@@ -153,7 +153,6 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dashboardLoading, setDashboardLoading] = useState(true);
-  const [selectedTrack, setSelectedTrack] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [matches, setMatches] = useState([]);
   const [theme, setThemeState] = useState("light");
@@ -176,11 +175,16 @@ export default function HomePage() {
     localStorage.setItem("mauriresults-theme", nextTheme);
   }
 
-  const stats = useMemo(() => calculateStats(students), [students]);
   const tracks = useMemo(() => [...new Set(students.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar")), [students]);
-  const trackStudents = selectedTrack === "all" ? students : students.filter((student) => student.track === selectedTrack);
-  const trackStats = calculateStats(trackStudents);
-  const toppers = [...trackStudents].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex).slice(0, 3);
+  const topperGroups = useMemo(() => tracks
+    .map((track) => ({
+      track,
+      students: students
+        .filter((student) => student.track === track)
+        .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex)
+        .slice(0, 3),
+    }))
+    .filter((group) => group.students.length > 0), [students, tracks]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -258,18 +262,13 @@ export default function HomePage() {
           {!loading && selectedStudent && <ResultCard student={selectedStudent} onCopyLink={copyResultLink} onShare={shareResult} />}
           {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={selectStudent} />}
         </section>
-        <StatsStrip stats={stats} loading={dashboardLoading} />
       </section>
 
       <section id="toppers" className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
         <ToppersSection
           loading={dashboardLoading}
           onSelect={selectStudent}
-          selectedTrack={selectedTrack}
-          setSelectedTrack={setSelectedTrack}
-          stats={trackStats}
-          toppers={toppers}
-          tracks={tracks}
+          groups={topperGroups}
         />
       </section>
 
@@ -291,7 +290,7 @@ function Header({ theme, setTheme }) {
           <LogoMark className="h-9 w-9 rounded-[14px]" />
           <span className="min-w-0">
             <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
-            <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">نتائج وطنية سريعة</small>
+            <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">منصة نتائج الوطنية</small>
           </span>
         </a>
         <div className="hidden items-center gap-2 md:flex">
@@ -312,7 +311,7 @@ function Hero() {
   return (
     <section className="compact-hero animate-slide-up">
       <div className="grid gap-2">
-        <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">منصة نتائج البكالوريا في موريتانيا</p>
+        <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">منصة نتائج الوطنية</p>
         <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">ابحث عن نتيجتك بسرعة</h1>
         <p className="max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">أدخل رقم المترشح أو الاسم الكامل، وستظهر النتيجة مباشرة تحت مربع البحث.</p>
       </div>
@@ -342,38 +341,6 @@ function SearchPanel({ error, handleSubmit, loading, message, query, setQuery })
         <p className={`col-span-full text-center text-xs font-black md:text-start ${error ? "text-red-600 dark:text-red-300" : "text-mauri-green dark:text-mauri-gold"}`}>{error || message}</p>
       )}
     </form>
-  );
-}
-
-function StatsStrip({ stats, loading }) {
-  const cards = [
-    { label: "الطلاب", value: loading ? "" : stats.total.toLocaleString("ar-MR"), icon: <GraduationIcon /> },
-    { label: "الناجحون", value: loading ? "" : stats.passed.toLocaleString("ar-MR"), icon: <CheckCircleIcon /> },
-    { label: "الأعلى", value: loading ? "" : stats.highest.toFixed(2), icon: <TrendingIcon /> },
-    { label: "المتوسط", value: loading ? "" : stats.average.toFixed(2), icon: <ChartIcon /> },
-  ];
-
-  return (
-    <section className="grid gap-2">
-      <SectionTitle eyebrow="لمحة سريعة" title="الإحصائيات" />
-      <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
-        {cards.map((card) => (
-          <MiniStatCard key={card.label} loading={loading} {...card} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function MiniStatCard({ icon, label, loading, value }) {
-  return (
-    <article className="mini-card min-w-[9rem] snap-start">
-      <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
-      <div className="min-w-0">
-        {loading ? <span className="skeleton mt-1 block h-5 w-16" /> : <strong className="block text-lg font-black text-slate-950 dark:text-white">{value}</strong>}
-        <span className="text-xs font-black text-slate-500 dark:text-slate-400">{label}</span>
-      </div>
-    </article>
   );
 }
 
@@ -488,17 +455,11 @@ function ResultSkeleton() {
   );
 }
 
-function ToppersSection({ tracks, selectedTrack, setSelectedTrack, stats, toppers, loading, onSelect }) {
+function ToppersSection({ groups, loading, onSelect }) {
   return (
     <section className="grid gap-3">
       <div className="flex items-end justify-between gap-3">
-        <SectionTitle eyebrow="الأوائل" title="أوائل الشعب" />
-        <TrackSelect selectedTrack={selectedTrack} setSelectedTrack={setSelectedTrack} tracks={tracks} />
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        <MiniMetric label="الطلاب" value={loading ? "..." : stats.total.toLocaleString("ar-MR")} />
-        <MiniMetric label="الناجحون" value={loading ? "..." : stats.passed.toLocaleString("ar-MR")} />
-        <MiniMetric label="الأعلى" value={loading ? "..." : stats.highest.toFixed(2)} />
+        <SectionTitle eyebrow="الأوائل" title="ثلاثة أوائل من كل شعبة" />
       </div>
       <div className="grid gap-2">
         {loading ? (
@@ -507,37 +468,23 @@ function ToppersSection({ tracks, selectedTrack, setSelectedTrack, stats, topper
             <TopperSkeleton />
             <TopperSkeleton />
           </>
-        ) : toppers.length ? (
-          toppers.map((student, index) => <TopperCard student={student} index={index} onSelect={onSelect} key={student.id} />)
+        ) : groups.length ? (
+          groups.map((group) => (
+            <section className="track-group" key={group.track}>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h3 className="line-clamp-1 text-sm font-black text-slate-950 dark:text-white">{group.track}</h3>
+                <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green">Top 3</span>
+              </div>
+              <div className="grid gap-2">
+                {group.students.map((student, index) => <TopperCard student={student} index={index} onSelect={onSelect} key={student.id} />)}
+              </div>
+            </section>
+          ))
         ) : (
           <p className="rounded-[18px] border border-mauri-border bg-white p-4 text-sm font-bold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400">لا توجد بيانات كافية لهذه الشعبة.</p>
         )}
       </div>
     </section>
-  );
-}
-
-function TrackSelect({ tracks, selectedTrack, setSelectedTrack }) {
-  return (
-    <label className="relative block w-40 shrink-0">
-      <span className="sr-only">اختيار الشعبة</span>
-      <select className="h-10 w-full appearance-none rounded-[14px] border border-mauri-border bg-white px-3 pl-9 text-xs font-black text-slate-950 outline-none shadow-soft focus:border-mauri-green focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/10 dark:text-white" value={selectedTrack} onChange={(event) => setSelectedTrack(event.target.value)}>
-        <option value="all">كل الشعب</option>
-        {tracks.map((track) => <option value={track} key={track}>{track}</option>)}
-      </select>
-      <span className="pointer-events-none absolute bottom-0 left-3 grid h-10 place-items-center text-slate-400">
-        <ChevronDownIcon />
-      </span>
-    </label>
-  );
-}
-
-function MiniMetric({ label, value }) {
-  return (
-    <div className="rounded-[16px] border border-mauri-border bg-white p-3 text-center shadow-soft dark:border-white/10 dark:bg-white/10">
-      <strong className="block text-sm font-black text-slate-950 dark:text-white">{value}</strong>
-      <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{label}</span>
-    </div>
   );
 }
 
@@ -584,13 +531,12 @@ function ContactSection() {
   const links = [
     { label: "واتساب", href: "https://wa.me/22244881891", icon: <WhatsAppIcon /> },
     { label: "فيسبوك", href: "https://www.facebook.com/ahmed.abde.mady", icon: <FacebookIcon /> },
-    { label: "تيليغرام", href: "https://t.me/mauriresults", icon: <TelegramIcon /> },
   ];
 
   return (
     <section className="grid gap-3">
       <SectionTitle eyebrow="تواصل" title="قنوات سريعة" />
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {links.map((link) => (
           <a className="contact-chip" href={link.href} key={link.label} target="_blank" rel="noopener">
             {link.icon}
@@ -603,17 +549,48 @@ function ContactSection() {
 }
 
 function Footer() {
+  const [developerOpen, setDeveloperOpen] = useState(false);
+
   return (
     <footer className="border-t border-mauri-border bg-white py-5 dark:border-white/10 dark:bg-white/5">
       <div className="app-shell grid gap-3 text-center md:text-start">
-        <div className="flex items-center justify-center gap-3 md:justify-start">
+        <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
+          <div className="flex items-center justify-center gap-3 md:justify-start">
           <LogoMark className="h-10 w-10 rounded-[14px]" />
           <div>
             <strong className="block text-base font-black text-slate-950 dark:text-white">MauriResults</strong>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">منصة موريتانية سريعة لعرض النتائج.</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">منصة النتائج الوطنية.</span>
           </div>
+          </div>
+          <button className="developer-button" onClick={() => setDeveloperOpen((value) => !value)} type="button">
+            <CodeIcon />
+            إعداد وتطوير
+          </button>
         </div>
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">مبرمج الموقع: Ahmed abdellahi mady - جميع الحقوق محفوظة © MauriResults.</p>
+        {developerOpen && (
+          <div className="developer-card animate-slide-up">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 place-items-center rounded-[16px] bg-mauri-green text-white">
+                <UserIcon />
+              </span>
+              <div className="min-w-0 text-start">
+                <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">إعداد وتطوير</p>
+                <h3 className="text-base font-black text-slate-950 dark:text-white">Ahmed abdellahi mady</h3>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <a className="developer-link" href="https://www.facebook.com/ahmed.abde.mady" target="_blank" rel="noopener">
+                <FacebookIcon />
+                فيسبوك
+              </a>
+              <a className="developer-link" href="https://wa.me/22244881891" target="_blank" rel="noopener">
+                <WhatsAppIcon />
+                واتساب
+              </a>
+            </div>
+          </div>
+        )}
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">جميع الحقوق محفوظة © MauriResults.</p>
       </div>
     </footer>
   );
@@ -694,6 +671,7 @@ function PrinterIcon() { return <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6" /
 function ShareIcon() { return <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-4" /><path d="m8.6 13.5 6.8 4" /></svg>; }
 function ChevronDownIcon() { return <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>; }
 function TelegramIcon() { return <svg viewBox="0 0 24 24"><path d="M21 4 3 11l7 2 2 7 9-16Z" /><path d="m10 13 4 4" /></svg>; }
+function CodeIcon() { return <svg viewBox="0 0 24 24"><path d="m8 9-4 3 4 3" /><path d="m16 9 4 3-4 3" /><path d="m14 4-4 16" /></svg>; }
 function LinkIcon() { return <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1" /></svg>; }
 function HomeIcon() { return <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>; }
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
