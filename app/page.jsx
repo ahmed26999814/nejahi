@@ -7,6 +7,16 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const TABLE = "bac_results";
 
+const EXAM_CARDS = [
+  { id: "bac-2025", title: "نتائج باكالوريا 2025", description: "النتائج الرسمية للباكالوريا.", available: true, icon: <GraduationIcon /> },
+  { id: "brevet-2026", title: "ختم دروس الإعدادية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <BookIcon /> },
+  { id: "concours-2026", title: "كونكور 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <SchoolIcon /> },
+  { id: "excellence-secondary-2026", title: "الامتياز - الثانوية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <AwardIcon /> },
+  { id: "excellence-middle-2026", title: "الامتياز - الإعدادية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <AwardIcon /> },
+  { id: "bac-session-2025", title: "الباكالوريا الدورة التكميلية 2025", description: "خاص بالمترشحين المؤهلين للدورة.", available: true, filter: "sessionnaire", icon: <AlertIcon /> },
+  { id: "bac-2026", title: "نتائج باكالوريا 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <GraduationIcon /> },
+];
+
 function parseAverage(value) {
   if (!value) return 0;
   return Number(String(value).replace(",", ".").trim()) || 0;
@@ -214,6 +224,7 @@ export default function HomePage() {
   const [matches, setMatches] = useState([]);
   const [theme, setThemeState] = useState("light");
   const [activeView, setActiveView] = useState("home");
+  const [selectedExamId, setSelectedExamId] = useState("");
 
   useEffect(() => {
     const saved = localStorage.getItem("mauriresults-theme");
@@ -237,13 +248,21 @@ export default function HomePage() {
   const stats = useMemo(() => calculateStats(students), [students]);
   const regionStats = useMemo(() => summarizeStudents(students, "wl"), [students]);
   const trackStats = useMemo(() => summarizeStudents(students, "track"), [students]);
+  const schoolStats = useMemo(() => summarizeStudents(students, "ms"), [students]);
+  const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
+  const searchPool = useMemo(() => {
+    if (selectedExam?.filter === "sessionnaire") {
+      return students.filter((student) => getOfficialStatus(student.kr).className === "sessionnaire");
+    }
+    return students;
+  }, [selectedExam, students]);
   const suggestions = useMemo(() => {
     const value = cleanText(query).toLowerCase();
-    if (value.length < 2 || resultPageOpen || matches.length) return [];
-    return students
+    if (!selectedExam?.available || value.length < 2 || resultPageOpen || matches.length) return [];
+    return searchPool
       .filter((student) => cleanText(student.id).toLowerCase().includes(value) || cleanText(student.name).toLowerCase().includes(value))
       .slice(0, 5);
-  }, [matches.length, query, resultPageOpen, students]);
+  }, [matches.length, query, resultPageOpen, searchPool, selectedExam]);
   const topperGroups = useMemo(() => tracks
     .map((track) => ({
       track,
@@ -294,10 +313,10 @@ export default function HomePage() {
       const found = prepareStudents(rows).map((student) => {
         const known = students.find((item) => item.id === student.id);
         return known ? { ...student, rank: known.rank } : student;
-      });
+      }).filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);
 
       if (!found.length) {
-        setError("لم يتم العثور على نتيجة بهذا الرقم أو الاسم.");
+        setError(selectedExam?.filter === "sessionnaire" ? "لم يتم العثور على مترشح مؤهل للدورة بهذا الرقم أو الاسم." : "لم يتم العثور على نتيجة بهذا الرقم أو الاسم.");
         return;
       }
 
@@ -342,9 +361,20 @@ export default function HomePage() {
           loading={loading}
           matches={matches}
           message={message}
+          onSelectExam={(exam) => {
+            setSelectedExamId(exam.id);
+            setMatches([]);
+            setSelectedStudent(null);
+            setResultPageOpen(false);
+            setError("");
+            setMessage("");
+            window.setTimeout(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
+          }}
           onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }}
           onSelect={selectStudent}
           query={query}
+          selectedExam={selectedExam}
+          selectedExamId={selectedExamId}
           setQuery={setQuery}
           stats={stats}
           suggestions={suggestions}
@@ -352,7 +382,7 @@ export default function HomePage() {
       )}
 
       {activeView === "toppers" && <ToppersPage groups={topperGroups} loading={dashboardLoading} onSelect={selectStudent} />}
-      {activeView === "analytics" && <AnalyticsPage loading={dashboardLoading} regionStats={regionStats} stats={stats} trackStats={trackStats} />}
+      {activeView === "analytics" && <AnalyticsPage loading={dashboardLoading} regionStats={regionStats} schoolStats={schoolStats} stats={stats} trackStats={trackStats} />}
       {activeView === "result" && selectedStudent && <ResultExperience student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} />}
 
       {activeView !== "result" && <Footer />}
@@ -362,13 +392,15 @@ export default function HomePage() {
   );
 }
 
-function HomeView({ dashboardLoading, error, handleSubmit, loading, matches, message, onPickSuggestion, onSelect, query, setQuery, stats, suggestions }) {
+function HomeView({ error, handleSubmit, loading, matches, message, onPickSuggestion, onSelect, onSelectExam, query, selectedExam, selectedExamId, setQuery, suggestions }) {
   return (
     <section className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
       <Hero />
-      <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} />
-      <StatsStrip loading={dashboardLoading} stats={stats} />
+      <CompetitionCards onSelectExam={onSelectExam} selectedExamId={selectedExamId} />
       <section className="scroll-mt-20" id="resultArea">
+        {selectedExam?.available && (
+          <SearchPanel error={error} examTitle={selectedExam.title} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} />
+        )}
         {loading && <ResultLoadingCard />}
         {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} />}
       </section>
@@ -377,6 +409,29 @@ function HomeView({ dashboardLoading, error, handleSubmit, loading, matches, mes
         <FeatureTile icon={<AwardIcon />} title="بطاقة رسمية" text="عرض فاخر للنتيجة مع رقم تحقق وختم الحالة." />
         <FeatureTile icon={<ChartIcon />} title="إحصائيات واضحة" text="قراءة سريعة لأداء الشعب والولايات." />
       </section>
+    </section>
+  );
+}
+
+function CompetitionCards({ onSelectExam, selectedExamId }) {
+  return (
+    <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {EXAM_CARDS.map((exam) => (
+        <button
+          className={`exam-card ${selectedExamId === exam.id ? "is-selected" : ""} ${exam.available ? "" : "is-locked"}`}
+          key={exam.id}
+          onClick={() => exam.available && onSelectExam(exam)}
+          type="button"
+          disabled={!exam.available}
+        >
+          <span className="exam-card-icon">{exam.icon}</span>
+          <span className="min-w-0 text-start">
+            <strong className="block text-base font-black text-slate-950 dark:text-white">{exam.title}</strong>
+            <small className="mt-1 block text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{exam.description}</small>
+          </span>
+          {!exam.available && <span className="soon-badge">قريبًا</span>}
+        </button>
+      ))}
     </section>
   );
 }
@@ -402,14 +457,17 @@ function ToppersPage({ groups, loading, onSelect }) {
   );
 }
 
-function AnalyticsPage({ loading, regionStats, stats, trackStats }) {
+function AnalyticsPage({ loading, regionStats, schoolStats, stats, trackStats }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow="الإحصائيات" title="إحصائيات حسب الولايات والشعب" description="لوحة مختصرة تساعد على فهم النتائج بسرعة." icon={<ChartIcon />} />
+      <PageHero eyebrow="الإحصائيات" title="إحصائيات حسب الولايات والشعب والمدارس" description="لوحة مختصرة تساعد على فهم النتائج بسرعة." icon={<ChartIcon />} />
       <StatsStrip loading={loading} stats={stats} />
       <div className="grid gap-4 lg:grid-cols-2">
         <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} title="حسب الولايات" />
         <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} title="حسب الشعب" />
+        <div className="lg:col-span-2">
+          <StatsTable icon={<SchoolIcon />} loading={loading} rows={schoolStats} title="حسب المدارس" />
+        </div>
       </div>
     </section>
   );
@@ -497,18 +555,17 @@ function Header({ activeView, onNavigate, theme, setTheme }) {
 
 function Hero() {
   return (
-    <section className="compact-hero animate-slide-up">
-      <div className="grid gap-2">
-        <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">منصة نتائج الوطنية</p>
-        <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">ابحث عن نتيجتك بسرعة</h1>
-        <p className="max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">أدخل رقم المترشح أو الاسم الكامل، وستظهر النتيجة مباشرة تحت مربع البحث.</p>
+    <section className="compact-hero hero-logo-panel animate-slide-up">
+      <LogoMark className="h-28 w-28 rounded-[30px] md:h-36 md:w-36" />
+      <div className="grid gap-2 text-center">
+        <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">نتائج المسابقات الوطنية في موريتانيا</h1>
+        <p className="mx-auto max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">اختر المسابقة ثم ابحث عن النتيجة الرسمية بسرعة.</p>
       </div>
-      <LogoMark className="hidden h-14 w-14 md:grid" />
     </section>
   );
 }
 
-function SearchPanel({ error, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions }) {
+function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions }) {
   const [focused, setFocused] = useState(false);
   const visibleSuggestions = focused && suggestions.length > 0;
 
@@ -519,6 +576,10 @@ function SearchPanel({ error, handleSubmit, loading, message, onPickSuggestion, 
 
   return (
     <form onSubmit={(event) => { setFocused(false); handleSubmit(event); }} className="search-card animate-slide-up">
+      <div className="col-span-full flex items-center justify-between gap-2 px-1">
+        <span className="text-xs font-black text-mauri-green dark:text-mauri-gold">{examTitle}</span>
+        <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">البحث مفتوح</span>
+      </div>
       <div className="relative min-w-0 flex-1">
         <label className="relative block">
           <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
