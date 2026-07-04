@@ -147,6 +147,7 @@ export default function HomePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resultLoading, setResultLoading] = useState(false);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [matches, setMatches] = useState([]);
@@ -171,6 +172,14 @@ export default function HomePage() {
   }
 
   const tracks = useMemo(() => [...new Set(students.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar")), [students]);
+  const stats = useMemo(() => calculateStats(students), [students]);
+  const suggestions = useMemo(() => {
+    const value = query.trim().toLowerCase();
+    if (value.length < 2 || selectedStudent || matches.length) return [];
+    return students
+      .filter((student) => student.id.includes(value) || student.name.toLowerCase().includes(value))
+      .slice(0, 5);
+  }, [matches.length, query, selectedStudent, students]);
   const topperGroups = useMemo(() => tracks
     .map((track) => ({
       track,
@@ -181,12 +190,25 @@ export default function HomePage() {
     }))
     .filter((group) => group.students.length > 0), [students, tracks]);
 
+  function showStudent(student) {
+    const known = students.find((item) => item.id === student.id);
+    setMatches([]);
+    setSelectedStudent(null);
+    setResultLoading(true);
+    window.setTimeout(() => {
+      setSelectedStudent(known || student);
+      setResultLoading(false);
+      requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }, 520);
+  }
+
   async function handleSubmit(event) {
-    event.preventDefault();
+    event?.preventDefault();
     setError("");
     setMessage("");
     setMatches([]);
     setSelectedStudent(null);
+    setResultLoading(false);
 
     const value = query.trim();
     if (!value) {
@@ -211,10 +233,8 @@ export default function HomePage() {
         return;
       }
 
-      if (found.length === 1) setSelectedStudent(found[0]);
+      if (found.length === 1) showStudent(found[0]);
       else setMatches(found);
-
-      requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
     } catch (error) {
       setError(isMissingSupabaseEnv(error) ? "لم يتم ضبط متغيرات Supabase في بيئة النشر." : "حدث خطأ أثناء الاتصال بقاعدة البيانات.");
     } finally {
@@ -233,21 +253,19 @@ export default function HomePage() {
   }
 
   function selectStudent(student) {
-    const known = students.find((item) => item.id === student.id);
-    setMatches([]);
-    setSelectedStudent(known || student);
-    requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+    showStudent(student);
   }
 
   return (
-    <main className="min-h-screen bg-mauri-bg pb-20 text-mauri-ink dark:bg-[#07130d] dark:text-white md:pb-0">
+    <main className="app-background min-h-screen pb-20 text-mauri-ink dark:text-white md:pb-0">
       <Header theme={theme} setTheme={setTheme} />
 
       <section id="home" className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
         <Hero />
-        <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} query={query} setQuery={setQuery} />
+        <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={showStudent} query={query} setQuery={setQuery} suggestions={suggestions} />
+        <StatsStrip loading={dashboardLoading} stats={stats} />
         <section className="scroll-mt-20" id="resultArea">
-          {loading && <ResultSkeleton />}
+          {(loading || resultLoading) && <ResultLoadingCard />}
           {!loading && selectedStudent && <ResultCard student={selectedStudent} onShare={shareResult} />}
           {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={selectStudent} />}
         </section>
@@ -305,20 +323,35 @@ function Hero() {
   );
 }
 
-function SearchPanel({ error, handleSubmit, loading, message, query, setQuery }) {
+function SearchPanel({ error, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions }) {
   return (
     <form onSubmit={handleSubmit} className="search-card animate-slide-up">
-      <label className="relative block min-w-0 flex-1">
-        <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
-          <SearchIcon />
-        </span>
-        <input
-          className="h-12 w-full rounded-[16px] border border-mauri-border bg-white px-4 pr-12 text-sm font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/50 focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/10 dark:text-white"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="أدخل رقم المترشح أو الاسم الكامل"
-        />
-      </label>
+      <div className="relative min-w-0 flex-1">
+        <label className="relative block">
+          <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
+            <SearchIcon />
+          </span>
+          <input
+            className="search-input"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="أدخل رقم المترشح أو الاسم الكامل"
+          />
+        </label>
+        {suggestions.length > 0 && (
+          <div className="suggestions-panel">
+            {suggestions.map((student) => (
+              <button className="suggestion-item" key={student.id} onClick={() => onPickSuggestion(student)} type="button">
+                <span className="min-w-0 text-start">
+                  <strong className="line-clamp-1 block">{student.name}</strong>
+                  <small className="line-clamp-1 text-slate-500 dark:text-slate-400">{student.id} - {student.track}</small>
+                </span>
+                <span className="rounded-full bg-mauri-green/10 px-2 py-1 text-xs font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <button className="tap-button h-12 rounded-[16px] bg-mauri-green px-5 text-sm font-black text-white shadow-soft transition hover:bg-emerald-700 active:scale-[.98]" type="submit">
         {loading ? "بحث..." : "بحث"}
       </button>
@@ -327,6 +360,51 @@ function SearchPanel({ error, handleSubmit, loading, message, query, setQuery })
       )}
     </form>
   );
+}
+
+function StatsStrip({ loading, stats }) {
+  const cards = [
+    { label: "الطلاب", value: stats.total, icon: <GraduationIcon /> },
+    { label: "الناجحون", value: stats.passed, icon: <CheckCircleIcon /> },
+    { label: "أعلى معدل", value: stats.highest, decimals: 2, icon: <TrendingIcon /> },
+    { label: "المتوسط", value: stats.average, decimals: 2, icon: <ChartIcon /> },
+  ];
+
+  return (
+    <section className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 md:grid md:grid-cols-4 md:overflow-visible">
+      {cards.map((card) => (
+        <article className="stat-chip snap-start" key={card.label}>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[12px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{card.icon}</span>
+          <div className="min-w-0">
+            {loading ? <span className="skeleton block h-5 w-14" /> : <CountUp decimals={card.decimals || 0} value={card.value} />}
+            <span className="block text-[11px] font-black text-slate-500 dark:text-slate-400">{card.label}</span>
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function CountUp({ decimals = 0, value }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    const start = performance.now();
+    const duration = 900;
+    let frame;
+
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(value * eased);
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    }
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+
+  return <strong className="block text-base font-black text-slate-950 dark:text-white">{decimals ? display.toFixed(decimals) : Math.round(display).toLocaleString("ar-MR")}</strong>;
 }
 
 function ResultCard({ student, onShare }) {
@@ -345,6 +423,7 @@ function ResultCard({ student, onShare }) {
 
   return (
     <article className={`result-modal result-${tone} animate-slide-up`}>
+      {status.className === "admis" && <Confetti />}
       <div className="result-modal-header">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">بطاقة النتيجة</p>
@@ -363,6 +442,13 @@ function ResultCard({ student, onShare }) {
           <strong className="block text-3xl font-black text-mauri-green dark:text-mauri-gold">{average.toFixed(2)}</strong>
         </div>
       </div>
+
+      {status.className === "admis" && (
+        <div className="success-banner">
+          <AwardIcon />
+          <span>تهانينا، تم العثور على نتيجة ناجحة.</span>
+        </div>
+      )}
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {details.map(([label, value, icon]) => (
@@ -419,9 +505,18 @@ function MatchesList({ matches, onSelect }) {
   );
 }
 
-function ResultSkeleton() {
+function ResultLoadingCard() {
   return (
-    <div className="result-card animate-slide-up">
+    <div className="result-modal animate-zoom-in">
+      <div className="mb-4 flex items-center gap-3">
+        <span className="grid h-11 w-11 place-items-center rounded-[16px] bg-mauri-green/10 text-mauri-green">
+          <SearchIcon />
+        </span>
+        <div>
+          <strong className="block text-sm font-black text-slate-950 dark:text-white">جاري تحضير بطاقة النتيجة</strong>
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">لحظات قليلة...</span>
+        </div>
+      </div>
       <div className="flex justify-between gap-4">
         <div className="grid flex-1 gap-2">
           <span className="skeleton h-3 w-20" />
@@ -436,6 +531,16 @@ function ResultSkeleton() {
         <span className="skeleton h-11" />
         <span className="skeleton h-11" />
       </div>
+    </div>
+  );
+}
+
+function Confetti() {
+  return (
+    <div className="confetti-layer" aria-hidden="true">
+      {Array.from({ length: 18 }).map((_, index) => (
+        <span key={index} style={{ "--i": index }} />
+      ))}
     </div>
   );
 }
