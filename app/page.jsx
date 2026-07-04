@@ -177,6 +177,30 @@ function calculateStats(students) {
   return { total, passed, failed, highest, average };
 }
 
+function summarizeStudents(students, field) {
+  const groups = new Map();
+
+  students.forEach((student) => {
+    const key = cleanText(student[field]) || "غير محدد";
+    const current = groups.get(key) || { label: key, total: 0, passed: 0, sum: 0, highest: 0 };
+    const average = getAverage(student);
+    current.total += 1;
+    current.sum += average;
+    current.highest = Math.max(current.highest, average);
+    if (getOfficialStatus(student.kr).className === "admis") current.passed += 1;
+    groups.set(key, current);
+  });
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      average: group.total ? group.sum / group.total : 0,
+      passRate: group.total ? (group.passed / group.total) * 100 : 0,
+    }))
+    .sort((a, b) => b.total - a.total || b.average - a.average)
+    .slice(0, 10);
+}
+
 export default function HomePage() {
   const [students, setStudents] = useState([]);
   const [query, setQuery] = useState("");
@@ -189,6 +213,7 @@ export default function HomePage() {
   const [resultPageOpen, setResultPageOpen] = useState(false);
   const [matches, setMatches] = useState([]);
   const [theme, setThemeState] = useState("light");
+  const [activeView, setActiveView] = useState("home");
 
   useEffect(() => {
     const saved = localStorage.getItem("mauriresults-theme");
@@ -210,6 +235,8 @@ export default function HomePage() {
 
   const tracks = useMemo(() => [...new Set(students.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar")), [students]);
   const stats = useMemo(() => calculateStats(students), [students]);
+  const regionStats = useMemo(() => summarizeStudents(students, "wl"), [students]);
+  const trackStats = useMemo(() => summarizeStudents(students, "track"), [students]);
   const suggestions = useMemo(() => {
     const value = cleanText(query).toLowerCase();
     if (value.length < 2 || resultPageOpen || matches.length) return [];
@@ -237,6 +264,8 @@ export default function HomePage() {
       setSelectedStudent(known || student);
       setResultLoading(false);
       setResultPageOpen(true);
+      setActiveView("result");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }, 520);
   }
 
@@ -295,52 +324,168 @@ export default function HomePage() {
     showStudent(student);
   }
 
+  function openView(view) {
+    setActiveView(view);
+    if (view !== "result") setResultPageOpen(false);
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  }
+
   return (
     <main className="app-background min-h-screen pb-20 text-mauri-ink dark:text-white md:pb-0">
-      <Header theme={theme} setTheme={setTheme} />
+      <Header activeView={activeView} onNavigate={openView} theme={theme} setTheme={setTheme} />
 
-      <section id="home" className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
-        <Hero />
-        <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} query={query} setQuery={setQuery} suggestions={suggestions} />
-        <StatsStrip loading={dashboardLoading} stats={stats} />
-        <section className="scroll-mt-20" id="resultArea">
-          {loading && <ResultLoadingCard />}
-          {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={selectStudent} />}
-        </section>
-      </section>
-
-      <section id="toppers" className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-        <ToppersSection
-          loading={dashboardLoading}
+      {activeView === "home" && (
+        <HomeView
+          dashboardLoading={dashboardLoading}
+          error={error}
+          handleSubmit={handleSubmit}
+          loading={loading}
+          matches={matches}
+          message={message}
+          onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }}
           onSelect={selectStudent}
-          groups={topperGroups}
+          query={query}
+          setQuery={setQuery}
+          stats={stats}
+          suggestions={suggestions}
         />
-      </section>
+      )}
 
-      <Footer />
-      <BottomNav />
+      {activeView === "toppers" && <ToppersPage groups={topperGroups} loading={dashboardLoading} onSelect={selectStudent} />}
+      {activeView === "analytics" && <AnalyticsPage loading={dashboardLoading} regionStats={regionStats} stats={stats} trackStats={trackStats} />}
+      {activeView === "result" && selectedStudent && <ResultExperience student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} />}
+
+      {activeView !== "result" && <Footer />}
+      <BottomNav activeView={activeView} onNavigate={openView} />
       {resultLoading && <ResultLoadingOverlay />}
-      {resultPageOpen && selectedStudent && <ResultExperience student={selectedStudent} onClose={() => setResultPageOpen(false)} onShare={shareResult} />}
     </main>
   );
 }
 
-function Header({ theme, setTheme }) {
+function HomeView({ dashboardLoading, error, handleSubmit, loading, matches, message, onPickSuggestion, onSelect, query, setQuery, stats, suggestions }) {
+  return (
+    <section className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
+      <Hero />
+      <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} />
+      <StatsStrip loading={dashboardLoading} stats={stats} />
+      <section className="scroll-mt-20" id="resultArea">
+        {loading && <ResultLoadingCard />}
+        {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} />}
+      </section>
+      <section className="grid gap-3 rounded-[26px] border border-white/70 bg-white/70 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/75 md:grid-cols-3">
+        <FeatureTile icon={<SearchIcon />} title="بحث سريع" text="اكتب الرقم أو الاسم وتظهر النتيجة مباشرة." />
+        <FeatureTile icon={<AwardIcon />} title="بطاقة رسمية" text="عرض فاخر للنتيجة مع رقم تحقق وختم الحالة." />
+        <FeatureTile icon={<ChartIcon />} title="إحصائيات واضحة" text="قراءة سريعة لأداء الشعب والولايات." />
+      </section>
+    </section>
+  );
+}
+
+function FeatureTile({ icon, text, title }) {
+  return (
+    <article className="info-tile">
+      <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
+      <div>
+        <strong className="block text-sm font-black text-slate-950 dark:text-white">{title}</strong>
+        <span className="text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{text}</span>
+      </div>
+    </article>
+  );
+}
+
+function ToppersPage({ groups, loading, onSelect }) {
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow="الأوائل" title="صفحة أوائل الشعب" description="أفضل ثلاثة مترشحين من كل شعبة في عرض سريع ومنظم." icon={<AwardIcon />} />
+      <ToppersSection loading={loading} onSelect={onSelect} groups={groups} />
+    </section>
+  );
+}
+
+function AnalyticsPage({ loading, regionStats, stats, trackStats }) {
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow="الإحصائيات" title="إحصائيات حسب الولايات والشعب" description="لوحة مختصرة تساعد على فهم النتائج بسرعة." icon={<ChartIcon />} />
+      <StatsStrip loading={loading} stats={stats} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} title="حسب الولايات" />
+        <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} title="حسب الشعب" />
+      </div>
+    </section>
+  );
+}
+
+function PageHero({ description, eyebrow, icon, title }) {
+  return (
+    <section className="page-hero animate-slide-up">
+      <span className="grid h-12 w-12 place-items-center rounded-[18px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
+      <div>
+        <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">{eyebrow}</p>
+        <h1 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white md:text-4xl">{title}</h1>
+        <p className="mt-1 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">{description}</p>
+      </div>
+    </section>
+  );
+}
+
+function StatsTable({ icon, loading, rows, title }) {
+  return (
+    <section className="analytics-panel animate-slide-up">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
+        <h2 className="text-base font-black text-slate-950 dark:text-white">{title}</h2>
+      </div>
+      <div className="grid gap-2">
+        {loading ? (
+          Array.from({ length: 6 }).map((_, index) => <span className="skeleton h-12 rounded-[16px]" key={index} />)
+        ) : rows.length ? (
+          rows.map((row) => <StatsRow row={row} key={row.label} />)
+        ) : (
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">لا توجد بيانات كافية.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function StatsRow({ row }) {
+  return (
+    <article className="analytics-row">
+      <div className="min-w-0">
+        <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{row.label}</strong>
+        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">ناجحون {row.passed.toLocaleString("ar-MR")} من {row.total.toLocaleString("ar-MR")}</span>
+      </div>
+      <div className="text-left">
+        <strong className="block text-sm font-black text-mauri-green dark:text-mauri-gold">{row.average.toFixed(2)}</strong>
+        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{row.passRate.toFixed(1)}%</span>
+      </div>
+    </article>
+  );
+}
+
+function Header({ activeView, onNavigate, theme, setTheme }) {
+  const navItems = [
+    { label: "الرئيسية", view: "home" },
+    { label: "الأوائل", view: "toppers" },
+    { label: "الإحصائيات", view: "analytics" },
+  ];
+
   return (
     <header className="sticky top-0 z-40 border-b border-mauri-border/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
       <nav className="app-shell flex h-14 items-center justify-between gap-3">
-        <a className="flex min-w-0 items-center gap-2.5" href="#home">
+        <button className="flex min-w-0 items-center gap-2.5 text-start" onClick={() => onNavigate("home")} type="button">
           <LogoMark className="h-9 w-9 rounded-[14px]" />
           <span className="min-w-0">
             <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
             <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">منصة نتائج الوطنية</small>
           </span>
-        </a>
+        </button>
         <div className="hidden items-center gap-2 md:flex">
-          <a className="nav-link" href="#home">الرئيسية</a>
-          <a className="nav-link" href="#resultArea">البحث</a>
-          <a className="nav-link" href="#toppers">الأوائل</a>
-          <a className="nav-link" href="#developer">تطوير</a>
+          {navItems.map((item) => (
+            <button className={`nav-link ${activeView === item.view ? "bg-mauri-green/10 text-mauri-green" : ""}`} onClick={() => onNavigate(item.view)} type="button" key={item.view}>
+              {item.label}
+            </button>
+          ))}
         </div>
         <button className="icon-button h-9 w-9" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="تبديل الوضع الليلي">
           {theme === "dark" ? <MoonIcon /> : <SunIcon />}
@@ -457,7 +602,7 @@ function CountUp({ decimals = 0, value }) {
   return <strong className="block text-base font-black text-slate-950 dark:text-white">{decimals ? display.toFixed(decimals) : Math.round(display).toLocaleString("ar-MR")}</strong>;
 }
 
-function ResultCard({ student, onShare }) {
+function ResultCard({ student, onShare, verificationCode }) {
   const average = parseAverage(student.MOD);
   const status = getOfficialStatus(student.kr);
   const isPassed = status.className === "admis";
@@ -496,6 +641,7 @@ function ResultCard({ student, onShare }) {
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-white/70 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{student.track}</span>
             <StatusBadge status={status} />
+            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">تحقق {verificationCode}</span>
             {isTopRanked && (
               <span className="top-rank-badge">
                 <GoldMedalIcon />
@@ -562,24 +708,30 @@ function AverageLevelBar({ level }) {
 }
 
 function ResultExperience({ onClose, onShare, student }) {
+  const status = getOfficialStatus(student.kr);
+  const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
+
   return (
-    <section className="result-page" role="dialog" aria-modal="true" aria-label="بطاقة النتيجة الرسمية">
-      <div className="result-page-backdrop" />
+    <section className="app-shell result-official-page py-4 md:py-8" aria-label="بطاقة النتيجة الرسمية">
       <div className="result-page-shell">
-        <header className="result-page-header">
+        <header className="official-result-header">
           <div className="flex min-w-0 items-center gap-3">
-            <LogoMark className="h-11 w-11 rounded-[16px]" />
+            <LogoMark className="h-12 w-12 rounded-[18px]" />
             <div className="min-w-0">
               <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">MauriResults</p>
-              <h1 className="line-clamp-1 text-lg font-black text-slate-950 dark:text-white">بطاقة نتيجة رسمية</h1>
+              <h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl">بطاقة النتيجة الرسمية</h1>
+              <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">رقم التحقق: {verificationCode}</p>
             </div>
           </div>
-          <button className="close-result-button" onClick={onClose} type="button">
-            <XIcon />
-            رجوع
-          </button>
+          <div className="flex items-center gap-2">
+            <span className={`official-status-stamp ${status.className}`}>{status.label}</span>
+            <button className="close-result-button no-print" onClick={onClose} type="button">
+              <XIcon />
+              رجوع
+            </button>
+          </div>
         </header>
-        <ResultCard student={student} onShare={onShare} />
+        <ResultCard student={student} onShare={onShare} verificationCode={verificationCode} />
       </div>
     </section>
   );
@@ -805,22 +957,22 @@ function Footer() {
   );
 }
 
-function BottomNav() {
+function BottomNav({ activeView, onNavigate }) {
   const items = [
-    { label: "الرئيسية", href: "#home", icon: <HomeIcon /> },
-    { label: "البحث", href: "#resultArea", icon: <SearchIcon /> },
-    { label: "الأوائل", href: "#toppers", icon: <AwardIcon /> },
-    { label: "تطوير", href: "#developer", icon: <CodeIcon /> },
+    { label: "الرئيسية", view: "home", icon: <HomeIcon /> },
+    { label: "البحث", view: "home", section: "resultArea", icon: <SearchIcon /> },
+    { label: "الأوائل", view: "toppers", icon: <AwardIcon /> },
+    { label: "الإحصائيات", view: "analytics", icon: <ChartIcon /> },
   ];
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(.55rem,env(safe-area-inset-bottom))] pt-2 md:hidden">
       <div className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[24px] border border-white/70 bg-white/[.92] p-1.5 shadow-[0_-14px_40px_rgba(15,23,42,.10)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.92]">
         {items.map((item) => (
-          <a className="grid justify-items-center gap-1 rounded-[18px] px-2 py-1.5 text-[11px] font-black text-slate-500 transition hover:-translate-y-0.5 hover:bg-mauri-green/10 hover:text-mauri-green active:scale-95 dark:text-slate-300" href={item.href} key={item.label}>
+          <button className={`grid justify-items-center gap-1 rounded-[18px] px-2 py-1.5 text-[11px] font-black transition hover:-translate-y-0.5 active:scale-95 ${activeView === item.view && !item.section ? "bg-mauri-green text-white shadow-soft" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`} onClick={() => { onNavigate(item.view); if (item.section) window.setTimeout(() => document.getElementById(item.section)?.scrollIntoView({ behavior: "smooth", block: "start" }), 120); }} type="button" key={item.label}>
             {item.icon}
             <span>{item.label}</span>
-          </a>
+          </button>
         ))}
       </div>
     </nav>
