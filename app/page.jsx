@@ -41,15 +41,22 @@ function getOfficialStatus(value) {
 }
 
 function getAverageMessage(average) {
-  if (average >= 15 && average <= 20) return "نتيجة ممتازة تعكس جهدا واضحا.";
-  if (average >= 13) return "أداء قوي ومشرف.";
-  if (average >= 10) return "مبروك النجاح.";
-  if (average >= 9) return "قريب جدا من النجاح.";
-  if (average >= 8) return "واصل العمل، الفرصة ما زالت أمامك.";
-  if (average >= 6) return "تحتاج إلى مراجعة أعمق وخطة أوضح.";
-  if (average >= 4) return "يمكنك العودة بشكل أفضل مع تنظيم المراجعة.";
-  if (average >= 2) return "ابدأ من الأساسيات وخذ وقتك في التحضير.";
-  return "كل بداية صعبة، والمهم أن تبدأ من جديد.";
+  if (average >= 15 && average <= 20) return "أنت مانك متكايس، نتيجة قوية تستاهل الفخر.";
+  if (average >= 13) return "أنت حامي، النجاح واضح والمستوى ممتاز.";
+  if (average >= 10) return "نصر، انجحت. مبروك عليك.";
+  if (average >= 9) return "أنت قريب، زيد ركز والنجاح قدامك.";
+  if (average >= 8) return "استمر وارفع راسك، لا تمشي فيه.";
+  if (average >= 6) return "بعدك ما انجحت، لكن تقدر ترجع أقوى.";
+  if (average >= 4) return "عادي، حضر روحك لسنة جاية بخطة أحسن.";
+  if (average >= 2) return "حاول تكرا أكثر، الدور الجاي تقدر تنجح.";
+  return "البداية صعبة، لكن المهم تبدأ من جديد.";
+}
+
+function getAverageTone(average) {
+  if (average >= 10) return "success";
+  if (average >= 8) return "near";
+  if (average >= 4) return "warning";
+  return "danger";
 }
 
 function escapePostgrestValue(value) {
@@ -237,12 +244,6 @@ export default function HomePage() {
     setMessage("تم نسخ النتيجة للمشاركة.");
   }
 
-  function copyResultLink(student) {
-    const url = `${window.location.origin}?q=${encodeURIComponent(student.id)}`;
-    navigator.clipboard?.writeText(url);
-    setMessage("تم نسخ رابط النتيجة.");
-  }
-
   function selectStudent(student) {
     const known = students.find((item) => item.id === student.id);
     setMatches([]);
@@ -259,7 +260,7 @@ export default function HomePage() {
         <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} query={query} setQuery={setQuery} />
         <section className="scroll-mt-20" id="resultArea">
           {loading && <ResultSkeleton />}
-          {!loading && selectedStudent && <ResultCard student={selectedStudent} onCopyLink={copyResultLink} onShare={shareResult} />}
+          {!loading && selectedStudent && <ResultCard student={selectedStudent} onShare={shareResult} />}
           {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={selectStudent} />}
         </section>
       </section>
@@ -270,10 +271,6 @@ export default function HomePage() {
           onSelect={selectStudent}
           groups={topperGroups}
         />
-      </section>
-
-      <section id="contact" className="app-shell grid gap-4 pb-6 md:pb-10">
-        <ContactSection />
       </section>
 
       <Footer />
@@ -297,7 +294,7 @@ function Header({ theme, setTheme }) {
           <a className="nav-link" href="#home">الرئيسية</a>
           <a className="nav-link" href="#resultArea">البحث</a>
           <a className="nav-link" href="#toppers">الأوائل</a>
-          <a className="nav-link" href="#contact">تواصل</a>
+          <a className="nav-link" href="#developer">تطوير</a>
         </div>
         <button className="icon-button h-9 w-9" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="تبديل الوضع الليلي">
           {theme === "dark" ? <MoonIcon /> : <SunIcon />}
@@ -344,51 +341,52 @@ function SearchPanel({ error, handleSubmit, loading, message, query, setQuery })
   );
 }
 
-function ResultCard({ student, onCopyLink, onShare }) {
-  const [detailsOpen, setDetailsOpen] = useState(false);
+function ResultCard({ student, onShare }) {
   const average = parseAverage(student.MOD);
   const status = getOfficialStatus(student.kr);
+  const tone = getAverageTone(average);
   const details = [
     ["رقم المترشح", student.id, <HashIcon key="hash" />],
     ["الشعبة", student.track, <BookIcon key="book" />],
+    ["المعدل", average.toFixed(2), <ChartIcon key="chart" />],
+    ["القرار", <StatusBadge key="status" status={status} />, <CheckCircleIcon key="check" />],
     ["الرتبة", student.rank ? `#${student.rank}` : "غير متوفرة", <AwardIcon key="award" />],
     ["المؤسسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />],
     ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />],
   ];
 
   return (
-    <article className="result-card animate-slide-up">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">النتيجة</p>
-          <h2 className="mt-1 line-clamp-2 text-lg font-black leading-snug text-slate-950 dark:text-white">{student.name}</h2>
-          <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.track}</p>
+    <article className={`result-modal result-${tone} animate-slide-up`}>
+      <div className="result-modal-header">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">بطاقة النتيجة</p>
+          <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-white/70 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{student.track}</span>
+            <StatusBadge status={status} />
+          </div>
         </div>
-        <div className="rounded-[18px] bg-mauri-green/10 px-3 py-2 text-center">
+        <div className="result-average">
           <span className="block text-[11px] font-black text-slate-500 dark:text-slate-400">المعدل</span>
-          <strong className="block text-2xl font-black text-mauri-green dark:text-mauri-gold">{average.toFixed(2)}</strong>
+          <strong className="block text-3xl font-black text-mauri-green dark:text-mauri-gold">{average.toFixed(2)}</strong>
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <StatusBadge status={status} />
-        <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 dark:bg-white/10 dark:text-slate-300">{getAverageMessage(average)}</span>
+      <div className={`motivation-pill motivation-${tone}`}>
+        <SparkIcon />
+        <span>{getAverageMessage(average)}</span>
       </div>
 
-      {detailsOpen && (
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {details.map(([label, value, icon]) => (
-            <InfoTile icon={icon} label={label} value={value} key={label} />
-          ))}
-        </div>
-      )}
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        {details.map(([label, value, icon]) => (
+          <InfoTile icon={icon} label={label} value={value} key={label} />
+        ))}
+      </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <ActionButton icon={<InfoIcon />} label={detailsOpen ? "إخفاء" : "التفاصيل"} onClick={() => setDetailsOpen((value) => !value)} variant="light" />
+      <div className="mt-4 grid grid-cols-3 gap-2">
         <ActionButton icon={<ShareIcon />} label="مشاركة" onClick={() => onShare(student)} />
         <ActionButton icon={<DownloadIcon />} label="PDF" onClick={() => window.print()} variant="light" />
         <ActionButton icon={<PrinterIcon />} label="طباعة" onClick={() => window.print()} variant="light" />
-        <ActionButton icon={<LinkIcon />} label="نسخ الرابط" onClick={() => onCopyLink(student)} variant="light" />
       </div>
     </article>
   );
@@ -527,32 +525,11 @@ function TopperSkeleton() {
   );
 }
 
-function ContactSection() {
-  const links = [
-    { label: "واتساب", href: "https://wa.me/22244881891", icon: <WhatsAppIcon /> },
-    { label: "فيسبوك", href: "https://www.facebook.com/ahmed.abde.mady", icon: <FacebookIcon /> },
-  ];
-
-  return (
-    <section className="grid gap-3">
-      <SectionTitle eyebrow="تواصل" title="قنوات سريعة" />
-      <div className="grid grid-cols-2 gap-2">
-        {links.map((link) => (
-          <a className="contact-chip" href={link.href} key={link.label} target="_blank" rel="noopener">
-            {link.icon}
-            <span>{link.label}</span>
-          </a>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function Footer() {
   const [developerOpen, setDeveloperOpen] = useState(false);
 
   return (
-    <footer className="border-t border-mauri-border bg-white py-5 dark:border-white/10 dark:bg-white/5">
+    <footer id="developer" className="border-t border-mauri-border bg-white py-5 dark:border-white/10 dark:bg-white/5">
       <div className="app-shell grid gap-3 text-center md:text-start">
         <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
           <div className="flex items-center justify-center gap-3 md:justify-start">
@@ -601,7 +578,7 @@ function BottomNav() {
     { label: "الرئيسية", href: "#home", icon: <HomeIcon /> },
     { label: "البحث", href: "#resultArea", icon: <SearchIcon /> },
     { label: "الأوائل", href: "#toppers", icon: <AwardIcon /> },
-    { label: "تواصل", href: "#contact", icon: <MessageIcon /> },
+    { label: "تطوير", href: "#developer", icon: <CodeIcon /> },
   ];
 
   return (
@@ -669,10 +646,8 @@ function MessageIcon() { return <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0
 function DownloadIcon() { return <svg viewBox="0 0 24 24"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>; }
 function PrinterIcon() { return <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v7H6Z" /></svg>; }
 function ShareIcon() { return <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-4" /><path d="m8.6 13.5 6.8 4" /></svg>; }
-function ChevronDownIcon() { return <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>; }
-function TelegramIcon() { return <svg viewBox="0 0 24 24"><path d="M21 4 3 11l7 2 2 7 9-16Z" /><path d="m10 13 4 4" /></svg>; }
 function CodeIcon() { return <svg viewBox="0 0 24 24"><path d="m8 9-4 3 4 3" /><path d="m16 9 4 3-4 3" /><path d="m14 4-4 16" /></svg>; }
-function LinkIcon() { return <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1" /></svg>; }
+function SparkIcon() { return <svg viewBox="0 0 24 24"><path d="M12 2 9.8 8.8 3 11l6.8 2.2L12 20l2.2-6.8L21 11l-6.8-2.2L12 2Z" /></svg>; }
 function HomeIcon() { return <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>; }
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
 function SilverMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 12a2 2 0 0 1 4 0c0 2-4 2-4 4h4" /></svg>; }

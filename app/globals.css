@@ -80,6 +80,75 @@ svg {
     @apply rounded-[22px] border border-mauri-border bg-white p-4 shadow-premium dark:border-white/10 dark:bg-white/10 md:p-5;
   }
 
+  .result-modal {
+    @apply relative overflow-hidden rounded-[26px] border bg-white p-4 shadow-premium dark:bg-white/10 md:p-5;
+  }
+
+  .result-modal::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-0 top-0 h-1.5;
+  }
+
+  .result-modal-header {
+    @apply relative z-10 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between;
+  }
+
+  .result-average {
+    @apply w-fit rounded-[20px] border border-mauri-green/15 bg-white/80 px-4 py-3 text-center shadow-soft dark:border-white/10 dark:bg-white/10;
+  }
+
+  .result-success {
+    @apply border-green-500/30;
+  }
+
+  .result-success::before {
+    @apply bg-green-500;
+  }
+
+  .result-near {
+    @apply border-mauri-gold/40;
+  }
+
+  .result-near::before {
+    @apply bg-mauri-gold;
+  }
+
+  .result-warning {
+    @apply border-amber-500/35;
+  }
+
+  .result-warning::before {
+    @apply bg-amber-500;
+  }
+
+  .result-danger {
+    @apply border-red-500/30;
+  }
+
+  .result-danger::before {
+    @apply bg-red-500;
+  }
+
+  .motivation-pill {
+    @apply mt-4 flex items-start gap-2 rounded-[18px] border px-3 py-3 text-sm font-black leading-6 shadow-soft;
+  }
+
+  .motivation-success {
+    @apply border-green-600/20 bg-green-50 text-green-800 dark:bg-green-400/10 dark:text-green-200;
+  }
+
+  .motivation-near {
+    @apply border-mauri-gold/30 bg-yellow-50 text-yellow-800 dark:bg-yellow-400/10 dark:text-yellow-200;
+  }
+
+  .motivation-warning {
+    @apply border-amber-500/25 bg-amber-50 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200;
+  }
+
+  .motivation-danger {
+    @apply border-red-500/20 bg-red-50 text-red-700 dark:bg-red-400/10 dark:text-red-200;
+  }
+
   .info-tile {
     @apply grid grid-cols-[auto_1fr] items-center gap-2 rounded-[16px] border border-mauri-border bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5;
   }
@@ -89,7 +158,7 @@ svg {
   }
 
   .action-button {
-    @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[14px] px-3 text-xs font-black shadow-soft transition active:scale-[.98];
+    @apply inline-flex min-h-12 items-center justify-center gap-1.5 rounded-[16px] px-3 text-xs font-black shadow-soft transition hover:-translate-y-0.5 active:scale-[.98];
   }
 
   .topper-compact {
