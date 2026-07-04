@@ -175,10 +175,10 @@ export default function HomePage() {
   const tracks = useMemo(() => [...new Set(students.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar")), [students]);
   const stats = useMemo(() => calculateStats(students), [students]);
   const suggestions = useMemo(() => {
-    const value = query.trim().toLowerCase();
+    const value = cleanText(query).toLowerCase();
     if (value.length < 2 || resultPageOpen || matches.length) return [];
     return students
-      .filter((student) => student.id.includes(value) || student.name.toLowerCase().includes(value))
+      .filter((student) => cleanText(student.id).toLowerCase().includes(value) || cleanText(student.name).toLowerCase().includes(value))
       .slice(0, 5);
   }, [matches.length, query, resultPageOpen, students]);
   const topperGroups = useMemo(() => tracks
@@ -265,7 +265,7 @@ export default function HomePage() {
 
       <section id="home" className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
         <Hero />
-        <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={showStudent} query={query} setQuery={setQuery} suggestions={suggestions} />
+        <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} query={query} setQuery={setQuery} suggestions={suggestions} />
         <StatsStrip loading={dashboardLoading} stats={stats} />
         <section className="scroll-mt-20" id="resultArea">
           {loading && <ResultLoadingCard />}
@@ -419,7 +419,6 @@ function ResultCard({ student, onShare }) {
     ["رقم المترشح", student.id, <HashIcon key="hash" />],
     ["الشعبة", student.track, <BookIcon key="book" />],
     ["المعدل", average.toFixed(2), <ChartIcon key="chart" />],
-    ["القرار", <StatusBadge key="status" status={status} />, <CheckCircleIcon key="check" />],
     ["الرتبة", student.rank ? `#${student.rank}` : "غير متوفرة", <AwardIcon key="award" />],
     ["المدرسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />],
     ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />],
@@ -431,7 +430,10 @@ function ResultCard({ student, onShare }) {
       <div className="result-modal-header">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">بطاقة النتيجة</p>
-          <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
+          <div className="student-name-panel">
+            <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">اسم الطالب</span>
+            <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
+          </div>
           <div className="mt-2 flex w-fit max-w-full items-center gap-2 rounded-[16px] border border-mauri-border bg-white/75 px-3 py-2 text-start text-xs font-black text-slate-700 shadow-soft dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             <SchoolIcon />
             <span className="overflow-wrap-anywhere">{student.ms || "المدرسة غير متوفرة"}</span>
