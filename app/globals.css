@@ -22,6 +22,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background: #f8faf8;
+  text-rendering: optimizeLegibility;
 }
 
 svg {
@@ -36,7 +37,7 @@ svg {
 
 @layer components {
   .content-section {
-    @apply grid gap-5;
+    @apply grid gap-5 md:gap-6;
   }
 
   .premium-card {
@@ -58,20 +59,20 @@ svg {
   .hero-surface {
     @apply pointer-events-none absolute inset-0 -z-10;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, .86), rgba(248, 250, 248, .96)),
-      radial-gradient(circle at 50% 22%, rgba(21, 128, 61, .12), transparent 34%),
-      radial-gradient(circle at 18% 78%, rgba(212, 175, 55, .11), transparent 26%);
+      linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(248, 250, 248, 1)),
+      linear-gradient(135deg, rgba(21, 128, 61, .08), transparent 42%),
+      linear-gradient(225deg, rgba(212, 175, 55, .08), transparent 44%);
   }
 
   .dark .hero-surface {
     background:
-      linear-gradient(180deg, rgba(7, 19, 13, .82), rgba(7, 19, 13, .98)),
-      radial-gradient(circle at 50% 22%, rgba(16, 185, 129, .18), transparent 34%),
-      radial-gradient(circle at 18% 78%, rgba(212, 175, 55, .12), transparent 26%);
+      linear-gradient(180deg, rgba(7, 19, 13, .94), rgba(7, 19, 13, 1)),
+      linear-gradient(135deg, rgba(16, 185, 129, .12), transparent 42%),
+      linear-gradient(225deg, rgba(212, 175, 55, .09), transparent 44%);
   }
 
   .topper-card {
-    @apply grid min-h-[22rem] content-between gap-5 rounded-[20px] border p-5 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-premium;
+    @apply grid min-h-[20rem] content-between gap-5 rounded-[20px] border p-5 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-premium;
   }
 
   .ripple-button {

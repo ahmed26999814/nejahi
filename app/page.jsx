@@ -241,7 +241,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-mauri-bg text-mauri-ink dark:bg-[#07130d] dark:text-white">
+    <main className="min-h-screen overflow-x-hidden bg-mauri-bg text-mauri-ink dark:bg-[#07130d] dark:text-white">
       <Header theme={theme} setTheme={setTheme} />
 
       <Hero
@@ -253,7 +253,7 @@ export default function HomePage() {
         setQuery={setQuery}
       />
 
-      <section id="dashboard" className="mx-auto grid w-[min(1180px,calc(100%-1.25rem))] gap-6 py-8 md:w-[min(1180px,calc(100%-2.5rem))] md:py-12">
+      <section id="dashboard" className="mx-auto grid w-[min(1180px,calc(100%-1.25rem))] gap-7 py-8 md:w-[min(1180px,calc(100%-2.5rem))] md:gap-9 md:py-12">
         <StatsSection stats={stats} loading={dashboardLoading} />
         {(selectedStudent || matches.length > 0) && (
           <section className="scroll-mt-24" id="resultArea">
@@ -282,7 +282,7 @@ export default function HomePage() {
 
 function Header({ theme, setTheme }) {
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-mauri-border/80 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/82">
+    <header className="sticky inset-x-0 top-0 z-40 border-b border-mauri-border/80 bg-white/90 backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/90">
       <nav className="mx-auto flex h-16 w-[min(1180px,calc(100%-1.25rem))] items-center justify-between gap-3 md:w-[min(1180px,calc(100%-2.5rem))]">
         <a className="group flex min-w-0 items-center gap-3" href="#">
           <LogoMark className="h-11 w-11" />
@@ -307,18 +307,18 @@ function Header({ theme, setTheme }) {
 
 function Hero({ error, handleSubmit, loading, message, query, setQuery }) {
   return (
-    <section className="relative isolate flex min-h-[100svh] items-center px-3 pt-16">
+    <section className="relative isolate grid min-h-[calc(100svh-4rem)] place-items-center px-4 py-8 sm:py-10 md:px-6">
       <div className="hero-surface" />
-      <div className="mx-auto grid w-[min(960px,100%)] justify-items-center gap-5 py-10 text-center">
-        <LogoMark className="h-20 w-20 animate-scale-in" />
-        <div className="animate-slide-up rounded-full border border-mauri-gold/35 bg-white/80 px-4 py-2 text-sm font-black text-mauri-green shadow-soft backdrop-blur-xl dark:border-mauri-gold/30 dark:bg-white/10 dark:text-mauri-gold">
+      <div className="mx-auto grid w-full max-w-4xl justify-items-center gap-4 text-center sm:gap-5">
+        <LogoMark className="h-16 w-16 animate-scale-in sm:h-20 sm:w-20" />
+        <div className="animate-slide-up max-w-full rounded-full border border-mauri-gold/35 bg-white/90 px-4 py-2 text-xs font-black text-mauri-green shadow-soft backdrop-blur-xl dark:border-mauri-gold/30 dark:bg-white/10 dark:text-mauri-gold sm:text-sm">
           منصة نتائج البكالوريا في موريتانيا
         </div>
-        <h1 className="animate-slide-up text-balance text-5xl font-black leading-[1.08] tracking-tight text-slate-950 dark:text-white sm:text-6xl lg:text-7xl">
+        <h1 className="animate-slide-up max-w-3xl text-balance text-[2.6rem] font-black leading-[1.12] tracking-tight text-slate-950 dark:text-white sm:text-6xl lg:text-7xl">
           نتائج البكالوريا
           <span className="block text-mauri-green dark:text-emerald-300">في موريتانيا</span>
         </h1>
-        <p className="animate-slide-up max-w-xl text-lg font-bold text-slate-600 dark:text-slate-300 sm:text-xl">
+        <p className="animate-slide-up max-w-xl text-base font-bold leading-7 text-slate-600 dark:text-slate-300 sm:text-xl">
           ابحث عن نتيجتك خلال ثوان.
         </p>
         <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} query={query} setQuery={setQuery} />
@@ -329,14 +329,14 @@ function Hero({ error, handleSubmit, loading, message, query, setQuery }) {
 
 function SearchPanel({ error, handleSubmit, loading, message, query, setQuery }) {
   return (
-    <form onSubmit={handleSubmit} className="animate-slide-up w-full max-w-3xl rounded-[20px] border border-mauri-border bg-white p-2 shadow-premium dark:border-white/10 dark:bg-white/10">
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+    <form onSubmit={handleSubmit} className="animate-slide-up w-full max-w-3xl rounded-[20px] border border-mauri-border bg-white/95 p-2.5 shadow-premium backdrop-blur dark:border-white/10 dark:bg-white/10 sm:p-3">
+      <div className="grid gap-2 md:grid-cols-[1fr_9.5rem]">
         <label className="relative block">
           <span className="pointer-events-none absolute inset-y-0 right-5 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
             <SearchIcon />
           </span>
           <input
-            className="h-[60px] w-full rounded-[16px] border border-transparent bg-[#F8FAF8] pr-14 text-base font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/35 focus:bg-white focus:ring-4 focus:ring-mauri-green/10 dark:bg-white/10 dark:text-white dark:placeholder:text-slate-400"
+            className="h-[60px] w-full rounded-[16px] border border-transparent bg-[#F8FAF8] px-4 pr-14 text-base font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/35 focus:bg-white focus:ring-4 focus:ring-mauri-green/10 dark:bg-white/10 dark:text-white dark:placeholder:text-slate-400"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="أدخل رقم المترشح أو الاسم الكامل"
@@ -346,7 +346,7 @@ function SearchPanel({ error, handleSubmit, loading, message, query, setQuery })
           {loading ? "جاري البحث..." : "بحث"}
         </button>
       </div>
-      <div className="flex min-h-8 flex-col items-center justify-between gap-1 px-2 pt-2 text-sm font-bold sm:flex-row">
+      <div className="grid min-h-8 gap-1 px-2 pt-3 text-center text-sm font-bold md:grid-cols-[1fr_auto] md:text-start">
         <p className="text-slate-500 dark:text-slate-400">يدعم البحث برقم المترشح أو الاسم الكامل.</p>
         <p className={error ? "text-red-600 dark:text-red-300" : "text-mauri-green dark:text-mauri-gold"}>{error || message}</p>
       </div>
