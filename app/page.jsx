@@ -150,6 +150,7 @@ export default function HomePage() {
   const [resultLoading, setResultLoading] = useState(false);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [resultPageOpen, setResultPageOpen] = useState(false);
   const [matches, setMatches] = useState([]);
   const [theme, setThemeState] = useState("light");
 
@@ -175,11 +176,11 @@ export default function HomePage() {
   const stats = useMemo(() => calculateStats(students), [students]);
   const suggestions = useMemo(() => {
     const value = query.trim().toLowerCase();
-    if (value.length < 2 || selectedStudent || matches.length) return [];
+    if (value.length < 2 || resultPageOpen || matches.length) return [];
     return students
       .filter((student) => student.id.includes(value) || student.name.toLowerCase().includes(value))
       .slice(0, 5);
-  }, [matches.length, query, selectedStudent, students]);
+  }, [matches.length, query, resultPageOpen, students]);
   const topperGroups = useMemo(() => tracks
     .map((track) => ({
       track,
@@ -194,11 +195,12 @@ export default function HomePage() {
     const known = students.find((item) => item.id === student.id);
     setMatches([]);
     setSelectedStudent(null);
+    setResultPageOpen(false);
     setResultLoading(true);
     window.setTimeout(() => {
       setSelectedStudent(known || student);
       setResultLoading(false);
-      requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      setResultPageOpen(true);
     }, 520);
   }
 
@@ -208,6 +210,7 @@ export default function HomePage() {
     setMessage("");
     setMatches([]);
     setSelectedStudent(null);
+    setResultPageOpen(false);
     setResultLoading(false);
 
     const value = query.trim();
@@ -265,8 +268,7 @@ export default function HomePage() {
         <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={showStudent} query={query} setQuery={setQuery} suggestions={suggestions} />
         <StatsStrip loading={dashboardLoading} stats={stats} />
         <section className="scroll-mt-20" id="resultArea">
-          {(loading || resultLoading) && <ResultLoadingCard />}
-          {!loading && selectedStudent && <ResultCard student={selectedStudent} onShare={shareResult} />}
+          {loading && <ResultLoadingCard />}
           {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={selectStudent} />}
         </section>
       </section>
@@ -281,6 +283,8 @@ export default function HomePage() {
 
       <Footer />
       <BottomNav />
+      {resultLoading && <ResultLoadingOverlay />}
+      {resultPageOpen && selectedStudent && <ResultExperience student={selectedStudent} onClose={() => setResultPageOpen(false)} onShare={shareResult} />}
     </main>
   );
 }
@@ -465,6 +469,30 @@ function ResultCard({ student, onShare }) {
   );
 }
 
+function ResultExperience({ onClose, onShare, student }) {
+  return (
+    <section className="result-page" role="dialog" aria-modal="true" aria-label="بطاقة النتيجة الرسمية">
+      <div className="result-page-backdrop" />
+      <div className="result-page-shell">
+        <header className="result-page-header">
+          <div className="flex min-w-0 items-center gap-3">
+            <LogoMark className="h-11 w-11 rounded-[16px]" />
+            <div className="min-w-0">
+              <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">MauriResults</p>
+              <h1 className="line-clamp-1 text-lg font-black text-slate-950 dark:text-white">بطاقة نتيجة رسمية</h1>
+            </div>
+          </div>
+          <button className="close-result-button" onClick={onClose} type="button">
+            <XIcon />
+            رجوع
+          </button>
+        </header>
+        <ResultCard student={student} onShare={onShare} />
+      </div>
+    </section>
+  );
+}
+
 function InfoTile({ icon, label, value }) {
   return (
     <div className="info-tile">
@@ -535,6 +563,26 @@ function ResultLoadingCard() {
   );
 }
 
+function ResultLoadingOverlay() {
+  return (
+    <section className="result-page" aria-label="تحميل بطاقة النتيجة">
+      <div className="result-page-backdrop" />
+      <div className="result-loading-panel animate-zoom-in">
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-[20px] bg-mauri-green/10 text-mauri-green">
+          <SearchIcon />
+        </span>
+        <h2 className="mt-3 text-xl font-black text-slate-950 dark:text-white">جاري فتح بطاقة النتيجة</h2>
+        <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">نحضّر لك صفحة النتيجة الرسمية...</p>
+        <div className="mt-5 grid gap-2">
+          <span className="skeleton h-4 w-full" />
+          <span className="skeleton h-4 w-3/4" />
+          <span className="skeleton h-12 w-full rounded-[18px]" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Confetti() {
   return (
     <div className="confetti-layer" aria-hidden="true">
@@ -598,7 +646,7 @@ function TopperCard({ student, index, onSelect }) {
       </div>
       <div className="text-center">
         <strong className="block text-lg font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</strong>
-        <button className="text-[11px] font-black text-slate-500 underline-offset-4 hover:text-mauri-green hover:underline" onClick={() => onSelect(student)} type="button">عرض</button>
+        <button className="text-[11px] font-black text-slate-500 underline-offset-4 hover:text-mauri-green hover:underline" onClick={() => onSelect(student)} type="button">عرض النتيجة</button>
       </div>
     </article>
   );
