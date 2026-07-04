@@ -36,6 +36,10 @@ svg {
 }
 
 @layer components {
+  .app-shell {
+    @apply mx-auto w-[min(1040px,calc(100%-1rem))] sm:w-[min(1040px,calc(100%-1.5rem))];
+  }
+
   .content-section {
     @apply grid gap-5 md:gap-6;
   }
@@ -54,6 +58,51 @@ svg {
 
   .premium-button {
     @apply rounded-full border border-mauri-border bg-white font-black text-slate-700 shadow-soft transition hover:-translate-y-0.5 hover:border-mauri-green/30 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100;
+  }
+
+  .nav-link {
+    @apply rounded-full px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300;
+  }
+
+  .compact-hero {
+    @apply grid items-center gap-4 rounded-[22px] border border-mauri-border bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/10 md:grid-cols-[1fr_auto] md:p-6;
+  }
+
+  .search-card {
+    @apply grid gap-2 rounded-[22px] border border-mauri-border bg-white p-2.5 shadow-premium dark:border-white/10 dark:bg-white/10 md:grid-cols-[1fr_auto] md:p-3;
+  }
+
+  .mini-card {
+    @apply flex items-center gap-3 rounded-[18px] border border-mauri-border bg-white p-3 shadow-soft dark:border-white/10 dark:bg-white/10;
+  }
+
+  .result-card {
+    @apply rounded-[22px] border border-mauri-border bg-white p-4 shadow-premium dark:border-white/10 dark:bg-white/10 md:p-5;
+  }
+
+  .info-tile {
+    @apply grid grid-cols-[auto_1fr] items-center gap-2 rounded-[16px] border border-mauri-border bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5;
+  }
+
+  .match-row {
+    @apply grid grid-cols-[1fr_auto] items-center gap-3 rounded-[16px] border border-mauri-border bg-slate-50 p-3 transition hover:border-mauri-green/35 hover:bg-white hover:shadow-soft active:scale-[.99] dark:border-white/10 dark:bg-white/5;
+  }
+
+  .action-button {
+    @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[14px] px-3 text-xs font-black shadow-soft transition active:scale-[.98];
+  }
+
+  .topper-compact {
+    @apply flex items-center gap-3 rounded-[18px] border border-mauri-border bg-white p-3 shadow-soft transition hover:-translate-y-0.5 hover:border-mauri-green/30 hover:shadow-premium dark:border-white/10 dark:bg-white/10;
+  }
+
+  .contact-chip {
+    @apply grid min-h-20 place-items-center gap-1 rounded-[18px] border border-mauri-border bg-white p-3 text-xs font-black text-slate-700 shadow-soft transition hover:-translate-y-0.5 hover:border-mauri-green/30 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-200;
+  }
+
+  .skeleton {
+    @apply rounded-full bg-slate-200 dark:bg-white/10;
+    animation: pulseSoft 1.2s ease-in-out infinite;
   }
 
   .hero-surface {
@@ -92,7 +141,7 @@ svg {
   }
 
   .status-badge {
-    @apply inline-flex w-fit max-w-full items-center gap-2 rounded-full border px-3 py-2 text-sm font-extrabold;
+    @apply inline-flex w-fit max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold;
   }
 
   .status-badge.admis {
@@ -164,6 +213,16 @@ svg {
 
 .animate-card-in {
   animation: slideUp 520ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+@keyframes pulseSoft {
+  0%,
+  100% {
+    opacity: .55;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

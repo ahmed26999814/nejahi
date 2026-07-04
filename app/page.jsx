@@ -215,7 +215,7 @@ export default function HomePage() {
       if (found.length === 1) setSelectedStudent(found[0]);
       else setMatches(found);
 
-      requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
     } catch (error) {
       setError(isMissingSupabaseEnv(error) ? "لم يتم ضبط متغيرات Supabase في بيئة النشر." : "حدث خطأ أثناء الاتصال بقاعدة البيانات.");
     } finally {
@@ -233,33 +233,35 @@ export default function HomePage() {
     setMessage("تم نسخ النتيجة للمشاركة.");
   }
 
+  function copyResultLink(student) {
+    const url = `${window.location.origin}?q=${encodeURIComponent(student.id)}`;
+    navigator.clipboard?.writeText(url);
+    setMessage("تم نسخ رابط النتيجة.");
+  }
+
   function selectStudent(student) {
     const known = students.find((item) => item.id === student.id);
     setMatches([]);
     setSelectedStudent(known || student);
-    requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-mauri-bg text-mauri-ink dark:bg-[#07130d] dark:text-white">
+    <main className="min-h-screen bg-mauri-bg pb-20 text-mauri-ink dark:bg-[#07130d] dark:text-white md:pb-0">
       <Header theme={theme} setTheme={setTheme} />
 
-      <Hero
-        error={error}
-        handleSubmit={handleSubmit}
-        loading={loading}
-        message={message}
-        query={query}
-        setQuery={setQuery}
-      />
+      <section id="home" className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
+        <Hero />
+        <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} query={query} setQuery={setQuery} />
+        <section className="scroll-mt-20" id="resultArea">
+          {loading && <ResultSkeleton />}
+          {!loading && selectedStudent && <ResultCard student={selectedStudent} onCopyLink={copyResultLink} onShare={shareResult} />}
+          {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={selectStudent} />}
+        </section>
+        <StatsStrip stats={stats} loading={dashboardLoading} />
+      </section>
 
-      <section id="dashboard" className="mx-auto grid w-[min(1180px,calc(100%-1.25rem))] gap-7 py-8 md:w-[min(1180px,calc(100%-2.5rem))] md:gap-9 md:py-12">
-        <StatsSection stats={stats} loading={dashboardLoading} />
-        {(selectedStudent || matches.length > 0) && (
-          <section className="scroll-mt-24" id="resultArea">
-            {selectedStudent ? <ResultCard student={selectedStudent} onShare={shareResult} /> : <MatchesList matches={matches} onSelect={selectStudent} />}
-          </section>
-        )}
+      <section id="toppers" className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
         <ToppersSection
           loading={dashboardLoading}
           onSelect={selectStudent}
@@ -269,159 +271,157 @@ export default function HomePage() {
           toppers={toppers}
           tracks={tracks}
         />
-        <WhatsAppBanner />
+      </section>
+
+      <section id="contact" className="app-shell grid gap-4 pb-6 md:pb-10">
         <ContactSection />
-        <DeveloperCard />
       </section>
 
       <Footer />
-      {loading && <Loader />}
+      <BottomNav />
     </main>
   );
 }
 
 function Header({ theme, setTheme }) {
   return (
-    <header className="sticky inset-x-0 top-0 z-40 border-b border-mauri-border/80 bg-white/90 backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/90">
-      <nav className="mx-auto flex h-16 w-[min(1180px,calc(100%-1.25rem))] items-center justify-between gap-3 md:w-[min(1180px,calc(100%-2.5rem))]">
-        <a className="group flex min-w-0 items-center gap-3" href="#">
-          <LogoMark className="h-11 w-11" />
+    <header className="sticky top-0 z-40 border-b border-mauri-border/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
+      <nav className="app-shell flex h-14 items-center justify-between gap-3">
+        <a className="flex min-w-0 items-center gap-2.5" href="#home">
+          <LogoMark className="h-9 w-9 rounded-[14px]" />
           <span className="min-w-0">
-            <strong className="block truncate text-base font-black tracking-tight">MauriResults</strong>
-            <small className="block text-xs font-bold text-slate-500 dark:text-slate-400">منصة نتائج وطنية</small>
+            <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
+            <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">نتائج وطنية سريعة</small>
           </span>
         </a>
-        <div className="flex items-center gap-2">
-          <a className="premium-button hidden h-10 items-center gap-2 px-4 text-sm sm:inline-flex" href="#contact">
-            <MessageIcon />
-            تواصل
-          </a>
-          <button className="icon-button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="تبديل الوضع الليلي">
-            {theme === "dark" ? <MoonIcon /> : <SunIcon />}
-          </button>
+        <div className="hidden items-center gap-2 md:flex">
+          <a className="nav-link" href="#home">الرئيسية</a>
+          <a className="nav-link" href="#resultArea">البحث</a>
+          <a className="nav-link" href="#toppers">الأوائل</a>
+          <a className="nav-link" href="#contact">تواصل</a>
         </div>
+        <button className="icon-button h-9 w-9" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="تبديل الوضع الليلي">
+          {theme === "dark" ? <MoonIcon /> : <SunIcon />}
+        </button>
       </nav>
     </header>
   );
 }
 
-function Hero({ error, handleSubmit, loading, message, query, setQuery }) {
+function Hero() {
   return (
-    <section className="relative isolate grid min-h-[calc(100svh-4rem)] place-items-center px-4 py-8 sm:py-10 md:px-6">
-      <div className="hero-surface" />
-      <div className="mx-auto grid w-full max-w-4xl justify-items-center gap-4 text-center sm:gap-5">
-        <LogoMark className="h-16 w-16 animate-scale-in sm:h-20 sm:w-20" />
-        <div className="animate-slide-up max-w-full rounded-full border border-mauri-gold/35 bg-white/90 px-4 py-2 text-xs font-black text-mauri-green shadow-soft backdrop-blur-xl dark:border-mauri-gold/30 dark:bg-white/10 dark:text-mauri-gold sm:text-sm">
-          منصة نتائج البكالوريا في موريتانيا
-        </div>
-        <h1 className="animate-slide-up max-w-3xl text-balance text-[2.6rem] font-black leading-[1.12] tracking-tight text-slate-950 dark:text-white sm:text-6xl lg:text-7xl">
-          نتائج البكالوريا
-          <span className="block text-mauri-green dark:text-emerald-300">في موريتانيا</span>
-        </h1>
-        <p className="animate-slide-up max-w-xl text-base font-bold leading-7 text-slate-600 dark:text-slate-300 sm:text-xl">
-          ابحث عن نتيجتك خلال ثوان.
-        </p>
-        <SearchPanel error={error} handleSubmit={handleSubmit} loading={loading} message={message} query={query} setQuery={setQuery} />
+    <section className="compact-hero animate-slide-up">
+      <div className="grid gap-2">
+        <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">منصة نتائج البكالوريا في موريتانيا</p>
+        <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">ابحث عن نتيجتك بسرعة</h1>
+        <p className="max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">أدخل رقم المترشح أو الاسم الكامل، وستظهر النتيجة مباشرة تحت مربع البحث.</p>
       </div>
+      <LogoMark className="hidden h-14 w-14 md:grid" />
     </section>
   );
 }
 
 function SearchPanel({ error, handleSubmit, loading, message, query, setQuery }) {
   return (
-    <form onSubmit={handleSubmit} className="animate-slide-up w-full max-w-3xl rounded-[20px] border border-mauri-border bg-white/95 p-2.5 shadow-premium backdrop-blur dark:border-white/10 dark:bg-white/10 sm:p-3">
-      <div className="grid gap-2 md:grid-cols-[1fr_9.5rem]">
-        <label className="relative block">
-          <span className="pointer-events-none absolute inset-y-0 right-5 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
-            <SearchIcon />
-          </span>
-          <input
-            className="h-[60px] w-full rounded-[16px] border border-transparent bg-[#F8FAF8] px-4 pr-14 text-base font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/35 focus:bg-white focus:ring-4 focus:ring-mauri-green/10 dark:bg-white/10 dark:text-white dark:placeholder:text-slate-400"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="أدخل رقم المترشح أو الاسم الكامل"
-          />
-        </label>
-        <button className="ripple-button h-[60px] rounded-[16px] bg-mauri-green px-8 text-base font-black text-white shadow-[0_12px_28px_rgba(21,128,61,.18)] transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-mauri-green/20" type="submit">
-          {loading ? "جاري البحث..." : "بحث"}
-        </button>
-      </div>
-      <div className="grid min-h-8 gap-1 px-2 pt-3 text-center text-sm font-bold md:grid-cols-[1fr_auto] md:text-start">
-        <p className="text-slate-500 dark:text-slate-400">يدعم البحث برقم المترشح أو الاسم الكامل.</p>
-        <p className={error ? "text-red-600 dark:text-red-300" : "text-mauri-green dark:text-mauri-gold"}>{error || message}</p>
-      </div>
+    <form onSubmit={handleSubmit} className="search-card animate-slide-up">
+      <label className="relative block min-w-0 flex-1">
+        <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
+          <SearchIcon />
+        </span>
+        <input
+          className="h-12 w-full rounded-[16px] border border-mauri-border bg-white px-4 pr-12 text-sm font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/50 focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/10 dark:text-white"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="أدخل رقم المترشح أو الاسم الكامل"
+        />
+      </label>
+      <button className="tap-button h-12 rounded-[16px] bg-mauri-green px-5 text-sm font-black text-white shadow-soft transition hover:bg-emerald-700 active:scale-[.98]" type="submit">
+        {loading ? "بحث..." : "بحث"}
+      </button>
+      {(error || message) && (
+        <p className={`col-span-full text-center text-xs font-black md:text-start ${error ? "text-red-600 dark:text-red-300" : "text-mauri-green dark:text-mauri-gold"}`}>{error || message}</p>
+      )}
     </form>
   );
 }
 
-function StatsSection({ stats, loading }) {
+function StatsStrip({ stats, loading }) {
   const cards = [
-    { label: "عدد الطلاب", value: loading ? "..." : stats.total.toLocaleString("ar-MR"), icon: <GraduationIcon /> },
-    { label: "عدد الناجحين", value: loading ? "..." : stats.passed.toLocaleString("ar-MR"), icon: <CheckCircleIcon /> },
-    { label: "أعلى معدل", value: loading ? "..." : stats.highest.toFixed(2), icon: <TrendingIcon /> },
-    { label: "متوسط المعدلات", value: loading ? "..." : stats.average.toFixed(2), icon: <ChartIcon /> },
+    { label: "الطلاب", value: loading ? "" : stats.total.toLocaleString("ar-MR"), icon: <GraduationIcon /> },
+    { label: "الناجحون", value: loading ? "" : stats.passed.toLocaleString("ar-MR"), icon: <CheckCircleIcon /> },
+    { label: "الأعلى", value: loading ? "" : stats.highest.toFixed(2), icon: <TrendingIcon /> },
+    { label: "المتوسط", value: loading ? "" : stats.average.toFixed(2), icon: <ChartIcon /> },
   ];
 
   return (
-    <section className="content-section">
-      <SectionHeader eyebrow="مؤشرات مباشرة" title="الإحصائيات العامة" description="لمحة سريعة عن بيانات النتائج المتاحة على المنصة." />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card, index) => (
-          <StatCard index={index} key={card.label} {...card} />
+    <section className="grid gap-2">
+      <SectionTitle eyebrow="لمحة سريعة" title="الإحصائيات" />
+      <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
+        {cards.map((card) => (
+          <MiniStatCard key={card.label} loading={loading} {...card} />
         ))}
       </div>
     </section>
   );
 }
 
-function StatCard({ icon, index, label, value }) {
+function MiniStatCard({ icon, label, loading, value }) {
   return (
-    <article className="premium-card animate-card-in grid min-h-44 place-items-center gap-3 p-5 text-center" style={{ animationDelay: `${index * 80}ms` }}>
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
-      <strong className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">{value}</strong>
-      <span className="text-sm font-extrabold text-slate-500 dark:text-slate-400">{label}</span>
+    <article className="mini-card min-w-[9rem] snap-start">
+      <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
+      <div className="min-w-0">
+        {loading ? <span className="skeleton mt-1 block h-5 w-16" /> : <strong className="block text-lg font-black text-slate-950 dark:text-white">{value}</strong>}
+        <span className="text-xs font-black text-slate-500 dark:text-slate-400">{label}</span>
+      </div>
     </article>
   );
 }
 
-function ResultCard({ student, onShare }) {
+function ResultCard({ student, onCopyLink, onShare }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const average = parseAverage(student.MOD);
   const status = getOfficialStatus(student.kr);
-  const items = [
-    ["الاسم", student.name, <UserIcon key="user" />],
+  const details = [
     ["رقم المترشح", student.id, <HashIcon key="hash" />],
     ["الشعبة", student.track, <BookIcon key="book" />],
-    ["المعدل", average.toFixed(2), <ChartIcon key="chart" />],
-    ["النتيجة", <StatusBadge key="status" status={status} />, <CheckCircleIcon key="check" />],
     ["الرتبة", student.rank ? `#${student.rank}` : "غير متوفرة", <AwardIcon key="award" />],
     ["المؤسسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />],
     ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />],
   ];
 
   return (
-    <article className="premium-card animate-rise overflow-hidden">
-      <div className="grid gap-5 border-b border-mauri-border bg-white p-5 dark:border-white/10 dark:bg-white/5 md:grid-cols-[1fr_auto] md:items-center md:p-7">
-        <div>
-          <p className="text-sm font-black text-mauri-green dark:text-mauri-gold">بطاقة النتيجة</p>
-          <h2 className="mt-2 text-balance text-3xl font-black leading-tight text-slate-950 dark:text-white md:text-4xl">{student.name}</h2>
-          <p className="mt-2 font-bold text-slate-500 dark:text-slate-400">{getAverageMessage(average)}</p>
+    <article className="result-card animate-slide-up">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">النتيجة</p>
+          <h2 className="mt-1 line-clamp-2 text-lg font-black leading-snug text-slate-950 dark:text-white">{student.name}</h2>
+          <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.track}</p>
         </div>
-        <div className="rounded-[20px] border border-mauri-gold/35 bg-mauri-gold/10 p-5 text-center">
-          <span className="text-sm font-black text-slate-500 dark:text-slate-400">المعدل العام</span>
-          <strong className="mt-1 block text-5xl font-black text-mauri-green dark:text-mauri-gold">{average.toFixed(2)}</strong>
+        <div className="rounded-[18px] bg-mauri-green/10 px-3 py-2 text-center">
+          <span className="block text-[11px] font-black text-slate-500 dark:text-slate-400">المعدل</span>
+          <strong className="block text-2xl font-black text-mauri-green dark:text-mauri-gold">{average.toFixed(2)}</strong>
         </div>
       </div>
-      <div className="grid gap-4 p-4 md:p-6">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {items.map(([label, value, icon]) => (
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <StatusBadge status={status} />
+        <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 dark:bg-white/10 dark:text-slate-300">{getAverageMessage(average)}</span>
+      </div>
+
+      {detailsOpen && (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {details.map(([label, value, icon]) => (
             <InfoTile icon={icon} label={label} value={value} key={label} />
           ))}
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <ActionButton icon={<DownloadIcon />} label="تحميل PDF" onClick={() => window.print()} />
-          <ActionButton icon={<PrinterIcon />} label="طباعة" onClick={() => window.print()} variant="light" />
-          <ActionButton icon={<ShareIcon />} label="مشاركة" onClick={() => onShare(student)} />
-        </div>
+      )}
+
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <ActionButton icon={<InfoIcon />} label={detailsOpen ? "إخفاء" : "التفاصيل"} onClick={() => setDetailsOpen((value) => !value)} variant="light" />
+        <ActionButton icon={<ShareIcon />} label="مشاركة" onClick={() => onShare(student)} />
+        <ActionButton icon={<DownloadIcon />} label="PDF" onClick={() => window.print()} variant="light" />
+        <ActionButton icon={<PrinterIcon />} label="طباعة" onClick={() => window.print()} variant="light" />
+        <ActionButton icon={<LinkIcon />} label="نسخ الرابط" onClick={() => onCopyLink(student)} variant="light" />
       </div>
     </article>
   );
@@ -429,11 +429,11 @@ function ResultCard({ student, onShare }) {
 
 function InfoTile({ icon, label, value }) {
   return (
-    <div className="soft-tile grid min-h-28 grid-cols-[auto_1fr] items-center gap-3 p-4">
-      <span className="grid h-10 w-10 place-items-center rounded-2xl bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
+    <div className="info-tile">
+      <span className="grid h-8 w-8 place-items-center rounded-[12px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
       <div className="min-w-0">
-        <span className="text-sm font-extrabold text-slate-500 dark:text-slate-400">{label}</span>
-        <strong className="mt-1 block overflow-wrap-anywhere font-black text-slate-950 dark:text-white">{value}</strong>
+        <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{label}</span>
+        <strong className="block overflow-wrap-anywhere text-sm font-black text-slate-950 dark:text-white">{value}</strong>
       </div>
     </div>
   );
@@ -450,15 +450,16 @@ function StatusBadge({ status }) {
 
 function MatchesList({ matches, onSelect }) {
   return (
-    <section className="premium-card animate-rise overflow-hidden">
-      <div className="border-b border-mauri-border p-5 dark:border-white/10">
-        <SectionHeader eyebrow="نتائج البحث" title="اختر المترشح المطلوب" description="ظهرت عدة نتائج مطابقة لعملية البحث." />
-      </div>
-      <div className="grid gap-3 p-4">
+    <section className="result-card animate-slide-up">
+      <SectionTitle eyebrow="نتائج البحث" title="اختر المترشح" />
+      <div className="mt-3 grid gap-2">
         {matches.map((student) => (
-          <button className="soft-tile p-4 text-start transition hover:-translate-y-0.5 hover:border-mauri-green/35 hover:shadow-soft" key={student.id} onClick={() => onSelect(student)} type="button">
-            <strong className="block font-black text-slate-950 dark:text-white">{student.name}</strong>
-            <span className="mt-1 block text-sm font-bold text-slate-500 dark:text-slate-400">رقم {student.id} - {student.track} - معدل {parseAverage(student.MOD).toFixed(2)}</span>
+          <button className="match-row" key={student.id} onClick={() => onSelect(student)} type="button">
+            <span className="min-w-0 text-start">
+              <strong className="line-clamp-1 block font-black text-slate-950 dark:text-white">{student.name}</strong>
+              <span className="mt-1 block text-xs font-bold text-slate-500 dark:text-slate-400">رقم {student.id} - {student.track}</span>
+            </span>
+            <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-sm font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</span>
           </button>
         ))}
       </div>
@@ -466,25 +467,50 @@ function MatchesList({ matches, onSelect }) {
   );
 }
 
+function ResultSkeleton() {
+  return (
+    <div className="result-card animate-slide-up">
+      <div className="flex justify-between gap-4">
+        <div className="grid flex-1 gap-2">
+          <span className="skeleton h-3 w-20" />
+          <span className="skeleton h-5 w-3/4" />
+          <span className="skeleton h-3 w-32" />
+        </div>
+        <span className="skeleton h-16 w-20 rounded-[18px]" />
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <span className="skeleton h-11" />
+        <span className="skeleton h-11" />
+        <span className="skeleton h-11" />
+        <span className="skeleton h-11" />
+      </div>
+    </div>
+  );
+}
+
 function ToppersSection({ tracks, selectedTrack, setSelectedTrack, stats, toppers, loading, onSelect }) {
   return (
-    <section className="content-section">
-      <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:items-end">
-        <SectionHeader eyebrow="لوحة المتفوقين" title="أوائل الشعب" description="أفضل ثلاث نتائج حسب الشعبة المختارة." />
+    <section className="grid gap-3">
+      <div className="flex items-end justify-between gap-3">
+        <SectionTitle eyebrow="الأوائل" title="أوائل الشعب" />
         <TrackSelect selectedTrack={selectedTrack} setSelectedTrack={setSelectedTrack} tracks={tracks} />
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2">
         <MiniMetric label="الطلاب" value={loading ? "..." : stats.total.toLocaleString("ar-MR")} />
         <MiniMetric label="الناجحون" value={loading ? "..." : stats.passed.toLocaleString("ar-MR")} />
         <MiniMetric label="الأعلى" value={loading ? "..." : stats.highest.toFixed(2)} />
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-2">
         {loading ? (
-          <p className="font-bold text-slate-500 dark:text-slate-400">جاري تحميل أوائل الشعب...</p>
+          <>
+            <TopperSkeleton />
+            <TopperSkeleton />
+            <TopperSkeleton />
+          </>
         ) : toppers.length ? (
           toppers.map((student, index) => <TopperCard student={student} index={index} onSelect={onSelect} key={student.id} />)
         ) : (
-          <p className="font-bold text-slate-500 dark:text-slate-400">لا توجد بيانات كافية لهذه الشعبة.</p>
+          <p className="rounded-[18px] border border-mauri-border bg-white p-4 text-sm font-bold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400">لا توجد بيانات كافية لهذه الشعبة.</p>
         )}
       </div>
     </section>
@@ -493,16 +519,13 @@ function ToppersSection({ tracks, selectedTrack, setSelectedTrack, stats, topper
 
 function TrackSelect({ tracks, selectedTrack, setSelectedTrack }) {
   return (
-    <label className="relative block">
-      <span className="mb-2 block text-sm font-black text-slate-500 dark:text-slate-400">اختيار الشعبة</span>
-      <span className="pointer-events-none absolute bottom-0 right-4 grid h-12 place-items-center text-mauri-green dark:text-mauri-gold">
-        <BookIcon />
-      </span>
-      <select className="h-12 w-full appearance-none rounded-[16px] border border-mauri-border bg-white px-12 font-black text-slate-950 outline-none shadow-soft transition focus:border-mauri-green focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/10 dark:text-white" id="trackSelect" value={selectedTrack} onChange={(event) => setSelectedTrack(event.target.value)}>
+    <label className="relative block w-40 shrink-0">
+      <span className="sr-only">اختيار الشعبة</span>
+      <select className="h-10 w-full appearance-none rounded-[14px] border border-mauri-border bg-white px-3 pl-9 text-xs font-black text-slate-950 outline-none shadow-soft focus:border-mauri-green focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/10 dark:text-white" value={selectedTrack} onChange={(event) => setSelectedTrack(event.target.value)}>
         <option value="all">كل الشعب</option>
         {tracks.map((track) => <option value={track} key={track}>{track}</option>)}
       </select>
-      <span className="pointer-events-none absolute bottom-0 left-4 grid h-12 place-items-center text-slate-400">
+      <span className="pointer-events-none absolute bottom-0 left-3 grid h-10 place-items-center text-slate-400">
         <ChevronDownIcon />
       </span>
     </label>
@@ -511,88 +534,67 @@ function TrackSelect({ tracks, selectedTrack, setSelectedTrack }) {
 
 function MiniMetric({ label, value }) {
   return (
-    <div className="soft-tile min-h-20 p-4 text-center">
-      <span className="text-xs font-black text-slate-500 dark:text-slate-400">{label}</span>
-      <strong className="mt-1 block text-xl font-black text-slate-950 dark:text-white">{value}</strong>
+    <div className="rounded-[16px] border border-mauri-border bg-white p-3 text-center shadow-soft dark:border-white/10 dark:bg-white/10">
+      <strong className="block text-sm font-black text-slate-950 dark:text-white">{value}</strong>
+      <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{label}</span>
     </div>
   );
 }
 
 function TopperCard({ student, index, onSelect }) {
   const medals = [
-    { name: "المركز الأول", className: "from-[#fff7d6] to-white border-[#D4AF37]/45 text-[#9a6b00]", icon: <GoldMedalIcon /> },
-    { name: "المركز الثاني", className: "from-[#f4f6f8] to-white border-slate-300 text-slate-600", icon: <SilverMedalIcon /> },
-    { name: "المركز الثالث", className: "from-[#fff0e5] to-white border-[#CD7F32]/35 text-[#9a4f18]", icon: <BronzeMedalIcon /> },
+    { name: "الأول", className: "bg-[#fff7d6] text-[#8a6500]", icon: <GoldMedalIcon /> },
+    { name: "الثاني", className: "bg-slate-100 text-slate-600", icon: <SilverMedalIcon /> },
+    { name: "الثالث", className: "bg-[#fff0e5] text-[#9a4f18]", icon: <BronzeMedalIcon /> },
   ];
   const medal = medals[index] || medals[0];
 
   return (
-    <article className={`topper-card bg-gradient-to-br ${medal.className}`}>
-      <div className="flex items-center justify-between gap-3">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/80 shadow-soft">{medal.icon}</span>
-        <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-black">{medal.name}</span>
-      </div>
-      <div>
-        <span className="text-sm font-black text-slate-500">رقم الترتيب</span>
-        <strong className="mt-1 block text-4xl font-black">#{index + 1}</strong>
-      </div>
-      <div>
-        <h3 className="text-balance text-xl font-black text-slate-950">{student.name}</h3>
-        <p className="mt-2 text-sm font-bold text-slate-600">{student.track}</p>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <span className="text-xs font-black text-slate-500">المعدل</span>
-          <strong className="block text-2xl font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</strong>
+    <article className="topper-compact">
+      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-[14px] ${medal.className}`}>{medal.icon}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <strong className="line-clamp-1 text-sm font-black text-slate-950 dark:text-white">{student.name}</strong>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500 dark:bg-white/10 dark:text-slate-300">{medal.name}</span>
         </div>
-        <button className="ripple-button rounded-[14px] bg-mauri-green px-4 py-3 text-sm font-black text-white shadow-[0_12px_24px_rgba(21,128,61,.18)] transition hover:-translate-y-0.5 hover:bg-emerald-700" onClick={() => onSelect(student)} type="button">
-          عرض النتيجة
-        </button>
+        <p className="mt-1 line-clamp-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.track}</p>
+      </div>
+      <div className="text-center">
+        <strong className="block text-lg font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</strong>
+        <button className="text-[11px] font-black text-slate-500 underline-offset-4 hover:text-mauri-green hover:underline" onClick={() => onSelect(student)} type="button">عرض</button>
       </div>
     </article>
   );
 }
 
-function WhatsAppBanner() {
+function TopperSkeleton() {
   return (
-    <section className="overflow-hidden rounded-[20px] border border-mauri-green/15 bg-emerald-50 p-5 shadow-soft dark:border-emerald-300/10 dark:bg-emerald-300/10 md:p-6">
-      <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
-        <div className="flex items-start gap-4">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-mauri-green shadow-soft dark:bg-white/10 dark:text-emerald-300">
-            <WhatsAppIcon />
-          </span>
-          <div>
-            <h2 className="text-2xl font-black text-slate-950 dark:text-white">مجتمع MauriResults</h2>
-            <p className="mt-2 max-w-2xl font-bold leading-7 text-slate-600 dark:text-slate-300">
-              انضم إلى مجتمع MauriResults على واتساب للحصول على آخر التحديثات وروابط النتائج.
-            </p>
-          </div>
-        </div>
-        <a className="ripple-button inline-flex min-h-12 items-center justify-center rounded-[16px] bg-mauri-green px-6 font-black text-white shadow-[0_14px_28px_rgba(21,128,61,.18)] transition hover:-translate-y-0.5 hover:bg-emerald-700" href="https://wa.me/22200000000" target="_blank" rel="noopener">
-          انضم الآن
-        </a>
+    <div className="topper-compact">
+      <span className="skeleton h-10 w-10 rounded-[14px]" />
+      <div className="grid flex-1 gap-2">
+        <span className="skeleton h-4 w-2/3" />
+        <span className="skeleton h-3 w-1/2" />
       </div>
-    </section>
+      <span className="skeleton h-8 w-12" />
+    </div>
   );
 }
 
 function ContactSection() {
   const links = [
-    { label: "Facebook", value: "تابع الصفحة", href: "https://www.facebook.com/ahmed.abde.mady", icon: <FacebookIcon /> },
-    { label: "WhatsApp", value: "+222 44 88 18 91", href: "https://wa.me/22244881891", icon: <WhatsAppIcon /> },
-    { label: "Email", value: "contact@mauriresults.mr", href: "mailto:contact@mauriresults.mr", icon: <MailIcon /> },
-    { label: "Telegram", value: "قناة التحديثات", href: "https://t.me/mauriresults", icon: <TelegramIcon /> },
+    { label: "واتساب", href: "https://wa.me/22244881891", icon: <WhatsAppIcon /> },
+    { label: "فيسبوك", href: "https://www.facebook.com/ahmed.abde.mady", icon: <FacebookIcon /> },
+    { label: "تيليغرام", href: "https://t.me/mauriresults", icon: <TelegramIcon /> },
   ];
 
   return (
-    <section className="content-section" id="contact">
-      <SectionHeader eyebrow="تواصل معنا" title="قنوات التواصل" description="روابط سريعة للاستفسارات والتحديثات الرسمية." />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <section className="grid gap-3">
+      <SectionTitle eyebrow="تواصل" title="قنوات سريعة" />
+      <div className="grid grid-cols-3 gap-2">
         {links.map((link) => (
-          <a className="premium-card group grid min-h-40 gap-3 p-5 transition hover:-translate-y-1 hover:border-mauri-green/30 hover:shadow-premium" href={link.href} key={link.label} target="_blank" rel="noopener">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-mauri-green/10 text-mauri-green transition group-hover:scale-105 dark:bg-emerald-300/10 dark:text-emerald-300">{link.icon}</span>
-            <strong className="text-xl font-black text-slate-950 dark:text-white">{link.label}</strong>
-            <span className="text-sm font-bold text-slate-500 dark:text-slate-400">{link.value}</span>
+          <a className="contact-chip" href={link.href} key={link.label} target="_blank" rel="noopener">
+            {link.icon}
+            <span>{link.label}</span>
           </a>
         ))}
       </div>
@@ -600,95 +602,67 @@ function ContactSection() {
   );
 }
 
-function DeveloperCard() {
-  return (
-    <section className="premium-card overflow-hidden">
-      <div className="grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center md:p-6">
-        <div className="flex min-w-0 items-center gap-4">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-[20px] bg-mauri-green text-white shadow-soft">
-            <UserIcon />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-extrabold text-mauri-green dark:text-mauri-gold">مبرمج الموقع</p>
-            <h2 className="mt-1 overflow-wrap-anywhere text-2xl font-black tracking-tight text-slate-950 dark:text-white">Ahmed abdellahi mady</h2>
-          </div>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 md:min-w-[22rem]">
-          <a className="soft-tile flex min-h-14 items-center justify-center gap-2 px-4 text-center font-black transition hover:-translate-y-0.5 hover:shadow-soft" href="https://www.facebook.com/ahmed.abde.mady" target="_blank" rel="noopener">
-            <FacebookIcon />
-            حسابي فيسبوك
-          </a>
-          <a className="ripple-button flex min-h-14 items-center justify-center gap-2 rounded-[16px] bg-mauri-green px-4 text-center font-black text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-emerald-700" href="https://wa.me/22244881891" target="_blank" rel="noopener">
-            <WhatsAppIcon />
-            واتسابي
-          </a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function Footer() {
-  const links = ["الرئيسية", "سياسة الخصوصية", "تواصل معنا", "حول الموقع"];
-
   return (
-    <footer className="border-t border-mauri-border bg-white/80 py-8 dark:border-white/10 dark:bg-white/5">
-      <div className="mx-auto grid w-[min(1180px,calc(100%-1.25rem))] gap-6 md:w-[min(1180px,calc(100%-2.5rem))] lg:grid-cols-[1fr_auto] lg:items-center">
-        <div className="flex items-center gap-4">
-          <LogoMark className="h-12 w-12" />
+    <footer className="border-t border-mauri-border bg-white py-5 dark:border-white/10 dark:bg-white/5">
+      <div className="app-shell grid gap-3 text-center md:text-start">
+        <div className="flex items-center justify-center gap-3 md:justify-start">
+          <LogoMark className="h-10 w-10 rounded-[14px]" />
           <div>
-            <strong className="text-xl font-black text-slate-950 dark:text-white">MauriResults</strong>
-            <p className="mt-1 max-w-xl text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">منصة موريتانية حديثة وسريعة لعرض نتائج البكالوريا والبريفية والكونكور.</p>
+            <strong className="block text-base font-black text-slate-950 dark:text-white">MauriResults</strong>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">منصة موريتانية سريعة لعرض النتائج.</span>
           </div>
         </div>
-        <nav className="flex flex-wrap gap-3 text-sm font-black text-slate-600 dark:text-slate-300">
-          {links.map((link) => (
-            <a className="rounded-full px-3 py-2 transition hover:bg-mauri-green/10 hover:text-mauri-green" href={link === "الرئيسية" ? "#" : "#contact"} key={link}>{link}</a>
-          ))}
-        </nav>
-        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 lg:col-span-2">جميع الحقوق محفوظة © MauriResults.</p>
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">مبرمج الموقع: Ahmed abdellahi mady - جميع الحقوق محفوظة © MauriResults.</p>
       </div>
     </footer>
   );
 }
 
-function Loader() {
+function BottomNav() {
+  const items = [
+    { label: "الرئيسية", href: "#home", icon: <HomeIcon /> },
+    { label: "البحث", href: "#resultArea", icon: <SearchIcon /> },
+    { label: "الأوائل", href: "#toppers", icon: <AwardIcon /> },
+    { label: "تواصل", href: "#contact", icon: <MessageIcon /> },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 backdrop-blur-xl">
-      <div className="premium-card w-[min(20rem,calc(100%-2rem))] p-6 text-center font-black">
-        <span className="mx-auto mb-3 block h-11 w-11 animate-spin rounded-full border-4 border-slate-200 border-t-mauri-green dark:border-white/20 dark:border-t-mauri-gold" />
-        جاري عرض النتائج...
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-mauri-border bg-white/95 px-3 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95 md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+        {items.map((item) => (
+          <a className="grid justify-items-center gap-1 rounded-[14px] px-2 py-1.5 text-[11px] font-black text-slate-500 transition active:scale-95 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300" href={item.href} key={item.label}>
+            {item.icon}
+            <span>{item.label}</span>
+          </a>
+        ))}
       </div>
-    </div>
+    </nav>
   );
 }
 
-function SectionHeader({ description, eyebrow, title }) {
+function SectionTitle({ eyebrow, title }) {
   return (
     <div>
-      <p className="text-sm font-black text-mauri-green dark:text-mauri-gold">{eyebrow}</p>
-      <h2 className="mt-1 text-3xl font-black tracking-tight text-slate-950 dark:text-white">{title}</h2>
-      {description && <p className="mt-2 max-w-2xl font-bold leading-7 text-slate-500 dark:text-slate-400">{description}</p>}
+      <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{eyebrow}</p>
+      <h2 className="text-lg font-black tracking-tight text-slate-950 dark:text-white">{title}</h2>
     </div>
   );
 }
 
 function ActionButton({ icon, label, onClick, variant = "solid" }) {
-  const className = variant === "solid"
-    ? "ripple-button min-h-14 rounded-[16px] bg-mauri-green px-4 font-black text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-emerald-700"
-    : "ripple-button soft-tile min-h-14 px-4 font-black transition hover:-translate-y-0.5 hover:shadow-soft";
-
+  const className = variant === "solid" ? "action-button bg-mauri-green text-white hover:bg-emerald-700" : "action-button border border-mauri-border bg-white text-slate-700 hover:border-mauri-green/40 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100";
   return (
-    <button className={`${className} flex items-center justify-center gap-2`} onClick={onClick} type="button">
+    <button className={className} onClick={onClick} type="button">
       {icon}
       {label}
     </button>
   );
 }
 
-function LogoMark({ className = "h-12 w-12" }) {
+function LogoMark({ className = "h-10 w-10" }) {
   return (
-    <span className={`${className} grid shrink-0 place-items-center rounded-[20px] border border-mauri-green/10 bg-white text-sm font-black text-mauri-green shadow-soft dark:border-white/10 dark:bg-white/10 dark:text-emerald-300`}>
+    <span className={`${className} grid shrink-0 place-items-center border border-mauri-green/10 bg-white text-xs font-black text-mauri-green shadow-soft dark:border-white/10 dark:bg-white/10 dark:text-emerald-300`}>
       MR
     </span>
   );
@@ -719,8 +693,9 @@ function DownloadIcon() { return <svg viewBox="0 0 24 24"><path d="M12 3v12" /><
 function PrinterIcon() { return <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v7H6Z" /></svg>; }
 function ShareIcon() { return <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-4" /><path d="m8.6 13.5 6.8 4" /></svg>; }
 function ChevronDownIcon() { return <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>; }
-function MailIcon() { return <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4Z" /><path d="m4 7 8 6 8-6" /></svg>; }
 function TelegramIcon() { return <svg viewBox="0 0 24 24"><path d="M21 4 3 11l7 2 2 7 9-16Z" /><path d="m10 13 4 4" /></svg>; }
+function LinkIcon() { return <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1" /></svg>; }
+function HomeIcon() { return <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>; }
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
 function SilverMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 12a2 2 0 0 1 4 0c0 2-4 2-4 4h4" /></svg>; }
 function BronzeMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 11h4l-2 2a2 2 0 1 1-2 2" /></svg>; }
