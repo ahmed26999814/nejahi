@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MauriResults منصة موريتانية سريعة لعرض نتائج البكالوريا، البريفيه والكونكور.">
+  <meta name="keywords" content="نتائج البكالوريا موريتانيا, Bac Mauritanie, MauriResults, نتائج البريفيه موريتانيا, نتائج الكونكور موريتانيا, Résultats BAC Mauritanie">
+  <meta name="theme-color" content="#006b3f">
+  <meta property="og:title" content="MauriResults | نتائج البكالوريا في موريتانيا">
+  <meta property="og:description" content="ابحث عن نتيجتك خلال ثوان في منصة موريتانية حديثة وسريعة.">
+  <meta property="og:type" content="website">
+  <title>MauriResults | نتائج البكالوريا في موريتانيا</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    window.tailwind = {
+      config: {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              arabic: ["IBM Plex Sans Arabic", "Cairo", "Tahoma", "sans-serif"],
+            },
+            colors: {
+              mauri: {
+                green: "#006b3f",
+                gold: "#d6a11d",
+                ink: "#07130d",
+              },
+            },
+            boxShadow: {
+              glow: "0 24px 80px rgba(0, 107, 63, .18)",
+              gold: "0 18px 55px rgba(214, 161, 29, .18)",
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="script/supabase-config.js" defer></script>
+  <script src="script/main.js" defer></script>
+</head>
+<body class="font-arabic bg-[#f7faf6] text-[#07130d] antialiased dark:bg-[#07130d] dark:text-white">
+  <a class="skip-link" href="#searchInput">تجاوز إلى البحث</a>
+
+  <header class="sticky top-0 z-40 border-b border-black/5 bg-white/70 backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/70">
+    <nav class="mx-auto flex h-16 w-[min(1120px,calc(100%-1rem))] items-center justify-between gap-3 md:w-[min(1120px,calc(100%-2rem))]" aria-label="القائمة الرئيسية">
+      <a class="flex min-w-0 items-center gap-3" href="#" aria-label="MauriResults">
+        <span class="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-mauri-green via-emerald-600 to-mauri-gold text-sm font-black text-white shadow-glow">MR</span>
+        <span class="min-w-0">
+          <strong class="block truncate text-base font-extrabold tracking-tight">MauriResults</strong>
+          <small class="block text-xs font-semibold text-slate-500 dark:text-slate-400">نتائج وطنية فورية</small>
+        </span>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <a class="hidden h-10 items-center gap-2 rounded-full border border-black/10 bg-white/75 px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/10 dark:text-slate-100 sm:inline-flex" id="programmerLink" href="https://wa.me/22200000000" target="_blank" rel="noopener">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20 11.5a8.4 8.4 0 0 1-12.5 7.4L3 20l1.2-4.3A8.5 8.5 0 1 1 20 11.5Z"/><path d="M9 8.5c.2 2 1.6 4.2 4.8 5.8l1.4-1.1 2.2.6c-.2 1.7-1.2 2.6-3 2.5-4.1-.3-7.4-3.7-7.7-7.6C6.6 7 7.5 6 9.2 5.8l.7 2.1-.9.6Z"/></svg>
+          </span>
+          تواصل
+        </a>
+        <button class="theme-toggle grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white/75 text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/10 dark:text-slate-100" id="themeToggle" type="button" aria-label="تبديل الوضع الليلي">
+          <span class="icon sun" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 4V2M12 22v-2M4.9 4.9 3.5 3.5M20.5 20.5l-1.4-1.4M4 12H2M22 12h-2M4.9 19.1l-1.4 1.4M20.5 3.5l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg>
+          </span>
+          <span class="icon moon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 7 7 0 1 0 20 15.5Z"/></svg>
+          </span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="relative z-10">
+    <section class="mx-auto grid w-[min(1120px,calc(100%-1rem))] gap-7 pb-8 pt-8 text-center md:w-[min(1120px,calc(100%-2rem))] md:pt-12" aria-labelledby="pageTitle">
+      <div class="mx-auto grid max-w-4xl gap-4">
+        <div class="mx-auto grid h-20 w-20 place-items-center rounded-[2rem] border border-white/70 bg-white/65 text-xl font-black text-mauri-green shadow-glow backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 dark:text-emerald-300">MR</div>
+        <p class="mx-auto w-fit rounded-full border border-mauri-gold/30 bg-mauri-gold/10 px-4 py-1 text-sm font-extrabold text-mauri-green dark:text-mauri-gold">MauriResults</p>
+        <h1 id="pageTitle" class="text-balance text-4xl font-extrabold leading-tight tracking-tight text-slate-950 dark:text-white sm:text-5xl lg:text-7xl">نتائج البكالوريا في موريتانيا</h1>
+        <p class="text-lg font-semibold text-slate-600 dark:text-slate-300 sm:text-2xl">ابحث عن نتيجتك خلال ثوانٍ.</p>
+      </div>
+
+      <form class="search-panel mx-auto w-full max-w-3xl rounded-[2rem] border border-white/70 bg-white/75 p-3 shadow-glow backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 sm:p-4" id="searchForm" novalidate>
+        <label class="sr-only" for="searchInput">رقم المترشح أو الاسم</label>
+        <div class="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <div class="relative">
+            <span class="pointer-events-none absolute inset-y-0 right-5 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+            </span>
+            <input class="h-16 w-full rounded-[1.45rem] border border-black/10 bg-white pr-14 text-lg font-bold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-mauri-green focus:ring-4 focus:ring-emerald-600/15 dark:border-white/10 dark:bg-white/10 dark:text-white" id="searchInput" name="numero" autocomplete="off" placeholder="أدخل الرقم أو الاسم الكامل" aria-describedby="searchHelp">
+          </div>
+          <button class="primary-button h-16 rounded-[1.45rem] bg-gradient-to-l from-mauri-green to-emerald-600 px-8 text-lg font-extrabold text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:shadow-glow" type="submit">
+            بحث
+          </button>
+        </div>
+        <div class="mt-3 flex flex-col items-center justify-between gap-2 px-2 text-sm sm:flex-row">
+          <p id="searchHelp" class="text-slate-500 dark:text-slate-400">يدعم البحث برقم المترشح أو الاسم الكامل.</p>
+          <p class="form-message font-bold" id="formMessage" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </section>
+
+    <section class="mx-auto grid w-[min(1120px,calc(100%-1rem))] gap-6 pb-12 md:w-[min(1120px,calc(100%-2rem))]" aria-label="لوحة النتائج">
+      <section class="stats-section" aria-labelledby="statsTitle">
+        <div class="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p class="text-sm font-extrabold text-mauri-green dark:text-mauri-gold">مؤشرات مباشرة</p>
+            <h2 id="statsTitle" class="text-2xl font-extrabold tracking-tight">الإحصائيات العامة</h2>
+          </div>
+        </div>
+        <div class="stats-grid" id="globalStats"></div>
+      </section>
+
+      <section class="result-area" id="resultArea" aria-live="polite">
+        <div class="empty-state">
+          <span class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M8 4h8l4 4v12H4V4h4Z"/><path d="M16 4v4h4M8 13h8M8 17h5"/></svg>
+          </span>
+          <h2>بطاقة النتيجة ستظهر هنا</h2>
+          <p>ابحث برقم المترشح أو الاسم لعرض النتيجة بتصميم واضح وقابل للمشاركة.</p>
+        </div>
+      </section>
+
+      <section class="panel toppers-panel" aria-label="أوائل الشعب">
+        <div class="section-title-row">
+          <div>
+            <p>لوحة المتفوقين</p>
+            <h2>أوائل الشعب</h2>
+          </div>
+          <div class="track-picker">
+            <label class="select-label" for="trackSelect">اختر الشعبة</label>
+            <select id="trackSelect"></select>
+          </div>
+        </div>
+        <div class="track-stats" id="trackStats"></div>
+        <div class="toppers-list" id="toppersList"></div>
+      </section>
+
+      <section class="panel whatsapp-panel">
+        <div class="flex items-center gap-3">
+          <span class="empty-icon !h-12 !w-12" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20 11.5a8.4 8.4 0 0 1-12.5 7.4L3 20l1.2-4.3A8.5 8.5 0 1 1 20 11.5Z"/><path d="M9 8.5c.2 2 1.6 4.2 4.8 5.8l1.4-1.1 2.2.6c-.2 1.7-1.2 2.6-3 2.5-4.1-.3-7.4-3.7-7.7-7.6C6.6 7 7.5 6 9.2 5.8l.7 2.1-.9.6Z"/></svg>
+          </span>
+          <div>
+            <h2 class="text-xl font-extrabold">مجموعة MauriResults</h2>
+            <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">آخر التحديثات وروابط النتائج.</p>
+          </div>
+        </div>
+        <a class="secondary-button" id="groupLink" href="https://wa.me/22200000000" target="_blank" rel="noopener">فتح مجموعة واتساب</a>
+      </section>
+    </section>
+  </main>
+
+  <footer class="relative z-10 mx-auto w-[min(1120px,calc(100%-1rem))] pb-6 md:w-[min(1120px,calc(100%-2rem))]">
+    <div class="rounded-[2rem] border border-black/5 bg-white/60 p-5 text-center shadow-sm backdrop-blur-2xl dark:border-white/10 dark:bg-white/10 md:flex md:items-center md:justify-between md:text-start">
+      <strong class="text-lg font-extrabold text-mauri-green dark:text-mauri-gold">MauriResults</strong>
+      <span class="mt-1 block text-sm font-semibold text-slate-500 dark:text-slate-400 md:mt-0">منصة موريتانية سريعة لعرض نتائج البكالوريا، البريفيه والكونكور.</span>
+    </div>
+  </footer>
+
+  <div class="loader" id="loader" role="status" aria-live="assertive" hidden>
+    <div class="loader-box">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>جاري عرض النتائج...</p>
+    </div>
+  </div>
+</body>
+</html>

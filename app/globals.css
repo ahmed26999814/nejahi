@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #f8faf8;
+}
+
+svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@layer components {
+  .content-section {
+    @apply grid gap-5;
+  }
+
+  .premium-card {
+    @apply rounded-[20px] border border-mauri-border bg-mauri-card shadow-soft dark:border-white/10 dark:bg-white/10;
+  }
+
+  .soft-tile {
+    @apply rounded-[20px] border border-mauri-border bg-white shadow-none dark:border-white/10 dark:bg-white/10;
+  }
+
+  .icon-button {
+    @apply grid h-10 w-10 place-items-center rounded-full border border-mauri-border bg-white text-slate-700 shadow-soft transition hover:-translate-y-0.5 hover:border-mauri-green/30 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100;
+  }
+
+  .premium-button {
+    @apply rounded-full border border-mauri-border bg-white font-black text-slate-700 shadow-soft transition hover:-translate-y-0.5 hover:border-mauri-green/30 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100;
+  }
+
+  .hero-surface {
+    @apply pointer-events-none absolute inset-0 -z-10;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, .86), rgba(248, 250, 248, .96)),
+      radial-gradient(circle at 50% 22%, rgba(21, 128, 61, .12), transparent 34%),
+      radial-gradient(circle at 18% 78%, rgba(212, 175, 55, .11), transparent 26%);
+  }
+
+  .dark .hero-surface {
+    background:
+      linear-gradient(180deg, rgba(7, 19, 13, .82), rgba(7, 19, 13, .98)),
+      radial-gradient(circle at 50% 22%, rgba(16, 185, 129, .18), transparent 34%),
+      radial-gradient(circle at 18% 78%, rgba(212, 175, 55, .12), transparent 26%);
+  }
+
+  .topper-card {
+    @apply grid min-h-[22rem] content-between gap-5 rounded-[20px] border p-5 shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-premium;
+  }
+
+  .ripple-button {
+    @apply relative isolate overflow-hidden;
+  }
+
+  .ripple-button::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, .34), transparent 42%);
+    transform: scale(.35);
+  }
+
+  .ripple-button:active::after {
+    @apply opacity-100 duration-75;
+    transform: scale(1.15);
+  }
+
+  .status-badge {
+    @apply inline-flex w-fit max-w-full items-center gap-2 rounded-full border px-3 py-2 text-sm font-extrabold;
+  }
+
+  .status-badge.admis {
+    @apply border-green-600/30 bg-green-600/10 text-green-700 dark:text-green-300;
+  }
+
+  .status-badge.sessionnaire {
+    @apply border-mauri-gold/40 bg-mauri-gold/15 text-yellow-700 dark:text-yellow-300;
+  }
+
+  .status-badge.ajourne {
+    @apply border-red-600/30 bg-red-600/10 text-red-600 dark:text-red-300;
+  }
+
+  .status-badge.absent,
+  .status-badge.unknown {
+    @apply border-slate-400/30 bg-slate-400/10 text-slate-600 dark:text-slate-300;
+  }
+}
+
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: riseIn 420ms ease both;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 620ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 520ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.animate-card-in {
+  animation: slideUp 520ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
