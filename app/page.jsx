@@ -40,18 +40,6 @@ function getOfficialStatus(value) {
   return { label: value ? cleanText(value) : "غير محددة", icon: <InfoIcon />, className: "unknown" };
 }
 
-function getAverageMessage(average) {
-  if (average >= 15 && average <= 20) return "أنت مانك متكايس، نتيجة قوية تستاهل الفخر.";
-  if (average >= 13) return "أنت حامي، النجاح واضح والمستوى ممتاز.";
-  if (average >= 10) return "نصر، انجحت. مبروك عليك.";
-  if (average >= 9) return "أنت قريب، زيد ركز والنجاح قدامك.";
-  if (average >= 8) return "استمر وارفع راسك، لا تمشي فيه.";
-  if (average >= 6) return "بعدك ما انجحت، لكن تقدر ترجع أقوى.";
-  if (average >= 4) return "عادي، حضر روحك لسنة جاية بخطة أحسن.";
-  if (average >= 2) return "حاول تكرا أكثر، الدور الجاي تقدر تنجح.";
-  return "البداية صعبة، لكن المهم تبدأ من جديد.";
-}
-
 function getAverageTone(average) {
   if (average >= 10) return "success";
   if (average >= 8) return "near";
@@ -372,11 +360,6 @@ function ResultCard({ student, onShare }) {
         </div>
       </div>
 
-      <div className={`motivation-pill motivation-${tone}`}>
-        <SparkIcon />
-        <span>{getAverageMessage(average)}</span>
-      </div>
-
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {details.map(([label, value, icon]) => (
           <InfoTile icon={icon} label={label} value={value} key={label} />
@@ -647,7 +630,6 @@ function DownloadIcon() { return <svg viewBox="0 0 24 24"><path d="M12 3v12" /><
 function PrinterIcon() { return <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 14h12v7H6Z" /></svg>; }
 function ShareIcon() { return <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-4" /><path d="m8.6 13.5 6.8 4" /></svg>; }
 function CodeIcon() { return <svg viewBox="0 0 24 24"><path d="m8 9-4 3 4 3" /><path d="m16 9 4 3-4 3" /><path d="m14 4-4 16" /></svg>; }
-function SparkIcon() { return <svg viewBox="0 0 24 24"><path d="M12 2 9.8 8.8 3 11l6.8 2.2L12 20l2.2-6.8L21 11l-6.8-2.2L12 2Z" /></svg>; }
 function HomeIcon() { return <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>; }
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
 function SilverMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 12a2 2 0 0 1 4 0c0 2-4 2-4 4h4" /></svg>; }

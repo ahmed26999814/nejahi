@@ -129,26 +129,6 @@ svg {
     @apply bg-red-500;
   }
 
-  .motivation-pill {
-    @apply mt-4 flex items-start gap-2 rounded-[18px] border px-3 py-3 text-sm font-black leading-6 shadow-soft;
-  }
-
-  .motivation-success {
-    @apply border-green-600/20 bg-green-50 text-green-800 dark:bg-green-400/10 dark:text-green-200;
-  }
-
-  .motivation-near {
-    @apply border-mauri-gold/30 bg-yellow-50 text-yellow-800 dark:bg-yellow-400/10 dark:text-yellow-200;
-  }
-
-  .motivation-warning {
-    @apply border-amber-500/25 bg-amber-50 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200;
-  }
-
-  .motivation-danger {
-    @apply border-red-500/20 bg-red-50 text-red-700 dark:bg-red-400/10 dark:text-red-200;
-  }
-
   .info-tile {
     @apply grid grid-cols-[auto_1fr] items-center gap-2 rounded-[16px] border border-mauri-border bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5;
   }
