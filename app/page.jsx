@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -8,13 +8,13 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const TABLE = "bac_results";
 
 const EXAM_CARDS = [
-  { id: "bac-2025", title: "نتائج باكالوريا 2025", description: "النتائج الرسمية للباكالوريا.", available: true, icon: <GraduationIcon /> },
-  { id: "brevet-2026", title: "ختم دروس الإعدادية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <BookIcon /> },
-  { id: "concours-2026", title: "كونكور 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <SchoolIcon /> },
-  { id: "excellence-secondary-2026", title: "الامتياز - الثانوية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <AwardIcon /> },
-  { id: "excellence-middle-2026", title: "الامتياز - الإعدادية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <AwardIcon /> },
-  { id: "bac-session-2025", title: "الباكالوريا الدورة التكميلية 2025", description: "خاص بالمترشحين المؤهلين للدورة.", available: true, filter: "sessionnaire", icon: <AlertIcon /> },
-  { id: "bac-2026", title: "نتائج باكالوريا 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <GraduationIcon /> },
+  { id: "bac-2025", title: "ظ†طھط§ط¦ط¬ ط¨ط§ظƒط§ظ„ظˆط±ظٹط§ 2025", description: "ط§ظ„ظ†طھط§ط¦ط¬ ط§ظ„ط±ط³ظ…ظٹط© ظ„ظ„ط¨ط§ظƒط§ظ„ظˆط±ظٹط§.", available: true, icon: <GraduationIcon /> },
+  { id: "brevet-2026", title: "ط®طھظ… ط¯ط±ظˆط³ ط§ظ„ط¥ط¹ط¯ط§ط¯ظٹط© 2026", description: "ط³ظٹطھظ… ظپطھط­ظ‡ط§ ط¹ظ†ط¯ طھظˆظپط± ط§ظ„ظ†طھط§ط¦ط¬.", available: false, icon: <BookIcon /> },
+  { id: "concours-2026", title: "ظƒظˆظ†ظƒظˆط± 2026", description: "ط³ظٹطھظ… ظپطھط­ظ‡ط§ ط¹ظ†ط¯ طھظˆظپط± ط§ظ„ظ†طھط§ط¦ط¬.", available: false, icon: <SchoolIcon /> },
+  { id: "excellence-secondary-2026", title: "ط§ظ„ط§ظ…طھظٹط§ط² - ط§ظ„ط«ط§ظ†ظˆظٹط© 2026", description: "ط³ظٹطھظ… ظپطھط­ظ‡ط§ ط¹ظ†ط¯ طھظˆظپط± ط§ظ„ظ†طھط§ط¦ط¬.", available: false, icon: <AwardIcon /> },
+  { id: "excellence-middle-2026", title: "ط§ظ„ط§ظ…طھظٹط§ط² - ط§ظ„ط¥ط¹ط¯ط§ط¯ظٹط© 2026", description: "ط³ظٹطھظ… ظپطھط­ظ‡ط§ ط¹ظ†ط¯ طھظˆظپط± ط§ظ„ظ†طھط§ط¦ط¬.", available: false, icon: <AwardIcon /> },
+  { id: "bac-session-2025", title: "ط§ظ„ط¨ط§ظƒط§ظ„ظˆط±ظٹط§ ط§ظ„ط¯ظˆط±ط© ط§ظ„طھظƒظ…ظٹظ„ظٹط© 2025", description: "ط®ط§طµ ط¨ط§ظ„ظ…طھط±ط´ط­ظٹظ† ط§ظ„ظ…ط¤ظ‡ظ„ظٹظ† ظ„ظ„ط¯ظˆط±ط©.", available: true, filter: "sessionnaire", icon: <AlertIcon /> },
+  { id: "bac-2026", title: "ظ†طھط§ط¦ط¬ ط¨ط§ظƒط§ظ„ظˆط±ظٹط§ 2026", description: "ط³ظٹطھظ… ظپطھط­ظ‡ط§ ط¹ظ†ط¯ طھظˆظپط± ط§ظ„ظ†طھط§ط¦ط¬.", available: false, icon: <GraduationIcon /> },
 ];
 
 function parseAverage(value) {
@@ -43,11 +43,11 @@ function isMissingSupabaseEnv(error) {
 
 function getOfficialStatus(value) {
   const normalized = cleanText(value).toLowerCase();
-  if (normalized.includes("admis")) return { label: "ناجح", icon: <CheckIcon />, className: "admis" };
-  if (normalized.includes("sessionnaire")) return { label: "دورة استدراكية", icon: <AlertIcon />, className: "sessionnaire" };
-  if (normalized.includes("absent")) return { label: "غائب", icon: <MinusIcon />, className: "absent" };
-  if (normalized.includes("ajourn")) return { label: "راسب", icon: <XIcon />, className: "ajourne" };
-  return { label: value ? cleanText(value) : "غير محددة", icon: <InfoIcon />, className: "unknown" };
+  if (normalized.includes("admis")) return { label: "ظ†ط§ط¬ط­", icon: <CheckIcon />, className: "admis" };
+  if (normalized.includes("sessionnaire")) return { label: "ط¯ظˆط±ط© ط§ط³طھط¯ط±ط§ظƒظٹط©", icon: <AlertIcon />, className: "sessionnaire" };
+  if (normalized.includes("absent")) return { label: "ط؛ط§ط¦ط¨", icon: <MinusIcon />, className: "absent" };
+  if (normalized.includes("ajourn")) return { label: "ط±ط§ط³ط¨", icon: <XIcon />, className: "ajourne" };
+  return { label: value ? cleanText(value) : "ط؛ظٹط± ظ…ط­ط¯ط¯ط©", icon: <InfoIcon />, className: "unknown" };
 }
 
 function getAverageTone(average) {
@@ -58,10 +58,10 @@ function getAverageTone(average) {
 }
 
 function getAverageLevel(average) {
-  if (average >= 15) return { label: "ممتاز", percent: 100, className: "excellent" };
-  if (average >= 12) return { label: "جيد جدًا", percent: 78, className: "very-good" };
-  if (average >= 10) return { label: "جيد", percent: 58, className: "good" };
-  return { label: "ضعيف", percent: Math.max(12, Math.min(48, average * 4.8)), className: "weak" };
+  if (average >= 15) return { label: "ظ…ظ…طھط§ط²", percent: 100, className: "excellent" };
+  if (average >= 12) return { label: "ط¬ظٹط¯ ط¬ط¯ظ‹ط§", percent: 78, className: "very-good" };
+  if (average >= 10) return { label: "ط¬ظٹط¯", percent: 58, className: "good" };
+  return { label: "ط¶ط¹ظٹظپ", percent: Math.max(12, Math.min(48, average * 4.8)), className: "weak" };
 }
 
 function playSuccessTone() {
@@ -124,11 +124,11 @@ async function supabaseRequest(params) {
 function prepareStudents(rows) {
   const normalized = rows
     .map((row, index) => {
-      const track = cleanText(getColumn(row, "TS", "ts", "Serie", "serie") || "غير محددة");
+      const track = cleanText(getColumn(row, "TS", "ts", "Serie", "serie") || "ط؛ظٹط± ظ…ط­ط¯ط¯ط©");
       return {
         id: String(getColumn(row, "Numero", "numero", "NUMERO", "N", "id") ?? "").trim(),
-        name: cleanText(getColumn(row, "NOM", "nom", "Nom", "name") || "اسم غير متوفر"),
-        ts: cleanText(getColumn(row, "TS", "ts") || "غير محدد"),
+        name: cleanText(getColumn(row, "NOM", "nom", "Nom", "name") || "ط§ط³ظ… ط؛ظٹط± ظ…طھظˆظپط±"),
+        ts: cleanText(getColumn(row, "TS", "ts") || "ط؛ظٹط± ظ…ط­ط¯ط¯"),
         track,
         MOD: getColumn(row, "MOD", "mod"),
         kr: cleanText(getColumn(row, "KR", "kr") || ""),
@@ -191,7 +191,7 @@ function summarizeStudents(students, field) {
   const groups = new Map();
 
   students.forEach((student) => {
-    const key = cleanText(student[field]) || "غير محدد";
+    const key = cleanText(student[field]) || "ط؛ظٹط± ظ…ط­ط¯ط¯";
     const current = groups.get(key) || { label: key, total: 0, passed: 0, sum: 0, highest: 0 };
     const average = getAverage(student);
     current.total += 1;
@@ -230,11 +230,27 @@ export default function HomePage() {
     const saved = localStorage.getItem("mauriresults-theme");
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
     setTheme(saved || (prefersDark ? "dark" : "light"));
+    window.history.replaceState({ view: "home" }, "", window.location.pathname);
 
     fetchAllResults()
       .then(setStudents)
-      .catch((error) => setError(isMissingSupabaseEnv(error) ? "لم يتم ضبط متغيرات Supabase في بيئة النشر." : "تعذر تحميل الإحصائيات من Supabase."))
+      .catch((error) => setError(isMissingSupabaseEnv(error) ? "ظ„ظ… ظٹطھظ… ط¶ط¨ط· ظ…طھط؛ظٹط±ط§طھ Supabase ظپظٹ ط¨ظٹط¦ط© ط§ظ„ظ†ط´ط±." : "طھط¹ط°ط± طھط­ظ…ظٹظ„ ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ ظ…ظ† Supabase."))
       .finally(() => setDashboardLoading(false));
+  }, []);
+
+  useEffect(() => {
+    function handlePopState(event) {
+      const view = event.state?.view || "home";
+      setActiveView(view);
+      if (view !== "result") {
+        setResultPageOpen(false);
+        setSelectedStudent(null);
+      }
+      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   function setTheme(nextTheme) {
@@ -284,6 +300,7 @@ export default function HomePage() {
       setResultLoading(false);
       setResultPageOpen(true);
       setActiveView("result");
+      window.history.pushState({ view: "result" }, "", "#result");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, 520);
   }
@@ -299,11 +316,11 @@ export default function HomePage() {
 
     const value = query.trim();
     if (!value) {
-      setError("يرجى إدخال رقم المترشح أو الاسم.");
+      setError("ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط±ظ‚ظ… ط§ظ„ظ…طھط±ط´ط­ ط£ظˆ ط§ظ„ط§ط³ظ….");
       return;
     }
     if (value.length < 2) {
-      setError("أدخل رقما أو اسما من حرفين على الأقل.");
+      setError("ط£ط¯ط®ظ„ ط±ظ‚ظ…ط§ ط£ظˆ ط§ط³ظ…ط§ ظ…ظ† ط­ط±ظپظٹظ† ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„.");
       return;
     }
 
@@ -316,27 +333,27 @@ export default function HomePage() {
       }).filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);
 
       if (!found.length) {
-        setError(selectedExam?.filter === "sessionnaire" ? "لم يتم العثور على مترشح مؤهل للدورة بهذا الرقم أو الاسم." : "لم يتم العثور على نتيجة بهذا الرقم أو الاسم.");
+        setError(selectedExam?.filter === "sessionnaire" ? "ظ„ظ… ظٹطھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ظ…طھط±ط´ط­ ظ…ط¤ظ‡ظ„ ظ„ظ„ط¯ظˆط±ط© ط¨ظ‡ط°ط§ ط§ظ„ط±ظ‚ظ… ط£ظˆ ط§ظ„ط§ط³ظ…." : "ظ„ظ… ظٹطھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ظ†طھظٹط¬ط© ط¨ظ‡ط°ط§ ط§ظ„ط±ظ‚ظ… ط£ظˆ ط§ظ„ط§ط³ظ….");
         return;
       }
 
       if (found.length === 1) showStudent(found[0]);
       else setMatches(found);
     } catch (error) {
-      setError(isMissingSupabaseEnv(error) ? "لم يتم ضبط متغيرات Supabase في بيئة النشر." : "حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+      setError(isMissingSupabaseEnv(error) ? "ظ„ظ… ظٹطھظ… ط¶ط¨ط· ظ…طھط؛ظٹط±ط§طھ Supabase ظپظٹ ط¨ظٹط¦ط© ط§ظ„ظ†ط´ط±." : "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط§ظ„ط§طھطµط§ظ„ ط¨ظ‚ط§ط¹ط¯ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ.");
     } finally {
       setLoading(false);
     }
   }
 
   function shareResult(student) {
-    const text = `نتيجة ${student.name}\nرقم المترشح: ${student.id}\nالشعبة: ${student.track}\nالمعدل: ${parseAverage(student.MOD).toFixed(2)}\nالترتيب: ${student.rank || "غير متوفر"}\nMauriResults`;
+    const text = `ظ†طھظٹط¬ط© ${student.name}\nط±ظ‚ظ… ط§ظ„ظ…طھط±ط´ط­: ${student.id}\nط§ظ„ط´ط¹ط¨ط©: ${student.track}\nط§ظ„ظ…ط¹ط¯ظ„: ${parseAverage(student.MOD).toFixed(2)}\nط§ظ„طھط±طھظٹط¨: ${student.rank || "ط؛ظٹط± ظ…طھظˆظپط±"}\nMauriResults`;
     if (navigator.share) {
-      navigator.share({ title: "MauriResults - نتيجة الامتحان", text }).catch(() => {});
+      navigator.share({ title: "MauriResults - ظ†طھظٹط¬ط© ط§ظ„ط§ظ…طھط­ط§ظ†", text }).catch(() => {});
       return;
     }
     navigator.clipboard?.writeText(text);
-    setMessage("تم نسخ النتيجة للمشاركة.");
+    setMessage("طھظ… ظ†ط³ط® ط§ظ„ظ†طھظٹط¬ط© ظ„ظ„ظ…ط´ط§ط±ظƒط©.");
   }
 
   function selectStudent(student) {
@@ -346,6 +363,7 @@ export default function HomePage() {
   function openView(view) {
     setActiveView(view);
     if (view !== "result") setResultPageOpen(false);
+    window.history.pushState({ view }, "", view === "home" ? window.location.pathname : `#${view}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
@@ -404,18 +422,13 @@ function HomeView({ error, handleSubmit, loading, matches, message, onPickSugges
         {loading && <ResultLoadingCard />}
         {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} />}
       </section>
-      <section className="grid gap-3 rounded-[26px] border border-white/70 bg-white/70 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/75 md:grid-cols-3">
-        <FeatureTile icon={<SearchIcon />} title="بحث سريع" text="اكتب الرقم أو الاسم وتظهر النتيجة مباشرة." />
-        <FeatureTile icon={<AwardIcon />} title="بطاقة رسمية" text="عرض فاخر للنتيجة مع رقم تحقق وختم الحالة." />
-        <FeatureTile icon={<ChartIcon />} title="إحصائيات واضحة" text="قراءة سريعة لأداء الشعب والولايات." />
-      </section>
     </section>
   );
 }
 
 function CompetitionCards({ onSelectExam, selectedExamId }) {
   return (
-    <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <section className="grid grid-cols-2 gap-3">
       {EXAM_CARDS.map((exam) => (
         <button
           className={`exam-card ${selectedExamId === exam.id ? "is-selected" : ""} ${exam.available ? "" : "is-locked"}`}
@@ -429,29 +442,17 @@ function CompetitionCards({ onSelectExam, selectedExamId }) {
             <strong className="block text-base font-black text-slate-950 dark:text-white">{exam.title}</strong>
             <small className="mt-1 block text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{exam.description}</small>
           </span>
-          {!exam.available && <span className="soon-badge">قريبًا</span>}
+          {!exam.available && <span className="soon-badge">ظ‚ط±ظٹط¨ظ‹ط§</span>}
         </button>
       ))}
     </section>
   );
 }
 
-function FeatureTile({ icon, text, title }) {
-  return (
-    <article className="info-tile">
-      <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
-      <div>
-        <strong className="block text-sm font-black text-slate-950 dark:text-white">{title}</strong>
-        <span className="text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{text}</span>
-      </div>
-    </article>
-  );
-}
-
 function ToppersPage({ groups, loading, onSelect }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow="الأوائل" title="صفحة أوائل الشعب" description="أفضل ثلاثة مترشحين من كل شعبة في عرض سريع ومنظم." icon={<AwardIcon />} />
+      <PageHero eyebrow="ط§ظ„ط£ظˆط§ط¦ظ„" title="طµظپط­ط© ط£ظˆط§ط¦ظ„ ط§ظ„ط´ط¹ط¨" description="ط£ظپط¶ظ„ ط«ظ„ط§ط«ط© ظ…طھط±ط´ط­ظٹظ† ظ…ظ† ظƒظ„ ط´ط¹ط¨ط© ظپظٹ ط¹ط±ط¶ ط³ط±ظٹط¹ ظˆظ…ظ†ط¸ظ…." icon={<AwardIcon />} />
       <ToppersSection loading={loading} onSelect={onSelect} groups={groups} />
     </section>
   );
@@ -460,13 +461,13 @@ function ToppersPage({ groups, loading, onSelect }) {
 function AnalyticsPage({ loading, regionStats, schoolStats, stats, trackStats }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow="الإحصائيات" title="إحصائيات حسب الولايات والشعب والمدارس" description="لوحة مختصرة تساعد على فهم النتائج بسرعة." icon={<ChartIcon />} />
+      <PageHero eyebrow="ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ" title="ط¥ط­طµط§ط¦ظٹط§طھ ط­ط³ط¨ ط§ظ„ظˆظ„ط§ظٹط§طھ ظˆط§ظ„ط´ط¹ط¨ ظˆط§ظ„ظ…ط¯ط§ط±ط³" description="ظ„ظˆط­ط© ظ…ط®طھطµط±ط© طھط³ط§ط¹ط¯ ط¹ظ„ظ‰ ظپظ‡ظ… ط§ظ„ظ†طھط§ط¦ط¬ ط¨ط³ط±ط¹ط©." icon={<ChartIcon />} />
       <StatsStrip loading={loading} stats={stats} />
       <div className="grid gap-4 lg:grid-cols-2">
-        <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} title="حسب الولايات" />
-        <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} title="حسب الشعب" />
+        <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} title="ط­ط³ط¨ ط§ظ„ظˆظ„ط§ظٹط§طھ" />
+        <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} title="ط­ط³ط¨ ط§ظ„ط´ط¹ط¨" />
         <div className="lg:col-span-2">
-          <StatsTable icon={<SchoolIcon />} loading={loading} rows={schoolStats} title="حسب المدارس" />
+          <StatsTable icon={<SchoolIcon />} loading={loading} rows={schoolStats} title="ط­ط³ط¨ ط§ظ„ظ…ط¯ط§ط±ط³" />
         </div>
       </div>
     </section>
@@ -499,7 +500,7 @@ function StatsTable({ icon, loading, rows, title }) {
         ) : rows.length ? (
           rows.map((row) => <StatsRow row={row} key={row.label} />)
         ) : (
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">لا توجد بيانات كافية.</p>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظƒط§ظپظٹط©.</p>
         )}
       </div>
     </section>
@@ -511,7 +512,7 @@ function StatsRow({ row }) {
     <article className="analytics-row">
       <div className="min-w-0">
         <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{row.label}</strong>
-        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">ناجحون {row.passed.toLocaleString("ar-MR")} من {row.total.toLocaleString("ar-MR")}</span>
+        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">ظ†ط§ط¬ط­ظˆظ† {row.passed.toLocaleString("ar-MR")} ظ…ظ† {row.total.toLocaleString("ar-MR")}</span>
       </div>
       <div className="text-left">
         <strong className="block text-sm font-black text-mauri-green dark:text-mauri-gold">{row.average.toFixed(2)}</strong>
@@ -523,9 +524,9 @@ function StatsRow({ row }) {
 
 function Header({ activeView, onNavigate, theme, setTheme }) {
   const navItems = [
-    { label: "الرئيسية", view: "home" },
-    { label: "الأوائل", view: "toppers" },
-    { label: "الإحصائيات", view: "analytics" },
+    { label: "ط§ظ„ط±ط¦ظٹط³ظٹط©", view: "home" },
+    { label: "ط§ظ„ط£ظˆط§ط¦ظ„", view: "toppers" },
+    { label: "ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ", view: "analytics" },
   ];
 
   return (
@@ -535,7 +536,7 @@ function Header({ activeView, onNavigate, theme, setTheme }) {
           <LogoMark className="h-9 w-9 rounded-[14px]" />
           <span className="min-w-0">
             <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
-            <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">منصة نتائج الوطنية</small>
+            <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">ظ…ظ†طµط© ظ†طھط§ط¦ط¬ ط§ظ„ظˆط·ظ†ظٹط©</small>
           </span>
         </button>
         <div className="hidden items-center gap-2 md:flex">
@@ -545,7 +546,7 @@ function Header({ activeView, onNavigate, theme, setTheme }) {
             </button>
           ))}
         </div>
-        <button className="icon-button h-9 w-9" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="تبديل الوضع الليلي">
+        <button className="icon-button h-9 w-9" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="طھط¨ط¯ظٹظ„ ط§ظ„ظˆط¶ط¹ ط§ظ„ظ„ظٹظ„ظٹ">
           {theme === "dark" ? <MoonIcon /> : <SunIcon />}
         </button>
       </nav>
@@ -558,8 +559,8 @@ function Hero() {
     <section className="compact-hero hero-logo-panel animate-slide-up">
       <LogoMark className="h-28 w-28 rounded-[30px] md:h-36 md:w-36" />
       <div className="grid gap-2 text-center">
-        <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">نتائج المسابقات الوطنية في موريتانيا</h1>
-        <p className="mx-auto max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">اختر المسابقة ثم ابحث عن النتيجة الرسمية بسرعة.</p>
+        <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">ظ†طھط§ط¦ط¬ ط§ظ„ظ…ط³ط§ط¨ظ‚ط§طھ ط§ظ„ظˆط·ظ†ظٹط© ظپظٹ ظ…ظˆط±ظٹطھط§ظ†ظٹط§</h1>
+        <p className="mx-auto max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">ط§ط®طھط± ط§ظ„ظ…ط³ط§ط¨ظ‚ط© ط«ظ… ط§ط¨ط­ط« ط¹ظ† ط§ظ„ظ†طھظٹط¬ط© ط§ظ„ط±ط³ظ…ظٹط© ط¨ط³ط±ط¹ط©.</p>
       </div>
     </section>
   );
@@ -578,7 +579,7 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
     <form onSubmit={(event) => { setFocused(false); handleSubmit(event); }} className="search-card animate-slide-up">
       <div className="col-span-full flex items-center justify-between gap-2 px-1">
         <span className="text-xs font-black text-mauri-green dark:text-mauri-gold">{examTitle}</span>
-        <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">البحث مفتوح</span>
+        <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">ط§ظ„ط¨ط­ط« ظ…ظپطھظˆط­</span>
       </div>
       <div className="relative min-w-0 flex-1">
         <label className="relative block">
@@ -591,7 +592,7 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
             onChange={(event) => setQuery(event.target.value)}
             onBlur={() => window.setTimeout(() => setFocused(false), 140)}
             onFocus={() => setFocused(true)}
-            placeholder="أدخل رقم المترشح أو الاسم الكامل"
+            placeholder="ط£ط¯ط®ظ„ ط±ظ‚ظ… ط§ظ„ظ…طھط±ط´ط­ ط£ظˆ ط§ظ„ط§ط³ظ… ط§ظ„ظƒط§ظ…ظ„"
           />
         </label>
         {visibleSuggestions && (
@@ -609,7 +610,7 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
         )}
       </div>
       <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98]" type="submit">
-        {loading ? "بحث..." : "بحث"}
+        {loading ? "ط¨ط­ط«..." : "ط¨ط­ط«"}
       </button>
       {(error || message) && (
         <p className={`col-span-full text-center text-xs font-black md:text-start ${error ? "text-red-600 dark:text-red-300" : "text-mauri-green dark:text-mauri-gold"}`}>{error || message}</p>
@@ -620,10 +621,10 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
 
 function StatsStrip({ loading, stats }) {
   const cards = [
-    { label: "الطلاب", value: stats.total, icon: <GraduationIcon /> },
-    { label: "الناجحون", value: stats.passed, icon: <CheckCircleIcon /> },
-    { label: "أعلى معدل", value: stats.highest, decimals: 2, icon: <TrendingIcon /> },
-    { label: "المتوسط", value: stats.average, decimals: 2, icon: <ChartIcon /> },
+    { label: "ط§ظ„ط·ظ„ط§ط¨", value: stats.total, icon: <GraduationIcon /> },
+    { label: "ط§ظ„ظ†ط§ط¬ط­ظˆظ†", value: stats.passed, icon: <CheckCircleIcon /> },
+    { label: "ط£ط¹ظ„ظ‰ ظ…ط¹ط¯ظ„", value: stats.highest, decimals: 2, icon: <TrendingIcon /> },
+    { label: "ط§ظ„ظ…طھظˆط³ط·", value: stats.average, decimals: 2, icon: <ChartIcon /> },
   ];
 
   return (
@@ -670,14 +671,12 @@ function ResultCard({ student, onShare, verificationCode }) {
   const isFailed = status.className === "ajourne";
   const isTopRanked = student.rank && student.rank <= 3;
   const tone = isFailed ? "calm" : getAverageTone(average);
-  const level = getAverageLevel(average);
   const details = [
-    ["رقم المترشح", student.id, <HashIcon key="hash" />],
-    ["الشعبة", student.track, <BookIcon key="book" />],
-    ["المعدل", average.toFixed(2), <ChartIcon key="chart" />],
-    ["الرتبة", student.rank ? `#${student.rank}` : "غير متوفرة", <AwardIcon key="award" />],
-    ["المدرسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />],
-    ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />],
+    ["ط±ظ‚ظ… ط§ظ„ظ…طھط±ط´ط­", student.id, <HashIcon key="hash" />],
+    ["ط§ظ„ط´ط¹ط¨ط©", student.track, <BookIcon key="book" />],
+    ["ط§ظ„ط±طھط¨ط©", student.rank ? `#${student.rank}` : "ط؛ظٹط± ظ…طھظˆظپط±ط©", <AwardIcon key="award" />],
+    ["ط§ظ„ظ…ط¯ط±ط³ط©", student.ms || "ط؛ظٹط± ظ…طھظˆظپط±ط©", <SchoolIcon key="school" />],
+    ["ط§ظ„ظˆظ„ط§ظٹط©", student.wl || "ط؛ظٹط± ظ…طھظˆظپط±ط©", <MapIcon key="map" />],
   ];
 
   useEffect(() => {
@@ -687,62 +686,51 @@ function ResultCard({ student, onShare, verificationCode }) {
   return (
     <article className={`result-modal result-${tone} animate-slide-up`}>
       {isPassed && <Confetti />}
-      {isPassed && <span className="success-stamp">ناجح</span>}
+      {isPassed && <span className="success-stamp">ظ†ط§ط¬ط­</span>}
       <div className="result-modal-header">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">بطاقة النتيجة</p>
+          <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">ط¨ط·ط§ظ‚ط© ط§ظ„ظ†طھظٹط¬ط©</p>
           <div className="student-name-panel">
-            <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">اسم الطالب</span>
+            <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">ط§ط³ظ… ط§ظ„ط·ط§ظ„ط¨</span>
             <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
-          </div>
-          <div className="mt-2 flex w-fit max-w-full items-center gap-2 rounded-[16px] border border-mauri-border bg-white/75 px-3 py-2 text-start text-xs font-black text-slate-700 shadow-soft dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
-            <SchoolIcon />
-            <span className="overflow-wrap-anywhere">{student.ms || "المدرسة غير متوفرة"}</span>
+            <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">{average.toFixed(2)}</strong>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-white/70 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{student.track}</span>
-            <StatusBadge status={status} />
-            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">تحقق {verificationCode}</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">طھط­ظ‚ظ‚ {verificationCode}</span>
             {isTopRanked && (
               <span className="top-rank-badge">
                 <GoldMedalIcon />
-                من الأوائل #{student.rank}
+                ظ…ظ† ط§ظ„ط£ظˆط§ط¦ظ„ #{student.rank}
               </span>
             )}
           </div>
         </div>
-        <div className="result-average">
-          <span className="block text-[11px] font-black text-slate-500 dark:text-slate-400">المعدل</span>
-          <strong className="block text-3xl font-black text-mauri-green dark:text-mauri-gold">{average.toFixed(2)}</strong>
-        </div>
       </div>
-
-      <AverageLevelBar level={level} />
 
       {isPassed && (
         <div className="success-banner">
           <AwardIcon />
-          <span>تهانينا، تم العثور على نتيجة ناجحة.</span>
+          <span>طھظ‡ط§ظ†ظٹظ†ط§طŒ طھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ظ†طھظٹط¬ط© ظ†ط§ط¬ط­ط©.</span>
         </div>
       )}
 
       {isFailed && (
         <div className="failure-note">
           <InfoIcon />
-          <span>لم يحالفك النجاح هذه المرة. راجع خطتك بهدوء، والفرصة القادمة يمكن أن تكون أفضل.</span>
+          <span>ظ„ظ… ظٹط­ط§ظ„ظپظƒ ط§ظ„ظ†ط¬ط§ط­ ظ‡ط°ظ‡ ط§ظ„ظ…ط±ط©. ط±ط§ط¬ط¹ ط®ط·طھظƒ ط¨ظ‡ط¯ظˆط،طŒ ظˆط§ظ„ظپط±طµط© ط§ظ„ظ‚ط§ط¯ظ…ط© ظٹظ…ظƒظ† ط£ظ† طھظƒظˆظ† ط£ظپط¶ظ„.</span>
         </div>
       )}
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-2 gap-2">
         {details.map(([label, value, icon]) => (
           <InfoTile icon={icon} label={label} value={value} key={label} />
         ))}
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <ActionButton icon={<ShareIcon />} label="مشاركة" onClick={() => onShare(student)} />
+        <ActionButton icon={<ShareIcon />} label="ظ…ط´ط§ط±ظƒط©" onClick={() => onShare(student)} />
         <ActionButton icon={<DownloadIcon />} label="PDF" onClick={() => window.print()} variant="light" />
-        <ActionButton icon={<PrinterIcon />} label="طباعة" onClick={() => window.print()} variant="light" />
+        <ActionButton icon={<PrinterIcon />} label="ط·ط¨ط§ط¹ط©" onClick={() => window.print()} variant="light" />
       </div>
     </article>
   );
@@ -752,44 +740,40 @@ function AverageLevelBar({ level }) {
   return (
     <div className={`average-level average-level-${level.className}`}>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">مستوى المعدل</span>
+        <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">ظ…ط³طھظˆظ‰ ط§ظ„ظ…ط¹ط¯ظ„</span>
         <strong className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-black text-slate-900 shadow-soft dark:bg-white/10 dark:text-white">{level.label}</strong>
       </div>
       <div className="average-level-track">
         <span style={{ width: `${level.percent}%` }} />
       </div>
       <div className="mt-1 grid grid-cols-4 text-[10px] font-black text-slate-400 dark:text-slate-500">
-        <span>ضعيف</span>
-        <span className="text-center">جيد</span>
-        <span className="text-center">جيد جدًا</span>
-        <span className="text-left">ممتاز</span>
+        <span>ط¶ط¹ظٹظپ</span>
+        <span className="text-center">ط¬ظٹط¯</span>
+        <span className="text-center">ط¬ظٹط¯ ط¬ط¯ظ‹ط§</span>
+        <span className="text-left">ظ…ظ…طھط§ط²</span>
       </div>
     </div>
   );
 }
 
-function ResultExperience({ onClose, onShare, student }) {
+function ResultExperience({ onShare, student }) {
   const status = getOfficialStatus(student.kr);
   const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
 
   return (
-    <section className="app-shell result-official-page py-4 md:py-8" aria-label="بطاقة النتيجة الرسمية">
+    <section className="app-shell result-official-page py-4 md:py-8" aria-label="ط¨ط·ط§ظ‚ط© ط§ظ„ظ†طھظٹط¬ط© ط§ظ„ط±ط³ظ…ظٹط©">
       <div className="result-page-shell">
         <header className="official-result-header">
           <div className="flex min-w-0 items-center gap-3">
             <LogoMark className="h-12 w-12 rounded-[18px]" />
             <div className="min-w-0">
               <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">MauriResults</p>
-              <h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl">بطاقة النتيجة الرسمية</h1>
-              <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">رقم التحقق: {verificationCode}</p>
+              <h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl">ط¨ط·ط§ظ‚ط© ط§ظ„ظ†طھظٹط¬ط© ط§ظ„ط±ط³ظ…ظٹط©</h1>
+              <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">ط±ظ‚ظ… ط§ظ„طھط­ظ‚ظ‚: {verificationCode}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className={`official-status-stamp ${status.className}`}>{status.label}</span>
-            <button className="close-result-button no-print" onClick={onClose} type="button">
-              <XIcon />
-              رجوع
-            </button>
           </div>
         </header>
         <ResultCard student={student} onShare={onShare} verificationCode={verificationCode} />
@@ -822,13 +806,13 @@ function StatusBadge({ status }) {
 function MatchesList({ matches, onSelect }) {
   return (
     <section className="result-card animate-slide-up">
-      <SectionTitle eyebrow="نتائج البحث" title="اختر المترشح" />
+      <SectionTitle eyebrow="ظ†طھط§ط¦ط¬ ط§ظ„ط¨ط­ط«" title="ط§ط®طھط± ط§ظ„ظ…طھط±ط´ط­" />
       <div className="mt-3 grid gap-2">
         {matches.map((student) => (
           <button className="match-row" key={student.id} onClick={() => onSelect(student)} type="button">
             <span className="min-w-0 text-start">
               <strong className="line-clamp-1 block font-black text-slate-950 dark:text-white">{student.name}</strong>
-              <span className="mt-1 block text-xs font-bold text-slate-500 dark:text-slate-400">رقم {student.id} - {student.track}</span>
+              <span className="mt-1 block text-xs font-bold text-slate-500 dark:text-slate-400">ط±ظ‚ظ… {student.id} - {student.track}</span>
             </span>
             <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-sm font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</span>
           </button>
@@ -846,8 +830,8 @@ function ResultLoadingCard() {
           <SearchIcon />
         </span>
         <div>
-          <strong className="block text-sm font-black text-slate-950 dark:text-white">جاري تحضير بطاقة النتيجة</strong>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">لحظات قليلة...</span>
+          <strong className="block text-sm font-black text-slate-950 dark:text-white">ط¬ط§ط±ظٹ طھط­ط¶ظٹط± ط¨ط·ط§ظ‚ط© ط§ظ„ظ†طھظٹط¬ط©</strong>
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">ظ„ط­ط¸ط§طھ ظ‚ظ„ظٹظ„ط©...</span>
         </div>
       </div>
       <div className="flex justify-between gap-4">
@@ -870,14 +854,14 @@ function ResultLoadingCard() {
 
 function ResultLoadingOverlay() {
   return (
-    <section className="result-page" aria-label="تحميل بطاقة النتيجة">
+    <section className="result-page" aria-label="طھط­ظ…ظٹظ„ ط¨ط·ط§ظ‚ط© ط§ظ„ظ†طھظٹط¬ط©">
       <div className="result-page-backdrop" />
       <div className="result-loading-panel animate-zoom-in">
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-[20px] bg-mauri-green/10 text-mauri-green">
           <SearchIcon />
         </span>
-        <h2 className="mt-3 text-xl font-black text-slate-950 dark:text-white">جاري فتح بطاقة النتيجة</h2>
-        <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">نحضّر لك صفحة النتيجة الرسمية...</p>
+        <h2 className="mt-3 text-xl font-black text-slate-950 dark:text-white">ط¬ط§ط±ظٹ ظپطھط­ ط¨ط·ط§ظ‚ط© ط§ظ„ظ†طھظٹط¬ط©</h2>
+        <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">ظ†ط­ط¶ظ‘ط± ظ„ظƒ طµظپط­ط© ط§ظ„ظ†طھظٹط¬ط© ط§ظ„ط±ط³ظ…ظٹط©...</p>
         <div className="mt-5 grid gap-2">
           <span className="skeleton h-4 w-full" />
           <span className="skeleton h-4 w-3/4" />
@@ -902,7 +886,7 @@ function ToppersSection({ groups, loading, onSelect }) {
   return (
     <section className="grid gap-3">
       <div className="flex items-end justify-between gap-3">
-        <SectionTitle eyebrow="الأوائل" title="ثلاثة أوائل من كل شعبة" />
+        <SectionTitle eyebrow="ط§ظ„ط£ظˆط§ط¦ظ„" title="ط«ظ„ط§ط«ط© ط£ظˆط§ط¦ظ„ ظ…ظ† ظƒظ„ ط´ط¹ط¨ط©" />
       </div>
       <div className="grid gap-2">
         {loading ? (
@@ -924,7 +908,7 @@ function ToppersSection({ groups, loading, onSelect }) {
             </section>
           ))
         ) : (
-          <p className="rounded-[18px] border border-mauri-border bg-white p-4 text-sm font-bold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400">لا توجد بيانات كافية لهذه الشعبة.</p>
+          <p className="rounded-[18px] border border-mauri-border bg-white p-4 text-sm font-bold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400">ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظƒط§ظپظٹط© ظ„ظ‡ط°ظ‡ ط§ظ„ط´ط¹ط¨ط©.</p>
         )}
       </div>
     </section>
@@ -933,9 +917,9 @@ function ToppersSection({ groups, loading, onSelect }) {
 
 function TopperCard({ student, index, onSelect }) {
   const medals = [
-    { name: "الأول", className: "bg-[#fff7d6] text-[#8a6500]", icon: <GoldMedalIcon /> },
-    { name: "الثاني", className: "bg-slate-100 text-slate-600", icon: <SilverMedalIcon /> },
-    { name: "الثالث", className: "bg-[#fff0e5] text-[#9a4f18]", icon: <BronzeMedalIcon /> },
+    { name: "ط§ظ„ط£ظˆظ„", className: "bg-[#fff7d6] text-[#8a6500]", icon: <GoldMedalIcon /> },
+    { name: "ط§ظ„ط«ط§ظ†ظٹ", className: "bg-slate-100 text-slate-600", icon: <SilverMedalIcon /> },
+    { name: "ط§ظ„ط«ط§ظ„ط«", className: "bg-[#fff0e5] text-[#9a4f18]", icon: <BronzeMedalIcon /> },
   ];
   const medal = medals[index] || medals[0];
 
@@ -951,7 +935,7 @@ function TopperCard({ student, index, onSelect }) {
       </div>
       <div className="text-center">
         <strong className="block text-lg font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</strong>
-        <button className="text-[11px] font-black text-slate-500 underline-offset-4 hover:text-mauri-green hover:underline" onClick={() => onSelect(student)} type="button">عرض النتيجة</button>
+        <button className="text-[11px] font-black text-slate-500 underline-offset-4 hover:text-mauri-green hover:underline" onClick={() => onSelect(student)} type="button">ط¹ط±ط¶ ط§ظ„ظ†طھظٹط¬ط©</button>
       </div>
     </article>
   );
@@ -981,12 +965,12 @@ function Footer() {
           <LogoMark className="h-10 w-10 rounded-[14px]" />
           <div>
             <strong className="block text-base font-black text-slate-950 dark:text-white">MauriResults</strong>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">منصة النتائج الوطنية.</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">ظ…ظ†طµط© ط§ظ„ظ†طھط§ط¦ط¬ ط§ظ„ظˆط·ظ†ظٹط©.</span>
           </div>
           </div>
           <button className="developer-button" onClick={() => setDeveloperOpen((value) => !value)} type="button">
             <CodeIcon />
-            إعداد وتطوير
+            ط¥ط¹ط¯ط§ط¯ ظˆطھط·ظˆظٹط±
           </button>
         </div>
         {developerOpen && (
@@ -996,23 +980,23 @@ function Footer() {
                 <UserIcon />
               </span>
               <div className="min-w-0 text-start">
-                <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">إعداد وتطوير</p>
+                <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">ط¥ط¹ط¯ط§ط¯ ظˆطھط·ظˆظٹط±</p>
                 <h3 className="text-base font-black text-slate-950 dark:text-white">Ahmed abdellahi mady</h3>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <a className="developer-link" href="https://www.facebook.com/ahmed.abde.mady" target="_blank" rel="noopener">
                 <FacebookIcon />
-                فيسبوك
+                ظپظٹط³ط¨ظˆظƒ
               </a>
               <a className="developer-link" href="https://wa.me/22244881891" target="_blank" rel="noopener">
                 <WhatsAppIcon />
-                واتساب
+                ظˆط§طھط³ط§ط¨
               </a>
             </div>
           </div>
         )}
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">جميع الحقوق محفوظة © MauriResults.</p>
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">ط¬ظ…ظٹط¹ ط§ظ„ط­ظ‚ظˆظ‚ ظ…ط­ظپظˆط¸ط© آ© MauriResults.</p>
       </div>
     </footer>
   );
@@ -1020,10 +1004,10 @@ function Footer() {
 
 function BottomNav({ activeView, onNavigate }) {
   const items = [
-    { label: "الرئيسية", view: "home", icon: <HomeIcon /> },
-    { label: "البحث", view: "home", section: "resultArea", icon: <SearchIcon /> },
-    { label: "الأوائل", view: "toppers", icon: <AwardIcon /> },
-    { label: "الإحصائيات", view: "analytics", icon: <ChartIcon /> },
+    { label: "ط§ظ„ط±ط¦ظٹط³ظٹط©", view: "home", icon: <HomeIcon /> },
+    { label: "ط§ظ„ط¨ط­ط«", view: "home", section: "resultArea", icon: <SearchIcon /> },
+    { label: "ط§ظ„ط£ظˆط§ط¦ظ„", view: "toppers", icon: <AwardIcon /> },
+    { label: "ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ", view: "analytics", icon: <ChartIcon /> },
   ];
 
   return (
@@ -1096,3 +1080,4 @@ function HomeIcon() { return <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8" />
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
 function SilverMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 12a2 2 0 0 1 4 0c0 2-4 2-4 4h4" /></svg>; }
 function BronzeMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 11h4l-2 2a2 2 0 1 1-2 2" /></svg>; }
+
