@@ -662,8 +662,8 @@ function ActionButton({ icon, label, onClick, variant = "solid" }) {
 
 function LogoMark({ className = "h-10 w-10" }) {
   return (
-    <span className={`${className} grid shrink-0 place-items-center border border-mauri-green/10 bg-white text-xs font-black text-mauri-green shadow-soft dark:border-white/10 dark:bg-white/10 dark:text-emerald-300`}>
-      MR
+    <span className={`${className} grid shrink-0 place-items-center overflow-hidden border border-mauri-green/10 bg-white shadow-soft dark:border-white/10`}>
+      <img className="h-full w-full object-contain p-1" src="/logo.png" alt="MauriResults" loading="eager" />
     </span>
   );
 }
