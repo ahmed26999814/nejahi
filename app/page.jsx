@@ -27,6 +27,10 @@ function getAverage(student) {
   return parseAverage(student.MOD);
 }
 
+function isMissingSupabaseEnv(error) {
+  return error instanceof Error && error.message === "Missing Supabase environment variables.";
+}
+
 function getOfficialStatus(value) {
   const normalized = cleanText(value).toLowerCase();
   if (normalized.includes("admis")) return { label: "ناجح", icon: <CheckIcon />, className: "admis" };
@@ -161,7 +165,7 @@ export default function HomePage() {
 
     fetchAllResults()
       .then(setStudents)
-      .catch(() => setError("تعذر تحميل الإحصائيات من Supabase."))
+      .catch((error) => setError(isMissingSupabaseEnv(error) ? "لم يتم ضبط متغيرات Supabase في بيئة النشر." : "تعذر تحميل الإحصائيات من Supabase."))
       .finally(() => setDashboardLoading(false));
   }, []);
 
@@ -212,8 +216,8 @@ export default function HomePage() {
       else setMatches(found);
 
       requestAnimationFrame(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    } catch {
-      setError("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+    } catch (error) {
+      setError(isMissingSupabaseEnv(error) ? "لم يتم ضبط متغيرات Supabase في بيئة النشر." : "حدث خطأ أثناء الاتصال بقاعدة البيانات.");
     } finally {
       setLoading(false);
     }
