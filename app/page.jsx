@@ -339,7 +339,7 @@ function ResultCard({ student, onShare }) {
     ["المعدل", average.toFixed(2), <ChartIcon key="chart" />],
     ["القرار", <StatusBadge key="status" status={status} />, <CheckCircleIcon key="check" />],
     ["الرتبة", student.rank ? `#${student.rank}` : "غير متوفرة", <AwardIcon key="award" />],
-    ["المؤسسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />],
+    ["المدرسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />],
     ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />],
   ];
 
@@ -349,6 +349,10 @@ function ResultCard({ student, onShare }) {
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">بطاقة النتيجة</p>
           <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
+          <div className="mt-2 flex w-fit max-w-full items-center gap-2 rounded-[16px] border border-mauri-border bg-white/75 px-3 py-2 text-start text-xs font-black text-slate-700 shadow-soft dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+            <SchoolIcon />
+            <span className="overflow-wrap-anywhere">{student.ms || "المدرسة غير متوفرة"}</span>
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-white/70 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{student.track}</span>
             <StatusBadge status={status} />
