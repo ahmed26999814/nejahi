@@ -37,16 +37,19 @@ svg {
 
 @layer components {
   .app-background {
+    @apply relative isolate overflow-hidden;
     background:
       radial-gradient(circle at 12% 8%, rgba(21, 128, 61, .12), transparent 28rem),
       radial-gradient(circle at 85% 18%, rgba(212, 175, 55, .12), transparent 26rem),
       linear-gradient(180deg, #f8faf8 0%, #ffffff 44%, #f3f8f4 100%);
+    background-size: 120% 120%, 130% 130%, 100% 100%;
+    animation: backgroundDrift 18s ease-in-out infinite alternate;
   }
 
   .dark .app-background {
     background:
-      radial-gradient(circle at 12% 8%, rgba(16, 185, 129, .15), transparent 28rem),
-      radial-gradient(circle at 85% 18%, rgba(212, 175, 55, .10), transparent 26rem),
+      radial-gradient(circle at 12% 8%, rgba(16, 185, 129, .10), transparent 28rem),
+      radial-gradient(circle at 85% 18%, rgba(212, 175, 55, .08), transparent 26rem),
       linear-gradient(180deg, #07130d 0%, #0c1c14 48%, #07130d 100%);
   }
 
@@ -79,11 +82,11 @@ svg {
   }
 
   .compact-hero {
-    @apply grid items-center gap-4 rounded-[22px] border border-white/70 bg-white/75 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95 md:grid-cols-[1fr_auto] md:p-6;
+    @apply grid items-center gap-4 rounded-[22px] border border-white/70 bg-white/70 p-4 shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 dark:border-white/10 dark:bg-[#10231a]/75 md:grid-cols-[1fr_auto] md:p-6;
   }
 
   .search-card {
-    @apply grid gap-2 rounded-[24px] border border-white/70 bg-white/85 p-3 shadow-premium backdrop-blur-xl transition focus-within:-translate-y-0.5 focus-within:border-mauri-green/40 focus-within:shadow-glow dark:border-white/10 dark:bg-[#10231a]/95 md:grid-cols-[1fr_auto];
+    @apply grid gap-2 rounded-[24px] border border-white/70 bg-white/[.78] p-3 shadow-premium backdrop-blur-xl transition focus-within:-translate-y-0.5 focus-within:border-mauri-green/40 focus-within:shadow-glow dark:border-white/10 dark:bg-[#10231a]/[.78] md:grid-cols-[1fr_auto];
   }
 
   .search-input {
@@ -100,7 +103,7 @@ svg {
   }
 
   .stat-chip {
-    @apply flex min-w-[9.5rem] items-center gap-3 rounded-[18px] border border-white/70 bg-white/75 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95;
+    @apply flex min-w-[9.5rem] items-center gap-3 rounded-[18px] border border-white/70 bg-white/70 p-3 shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-premium active:scale-[.99] dark:border-white/10 dark:bg-[#10231a]/75;
   }
 
   .mini-card {
@@ -112,7 +115,7 @@ svg {
   }
 
   .result-modal {
-    @apply relative overflow-hidden rounded-[28px] border bg-white/95 p-4 shadow-premium backdrop-blur-xl dark:bg-[#10231a]/95 md:p-6;
+    @apply relative overflow-hidden rounded-[28px] border bg-white/90 p-4 shadow-premium backdrop-blur-2xl transition hover:shadow-[0_28px_90px_rgba(15,23,42,.14)] dark:bg-[#10231a]/[.88] md:p-6;
     animation: zoomIn 460ms cubic-bezier(.2, .8, .2, 1) both;
   }
 
@@ -156,12 +159,17 @@ svg {
   }
 
   .result-average {
-    @apply w-fit rounded-[22px] border border-mauri-green/15 bg-white/85 px-5 py-3 text-center shadow-soft dark:border-white/10 dark:bg-[#172b22];
+    @apply w-fit rounded-[22px] border border-mauri-green/15 bg-white/80 px-5 py-3 text-center shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 dark:border-white/10 dark:bg-white/10;
   }
 
   .success-banner {
     @apply mt-4 flex items-center gap-2 rounded-[18px] border border-green-600/20 bg-green-50 px-3 py-3 text-sm font-black text-green-800 shadow-soft dark:bg-green-400/10 dark:text-green-200;
     animation: successPulse 1.6s ease-in-out 2;
+  }
+
+  .failure-note {
+    @apply mt-4 flex items-start gap-2 rounded-[18px] border border-amber-500/20 bg-amber-50/80 px-3 py-3 text-sm font-black leading-6 text-amber-900 shadow-soft backdrop-blur-xl dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100;
+    animation: slideUp 420ms cubic-bezier(.2, .8, .2, 1) both;
   }
 
   .result-success {
@@ -197,8 +205,51 @@ svg {
     @apply bg-red-500;
   }
 
+  .result-calm {
+    @apply border-amber-400/30;
+    box-shadow: 0 24px 80px rgba(245, 158, 11, .11);
+  }
+
+  .result-calm::before {
+    @apply bg-amber-400;
+  }
+
+  .success-stamp {
+    @apply pointer-events-none absolute left-4 top-20 z-20 rounded-full border-2 border-green-600/70 bg-green-50/80 px-5 py-2 text-lg font-black text-green-700 shadow-premium backdrop-blur-xl dark:border-green-300/50 dark:bg-green-300/10 dark:text-green-200;
+    transform: rotate(-12deg);
+    animation: stampPop 680ms cubic-bezier(.18, .9, .2, 1.25) both, stampGlow 1.8s ease-in-out 700ms 2;
+  }
+
+  .top-rank-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-mauri-gold/40 bg-mauri-gold/15 px-3 py-1.5 text-xs font-black text-yellow-700 shadow-soft dark:text-yellow-200;
+  }
+
+  .average-level {
+    @apply mt-4 rounded-[20px] border border-mauri-border bg-white/70 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.08];
+  }
+
+  .average-level-track {
+    @apply h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10;
+  }
+
+  .average-level-track span {
+    @apply block h-full rounded-full;
+    background: linear-gradient(90deg, #f59e0b, #22c55e);
+    animation: levelFill 780ms cubic-bezier(.2, .8, .2, 1) both;
+  }
+
+  .average-level-weak .average-level-track span {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  }
+
+  .average-level-good .average-level-track span,
+  .average-level-very-good .average-level-track span,
+  .average-level-excellent .average-level-track span {
+    background: linear-gradient(90deg, #15803d, #22c55e, #d4af37);
+  }
+
   .info-tile {
-    @apply grid grid-cols-[auto_1fr] items-center gap-2 rounded-[16px] border border-mauri-border bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5;
+    @apply grid grid-cols-[auto_1fr] items-center gap-2 rounded-[16px] border border-mauri-border bg-white/70 p-3 shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-mauri-green/30 hover:shadow-premium active:scale-[.99] dark:border-white/10 dark:bg-white/[.08];
   }
 
   .match-row {
@@ -214,7 +265,7 @@ svg {
   }
 
   .track-group {
-    @apply rounded-[22px] border border-white/70 bg-white/75 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95;
+    @apply rounded-[22px] border border-white/70 bg-white/70 p-3 shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-premium dark:border-white/10 dark:bg-[#10231a]/75;
   }
 
   .contact-chip {
@@ -226,7 +277,7 @@ svg {
   }
 
   .developer-card {
-    @apply mx-auto grid w-full max-w-md gap-3 rounded-[20px] border border-mauri-green/20 bg-emerald-50 p-4 text-start shadow-premium dark:border-emerald-300/10 dark:bg-emerald-300/10;
+    @apply mx-auto grid w-full max-w-md gap-3 rounded-[20px] border border-mauri-green/20 bg-emerald-50/80 p-4 text-start shadow-premium backdrop-blur-xl dark:border-emerald-300/10 dark:bg-emerald-300/10;
   }
 
   .developer-link {
@@ -323,6 +374,15 @@ svg {
   }
 }
 
+@keyframes backgroundDrift {
+  from {
+    background-position: 0% 0%, 100% 0%, 0 0;
+  }
+  to {
+    background-position: 8% 6%, 92% 10%, 0 0;
+  }
+}
+
 .animate-rise {
   animation: riseIn 420ms ease both;
 }
@@ -403,6 +463,37 @@ svg {
   }
   50% {
     transform: scale(1.015);
+  }
+}
+
+@keyframes stampPop {
+  from {
+    opacity: 0;
+    transform: rotate(-18deg) scale(.42);
+  }
+  70% {
+    opacity: 1;
+    transform: rotate(-12deg) scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-12deg) scale(1);
+  }
+}
+
+@keyframes stampGlow {
+  0%,
+  100% {
+    box-shadow: 0 16px 45px rgba(34, 197, 94, .16);
+  }
+  50% {
+    box-shadow: 0 20px 60px rgba(34, 197, 94, .28);
+  }
+}
+
+@keyframes levelFill {
+  from {
+    width: 0;
   }
 }
 

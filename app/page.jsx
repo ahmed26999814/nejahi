@@ -47,6 +47,42 @@ function getAverageTone(average) {
   return "danger";
 }
 
+function getAverageLevel(average) {
+  if (average >= 15) return { label: "ممتاز", percent: 100, className: "excellent" };
+  if (average >= 12) return { label: "جيد جدًا", percent: 78, className: "very-good" };
+  if (average >= 10) return { label: "جيد", percent: 58, className: "good" };
+  return { label: "ضعيف", percent: Math.max(12, Math.min(48, average * 4.8)), className: "weak" };
+}
+
+function playSuccessTone() {
+  if (typeof window === "undefined") return;
+
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    const context = new AudioContext();
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.36);
+    gain.connect(context.destination);
+
+    [523.25, 659.25, 783.99].forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, context.currentTime + index * 0.08);
+      oscillator.connect(gain);
+      oscillator.start(context.currentTime + index * 0.08);
+      oscillator.stop(context.currentTime + 0.32 + index * 0.04);
+    });
+
+    window.setTimeout(() => context.close().catch(() => {}), 520);
+  } catch {
+    // Some browsers block Web Audio in strict privacy modes.
+  }
+}
+
 function escapePostgrestValue(value) {
   return String(value).replaceAll("\\", "\\\\").replaceAll(",", "\\,").replaceAll(")", "\\)");
 }
@@ -366,7 +402,7 @@ function SearchPanel({ error, handleSubmit, loading, message, onPickSuggestion, 
           </div>
         )}
       </div>
-      <button className="tap-button h-12 rounded-[16px] bg-mauri-green px-5 text-sm font-black text-white shadow-soft transition hover:bg-emerald-700 active:scale-[.98]" type="submit">
+      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98]" type="submit">
         {loading ? "بحث..." : "بحث"}
       </button>
       {(error || message) && (
@@ -424,7 +460,11 @@ function CountUp({ decimals = 0, value }) {
 function ResultCard({ student, onShare }) {
   const average = parseAverage(student.MOD);
   const status = getOfficialStatus(student.kr);
-  const tone = getAverageTone(average);
+  const isPassed = status.className === "admis";
+  const isFailed = status.className === "ajourne";
+  const isTopRanked = student.rank && student.rank <= 3;
+  const tone = isFailed ? "calm" : getAverageTone(average);
+  const level = getAverageLevel(average);
   const details = [
     ["رقم المترشح", student.id, <HashIcon key="hash" />],
     ["الشعبة", student.track, <BookIcon key="book" />],
@@ -434,9 +474,14 @@ function ResultCard({ student, onShare }) {
     ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />],
   ];
 
+  useEffect(() => {
+    if (isPassed) playSuccessTone();
+  }, [isPassed, student.id]);
+
   return (
     <article className={`result-modal result-${tone} animate-slide-up`}>
-      {status.className === "admis" && <Confetti />}
+      {isPassed && <Confetti />}
+      {isPassed && <span className="success-stamp">ناجح</span>}
       <div className="result-modal-header">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">بطاقة النتيجة</p>
@@ -451,6 +496,12 @@ function ResultCard({ student, onShare }) {
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-white/70 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{student.track}</span>
             <StatusBadge status={status} />
+            {isTopRanked && (
+              <span className="top-rank-badge">
+                <GoldMedalIcon />
+                من الأوائل #{student.rank}
+              </span>
+            )}
           </div>
         </div>
         <div className="result-average">
@@ -459,10 +510,19 @@ function ResultCard({ student, onShare }) {
         </div>
       </div>
 
-      {status.className === "admis" && (
+      <AverageLevelBar level={level} />
+
+      {isPassed && (
         <div className="success-banner">
           <AwardIcon />
           <span>تهانينا، تم العثور على نتيجة ناجحة.</span>
+        </div>
+      )}
+
+      {isFailed && (
+        <div className="failure-note">
+          <InfoIcon />
+          <span>لم يحالفك النجاح هذه المرة. راجع خطتك بهدوء، والفرصة القادمة يمكن أن تكون أفضل.</span>
         </div>
       )}
 
@@ -478,6 +538,26 @@ function ResultCard({ student, onShare }) {
         <ActionButton icon={<PrinterIcon />} label="طباعة" onClick={() => window.print()} variant="light" />
       </div>
     </article>
+  );
+}
+
+function AverageLevelBar({ level }) {
+  return (
+    <div className={`average-level average-level-${level.className}`}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">مستوى المعدل</span>
+        <strong className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-black text-slate-900 shadow-soft dark:bg-white/10 dark:text-white">{level.label}</strong>
+      </div>
+      <div className="average-level-track">
+        <span style={{ width: `${level.percent}%` }} />
+      </div>
+      <div className="mt-1 grid grid-cols-4 text-[10px] font-black text-slate-400 dark:text-slate-500">
+        <span>ضعيف</span>
+        <span className="text-center">جيد</span>
+        <span className="text-center">جيد جدًا</span>
+        <span className="text-left">ممتاز</span>
+      </div>
+    </div>
   );
 }
 
@@ -734,10 +814,10 @@ function BottomNav() {
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-mauri-border bg-white/95 px-3 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95 md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+    <nav className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(.55rem,env(safe-area-inset-bottom))] pt-2 md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[24px] border border-white/70 bg-white/[.92] p-1.5 shadow-[0_-14px_40px_rgba(15,23,42,.10)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.92]">
         {items.map((item) => (
-          <a className="grid justify-items-center gap-1 rounded-[14px] px-2 py-1.5 text-[11px] font-black text-slate-500 transition active:scale-95 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300" href={item.href} key={item.label}>
+          <a className="grid justify-items-center gap-1 rounded-[18px] px-2 py-1.5 text-[11px] font-black text-slate-500 transition hover:-translate-y-0.5 hover:bg-mauri-green/10 hover:text-mauri-green active:scale-95 dark:text-slate-300" href={item.href} key={item.label}>
             {item.icon}
             <span>{item.label}</span>
           </a>
@@ -757,7 +837,7 @@ function SectionTitle({ eyebrow, title }) {
 }
 
 function ActionButton({ icon, label, onClick, variant = "solid" }) {
-  const className = variant === "solid" ? "action-button bg-mauri-green text-white hover:bg-emerald-700" : "action-button border border-mauri-border bg-white text-slate-700 hover:border-mauri-green/40 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100";
+  const className = variant === "solid" ? "action-button bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 text-white shadow-[0_16px_35px_rgba(21,128,61,.20)] hover:shadow-[0_20px_45px_rgba(21,128,61,.28)]" : "action-button border border-mauri-border bg-white/85 text-slate-700 hover:border-mauri-green/40 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100";
   return (
     <button className={className} onClick={onClick} type="button">
       {icon}
