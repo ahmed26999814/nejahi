@@ -328,8 +328,16 @@ function Hero() {
 }
 
 function SearchPanel({ error, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions }) {
+  const [focused, setFocused] = useState(false);
+  const visibleSuggestions = focused && suggestions.length > 0;
+
+  function pickSuggestion(student) {
+    setFocused(false);
+    onPickSuggestion(student);
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="search-card animate-slide-up">
+    <form onSubmit={(event) => { setFocused(false); handleSubmit(event); }} className="search-card animate-slide-up">
       <div className="relative min-w-0 flex-1">
         <label className="relative block">
           <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
@@ -339,13 +347,15 @@ function SearchPanel({ error, handleSubmit, loading, message, onPickSuggestion, 
             className="search-input"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            onBlur={() => window.setTimeout(() => setFocused(false), 140)}
+            onFocus={() => setFocused(true)}
             placeholder="أدخل رقم المترشح أو الاسم الكامل"
           />
         </label>
-        {suggestions.length > 0 && (
+        {visibleSuggestions && (
           <div className="suggestions-panel">
             {suggestions.map((student) => (
-              <button className="suggestion-item" key={student.id} onClick={() => onPickSuggestion(student)} type="button">
+              <button className="suggestion-item" key={student.id} onMouseDown={(event) => event.preventDefault()} onClick={() => pickSuggestion(student)} type="button">
                 <span className="min-w-0 text-start">
                   <strong className="line-clamp-1 block">{student.name}</strong>
                   <small className="line-clamp-1 text-slate-500 dark:text-slate-400">{student.id} - {student.track}</small>

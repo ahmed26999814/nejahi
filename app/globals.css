@@ -79,15 +79,15 @@ svg {
   }
 
   .compact-hero {
-    @apply grid items-center gap-4 rounded-[22px] border border-white/70 bg-white/75 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/10 md:grid-cols-[1fr_auto] md:p-6;
+    @apply grid items-center gap-4 rounded-[22px] border border-white/70 bg-white/75 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95 md:grid-cols-[1fr_auto] md:p-6;
   }
 
   .search-card {
-    @apply grid gap-2 rounded-[24px] border border-white/70 bg-white/85 p-3 shadow-premium backdrop-blur-xl transition focus-within:-translate-y-0.5 focus-within:border-mauri-green/40 focus-within:shadow-glow dark:border-white/10 dark:bg-white/10 md:grid-cols-[1fr_auto];
+    @apply grid gap-2 rounded-[24px] border border-white/70 bg-white/85 p-3 shadow-premium backdrop-blur-xl transition focus-within:-translate-y-0.5 focus-within:border-mauri-green/40 focus-within:shadow-glow dark:border-white/10 dark:bg-[#10231a]/95 md:grid-cols-[1fr_auto];
   }
 
   .search-input {
-    @apply h-14 w-full rounded-[18px] border border-mauri-border bg-white px-4 pr-12 text-base font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/50 focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/10 dark:text-white;
+    @apply h-14 w-full rounded-[18px] border border-mauri-border bg-white px-4 pr-12 text-base font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/50 focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-[#172b22] dark:text-white;
   }
 
   .suggestions-panel {
@@ -100,7 +100,7 @@ svg {
   }
 
   .stat-chip {
-    @apply flex min-w-[9.5rem] items-center gap-3 rounded-[18px] border border-white/70 bg-white/75 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/10;
+    @apply flex min-w-[9.5rem] items-center gap-3 rounded-[18px] border border-white/70 bg-white/75 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95;
   }
 
   .mini-card {
@@ -108,16 +108,16 @@ svg {
   }
 
   .result-card {
-    @apply rounded-[22px] border border-mauri-border bg-white p-4 shadow-premium dark:border-white/10 dark:bg-white/10 md:p-5;
+    @apply rounded-[22px] border border-mauri-border bg-white p-4 shadow-premium dark:border-white/10 dark:bg-[#10231a]/95 md:p-5;
   }
 
   .result-modal {
-    @apply relative overflow-hidden rounded-[28px] border bg-white/90 p-4 shadow-premium backdrop-blur-xl dark:bg-white/10 md:p-6;
+    @apply relative overflow-hidden rounded-[28px] border bg-white/95 p-4 shadow-premium backdrop-blur-xl dark:bg-[#10231a]/95 md:p-6;
     animation: zoomIn 460ms cubic-bezier(.2, .8, .2, 1) both;
   }
 
   .student-name-panel {
-    @apply mt-2 rounded-[22px] border border-mauri-green/15 bg-white/70 p-3 shadow-soft dark:border-white/10 dark:bg-white/10;
+    @apply mt-2 rounded-[22px] border border-mauri-green/15 bg-white/80 p-3 shadow-soft dark:border-white/10 dark:bg-[#172b22];
   }
 
   .result-page {
@@ -126,7 +126,7 @@ svg {
   }
 
   .result-page-backdrop {
-    @apply fixed inset-0 bg-slate-950/45 backdrop-blur-xl;
+    @apply fixed inset-0 bg-slate-950/80 backdrop-blur-xl;
   }
 
   .result-page-shell {
@@ -135,7 +135,7 @@ svg {
   }
 
   .result-page-header {
-    @apply flex items-center justify-between gap-3 rounded-[24px] border border-white/70 bg-white/90 p-3 shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/90;
+    @apply flex items-center justify-between gap-3 rounded-[24px] border border-white/70 bg-white/95 p-3 shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95;
   }
 
   .close-result-button {
@@ -156,7 +156,7 @@ svg {
   }
 
   .result-average {
-    @apply w-fit rounded-[22px] border border-mauri-green/15 bg-white/80 px-5 py-3 text-center shadow-soft dark:border-white/10 dark:bg-white/10;
+    @apply w-fit rounded-[22px] border border-mauri-green/15 bg-white/85 px-5 py-3 text-center shadow-soft dark:border-white/10 dark:bg-[#172b22];
   }
 
   .success-banner {
@@ -214,7 +214,7 @@ svg {
   }
 
   .track-group {
-    @apply rounded-[22px] border border-white/70 bg-white/75 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/10;
+    @apply rounded-[22px] border border-white/70 bg-white/75 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95;
   }
 
   .contact-chip {
