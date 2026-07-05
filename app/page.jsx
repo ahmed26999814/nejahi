@@ -140,6 +140,9 @@ const UI_TEXT = {
     chooseCentre: "اختر مركز الامتحان",
     candidateNumber: "رقم المترشح",
     unavailable: "غير متوفرة",
+    concoursFailed: "راسب",
+    concoursPassedCompetition: "ناجح في المسابقة",
+    concoursPassedCertificate: "ناجح في المسابقة والشهادة",
     statusLabels: { admis: "ناجح", sessionnaire: "دورة استدراكية", absent: "غائب", ajourne: "راسب", unknown: "غير محددة" },
     missingEnv: "لم يتم ضبط متغيرات Supabase في بيئة النشر.",
     statsLoadError: "تعذر تحميل الإحصائيات من Supabase.",
@@ -239,6 +242,9 @@ const UI_TEXT = {
     chooseCentre: "Choisir le centre d'examen",
     candidateNumber: "Numéro du candidat",
     unavailable: "Non disponible",
+    concoursFailed: "Ajourné",
+    concoursPassedCompetition: "Admis au concours",
+    concoursPassedCertificate: "Admis au concours et au certificat",
     statusLabels: { admis: "Admis", sessionnaire: "Session complémentaire", absent: "Absent", ajourne: "Ajourné", unknown: "Non défini" },
     missingEnv: "Les variables Supabase ne sont pas configurées en production.",
     statsLoadError: "Impossible de charger les statistiques depuis Supabase.",
@@ -335,6 +341,16 @@ function getOfficialStatus(value) {
 
 function getStatusDisplay(status, text) {
   return { ...status, label: text?.statusLabels?.[status.className] || status.label };
+}
+
+function getConcoursStatus(total, text = UI_TEXT.ar) {
+  if (total >= 100) {
+    return { label: text.concoursPassedCertificate, icon: <CheckIcon />, className: "admis" };
+  }
+  if (total >= 85) {
+    return { label: text.concoursPassedCompetition, icon: <CheckIcon />, className: "admis" };
+  }
+  return { label: text.concoursFailed, icon: <XIcon />, className: "ajourne" };
 }
 
 function getAverageTone(average) {
@@ -1755,9 +1771,9 @@ function CountUp({ decimals = 0, value }) {
 function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verificationCode }) {
   const average = parseAverage(student.MOD);
   const isConcours = student.source === "concours";
-  const status = getStatusDisplay(getOfficialStatus(student.kr), text);
-  const isPassed = !isConcours && status.className === "admis";
-  const isFailed = !isConcours && status.className === "ajourne";
+  const status = isConcours ? getConcoursStatus(average, text) : getStatusDisplay(getOfficialStatus(student.kr), text);
+  const isPassed = status.className === "admis";
+  const isFailed = status.className === "ajourne";
   const isTopRanked = student.rank && student.rank <= 3;
   const tone = isFailed ? "calm" : getAverageTone(average);
   const averagePhrase = getAveragePhrase(average);
@@ -1788,6 +1804,7 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
         ? [
           [text.id, student.id, <HashIcon key="hash" />],
           [text.totalScore, `${average.toFixed(2)} / 200`, <ChartIcon key="chart" />],
+          [text.decision, status.label, <InfoIcon key="decision" />],
           [text.type, student.type || student.track || text.unavailable, <BookIcon key="type" />],
           [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
           [text.center, student.centre || text.unavailable, <MapIcon key="center" />, () => onOpenRanking?.("centre", student.centre, text.center)],
@@ -1843,7 +1860,7 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
             </strong>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {!isConcours && <StatusBadge status={status} />}
+            <StatusBadge status={status} />
             <span className="top-rank-badge">
               <AwardIcon />
               {text.rank} {student.rank ? `#${student.rank}` : text.unavailable}
@@ -1912,9 +1929,9 @@ function AverageLevelBar({ level }) {
 }
 
 function ResultExperience({ onOpenRanking, onShare, student, text }) {
-  const status = getStatusDisplay(getOfficialStatus(student.kr), text);
   const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
   const isConcours = student.source === "concours";
+  const status = isConcours ? getConcoursStatus(getAverage(student), text) : getStatusDisplay(getOfficialStatus(student.kr), text);
 
   return (
     <section className="app-shell result-official-page py-4 md:py-8" aria-label={text?.officialResult || "بطاقة النتيجة الرسمية"}>
@@ -1929,7 +1946,7 @@ function ResultExperience({ onOpenRanking, onShare, student, text }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`official-status-stamp ${isConcours ? "unknown" : status.className}`}>{isConcours ? `${text.totalScore}: ${formatScore(student, text)}` : status.label}</span>
+            <span className={`official-status-stamp ${status.className}`}>{status.label}</span>
           </div>
         </header>
         <ResultCard onOpenRanking={onOpenRanking} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
