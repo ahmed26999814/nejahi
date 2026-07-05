@@ -66,6 +66,10 @@ const UI_TEXT = {
     passedCount: "الناجحون",
     highestAverage: "أعلى معدل",
     averageLabel: "المتوسط",
+    totalScore: "المجموع",
+    participants: "المشاركون",
+    highestScore: "أعلى مجموع",
+    averageScore: "متوسط المجموع",
     searchPlaceholder: "أدخل رقم المترشح أو الاسم الكامل",
     searchButton: "بحث",
     searching: "بحث...",
@@ -161,6 +165,10 @@ const UI_TEXT = {
     passedCount: "Admis",
     highestAverage: "Meilleure moyenne",
     averageLabel: "Moyenne",
+    totalScore: "Total",
+    participants: "Participants",
+    highestScore: "Meilleur total",
+    averageScore: "Total moyen",
     searchPlaceholder: "Entrez le numéro ou le nom complet",
     searchButton: "Rechercher",
     searching: "Recherche...",
@@ -226,7 +234,7 @@ const UI_TEXT = {
 
 function parseAverage(value) {
   if (!value) return 0;
-  return Number(String(value).replace(",", ".").trim()) || 0;
+  return Number.parseFloat(String(value).replace(",", ".").trim()) || 0;
 }
 
 function cleanText(value) {
@@ -257,6 +265,11 @@ function getColumn(row, ...names) {
 
 function getAverage(student) {
   return parseAverage(student.MOD);
+}
+
+function formatScore(student, text = UI_TEXT.ar) {
+  const score = getAverage(student);
+  return student.source === "concours" ? `${score.toFixed(2)} / 200` : score.toFixed(2);
 }
 
 function isMissingSupabaseEnv(error) {
@@ -442,23 +455,28 @@ function prepareBacSessionStudents(rows) {
 
 function prepareConcoursStudents(rows) {
   const normalized = rows
-    .map((row, index) => ({
-      id: String(getColumn(row, "Numéro_C1AS") ?? "").trim(),
-      internalId: cleanText(getColumn(row, "Noreg", "NODOSS") || ""),
-      name: cleanText(getColumn(row, "NOM_AR") || "اسم غير متوفر"),
-      track: cleanText(getColumn(row, "TYPE") || "كونكور"),
-      MOD: getColumn(row, "TOTAL"),
-      kr: "",
-      wl: cleanText(getColumn(row, "WILAYA_AR") || ""),
-      moughataa: cleanText(getColumn(row, "MOUGHATAA_AR") || ""),
-      ms: cleanText(getColumn(row, "Ecole_AR") || ""),
-      centre: cleanText(getColumn(row, "Centre Examen_AR") || ""),
-      birthPlace: cleanText(getColumn(row, "LIEU NAISS_AR") || ""),
-      birthDate: cleanText(getColumn(row, "ANNEE_NAISS") || ""),
-      type: cleanText(getColumn(row, "TYPE") || ""),
-      source: "concours",
-      originalIndex: index,
-    }))
+    .map((row, index) => {
+      const total = getColumn(row, "TOTAL");
+      return {
+        id: String(getColumn(row, "Numéro_C1AS", "Numero_C1AS") ?? "").trim(),
+        internalId: cleanText(getColumn(row, "NODOSS", "Noreg") || ""),
+        noreg: cleanText(getColumn(row, "Noreg") || ""),
+        name: cleanText(getColumn(row, "NOM_AR") || "اسم غير متوفر"),
+        track: cleanText(getColumn(row, "TYPE") || "كونكور"),
+        MOD: total,
+        totalScore: parseAverage(total),
+        kr: "",
+        wl: cleanText(getColumn(row, "WILAYA_AR") || ""),
+        moughataa: cleanText(getColumn(row, "MOUGHATAA_AR") || ""),
+        ms: cleanText(getColumn(row, "Ecole_AR") || ""),
+        centre: cleanText(getColumn(row, "Centre Examen_AR") || ""),
+        birthPlace: cleanText(getColumn(row, "LIEU NAISS_AR") || ""),
+        birthDate: cleanText(getColumn(row, "ANNEE_NAISS") || ""),
+        type: cleanText(getColumn(row, "TYPE") || ""),
+        source: "concours",
+        originalIndex: index,
+      };
+    })
     .filter((student) => student.id);
 
   const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
@@ -662,15 +680,17 @@ async function searchResults(query, exam) {
 function calculateStats(students) {
   const total = students.length;
   const averages = students.map((student) => parseAverage(student.MOD));
-  const passed = students.filter((student) => getOfficialStatus(student.kr).className === "admis").length;
-  const failed = students.filter((student) => getOfficialStatus(student.kr).className === "ajourne").length;
+  const isConcours = students.some((student) => student.source === "concours");
+  const passed = isConcours ? 0 : students.filter((student) => getOfficialStatus(student.kr).className === "admis").length;
+  const failed = isConcours ? 0 : students.filter((student) => getOfficialStatus(student.kr).className === "ajourne").length;
   const highest = total ? Math.max(...averages) : 0;
   const average = total ? averages.reduce((sum, value) => sum + value, 0) / total : 0;
-  return { total, passed, failed, highest, average };
+  return { total, passed, failed, highest, average, isConcours };
 }
 
 function summarizeStudents(students, field) {
   const groups = new Map();
+  const isConcours = students.some((student) => student.source === "concours");
 
   students.forEach((student) => {
     const key = cleanText(student[field]) || "غير محدد";
@@ -679,7 +699,7 @@ function summarizeStudents(students, field) {
     current.total += 1;
     current.sum += average;
     current.highest = Math.max(current.highest, average);
-    if (getOfficialStatus(student.kr).className === "admis") current.passed += 1;
+    if (!isConcours && getOfficialStatus(student.kr).className === "admis") current.passed += 1;
     groups.set(key, current);
   });
 
@@ -687,6 +707,7 @@ function summarizeStudents(students, field) {
     .map((group) => ({
       ...group,
       average: group.total ? group.sum / group.total : 0,
+      isConcours,
       passRate: group.total ? (group.passed / group.total) * 100 : 0,
     }))
     .sort((a, b) => b.total - a.total || b.average - a.average)
@@ -878,7 +899,8 @@ export default function HomePage() {
   }
 
   function shareResult(student) {
-    const shareText = `${text.result} ${student.name}\n${text.id}: ${student.id}\n${text.track}: ${student.track}\n${text.averageLabel}: ${parseAverage(student.MOD).toFixed(2)}\n${text.rank}: ${student.rank || text.unavailable}\nMauriResults`;
+    const scoreLabel = student.source === "concours" ? text.totalScore : text.averageLabel;
+    const shareText = `${text.result} ${student.name}\n${text.id}: ${student.id}\n${text.track}: ${student.track}\n${scoreLabel}: ${formatScore(student, text)}\n${text.rank}: ${student.rank || text.unavailable}\nMauriResults`;
     if (navigator.share) {
       navigator.share({ title: text.examResultTitle, text: shareText }).catch(() => {});
       return;
@@ -1230,7 +1252,7 @@ function TrackGroupsPreview({ groups, onSelect, text }) {
                   <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{student.name}</strong>
                   <small className="line-clamp-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.id} - {student.ms || text.unavailable}</small>
                 </span>
-                <strong className="text-lg font-black text-mauri-green dark:text-mauri-gold">{getAverage(student).toFixed(2)}</strong>
+                <strong className="text-lg font-black text-mauri-green dark:text-mauri-gold">{formatScore(student, text)}</strong>
               </button>
             ))}
           </div>
@@ -1257,10 +1279,10 @@ function AnalyticsPage({ lang, loading, regionStats, schoolStats, selectedExam, 
         <>
           <StatsStrip loading={loading} stats={stats} text={text} />
           <div className="grid gap-4 lg:grid-cols-2">
-            <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} text={text} title={text.byRegions} />
-            <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} text={text} title={text.byTracks} />
+            <StatsTable icon={<MapIcon />} isConcours={stats.isConcours} loading={loading} rows={regionStats} text={text} title={text.byRegions} />
+            <StatsTable icon={<BookIcon />} isConcours={stats.isConcours} loading={loading} rows={trackStats} text={text} title={text.byTracks} />
             <div className="lg:col-span-2">
-              <StatsTable icon={<SchoolIcon />} loading={loading} rows={schoolStats} text={text} title={text.bySchools} />
+              <StatsTable icon={<SchoolIcon />} isConcours={stats.isConcours} loading={loading} rows={schoolStats} text={text} title={text.bySchools} />
             </div>
           </div>
         </>
@@ -1300,7 +1322,7 @@ function PageHero({ description, eyebrow, icon, title }) {
   );
 }
 
-function StatsTable({ icon, loading, rows, text, title }) {
+function StatsTable({ icon, isConcours, loading, rows, text, title }) {
   return (
     <section className="analytics-panel animate-slide-up">
       <div className="mb-3 flex items-center gap-2">
@@ -1311,7 +1333,7 @@ function StatsTable({ icon, loading, rows, text, title }) {
         {loading ? (
           Array.from({ length: 6 }).map((_, index) => <span className="skeleton h-12 rounded-[16px]" key={index} />)
         ) : rows.length ? (
-          rows.map((row) => <StatsRow row={row} text={text} key={row.label} />)
+          rows.map((row) => <StatsRow isConcours={isConcours} row={row} text={text} key={row.label} />)
         ) : (
           <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{text.noData}</p>
         )}
@@ -1320,16 +1342,18 @@ function StatsTable({ icon, loading, rows, text, title }) {
   );
 }
 
-function StatsRow({ row, text }) {
+function StatsRow({ isConcours, row, text }) {
   return (
     <article className="analytics-row">
       <div className="min-w-0">
         <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{row.label}</strong>
-        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{text.passedOf} {row.passed.toLocaleString("ar-MR")} {text.from} {row.total.toLocaleString("ar-MR")}</span>
+        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          {isConcours ? `${text.participants} ${row.total.toLocaleString("ar-MR")} - ${text.highestScore} ${row.highest.toFixed(2)}` : `${text.passedOf} ${row.passed.toLocaleString("ar-MR")} ${text.from} ${row.total.toLocaleString("ar-MR")}`}
+        </span>
       </div>
       <div className="text-left">
         <strong className="block text-sm font-black text-mauri-green dark:text-mauri-gold">{row.average.toFixed(2)}</strong>
-        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{row.passRate.toFixed(1)}%</span>
+        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{isConcours ? text.averageScore : `${row.passRate.toFixed(1)}%`}</span>
       </div>
     </article>
   );
@@ -1439,12 +1463,18 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
 }
 
 function StatsStrip({ loading, stats, text = UI_TEXT.ar }) {
-  const cards = [
-    { label: text.studentCount, value: stats.total, icon: <GraduationIcon /> },
-    { label: text.passedCount, value: stats.passed, icon: <CheckCircleIcon /> },
-    { label: text.highestAverage, value: stats.highest, decimals: 2, icon: <TrendingIcon /> },
-    { label: text.averageLabel, value: stats.average, decimals: 2, icon: <ChartIcon /> },
-  ];
+  const cards = stats.isConcours
+    ? [
+      { label: text.participants, value: stats.total, icon: <GraduationIcon /> },
+      { label: text.highestScore, value: stats.highest, decimals: 2, icon: <TrendingIcon /> },
+      { label: text.averageScore, value: stats.average, decimals: 2, icon: <ChartIcon /> },
+    ]
+    : [
+      { label: text.studentCount, value: stats.total, icon: <GraduationIcon /> },
+      { label: text.passedCount, value: stats.passed, icon: <CheckCircleIcon /> },
+      { label: text.highestAverage, value: stats.highest, decimals: 2, icon: <TrendingIcon /> },
+      { label: text.averageLabel, value: stats.average, decimals: 2, icon: <ChartIcon /> },
+    ];
 
   return (
     <section className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 md:grid md:grid-cols-4 md:overflow-visible">
@@ -1485,9 +1515,10 @@ function CountUp({ decimals = 0, value }) {
 
 function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verificationCode }) {
   const average = parseAverage(student.MOD);
+  const isConcours = student.source === "concours";
   const status = getStatusDisplay(getOfficialStatus(student.kr), text);
-  const isPassed = status.className === "admis";
-  const isFailed = status.className === "ajourne";
+  const isPassed = !isConcours && status.className === "admis";
+  const isFailed = !isConcours && status.className === "ajourne";
   const isTopRanked = student.rank && student.rank <= 3;
   const tone = isFailed ? "calm" : getAverageTone(average);
   const averagePhrase = getAveragePhrase(average);
@@ -1517,12 +1548,13 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
       : student.source === "concours"
         ? [
           [text.id, student.id, <HashIcon key="hash" />],
-          [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
+          [text.totalScore, `${average.toFixed(2)} / 200`, <ChartIcon key="chart" />],
           [text.type, student.type || student.track || text.unavailable, <BookIcon key="type" />],
           [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
           [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
           [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
           [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />],
+          ["NODOSS", student.internalId || text.unavailable, <HashIcon key="nodoss" />],
           [text.birthPlace, student.birthPlace || text.unavailable, <UserIcon key="birth-place" />],
           [text.yearBirth, student.birthDate || text.unavailable, <BookIcon key="birth-year" />],
         ]
@@ -1567,16 +1599,18 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
           <div className="student-name-panel">
             <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{text.studentName}</span>
             <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
-            <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">{average.toFixed(2)}</strong>
+            <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">
+              {isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}
+            </strong>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <StatusBadge status={status} />
+            {!isConcours && <StatusBadge status={status} />}
             <span className="top-rank-badge">
               <AwardIcon />
               {text.rank} {student.rank ? `#${student.rank}` : text.unavailable}
             </span>
             <span className="rounded-full border border-mauri-gold/25 bg-mauri-gold/10 px-3 py-1.5 text-xs font-black text-yellow-800 shadow-soft dark:text-yellow-200">
-              {student.sessionType || (student.source === "bac_session" ? text.statusLabels.sessionnaire : "2025")}
+              {isConcours ? text.totalScore : student.sessionType || (student.source === "bac_session" ? text.statusLabels.sessionnaire : "2025")}
             </span>
             <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{text.verify} {verificationCode}</span>
             {isTopRanked && (
@@ -1596,10 +1630,12 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
         </div>
       )}
 
-      <div className="result-phrase">
-        <MessageIcon />
-        <span>{averagePhrase}</span>
-      </div>
+      {!isConcours && (
+        <div className="result-phrase">
+          <MessageIcon />
+          <span>{averagePhrase}</span>
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         {details.map(([label, value, icon, onClick]) => (
@@ -1639,6 +1675,7 @@ function AverageLevelBar({ level }) {
 function ResultExperience({ onOpenRanking, onShare, student, text }) {
   const status = getStatusDisplay(getOfficialStatus(student.kr), text);
   const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
+  const isConcours = student.source === "concours";
 
   return (
     <section className="app-shell result-official-page py-4 md:py-8" aria-label={text?.officialResult || "بطاقة النتيجة الرسمية"}>
@@ -1653,7 +1690,7 @@ function ResultExperience({ onOpenRanking, onShare, student, text }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`official-status-stamp ${status.className}`}>{status.label}</span>
+            <span className={`official-status-stamp ${isConcours ? "unknown" : status.className}`}>{isConcours ? `${text.totalScore}: ${formatScore(student, text)}` : status.label}</span>
           </div>
         </header>
         <ResultCard onOpenRanking={onOpenRanking} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
@@ -1695,7 +1732,7 @@ function MatchesList({ matches, onSelect, text = UI_TEXT.ar }) {
               <strong className="line-clamp-1 block font-black text-slate-950 dark:text-white">{student.name}</strong>
               <span className="mt-1 block text-xs font-bold text-slate-500 dark:text-slate-400">{text.number} {student.id} - {student.track}</span>
             </span>
-            <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-sm font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</span>
+            <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-sm font-black text-mauri-green">{formatScore(student, text)}</span>
           </button>
         ))}
       </div>
@@ -1815,7 +1852,7 @@ function TopperCard({ student, index, onSelect, text = UI_TEXT.ar }) {
         <p className="mt-1 line-clamp-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.track}</p>
       </div>
       <div className="text-center">
-        <strong className="block text-lg font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</strong>
+        <strong className="block text-lg font-black text-mauri-green">{formatScore(student, text)}</strong>
         <button className="text-[11px] font-black text-slate-500 underline-offset-4 hover:text-mauri-green hover:underline" onClick={() => onSelect(student)} type="button">{text.showResult}</button>
       </div>
     </article>
