@@ -9,6 +9,7 @@ const BAC_TABLE = "bac_results";
 const BAC_SESSION_TABLE = "bac_session2_results";
 const CONCOURS_TABLE = "concours_results";
 const CONCOURS_VIEW = "concours_results_view";
+const CONCOURS_LOCATIONS_VIEW = "concours_locations_view";
 const EXCELLENCE_1AS_TABLE = "excellence_1as_results";
 const BREVET_TABLE = "brevet_results";
 const TABLE_BY_SOURCE = {
@@ -630,6 +631,27 @@ async function fetchConcoursResults() {
   return students;
 }
 
+async function fetchConcoursLocations() {
+  const rows = [];
+  let from = 0;
+  while (true) {
+    const batch = await supabaseRequest({
+      select: "*",
+      limit: PAGE_SIZE,
+      offset: from,
+    }, CONCOURS_LOCATIONS_VIEW);
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  console.log("[MauriResults Concours Locations]", {
+    rawCount: rows.length,
+    wilayas: uniqueSorted(rows.map((row) => getColumn(row, "WILAYA_AR"))).length,
+  });
+  return rows;
+}
+
 async function fetchConcoursFilteredResults(field, value) {
   const columnByField = {
     wl: "WILAYA_AR",
@@ -658,6 +680,22 @@ async function fetchConcoursFilteredResults(field, value) {
 
   const students = prepareConcoursStudents(rows);
   logConcoursRows(`filtered:${field}`, rows, students);
+  return students;
+}
+
+async function searchConcoursByLocation({ wilaya, moughataa, centre, number }) {
+  const numbers = concoursNumberSearchValues(number);
+  const rows = await supabaseRequest({
+    select: "*",
+    WILAYA_AR: `eq.${escapePostgrestValue(wilaya)}`,
+    MOUGHATAA_AR: `eq.${escapePostgrestValue(moughataa)}`,
+    "Centre Examen_AR": `eq.${escapePostgrestValue(centre)}`,
+    or: `(${numbers.map((item) => `NODOSS.eq.${item}`).join(",")},${numbers.map((item) => `Numéro_C1AS.eq.${item}`).join(",")})`,
+    order: "total_num.desc.nullslast",
+    limit: 20,
+  }, CONCOURS_VIEW);
+  const students = prepareConcoursStudents(rows);
+  logConcoursRows("location-search", rows, students);
   return students;
 }
 
@@ -1228,9 +1266,13 @@ function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, 
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
       <section className="scroll-mt-20" id="resultArea">
-        <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
+        {exam.source === "concours" ? (
+          <ConcoursSearchPanel onSelect={onSelect} text={text} />
+        ) : (
+          <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
+        )}
         {loading && <ResultLoadingCard text={text} />}
-        {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
+        {exam.source !== "concours" && !loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
       </section>
     </section>
   );
@@ -1251,45 +1293,76 @@ function uniqueSorted(values) {
   return [...new Set(values.map(cleanText).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
 }
 
-function ConcoursSearchPanel({ loading, onSelect, students, text }) {
+function ConcoursSearchPanel({ onSelect, text }) {
   const [wilaya, setWilaya] = useState("");
   const [moughataa, setMoughataa] = useState("");
   const [centre, setCentre] = useState("");
   const [number, setNumber] = useState("");
+  const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [localError, setLocalError] = useState("");
 
-  const wilayas = useMemo(() => uniqueSorted(students.map((student) => student.wl)), [students]);
-  const moughataas = useMemo(() => uniqueSorted(students.filter((student) => student.wl === wilaya).map((student) => student.moughataa)), [students, wilaya]);
-  const centres = useMemo(() => uniqueSorted(students.filter((student) => student.wl === wilaya && student.moughataa === moughataa).map((student) => student.centre)), [centre, moughataa, students, wilaya]);
+  useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+    fetchConcoursLocations()
+      .then((rows) => {
+        if (!ignore) setLocations(rows);
+      })
+      .catch((error) => {
+        console.error("[MauriResults Concours Locations Error]", error);
+        if (!ignore) setLocalError(text.connectionError);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [text.connectionError]);
 
-  function submit(event) {
+  const wilayas = useMemo(() => uniqueSorted(locations.map((row) => getColumn(row, "WILAYA_AR"))), [locations]);
+  const moughataas = useMemo(() => uniqueSorted(locations.filter((row) => normalizeComparable(getColumn(row, "WILAYA_AR")) === normalizeComparable(wilaya)).map((row) => getColumn(row, "MOUGHATAA_AR"))), [locations, wilaya]);
+  const centres = useMemo(() => uniqueSorted(locations.filter((row) => normalizeComparable(getColumn(row, "WILAYA_AR")) === normalizeComparable(wilaya) && normalizeComparable(getColumn(row, "MOUGHATAA_AR")) === normalizeComparable(moughataa)).map((row) => getColumn(row, "Centre Examen_AR"))), [locations, moughataa, wilaya]);
+
+  async function submit(event) {
     event.preventDefault();
     setLocalError("");
-    const found = students.find((student) => (
-      normalizeComparable(student.wl) === normalizeComparable(wilaya)
-      && normalizeComparable(student.moughataa) === normalizeComparable(moughataa)
-      && normalizeComparable(student.centre) === normalizeComparable(centre)
-      && normalizeCandidateNumber(student.id) === normalizeCandidateNumber(number)
-    ));
-
-    if (!found) {
-      setLocalError(text.notFound);
+    if (!wilaya || !moughataa || !centre || !number.trim()) {
+      setLocalError(text.enterQuery);
       return;
     }
-    onSelect(found);
+
+    setSearching(true);
+    try {
+      const results = await searchConcoursByLocation({ wilaya, moughataa, centre, number });
+      if (!results.length) {
+        setLocalError(text.notFound);
+        return;
+      }
+      onSelect(results[0]);
+    } catch (error) {
+      console.error("[MauriResults Concours Search Error]", error);
+      setLocalError(text.connectionError);
+    } finally {
+      setSearching(false);
+    }
   }
+
+  const busy = loading || searching;
 
   return (
     <form className="search-card animate-slide-up" onSubmit={submit}>
-      <SelectField disabled={loading} label={text.chooseWilaya} onChange={(value) => { setWilaya(value); setMoughataa(""); setCentre(""); }} options={wilayas} value={wilaya} />
-      <SelectField disabled={loading || !wilaya} label={text.chooseMoughataa} onChange={(value) => { setMoughataa(value); setCentre(""); }} options={moughataas} value={moughataa} />
-      <SelectField disabled={loading || !moughataa} label={text.chooseCentre} onChange={setCentre} options={centres} value={centre} />
+      <SelectField disabled={busy} label={text.chooseWilaya} onChange={(value) => { setWilaya(value); setMoughataa(""); setCentre(""); }} options={wilayas} value={wilaya} />
+      <SelectField disabled={busy || !wilaya} label={text.chooseMoughataa} onChange={(value) => { setMoughataa(value); setCentre(""); }} options={moughataas} value={moughataa} />
+      <SelectField disabled={busy || !moughataa} label={text.chooseCentre} onChange={setCentre} options={centres} value={centre} />
       <label className="grid gap-1">
         <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{text.candidateNumber}</span>
-        <input className="search-input pr-4" disabled={loading || !centre} onChange={(event) => setNumber(event.target.value)} placeholder={text.candidateNumber} value={number} />
+        <input className="search-input pr-4" disabled={busy || !centre} onChange={(event) => setNumber(event.target.value)} placeholder={text.candidateNumber} value={number} />
       </label>
-      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98]" disabled={loading} type="submit">
-        {loading ? text.searching : text.searchButton}
+      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={busy} type="submit">
+        {busy ? text.searching : text.searchButton}
       </button>
       {localError && <p className="col-span-full text-center text-xs font-black text-red-600 dark:text-red-300 md:text-start">{localError}</p>}
     </form>
