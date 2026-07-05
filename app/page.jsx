@@ -1,7 +1,12 @@
 "use client";
 
-import confetti from "canvas-confetti";
+import { cva } from "class-variance-authority";
+import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
+import { Clock3, Database, Image as ImageIcon, ShieldCheck, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { FaFacebookF, FaWhatsapp } from "react-icons/fa6";
+import * as Select from "@radix-ui/react-select";
+import { Toaster, toast } from "sonner";
 
 const PAGE_SIZE = 1000;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,6 +25,18 @@ const TABLE_BY_SOURCE = {
   concours: CONCOURS_VIEW,
   excellence_1as: EXCELLENCE_1AS_TABLE,
 };
+
+const actionButtonClass = cva("action-button", {
+  variants: {
+    variant: {
+      solid: "bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 text-white shadow-[0_16px_35px_rgba(21,128,61,.20)] hover:shadow-[0_20px_45px_rgba(21,128,61,.28)]",
+      light: "border border-mauri-border bg-white/85 text-slate-700 hover:border-mauri-green/40 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100",
+    },
+  },
+  defaultVariants: {
+    variant: "solid",
+  },
+});
 
 const EXAM_CARDS = [
   { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },
@@ -360,8 +377,9 @@ function examHasTrackGroups(source) {
   return source === "bac" || source === "bac_session";
 }
 
-function fireSuccessConfetti() {
+async function fireSuccessConfetti() {
   if (typeof window === "undefined") return;
+  const { default: confetti } = await import("canvas-confetti");
   const duration = 3200;
   const animationEnd = Date.now() + duration;
   const defaults = {
@@ -999,6 +1017,9 @@ export default function HomePage() {
     setLang(savedLang || "ar");
     window.history.replaceState({ view: "home" }, "", window.location.pathname);
 
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -1278,7 +1299,9 @@ export default function HomePage() {
   }
 
   return (
-    <main className="app-background min-h-screen pb-20 text-mauri-ink dark:text-white md:pb-0">
+    <LazyMotion features={domAnimation}>
+      <MotionConfig reducedMotion="user">
+    <m.main className="app-background min-h-screen pb-20 text-mauri-ink dark:text-white md:pb-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.32, ease: "easeOut" }}>
       <Header activeView={activeView} lang={lang} onNavigate={openView} onToggleLang={toggleLang} text={text} theme={theme} setTheme={setTheme} />
 
       {activeView === "home" && (
@@ -1313,8 +1336,11 @@ export default function HomePage() {
 
       {activeView === "home" && <Footer text={text} />}
       <BottomNav activeView={activeView} onNavigate={openView} text={text} />
+      <Toaster richColors position="top-center" dir="rtl" toastOptions={{ duration: 4200 }} />
       {resultLoading && <ResultLoadingOverlay text={text} />}
-    </main>
+    </m.main>
+      </MotionConfig>
+    </LazyMotion>
   );
 }
 
@@ -1323,16 +1349,18 @@ function HomeView({ lang, onSelectYear, text }) {
     <section className="app-shell grid gap-5 pt-5 md:gap-7 md:pt-8">
       <Hero text={text} />
       <HomeHighlights text={text} />
+      <OfficialStats text={text} />
       <YearCards lang={lang} onSelectYear={onSelectYear} text={text} />
+      <AssetPreviewStrip />
     </section>
   );
 }
 
 function HomeHighlights({ text }) {
   const items = [
-    [text.search, <SearchIcon key="search" />],
-    [text.officialResult, <AwardIcon key="award" />],
-    [text.analytics, <ChartIcon key="chart" />],
+    [text.search, <Zap key="search" />],
+    [text.officialResult, <ShieldCheck key="award" />],
+    [text.analytics, <Database key="chart" />],
   ];
 
   return (
@@ -1341,6 +1369,40 @@ function HomeHighlights({ text }) {
         <div className="home-highlight" key={label}>
           <span>{icon}</span>
           <strong>{label}</strong>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function OfficialStats({ text }) {
+  const items = [
+    [text.studentCount, "250k+", <Database key="database" />],
+    [text.open, "2025", <ShieldCheck key="shield" />],
+    ["آخر تحديث", "اليوم", <Clock3 key="clock" />],
+  ];
+
+  return (
+    <section className="official-stats">
+      {items.map(([label, value, icon]) => (
+        <article className="official-stat-card" key={label}>
+          <span>{icon}</span>
+          <strong>{value}</strong>
+          <small>{label}</small>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function AssetPreviewStrip() {
+  const slots = ["hero", "background", "empty-state", "loading", "footer"];
+  return (
+    <section className="asset-strip" aria-label="Prepared image slots">
+      {slots.map((slot) => (
+        <div className="asset-slot" key={slot}>
+          <ImageIcon />
+          <span>public/images/{slot}.png</span>
         </div>
       ))}
     </section>
@@ -1521,10 +1583,25 @@ function SelectField({ disabled, label, onChange, options, value }) {
   return (
     <label className="grid gap-1">
       <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{label}</span>
-      <select className="search-input pr-4" disabled={disabled} onChange={(event) => onChange(event.target.value)} value={value}>
-        <option value="">{label}</option>
-        {options.map((option) => <option value={option} key={option}>{option}</option>)}
-      </select>
+      <Select.Root disabled={disabled} onValueChange={onChange} value={value || undefined}>
+        <Select.Trigger className="search-input flex items-center justify-between pr-4 text-start" aria-label={label}>
+          <Select.Value placeholder={label} />
+          <Select.Icon className="text-mauri-green">
+            <ChevronDownIcon />
+          </Select.Icon>
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Content className="select-content" position="popper" sideOffset={6}>
+            <Select.Viewport className="p-1">
+              {options.map((option) => (
+                <Select.Item className="select-item" value={option} key={option}>
+                  <Select.ItemText>{option}</Select.ItemText>
+                </Select.Item>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
     </label>
   );
 }
@@ -1808,7 +1885,6 @@ function CountUp({ decimals = 0, value }) {
 }
 
 function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verificationCode }) {
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const average = parseAverage(student.MOD);
   const isConcours = student.source === "concours";
   const status = isConcours ? getConcoursStatus(average, text) : getStatusDisplay(getOfficialStatus(student.kr), text);
@@ -1883,14 +1959,12 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
     if (!isPassed) return undefined;
     playSuccessTone();
     fireSuccessConfetti();
-    setShowSuccessToast(true);
-    const timeout = window.setTimeout(() => setShowSuccessToast(false), 4200);
-    return () => window.clearTimeout(timeout);
+    toast.success(text.successToast, { icon: "🎉" });
+    return undefined;
   }, [isPassed, student.id]);
 
   return (
     <article className={`result-modal result-${tone} animate-slide-up`}>
-      {showSuccessToast && <div className="success-toast" role="status">{text.successToast}</div>}
       {isPassed && <span className="success-stamp">{status.label}</span>}
       <div className="result-modal-header">
         <div className="min-w-0 flex-1">
@@ -2203,11 +2277,11 @@ function Footer({ text = UI_TEXT.ar }) {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <a className="developer-link" href="https://www.facebook.com/ahmed.abde.mady" target="_blank" rel="noopener">
-                <FacebookIcon />
+                <FaFacebookF />
                 {text.facebook}
               </a>
               <a className="developer-link" href="https://wa.me/22244881891" target="_blank" rel="noopener">
-                <WhatsAppIcon />
+                <FaWhatsapp />
                 {text.whatsapp}
               </a>
             </div>
@@ -2251,9 +2325,8 @@ function SectionTitle({ eyebrow, title }) {
 }
 
 function ActionButton({ icon, label, onClick, variant = "solid" }) {
-  const className = variant === "solid" ? "action-button bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 text-white shadow-[0_16px_35px_rgba(21,128,61,.20)] hover:shadow-[0_20px_45px_rgba(21,128,61,.28)]" : "action-button border border-mauri-border bg-white/85 text-slate-700 hover:border-mauri-green/40 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100";
   return (
-    <button className={className} onClick={onClick} type="button">
+    <button className={actionButtonClass({ variant })} onClick={onClick} type="button">
       {icon}
       {label}
     </button>
@@ -2294,6 +2367,7 @@ function PrinterIcon() { return <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6" /
 function ShareIcon() { return <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-4" /><path d="m8.6 13.5 6.8 4" /></svg>; }
 function CodeIcon() { return <svg viewBox="0 0 24 24"><path d="m8 9-4 3 4 3" /><path d="m16 9 4 3-4 3" /><path d="m14 4-4 16" /></svg>; }
 function HomeIcon() { return <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>; }
+function ChevronDownIcon() { return <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>; }
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
 function SilverMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 12a2 2 0 0 1 4 0c0 2-4 2-4 4h4" /></svg>; }
 function BronzeMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 11h4l-2 2a2 2 0 1 1-2 2" /></svg>; }

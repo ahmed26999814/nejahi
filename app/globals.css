@@ -124,6 +124,34 @@ svg {
     @apply text-xs font-black text-slate-700 dark:text-slate-200;
   }
 
+  .official-stats {
+    @apply grid grid-cols-3 gap-2 md:gap-3;
+  }
+
+  .official-stat-card {
+    @apply grid min-h-24 content-center justify-items-center gap-1 rounded-[22px] border border-slate-200/80 bg-white/85 p-3 text-center shadow-soft backdrop-blur-xl transition hover:-translate-y-1 hover:border-mauri-green/30 hover:shadow-premium dark:border-white/10 dark:bg-[#10231a]/75;
+  }
+
+  .official-stat-card span {
+    @apply grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-gold/15 text-yellow-700 dark:text-yellow-300;
+  }
+
+  .official-stat-card strong {
+    @apply text-lg font-black text-slate-950 dark:text-white;
+  }
+
+  .official-stat-card small {
+    @apply text-[11px] font-black text-slate-500 dark:text-slate-400;
+  }
+
+  .asset-strip {
+    @apply grid gap-2 rounded-[24px] border border-dashed border-mauri-green/25 bg-white/60 p-3 shadow-soft backdrop-blur-xl dark:border-emerald-300/20 dark:bg-white/[.06] md:grid-cols-5;
+  }
+
+  .asset-slot {
+    @apply flex items-center gap-2 rounded-[16px] bg-white/70 p-2 text-[11px] font-black text-slate-500 dark:bg-white/[.06] dark:text-slate-300;
+  }
+
   .search-card {
     @apply grid gap-2 rounded-[24px] border border-white/70 bg-white/[.78] p-3 shadow-premium backdrop-blur-xl transition focus-within:-translate-y-0.5 focus-within:border-mauri-green/40 focus-within:shadow-glow dark:border-white/10 dark:bg-[#10231a]/[.78] md:grid-cols-[1fr_auto];
   }
@@ -195,6 +223,14 @@ svg {
 
   .search-input {
     @apply h-14 w-full rounded-[18px] border border-mauri-border bg-white px-4 pr-12 text-base font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/50 focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-[#172b22] dark:text-white;
+  }
+
+  .select-content {
+    @apply z-[80] max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[18px] border border-mauri-border bg-white/95 p-1 shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95;
+  }
+
+  .select-item {
+    @apply cursor-pointer rounded-[14px] px-3 py-2 text-sm font-black text-slate-700 outline-none transition data-[highlighted]:bg-mauri-green/10 data-[highlighted]:text-mauri-green dark:text-slate-100;
   }
 
   .suggestions-panel {

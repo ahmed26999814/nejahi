@@ -1,0 +1,35 @@
+{
+  "name": "MauriResults",
+  "short_name": "MauriResults",
+  "description": "منصة نتائج المسابقات الوطنية في موريتانيا",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F8FAF8",
+  "theme_color": "#15803D",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "البحث عن نتيجة",
+      "short_name": "بحث",
+      "url": "/#exam",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
