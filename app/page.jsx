@@ -227,8 +227,13 @@ function cleanText(value) {
 }
 
 function getColumn(row, ...names) {
+  const source = row || {};
+  const normalizedEntries = Object.entries(source).map(([key, value]) => [cleanText(key).toLowerCase(), value]);
   for (const name of names) {
-    if (Object.prototype.hasOwnProperty.call(row, name)) return row[name];
+    if (Object.prototype.hasOwnProperty.call(source, name)) return source[name];
+    const normalizedName = cleanText(name).toLowerCase();
+    const match = normalizedEntries.find(([key]) => key === normalizedName);
+    if (match) return match[1];
   }
   return "";
 }
@@ -313,6 +318,16 @@ function escapePostgrestValue(value) {
   return String(value).replaceAll("\\", "\\\\").replaceAll(",", "\\,").replaceAll(")", "\\)");
 }
 
+function numberSearchValues(query, width = 5) {
+  const value = cleanText(query);
+  if (!/^\d+$/.test(value)) return [escapePostgrestValue(value)];
+  return [...new Set([
+    value,
+    value.padStart(width, "0"),
+    String(Number(value)),
+  ])].map(escapePostgrestValue);
+}
+
 async function supabaseRequest(params, table = BAC_TABLE) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error("Missing Supabase environment variables.");
@@ -340,17 +355,18 @@ async function supabaseRequest(params, table = BAC_TABLE) {
 function prepareStudents(rows) {
   const normalized = rows
     .map((row, index) => {
-      const track = cleanText(getColumn(row, "MOD", "mod", "Serie", "serie") || "غير محددة");
+      const track = cleanText(getColumn(row, "TS", "ts", "Serie", "serie") || "غير محددة");
       return {
         id: String(getColumn(row, "Numero", "numero", "NUMERO", "N", "id") ?? "").trim(),
         name: cleanText(getColumn(row, "NOM", "nom", "Nom", "name") || "اسم غير متوفر"),
-        ts: cleanText(getColumn(row, "MOD", "TS", "ts") || "غير محدد"),
+        ts: track,
         track,
-        MOD: getColumn(row, "TS", "MOD", "mod"),
-        kr: cleanText(getColumn(row, "MD", "KR", "kr") || ""),
-        wl: cleanText(getColumn(row, "KR", "wl") || ""),
-        moughataa: cleanText(getColumn(row, "WL", "moughataa") || ""),
+        MOD: getColumn(row, "MOD", "mod", "Moyenne", "moyenne"),
+        kr: cleanText(getColumn(row, "KR", "kr", "Decision", "decision") || ""),
+        wl: cleanText(getColumn(row, "WL", "wl", "Wilaya", "wilaya") || ""),
+        moughataa: cleanText(getColumn(row, "MD", "md", "Moughataa", "moughataa") || ""),
         ms: cleanText(getColumn(row, "MS", "ms") || ""),
+        sessionType: "الدورة الرئيسية 2025",
         source: "bac",
         originalIndex: index,
       };
@@ -562,9 +578,10 @@ async function searchResults(query, exam) {
   const isNumeroSearch = /^[0-9A-Za-z-]+$/.test(query);
 
   if (exam?.source === "brevet") {
+    const numbers = numberSearchValues(query, 5);
     const rows = await supabaseRequest({
       select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS",
-      or: isNumeroSearch ? `(Num_Bepc.eq.${value},NOM.ilike.*${value}*)` : "",
+      or: isNumeroSearch ? `(${numbers.map((number) => `Num_Bepc.eq.${number}`).join(",")},NOM.ilike.*${value}*)` : "",
       NOM: isNumeroSearch ? "" : `ilike.*${value}*`,
       limit: 20,
     }, BREVET_TABLE);
@@ -589,9 +606,10 @@ async function searchResults(query, exam) {
     return prepareExcellenceStudents(rows);
   }
 
+  const numbers = numberSearchValues(query, 5);
   const rows = await supabaseRequest({
     select: "Numero,NOM,TS,MOD,KR,WL,MS,MD",
-    or: isNumeroSearch ? `(Numero.eq.${value},NOM.ilike.*${value}*)` : "",
+    or: isNumeroSearch ? `(${numbers.map((number) => `Numero.eq.${number}`).join(",")},NOM.ilike.*${value}*)` : "",
     NOM: isNumeroSearch ? "" : `ilike.*${value}*`,
     limit: 20,
   }, BAC_TABLE);
@@ -951,7 +969,7 @@ export default function HomePage() {
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience lang={lang} onOpenRanking={openRanking} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
-      {activeView !== "result" && <Footer text={text} />}
+      {activeView === "home" && <Footer text={text} />}
       <BottomNav activeView={activeView} onNavigate={openView} text={text} />
       {resultLoading && <ResultLoadingOverlay text={text} />}
     </main>
@@ -960,16 +978,36 @@ export default function HomePage() {
 
 function HomeView({ lang, onSelectYear, text }) {
   return (
-    <section className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
+    <section className="app-shell grid gap-5 pt-5 md:gap-7 md:pt-8">
       <Hero text={text} />
+      <HomeHighlights text={text} />
       <YearCards lang={lang} onSelectYear={onSelectYear} text={text} />
+    </section>
+  );
+}
+
+function HomeHighlights({ text }) {
+  const items = [
+    [text.search, <SearchIcon key="search" />],
+    [text.officialResult, <AwardIcon key="award" />],
+    [text.analytics, <ChartIcon key="chart" />],
+  ];
+
+  return (
+    <section className="home-highlights">
+      {items.map(([label, icon]) => (
+        <div className="home-highlight" key={label}>
+          <span>{icon}</span>
+          <strong>{label}</strong>
+        </div>
+      ))}
     </section>
   );
 }
 
 function YearCards({ lang, onSelectYear, text }) {
   return (
-    <section className="grid grid-cols-2 gap-3">
+    <section className="grid grid-cols-2 gap-3 md:gap-4">
       {YEAR_CARDS.map((year) => (
         <button
           className={`exam-card exam-card-${year.tone} ${year.available ? "" : "is-locked"}`}
@@ -1271,10 +1309,13 @@ function Header({ activeView, lang, onNavigate, onToggleLang, text, theme, setTh
 function Hero({ text }) {
   return (
     <section className="compact-hero hero-logo-panel animate-slide-up">
-      <LogoMark className="h-28 w-28 rounded-[30px] md:h-36 md:w-36" />
+      <div className="hero-logo-glow">
+        <LogoMark className="h-28 w-28 rounded-[30px] md:h-36 md:w-36" />
+      </div>
       <div className="grid gap-2 text-center">
-        <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">{text.heroTitle}</h1>
-        <p className="mx-auto max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">{text.heroDesc}</p>
+        <p className="mx-auto w-fit rounded-full border border-mauri-green/15 bg-mauri-green/10 px-3 py-1 text-xs font-black text-mauri-green dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300">{text.platformSubtitle}</p>
+        <h1 className="text-3xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-5xl">{text.heroTitle}</h1>
+        <p className="mx-auto max-w-xl text-sm font-bold leading-7 text-slate-600 dark:text-slate-300">{text.heroDesc}</p>
       </div>
     </section>
   );
@@ -1323,7 +1364,7 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
           </div>
         )}
       </div>
-      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98]" type="submit">
+      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={loading}>
         {loading ? (text?.searching || "بحث...") : (text?.searchButton || "بحث")}
       </button>
       {(error || message) && (
@@ -1438,10 +1479,14 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
           ]
     : [
       [text.id, student.id, <HashIcon key="hash" />],
+      [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
+      [text.decision, status.label, <InfoIcon key="decision" />],
       [text.track, student.track, <BookIcon key="book" />],
       [text.rank, student.rank ? `#${student.rank}` : text.unavailable, <AwardIcon key="award" />],
+      [text.type, student.sessionType || "الدورة الرئيسية 2025", <AlertIcon key="type" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
+      [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />],
     ];
 
   useEffect(() => {
@@ -1461,6 +1506,14 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
             <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">{average.toFixed(2)}</strong>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
+            <StatusBadge status={status} />
+            <span className="top-rank-badge">
+              <AwardIcon />
+              {text.rank} {student.rank ? `#${student.rank}` : text.unavailable}
+            </span>
+            <span className="rounded-full border border-mauri-gold/25 bg-mauri-gold/10 px-3 py-1.5 text-xs font-black text-yellow-800 shadow-soft dark:text-yellow-200">
+              {student.sessionType || (student.source === "bac_session" ? text.statusLabels.sessionnaire : "2025")}
+            </span>
             <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{text.verify} {verificationCode}</span>
             {isTopRanked && (
               <span className="top-rank-badge">
