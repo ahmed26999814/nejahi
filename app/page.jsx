@@ -5,10 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 const PAGE_SIZE = 1000;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const TABLE = "bac_results";
+const BAC_TABLE = "bac_results";
+const BREVET_TABLE = "brevet_results";
 
 const EXAM_CARDS = [
   { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, icon: <GraduationIcon /> },
+  { id: "brevet-2025", title: { ar: "نتائج البريفيه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية من جدول البريفيه.", fr: "Résultats du BEPC depuis la table dédiée." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
   { id: "brevet-2026", title: { ar: "ختم دروس الإعدادية 2026", fr: "Brevet 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "blue", available: false, icon: <BookIcon /> },
   { id: "concours-2026", title: { ar: "كونكور 2026", fr: "Concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "gold", available: false, icon: <SchoolIcon /> },
   { id: "excellence-secondary-2026", title: { ar: "الامتياز - الثانوية 2026", fr: "Excellence - Secondaire 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "purple", available: false, icon: <AwardIcon /> },
@@ -81,6 +83,10 @@ const UI_TEXT = {
     rank: "الرتبة",
     school: "المدرسة",
     region: "الولاية",
+    decision: "القرار",
+    center: "المركز",
+    birthPlace: "مكان الميلاد",
+    birthDate: "تاريخ الميلاد",
     unavailable: "غير متوفرة",
     statusLabels: { admis: "ناجح", sessionnaire: "دورة استدراكية", absent: "غائب", ajourne: "راسب", unknown: "غير محددة" },
     missingEnv: "لم يتم ضبط متغيرات Supabase في بيئة النشر.",
@@ -157,6 +163,10 @@ const UI_TEXT = {
     rank: "Rang",
     school: "Établissement",
     region: "Région",
+    decision: "Décision",
+    center: "Centre",
+    birthPlace: "Lieu de naissance",
+    birthDate: "Date de naissance",
     unavailable: "Non disponible",
     statusLabels: { admis: "Admis", sessionnaire: "Session complémentaire", absent: "Absent", ajourne: "Ajourné", unknown: "Non défini" },
     missingEnv: "Les variables Supabase ne sont pas configurées en production.",
@@ -268,12 +278,12 @@ function escapePostgrestValue(value) {
   return String(value).replaceAll("\\", "\\\\").replaceAll(",", "\\,").replaceAll(")", "\\)");
 }
 
-async function supabaseRequest(params) {
+async function supabaseRequest(params, table = BAC_TABLE) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error("Missing Supabase environment variables.");
   }
 
-  const url = new URL(`${SUPABASE_URL}/rest/v1/${TABLE}`);
+  const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       url.searchParams.set(key, value);
@@ -318,6 +328,33 @@ function prepareStudents(rows) {
   return [...new Map(sorted.map((student) => [student.id, student])).values()];
 }
 
+function prepareBrevetStudents(rows) {
+  const normalized = rows
+    .map((row, index) => ({
+      id: String(getColumn(row, "Num_Bepc", "num_bepc", "NUM_BEPC", "numero", "Numero") ?? "").trim(),
+      name: cleanText(getColumn(row, "NOM", "nom", "Nom", "name") || "اسم غير متوفر"),
+      ts: "BEPC",
+      track: "BEPC",
+      MOD: getColumn(row, "Moyenne_Bepc", "moyenne_bepc", "MOYENNE_BEPC"),
+      kr: cleanText(getColumn(row, "Decision", "decision", "DECISION") || ""),
+      wl: cleanText(getColumn(row, "WILAYA", "wilaya", "WL") || ""),
+      ms: cleanText(getColumn(row, "Ecole", "ecole", "ECOLE", "MS") || ""),
+      centre: cleanText(getColumn(row, "Centre", "centre", "CENTRE") || ""),
+      birthPlace: cleanText(getColumn(row, "LIEU_NAIS", "lieu_nais") || ""),
+      birthDate: cleanText(getColumn(row, "DATE_NAISS", "date_naiss") || ""),
+      source: "brevet",
+      originalIndex: index,
+    }))
+    .filter((student) => student.id);
+
+  const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+  sorted.forEach((student, index) => {
+    student.rank = index + 1;
+  });
+
+  return [...new Map(sorted.map((student) => [student.id, student])).values()];
+}
+
 async function fetchAllResults() {
   const rows = [];
   let from = 0;
@@ -327,7 +364,7 @@ async function fetchAllResults() {
       select: "Numero,NOM,TS,MOD,KR,WL,MS",
       limit: PAGE_SIZE,
       offset: from,
-    });
+    }, BAC_TABLE);
     rows.push(...batch);
     if (batch.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
@@ -336,16 +373,45 @@ async function fetchAllResults() {
   return prepareStudents(rows);
 }
 
-async function searchResults(query) {
+async function fetchBrevetResults() {
+  const rows = [];
+  let from = 0;
+
+  while (true) {
+    const batch = await supabaseRequest({
+      select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS",
+      limit: PAGE_SIZE,
+      offset: from,
+    }, BREVET_TABLE);
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return prepareBrevetStudents(rows);
+}
+
+async function searchResults(query, exam) {
   const value = escapePostgrestValue(query);
   const isNumeroSearch = /^[0-9A-Za-z-]+$/.test(query);
 
-  return supabaseRequest({
+  if (exam?.source === "brevet") {
+    const rows = await supabaseRequest({
+      select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS",
+      or: isNumeroSearch ? `(Num_Bepc.eq.${value},NOM.ilike.*${value}*)` : "",
+      NOM: isNumeroSearch ? "" : `ilike.*${value}*`,
+      limit: 20,
+    }, BREVET_TABLE);
+    return prepareBrevetStudents(rows);
+  }
+
+  const rows = await supabaseRequest({
     select: "Numero,NOM,TS,MOD,KR,WL,MS",
     or: isNumeroSearch ? `(Numero.eq.${value},NOM.ilike.*${value}*)` : "",
     NOM: isNumeroSearch ? "" : `ilike.*${value}*`,
     limit: 20,
-  });
+  }, BAC_TABLE);
+  return prepareStudents(rows);
 }
 
 function calculateStats(students) {
@@ -400,12 +466,14 @@ function groupStudentsByTrack(students) {
 
 export default function HomePage() {
   const [students, setStudents] = useState([]);
+  const [brevetStudents, setBrevetStudents] = useState([]);
   const [query, setQuery] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resultLoading, setResultLoading] = useState(false);
   const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [examLoading, setExamLoading] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [resultPageOpen, setResultPageOpen] = useState(false);
   const [matches, setMatches] = useState([]);
@@ -462,19 +530,20 @@ export default function HomePage() {
   const trackStats = useMemo(() => summarizeStudents(students, "track"), [students]);
   const schoolStats = useMemo(() => summarizeStudents(students, "ms"), [students]);
   const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
+  const activeStudents = selectedExam?.source === "brevet" ? brevetStudents : students;
   const text = UI_TEXT[lang];
   const rankingStudents = useMemo(() => {
     if (!rankingTarget) return [];
-    return students
+    return activeStudents
       .filter((student) => cleanText(student[rankingTarget.field]) === rankingTarget.value)
       .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
-  }, [rankingTarget, students]);
+  }, [activeStudents, rankingTarget]);
   const searchPool = useMemo(() => {
     if (selectedExam?.filter === "sessionnaire") {
       return students.filter((student) => getOfficialStatus(student.kr).className === "sessionnaire");
     }
-    return students;
-  }, [selectedExam, students]);
+    return activeStudents;
+  }, [activeStudents, selectedExam, students]);
   const suggestions = useMemo(() => {
     const value = cleanText(query).toLowerCase();
     if (!selectedExam?.available || value.length < 2 || resultPageOpen || matches.length) return [];
@@ -493,7 +562,7 @@ export default function HomePage() {
     .filter((group) => group.students.length > 0), [students, tracks]);
 
   function showStudent(student) {
-    const known = students.find((item) => item.id === student.id);
+    const known = activeStudents.find((item) => item.id === student.id);
     setMatches([]);
     setSelectedStudent(null);
     setResultPageOpen(false);
@@ -529,9 +598,9 @@ export default function HomePage() {
 
     setLoading(true);
     try {
-      const rows = await searchResults(value);
-      const found = prepareStudents(rows).map((student) => {
-        const known = students.find((item) => item.id === student.id);
+      const rows = await searchResults(value, selectedExam);
+      const found = rows.map((student) => {
+        const known = searchPool.find((item) => item.id === student.id);
         return known ? { ...student, rank: known.rank } : student;
       }).filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);
 
@@ -571,7 +640,7 @@ export default function HomePage() {
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
-  function openExam(exam) {
+  async function openExam(exam) {
     setSelectedExamId(exam.id);
     setMatches([]);
     setSelectedStudent(null);
@@ -581,6 +650,18 @@ export default function HomePage() {
     setActiveView("exam");
     window.history.pushState({ view: "exam" }, "", `#${exam.id}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+
+    if (exam.source === "brevet" && !brevetStudents.length) {
+      setExamLoading(true);
+      try {
+        const rows = await fetchBrevetResults();
+        setBrevetStudents(rows);
+      } catch (error) {
+        setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
+      } finally {
+        setExamLoading(false);
+      }
+    }
   }
 
   function openRanking(field, value, label) {
@@ -617,7 +698,7 @@ export default function HomePage() {
         />
       )}
 
-      {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
+      {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
       {activeView === "toppers" && <ToppersPage groups={topperGroups} loading={dashboardLoading} onSelect={selectStudent} text={text} />}
       {activeView === "analytics" && <AnalyticsPage loading={dashboardLoading} regionStats={regionStats} schoolStats={schoolStats} stats={stats} text={text} trackStats={trackStats} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
@@ -664,10 +745,12 @@ function CompetitionCards({ lang, onSelectExam, selectedExamId, text }) {
 
 function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, onPickSuggestion, onSelect, query, searchPool, setQuery, suggestions, text }) {
   const trackGroups = useMemo(() => groupStudentsByTrack(searchPool), [searchPool]);
+  const examStats = useMemo(() => calculateStats(searchPool), [searchPool]);
 
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
+      <StatsStrip loading={loading} stats={examStats} text={text} />
       <section className="scroll-mt-20" id="resultArea">
         <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
         {loading && <ResultLoadingCard text={text} />}
@@ -942,13 +1025,24 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
   const isTopRanked = student.rank && student.rank <= 3;
   const tone = isFailed ? "calm" : getAverageTone(average);
   const averagePhrase = getAveragePhrase(average);
-  const details = [
-    [text.id, student.id, <HashIcon key="hash" />],
-    [text.track, student.track, <BookIcon key="book" />],
-    [text.rank, student.rank ? `#${student.rank}` : text.unavailable, <AwardIcon key="award" />],
-    [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
-    [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
-  ];
+  const details = student.source === "brevet"
+    ? [
+      [text.id, student.id, <HashIcon key="hash" />],
+      [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
+      [text.decision, status.label, <InfoIcon key="decision" />],
+      [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
+      [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
+      [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
+      [text.birthPlace, student.birthPlace || text.unavailable, <UserIcon key="birth-place" />],
+      [text.birthDate, student.birthDate || text.unavailable, <BookIcon key="birth-date" />],
+    ]
+    : [
+      [text.id, student.id, <HashIcon key="hash" />],
+      [text.track, student.track, <BookIcon key="book" />],
+      [text.rank, student.rank ? `#${student.rank}` : text.unavailable, <AwardIcon key="award" />],
+      [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
+      [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
+    ];
 
   useEffect(() => {
     if (isPassed) playSuccessTone();
