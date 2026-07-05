@@ -33,6 +33,25 @@ const YEAR_CARDS = [
   { id: "year-2026", title: { ar: "نتائج مسابقات 2026", fr: "Résultats des concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, available: false, tone: "rose", icon: <AwardIcon /> },
 ];
 
+const CONCOURS_WILAYA_ALIASES = {
+  "آدرار": ["آدرار"],
+  "الترارزة": ["الترارزة", "اتـــرارزه"],
+  "الحوض الشرقي": ["الحوض الشرقي"],
+  "الحوض الغربي": ["الحوض الغربي", "الحوض الغر��ي", "الحوض ا��غربي"],
+  "إنشيري": ["إنشيري", "انـــشـــيـــري"],
+  "نواكشوط الجنوبية": ["نواكشوط الجنوبية", "انواكشوط  الجنوبية", "انواكشوط  الجنوبي��", "انواكشوط  ا��جنوبية"],
+  "نواكشوط الغربية": ["نواكشوط الغربية", "انواكشوط  الغربية"],
+  "نواكشوط الشمالية": ["نواكشوط الشمالية", "انواكشوط الشمالية", "انواك��وط الشمالية", "انوا��شوط الشمالية", "ان��اكشوط الشمالية"],
+  "باماكو": ["باماكو"],
+  "تكانت": ["تكانت", "تــــكانت"],
+  "تيرس زمور": ["تيرس زمور", "تـيــرس زمور"],
+  "داخلة نواذيبو": ["داخلة نواذيبو", "داخلت انواديـبـو", "داخلت ��نواديـبـو", "د��خلت انواديـبـو"],
+  "كوركول": ["كوركول", "كـــوركل"],
+  "كيدي ماغا": ["كيدي ماغا", "كيديماغا", "كيديم��غا", "كيدي��اغا"],
+  "لبراكنة": ["لبراكنة", "لــبــراكــنــه"],
+  "لعصابة": ["لعصابة", "لعصابـــــه", "��عصابـــــه"],
+};
+
 const UI_TEXT = {
   ar: {
     home: "الرئيسية",
@@ -247,6 +266,28 @@ function normalizeComparable(value) {
   return cleanText(value).replace(/\s+/g, " ").toLowerCase();
 }
 
+function normalizeWilayaLabel(value) {
+  const compact = cleanText(value).replace(/ـ/g, "").replace(/\uFFFD/g, "").replace(/\s+/g, " ");
+  if (!compact) return "";
+  if (compact.includes("آدرار") || compact.includes("ادرار")) return "آدرار";
+  if (compact.includes("ترارز")) return "الترارزة";
+  if (compact.includes("الحوض الشرقي")) return "الحوض الشرقي";
+  if (compact.includes("الحوض الغر") || compact.includes("الغربي")) return "الحوض الغربي";
+  if (compact.includes("انشيري") || compact.includes("ان شيري")) return "إنشيري";
+  if (compact.includes("جنوبي")) return "نواكشوط الجنوبية";
+  if (compact.includes("الغربية")) return "نواكشوط الغربية";
+  if (compact.includes("شمال")) return "نواكشوط الشمالية";
+  if (compact.includes("باماكو")) return "باماكو";
+  if (compact.includes("تكانت")) return "تكانت";
+  if (compact.includes("تيرس") || compact.includes("زمور")) return "تيرس زمور";
+  if (compact.includes("داخلت") || compact.includes("نواديبو")) return "داخلة نواذيبو";
+  if (compact.includes("كوركل")) return "كوركول";
+  if (compact.includes("كيديم") || compact.includes("كيدي")) return "كيدي ماغا";
+  if (compact.includes("براك")) return "لبراكنة";
+  if (compact.includes("عصاب")) return "لعصابة";
+  return compact;
+}
+
 function normalizeCandidateNumber(value) {
   const text = cleanText(value);
   if (!/^\d+$/.test(text)) return normalizeComparable(text);
@@ -365,6 +406,21 @@ function numberSearchValues(query, width = 5) {
   ])].map(escapePostgrestValue);
 }
 
+function postgrestInFilter(values) {
+  const cleanValues = [...new Set(values.map(cleanText).filter(Boolean))].map(escapePostgrestValue);
+  return cleanValues.length ? `in.(${cleanValues.join(",")})` : "";
+}
+
+function concoursWilayaQueryValues(value, fallbackValues = []) {
+  const label = normalizeWilayaLabel(value);
+  return [...new Set([
+    value,
+    label,
+    ...(CONCOURS_WILAYA_ALIASES[label] || []),
+    ...fallbackValues,
+  ].map(cleanText).filter(Boolean))];
+}
+
 function concoursNumberSearchValues(query) {
   const value = cleanText(query);
   if (!/^\d+$/.test(value)) return [escapePostgrestValue(value)];
@@ -477,6 +533,7 @@ function prepareConcoursStudents(rows) {
     .map((row, index) => {
       const total = getColumn(row, "TOTAL");
       const totalNum = getColumn(row, "total_num");
+      const rawWilaya = cleanText(getColumn(row, "WILAYA_AR") || "");
       return {
         id: String(getColumn(row, "Numéro_C1AS", "Numero_C1AS") ?? "").trim(),
         internalId: cleanText(getColumn(row, "NODOSS", "Noreg") || ""),
@@ -486,7 +543,8 @@ function prepareConcoursStudents(rows) {
         MOD: total,
         totalScore: totalNum !== "" ? parseAverage(totalNum) : parseAverage(total),
         kr: "",
-        wl: cleanText(getColumn(row, "WILAYA_AR") || ""),
+        wl: normalizeWilayaLabel(rawWilaya),
+        rawWilaya,
         moughataa: cleanText(getColumn(row, "MOUGHATAA_AR") || ""),
         ms: cleanText(getColumn(row, "Ecole_AR") || ""),
         centre: cleanText(getColumn(row, "Centre Examen_AR") || ""),
@@ -667,6 +725,9 @@ async function fetchConcoursFilteredResults(field, value) {
   };
   const column = columnByField[field];
   if (!column || !value) return [];
+  const filterValue = field === "wl"
+    ? postgrestInFilter(concoursWilayaQueryValues(value))
+    : `eq.${escapePostgrestValue(value)}`;
 
   const rows = [];
   let from = 0;
@@ -675,7 +736,7 @@ async function fetchConcoursFilteredResults(field, value) {
     try {
       const batch = await supabaseRequest({
         select: "*",
-        [column]: `eq.${escapePostgrestValue(value)}`,
+        [column]: filterValue,
         order: useView ? "total_num.desc.nullslast" : "",
         limit: PAGE_SIZE,
         offset: from,
@@ -696,11 +757,11 @@ async function fetchConcoursFilteredResults(field, value) {
   return students;
 }
 
-async function searchConcoursByLocation({ wilaya, moughataa, centre, number }) {
+async function searchConcoursByLocation({ wilaya, wilayaValues = [], moughataa, centre, number }) {
   const numbers = concoursNumberSearchValues(number);
   const params = {
     select: "*",
-    WILAYA_AR: `eq.${escapePostgrestValue(wilaya)}`,
+    WILAYA_AR: postgrestInFilter(concoursWilayaQueryValues(wilaya, wilayaValues)),
     MOUGHATAA_AR: `eq.${escapePostgrestValue(moughataa)}`,
     "Centre Examen_AR": `eq.${escapePostgrestValue(centre)}`,
     or: `(${numbers.map((item) => `NODOSS.eq.${item}`).join(",")},${numbers.map((item) => `Numéro_C1AS.eq.${item}`).join(",")})`,
@@ -1347,9 +1408,16 @@ function ConcoursSearchPanel({ onSelect, text }) {
     };
   }, [text.connectionError]);
 
-  const wilayas = useMemo(() => uniqueSorted(locations.map((row) => getColumn(row, "WILAYA_AR"))), [locations]);
-  const moughataas = useMemo(() => uniqueSorted(locations.filter((row) => normalizeComparable(getColumn(row, "WILAYA_AR")) === normalizeComparable(wilaya)).map((row) => getColumn(row, "MOUGHATAA_AR"))), [locations, wilaya]);
-  const centres = useMemo(() => uniqueSorted(locations.filter((row) => normalizeComparable(getColumn(row, "WILAYA_AR")) === normalizeComparable(wilaya) && normalizeComparable(getColumn(row, "MOUGHATAA_AR")) === normalizeComparable(moughataa)).map((row) => getColumn(row, "Centre Examen_AR"))), [locations, moughataa, wilaya]);
+  const wilayas = useMemo(() => uniqueSorted(locations.map((row) => normalizeWilayaLabel(getColumn(row, "WILAYA_AR")))), [locations]);
+  const wilayaRawValues = useMemo(() => uniqueSorted(locations
+    .filter((row) => normalizeComparable(normalizeWilayaLabel(getColumn(row, "WILAYA_AR"))) === normalizeComparable(wilaya))
+    .map((row) => getColumn(row, "WILAYA_AR"))), [locations, wilaya]);
+  const moughataas = useMemo(() => uniqueSorted(locations
+    .filter((row) => normalizeComparable(normalizeWilayaLabel(getColumn(row, "WILAYA_AR"))) === normalizeComparable(wilaya))
+    .map((row) => getColumn(row, "MOUGHATAA_AR"))), [locations, wilaya]);
+  const centres = useMemo(() => uniqueSorted(locations
+    .filter((row) => normalizeComparable(normalizeWilayaLabel(getColumn(row, "WILAYA_AR"))) === normalizeComparable(wilaya) && normalizeComparable(getColumn(row, "MOUGHATAA_AR")) === normalizeComparable(moughataa))
+    .map((row) => getColumn(row, "Centre Examen_AR"))), [locations, moughataa, wilaya]);
 
   async function submit(event) {
     event.preventDefault();
@@ -1361,7 +1429,7 @@ function ConcoursSearchPanel({ onSelect, text }) {
 
     setSearching(true);
     try {
-      const results = await searchConcoursByLocation({ wilaya, moughataa, centre, number });
+      const results = await searchConcoursByLocation({ wilaya, wilayaValues: wilayaRawValues, moughataa, centre, number });
       if (!results.length) {
         setLocalError(text.notFound);
         return;
