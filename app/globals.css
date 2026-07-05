@@ -360,6 +360,11 @@ svg {
     animation: stampPop 680ms cubic-bezier(.18, .9, .2, 1.25) both, stampGlow 1.8s ease-in-out 700ms 2;
   }
 
+  .success-toast {
+    @apply fixed left-1/2 top-20 z-[90] -translate-x-1/2 rounded-full border border-green-500/25 bg-white/90 px-4 py-2 text-sm font-black text-green-700 shadow-premium backdrop-blur-2xl dark:border-green-300/20 dark:bg-[#10231a]/90 dark:text-green-200;
+    animation: toastPop 360ms cubic-bezier(.2, .8, .2, 1) both;
+  }
+
   .top-rank-badge {
     @apply inline-flex items-center gap-1.5 rounded-full border border-mauri-gold/40 bg-mauri-gold/15 px-3 py-1.5 text-xs font-black text-yellow-700 shadow-soft dark:text-yellow-200;
   }
@@ -648,6 +653,17 @@ svg {
   }
   50% {
     box-shadow: 0 20px 60px rgba(34, 197, 94, .28);
+  }
+}
+
+@keyframes toastPop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
   }
 }
 
