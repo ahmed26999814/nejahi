@@ -8,14 +8,51 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const TABLE = "bac_results";
 
 const EXAM_CARDS = [
-  { id: "bac-2025", title: "نتائج باكالوريا 2025", description: "النتائج الرسمية للباكالوريا.", available: true, icon: <GraduationIcon /> },
-  { id: "brevet-2026", title: "ختم دروس الإعدادية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <BookIcon /> },
-  { id: "concours-2026", title: "كونكور 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <SchoolIcon /> },
-  { id: "excellence-secondary-2026", title: "الامتياز - الثانوية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <AwardIcon /> },
-  { id: "excellence-middle-2026", title: "الامتياز - الإعدادية 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <AwardIcon /> },
-  { id: "bac-session-2025", title: "الباكالوريا الدورة التكميلية 2025", description: "خاص بالمترشحين المؤهلين للدورة.", available: true, filter: "sessionnaire", icon: <AlertIcon /> },
-  { id: "bac-2026", title: "نتائج باكالوريا 2026", description: "سيتم فتحها عند توفر النتائج.", available: false, icon: <GraduationIcon /> },
+  { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, icon: <GraduationIcon /> },
+  { id: "brevet-2026", title: { ar: "ختم دروس الإعدادية 2026", fr: "Brevet 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "blue", available: false, icon: <BookIcon /> },
+  { id: "concours-2026", title: { ar: "كونكور 2026", fr: "Concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "gold", available: false, icon: <SchoolIcon /> },
+  { id: "excellence-secondary-2026", title: { ar: "الامتياز - الثانوية 2026", fr: "Excellence - Secondaire 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "purple", available: false, icon: <AwardIcon /> },
+  { id: "excellence-middle-2026", title: { ar: "الامتياز - الإعدادية 2026", fr: "Excellence - Collège 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "teal", available: false, icon: <AwardIcon /> },
+  { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "خاص بالمترشحين المؤهلين للدورة.", fr: "Pour les candidats admissibles à la session." }, tone: "amber", available: true, filter: "sessionnaire", icon: <AlertIcon /> },
+  { id: "bac-2026", title: { ar: "نتائج باكالوريا 2026", fr: "Résultats Bac 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "rose", available: false, icon: <GraduationIcon /> },
 ];
+
+const UI_TEXT = {
+  ar: {
+    home: "الرئيسية",
+    toppers: "الأوائل",
+    analytics: "الإحصائيات",
+    search: "البحث",
+    developer: "تطوير",
+    soon: "قريبًا",
+    open: "البحث مفتوح",
+    heroTitle: "نتائج المسابقات الوطنية في موريتانيا",
+    heroDesc: "اختر المسابقة ثم ابحث عن النتيجة الرسمية بسرعة.",
+    officialResult: "بطاقة النتيجة الرسمية",
+    verification: "رقم التحقق",
+    examPageDesc: "صفحة منظمة للبحث وعرض النتائج الخاصة بهذه المسابقة.",
+    ranking: "التصنيف",
+    rankingDesc: "ترتيب المترشحين حسب المعدل داخل نفس المجموعة.",
+    noData: "لا توجد بيانات كافية.",
+  },
+  fr: {
+    home: "Accueil",
+    toppers: "Lauréats",
+    analytics: "Statistiques",
+    search: "Recherche",
+    developer: "Dev",
+    soon: "Bientôt",
+    open: "Recherche ouverte",
+    heroTitle: "Résultats des concours nationaux en Mauritanie",
+    heroDesc: "Choisissez un concours puis recherchez le résultat officiel.",
+    officialResult: "Carte officielle du résultat",
+    verification: "Code de vérification",
+    examPageDesc: "Une page organisée pour rechercher les résultats de ce concours.",
+    ranking: "Classement",
+    rankingDesc: "Classement des candidats par moyenne dans le même groupe.",
+    noData: "Données insuffisantes.",
+  },
+};
 
 function parseAverage(value) {
   if (!value) return 0;
@@ -62,6 +99,18 @@ function getAverageLevel(average) {
   if (average >= 12) return { label: "جيد جدًا", percent: 78, className: "very-good" };
   if (average >= 10) return { label: "جيد", percent: 58, className: "good" };
   return { label: "ضعيف", percent: Math.max(12, Math.min(48, average * 4.8)), className: "weak" };
+}
+
+function getAveragePhrase(average) {
+  if (average >= 15) return "انت مانك متكايس";
+  if (average >= 13) return "انت حامي انجحت";
+  if (average >= 10) return "نصر انجحت";
+  if (average >= 9) return "انت ادكد ماتكرا انت ناجح";
+  if (average >= 8) return "اشتمر (ي) امع راسك لا تمشي فيه";
+  if (average >= 6) return "بعدنك انجحت";
+  if (average >= 4) return "عادي تجبروا سنة جاي";
+  if (average >= 2) return "الا حاول تكرا دور تنجح تعكب";
+  return "كالتك العنز";
 }
 
 function playSuccessTone() {
@@ -225,11 +274,14 @@ export default function HomePage() {
   const [theme, setThemeState] = useState("light");
   const [activeView, setActiveView] = useState("home");
   const [selectedExamId, setSelectedExamId] = useState("");
+  const [lang, setLang] = useState("ar");
+  const [rankingTarget, setRankingTarget] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("mauriresults-theme");
-    const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
-    setTheme(saved || (prefersDark ? "dark" : "light"));
+    const savedLang = localStorage.getItem("mauriresults-lang");
+    setTheme(saved || "light");
+    setLang(savedLang || "ar");
     window.history.replaceState({ view: "home" }, "", window.location.pathname);
 
     fetchAllResults()
@@ -260,12 +312,25 @@ export default function HomePage() {
     localStorage.setItem("mauriresults-theme", nextTheme);
   }
 
+  function toggleLang() {
+    const nextLang = lang === "ar" ? "fr" : "ar";
+    setLang(nextLang);
+    localStorage.setItem("mauriresults-lang", nextLang);
+  }
+
   const tracks = useMemo(() => [...new Set(students.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar")), [students]);
   const stats = useMemo(() => calculateStats(students), [students]);
   const regionStats = useMemo(() => summarizeStudents(students, "wl"), [students]);
   const trackStats = useMemo(() => summarizeStudents(students, "track"), [students]);
   const schoolStats = useMemo(() => summarizeStudents(students, "ms"), [students]);
   const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
+  const text = UI_TEXT[lang];
+  const rankingStudents = useMemo(() => {
+    if (!rankingTarget) return [];
+    return students
+      .filter((student) => cleanText(student[rankingTarget.field]) === rankingTarget.value)
+      .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+  }, [rankingTarget, students]);
   const searchPool = useMemo(() => {
     if (selectedExam?.filter === "sessionnaire") {
       return students.filter((student) => getOfficialStatus(student.kr).className === "sessionnaire");
@@ -361,15 +426,36 @@ export default function HomePage() {
   }
 
   function openView(view) {
+    if (view === "exam" && !selectedExamId) setSelectedExamId("bac-2025");
     setActiveView(view);
     if (view !== "result") setResultPageOpen(false);
     window.history.pushState({ view }, "", view === "home" ? window.location.pathname : `#${view}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
+  function openExam(exam) {
+    setSelectedExamId(exam.id);
+    setMatches([]);
+    setSelectedStudent(null);
+    setResultPageOpen(false);
+    setError("");
+    setMessage("");
+    setActiveView("exam");
+    window.history.pushState({ view: "exam" }, "", `#${exam.id}`);
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  }
+
+  function openRanking(field, value, label) {
+    if (!value || value === "غير متوفرة") return;
+    setRankingTarget({ field, value, label });
+    setActiveView("ranking");
+    window.history.pushState({ view: "ranking" }, "", "#ranking");
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  }
+
   return (
     <main className="app-background min-h-screen pb-20 text-mauri-ink dark:text-white md:pb-0">
-      <Header activeView={activeView} onNavigate={openView} theme={theme} setTheme={setTheme} />
+      <Header activeView={activeView} lang={lang} onNavigate={openView} onToggleLang={toggleLang} text={text} theme={theme} setTheme={setTheme} />
 
       {activeView === "home" && (
         <HomeView
@@ -379,15 +465,8 @@ export default function HomePage() {
           loading={loading}
           matches={matches}
           message={message}
-          onSelectExam={(exam) => {
-            setSelectedExamId(exam.id);
-            setMatches([]);
-            setSelectedStudent(null);
-            setResultPageOpen(false);
-            setError("");
-            setMessage("");
-            window.setTimeout(() => document.getElementById("resultArea")?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
-          }}
+          lang={lang}
+          onSelectExam={openExam}
           onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }}
           onSelect={selectStudent}
           query={query}
@@ -396,42 +475,38 @@ export default function HomePage() {
           setQuery={setQuery}
           stats={stats}
           suggestions={suggestions}
+          text={text}
         />
       )}
 
+      {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />}
       {activeView === "toppers" && <ToppersPage groups={topperGroups} loading={dashboardLoading} onSelect={selectStudent} />}
       {activeView === "analytics" && <AnalyticsPage loading={dashboardLoading} regionStats={regionStats} schoolStats={schoolStats} stats={stats} trackStats={trackStats} />}
-      {activeView === "result" && selectedStudent && <ResultExperience student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} />}
+      {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
+      {activeView === "result" && selectedStudent && <ResultExperience lang={lang} onOpenRanking={openRanking} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
       {activeView !== "result" && <Footer />}
-      <BottomNav activeView={activeView} onNavigate={openView} />
+      <BottomNav activeView={activeView} onNavigate={openView} text={text} />
       {resultLoading && <ResultLoadingOverlay />}
     </main>
   );
 }
 
-function HomeView({ error, handleSubmit, loading, matches, message, onPickSuggestion, onSelect, onSelectExam, query, selectedExam, selectedExamId, setQuery, suggestions }) {
+function HomeView({ lang, onSelectExam, selectedExamId, text }) {
   return (
     <section className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
-      <Hero />
-      <CompetitionCards onSelectExam={onSelectExam} selectedExamId={selectedExamId} />
-      <section className="scroll-mt-20" id="resultArea">
-        {selectedExam?.available && (
-          <SearchPanel error={error} examTitle={selectedExam.title} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} />
-        )}
-        {loading && <ResultLoadingCard />}
-        {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} />}
-      </section>
+      <Hero text={text} />
+      <CompetitionCards lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
     </section>
   );
 }
 
-function CompetitionCards({ onSelectExam, selectedExamId }) {
+function CompetitionCards({ lang, onSelectExam, selectedExamId, text }) {
   return (
     <section className="grid grid-cols-2 gap-3">
       {EXAM_CARDS.map((exam) => (
         <button
-          className={`exam-card ${selectedExamId === exam.id ? "is-selected" : ""} ${exam.available ? "" : "is-locked"}`}
+          className={`exam-card exam-card-${exam.tone} ${selectedExamId === exam.id ? "is-selected" : ""} ${exam.available ? "" : "is-locked"}`}
           key={exam.id}
           onClick={() => exam.available && onSelectExam(exam)}
           type="button"
@@ -439,12 +514,47 @@ function CompetitionCards({ onSelectExam, selectedExamId }) {
         >
           <span className="exam-card-icon">{exam.icon}</span>
           <span className="min-w-0 text-start">
-            <strong className="block text-base font-black text-slate-950 dark:text-white">{exam.title}</strong>
-            <small className="mt-1 block text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{exam.description}</small>
+            <strong className="block text-base font-black text-slate-950 dark:text-white">{exam.title[lang]}</strong>
+            <small className="mt-1 block text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{exam.description[lang]}</small>
           </span>
-          {!exam.available && <span className="soon-badge">قريبًا</span>}
+          {!exam.available && <span className="soon-badge">{text.soon}</span>}
         </button>
       ))}
+    </section>
+  );
+}
+
+function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, onPickSuggestion, onSelect, query, setQuery, suggestions, text }) {
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
+      <section className="scroll-mt-20" id="resultArea">
+        <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
+        {loading && <ResultLoadingCard />}
+        {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} />}
+      </section>
+    </section>
+  );
+}
+
+function RankingPage({ onSelect, rankingTarget, students, text }) {
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow={text.ranking} title={rankingTarget.value} description={text.rankingDesc} icon={rankingTarget.field === "ms" ? <SchoolIcon /> : <MapIcon />} />
+      <section className="analytics-panel animate-slide-up">
+        <div className="grid gap-2">
+          {students.length ? students.map((student, index) => (
+            <button className="ranking-row" key={student.id} onClick={() => onSelect(student)} type="button">
+              <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-sm font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">#{index + 1}</span>
+              <span className="min-w-0 text-start">
+                <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{student.name}</strong>
+                <small className="line-clamp-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.id} - {student.track}</small>
+              </span>
+              <strong className="text-lg font-black text-mauri-green dark:text-mauri-gold">{getAverage(student).toFixed(2)}</strong>
+            </button>
+          )) : <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{text.noData}</p>}
+        </div>
+      </section>
     </section>
   );
 }
@@ -522,11 +632,11 @@ function StatsRow({ row }) {
   );
 }
 
-function Header({ activeView, onNavigate, theme, setTheme }) {
+function Header({ activeView, lang, onNavigate, onToggleLang, text, theme, setTheme }) {
   const navItems = [
-    { label: "الرئيسية", view: "home" },
-    { label: "الأوائل", view: "toppers" },
-    { label: "الإحصائيات", view: "analytics" },
+    { label: text.home, view: "home" },
+    { label: text.toppers, view: "toppers" },
+    { label: text.analytics, view: "analytics" },
   ];
 
   return (
@@ -549,24 +659,27 @@ function Header({ activeView, onNavigate, theme, setTheme }) {
         <button className="icon-button h-9 w-9" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="تبديل الوضع الليلي">
           {theme === "dark" ? <MoonIcon /> : <SunIcon />}
         </button>
+        <button className="lang-button" onClick={onToggleLang} type="button" aria-label="Changer la langue">
+          {lang === "ar" ? "FR" : "AR"}
+        </button>
       </nav>
     </header>
   );
 }
 
-function Hero() {
+function Hero({ text }) {
   return (
     <section className="compact-hero hero-logo-panel animate-slide-up">
       <LogoMark className="h-28 w-28 rounded-[30px] md:h-36 md:w-36" />
       <div className="grid gap-2 text-center">
-        <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">نتائج المسابقات الوطنية في موريتانيا</h1>
-        <p className="mx-auto max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">اختر المسابقة ثم ابحث عن النتيجة الرسمية بسرعة.</p>
+        <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">{text.heroTitle}</h1>
+        <p className="mx-auto max-w-xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">{text.heroDesc}</p>
       </div>
     </section>
   );
 }
 
-function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions }) {
+function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions, text }) {
   const [focused, setFocused] = useState(false);
   const visibleSuggestions = focused && suggestions.length > 0;
 
@@ -579,7 +692,7 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
     <form onSubmit={(event) => { setFocused(false); handleSubmit(event); }} className="search-card animate-slide-up">
       <div className="col-span-full flex items-center justify-between gap-2 px-1">
         <span className="text-xs font-black text-mauri-green dark:text-mauri-gold">{examTitle}</span>
-        <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">البحث مفتوح</span>
+        <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">{text?.open || "البحث مفتوح"}</span>
       </div>
       <div className="relative min-w-0 flex-1">
         <label className="relative block">
@@ -664,19 +777,20 @@ function CountUp({ decimals = 0, value }) {
   return <strong className="block text-base font-black text-slate-950 dark:text-white">{decimals ? display.toFixed(decimals) : Math.round(display).toLocaleString("ar-MR")}</strong>;
 }
 
-function ResultCard({ student, onShare, verificationCode }) {
+function ResultCard({ onOpenRanking, student, onShare, verificationCode }) {
   const average = parseAverage(student.MOD);
   const status = getOfficialStatus(student.kr);
   const isPassed = status.className === "admis";
   const isFailed = status.className === "ajourne";
   const isTopRanked = student.rank && student.rank <= 3;
   const tone = isFailed ? "calm" : getAverageTone(average);
+  const averagePhrase = getAveragePhrase(average);
   const details = [
     ["رقم المترشح", student.id, <HashIcon key="hash" />],
     ["الشعبة", student.track, <BookIcon key="book" />],
     ["الرتبة", student.rank ? `#${student.rank}` : "غير متوفرة", <AwardIcon key="award" />],
-    ["المدرسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />],
-    ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />],
+    ["المدرسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, "المدرسة")],
+    ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, "الولاية")],
   ];
 
   useEffect(() => {
@@ -714,16 +828,14 @@ function ResultCard({ student, onShare, verificationCode }) {
         </div>
       )}
 
-      {isFailed && (
-        <div className="failure-note">
-          <InfoIcon />
-          <span>لم يحالفك النجاح هذه المرة. راجع خطتك بهدوء، والفرصة القادمة يمكن أن تكون أفضل.</span>
-        </div>
-      )}
+      <div className="result-phrase">
+        <MessageIcon />
+        <span>{averagePhrase}</span>
+      </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        {details.map(([label, value, icon]) => (
-          <InfoTile icon={icon} label={label} value={value} key={label} />
+        {details.map(([label, value, icon, onClick]) => (
+          <InfoTile icon={icon} label={label} onClick={onClick} value={value} key={label} />
         ))}
       </div>
 
@@ -756,7 +868,7 @@ function AverageLevelBar({ level }) {
   );
 }
 
-function ResultExperience({ onShare, student }) {
+function ResultExperience({ onOpenRanking, onShare, student, text }) {
   const status = getOfficialStatus(student.kr);
   const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
 
@@ -768,29 +880,30 @@ function ResultExperience({ onShare, student }) {
             <LogoMark className="h-12 w-12 rounded-[18px]" />
             <div className="min-w-0">
               <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">MauriResults</p>
-              <h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl">بطاقة النتيجة الرسمية</h1>
-              <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">رقم التحقق: {verificationCode}</p>
+              <h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl">{text?.officialResult || "بطاقة النتيجة الرسمية"}</h1>
+              <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{text?.verification || "رقم التحقق"}: {verificationCode}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className={`official-status-stamp ${status.className}`}>{status.label}</span>
           </div>
         </header>
-        <ResultCard student={student} onShare={onShare} verificationCode={verificationCode} />
+        <ResultCard onOpenRanking={onOpenRanking} student={student} onShare={onShare} verificationCode={verificationCode} />
       </div>
     </section>
   );
 }
 
-function InfoTile({ icon, label, value }) {
+function InfoTile({ icon, label, onClick, value }) {
+  const Component = onClick ? "button" : "div";
   return (
-    <div className="info-tile">
+    <Component className={`info-tile ${onClick ? "info-tile-clickable" : ""}`} onClick={onClick} type={onClick ? "button" : undefined}>
       <span className="grid h-8 w-8 place-items-center rounded-[12px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
       <div className="min-w-0">
         <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{label}</span>
         <strong className="block overflow-wrap-anywhere text-sm font-black text-slate-950 dark:text-white">{value}</strong>
       </div>
-    </div>
+    </Component>
   );
 }
 
@@ -1002,12 +1115,12 @@ function Footer() {
   );
 }
 
-function BottomNav({ activeView, onNavigate }) {
+function BottomNav({ activeView, onNavigate, text }) {
   const items = [
-    { label: "الرئيسية", view: "home", icon: <HomeIcon /> },
-    { label: "البحث", view: "home", section: "resultArea", icon: <SearchIcon /> },
-    { label: "الأوائل", view: "toppers", icon: <AwardIcon /> },
-    { label: "الإحصائيات", view: "analytics", icon: <ChartIcon /> },
+    { label: text.home, view: "home", icon: <HomeIcon /> },
+    { label: text.search, view: "exam", icon: <SearchIcon /> },
+    { label: text.toppers, view: "toppers", icon: <AwardIcon /> },
+    { label: text.analytics, view: "analytics", icon: <ChartIcon /> },
   ];
 
   return (
