@@ -6,16 +6,19 @@ const PAGE_SIZE = 1000;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const BAC_TABLE = "bac_results";
+const BAC_SESSION_TABLE = "bac_session2_results";
+const CONCOURS_TABLE = "concours_results";
+const EXCELLENCE_1AS_TABLE = "excellence_1as_results";
 const BREVET_TABLE = "brevet_results";
 
 const EXAM_CARDS = [
-  { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, icon: <GraduationIcon /> },
+  { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },
   { id: "brevet-2025", title: { ar: "نتائج البريفيه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية من جدول البريفيه.", fr: "Résultats du BEPC depuis la table dédiée." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
   { id: "brevet-2026", title: { ar: "ختم دروس الإعدادية 2026", fr: "Brevet 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "blue", available: false, icon: <BookIcon /> },
-  { id: "concours-2026", title: { ar: "كونكور 2026", fr: "Concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "gold", available: false, icon: <SchoolIcon /> },
+  { id: "concours-2026", title: { ar: "كونكور 2026", fr: "Concours 2026" }, description: { ar: "بحث خاص بالولاية والمقاطعة والمركز ورقم المترشح.", fr: "Recherche par région, département, centre et numéro." }, tone: "gold", available: true, source: "concours", icon: <SchoolIcon /> },
   { id: "excellence-secondary-2026", title: { ar: "الامتياز - الثانوية 2026", fr: "Excellence - Secondaire 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "purple", available: false, icon: <AwardIcon /> },
-  { id: "excellence-middle-2026", title: { ar: "الامتياز - الإعدادية 2026", fr: "Excellence - Collège 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "teal", available: false, icon: <AwardIcon /> },
-  { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "خاص بالمترشحين المؤهلين للدورة.", fr: "Pour les candidats admissibles à la session." }, tone: "amber", available: true, filter: "sessionnaire", icon: <AlertIcon /> },
+  { id: "excellence-middle-2026", title: { ar: "الامتياز الأولى إعدادية", fr: "Excellence 1AS" }, description: { ar: "نتائج مسابقة الامتياز الأولى إعدادية.", fr: "Résultats du concours Excellence 1AS." }, tone: "teal", available: true, source: "excellence_1as", icon: <AwardIcon /> },
+  { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "نتائج الدورة التكميلية من جدولها الخاص.", fr: "Résultats depuis la table de session complémentaire." }, tone: "amber", available: true, source: "bac_session", icon: <AlertIcon /> },
   { id: "bac-2026", title: { ar: "نتائج باكالوريا 2026", fr: "Résultats Bac 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "rose", available: false, icon: <GraduationIcon /> },
 ];
 
@@ -87,6 +90,17 @@ const UI_TEXT = {
     center: "المركز",
     birthPlace: "مكان الميلاد",
     birthDate: "تاريخ الميلاد",
+    moughataa: "المقاطعة",
+    type: "النوع",
+    yearBirth: "سنة الميلاد",
+    nationalId: "الرقم الوطني",
+    arabicMark: "العربية",
+    frenchMark: "الفرنسية",
+    mathMark: "الرياضيات",
+    chooseWilaya: "اختر الولاية",
+    chooseMoughataa: "اختر المقاطعة",
+    chooseCentre: "اختر مركز الامتحان",
+    candidateNumber: "رقم المترشح",
     unavailable: "غير متوفرة",
     statusLabels: { admis: "ناجح", sessionnaire: "دورة استدراكية", absent: "غائب", ajourne: "راسب", unknown: "غير محددة" },
     missingEnv: "لم يتم ضبط متغيرات Supabase في بيئة النشر.",
@@ -167,6 +181,17 @@ const UI_TEXT = {
     center: "Centre",
     birthPlace: "Lieu de naissance",
     birthDate: "Date de naissance",
+    moughataa: "Département",
+    type: "Type",
+    yearBirth: "Année de naissance",
+    nationalId: "Matricule",
+    arabicMark: "Arabe",
+    frenchMark: "Français",
+    mathMark: "Mathématiques",
+    chooseWilaya: "Choisir la région",
+    chooseMoughataa: "Choisir le département",
+    chooseCentre: "Choisir le centre d'examen",
+    candidateNumber: "Numéro du candidat",
     unavailable: "Non disponible",
     statusLabels: { admis: "Admis", sessionnaire: "Session complémentaire", absent: "Absent", ajourne: "Ajourné", unknown: "Non défini" },
     missingEnv: "Les variables Supabase ne sont pas configurées en production.",
@@ -208,10 +233,10 @@ function isMissingSupabaseEnv(error) {
 
 function getOfficialStatus(value) {
   const normalized = cleanText(value).toLowerCase();
-  if (normalized.includes("admis")) return { label: "ناجح", icon: <CheckIcon />, className: "admis" };
+  if (normalized.includes("admis") || normalized.includes("ناجح")) return { label: "ناجح", icon: <CheckIcon />, className: "admis" };
   if (normalized.includes("sessionnaire")) return { label: "دورة استدراكية", icon: <AlertIcon />, className: "sessionnaire" };
-  if (normalized.includes("absent")) return { label: "غائب", icon: <MinusIcon />, className: "absent" };
-  if (normalized.includes("ajourn")) return { label: "راسب", icon: <XIcon />, className: "ajourne" };
+  if (normalized.includes("absent") || normalized.includes("غائب")) return { label: "غائب", icon: <MinusIcon />, className: "absent" };
+  if (normalized.includes("ajourn") || normalized.includes("راسب")) return { label: "راسب", icon: <XIcon />, className: "ajourne" };
   return { label: value ? cleanText(value) : "غير محددة", icon: <InfoIcon />, className: "unknown" };
 }
 
@@ -305,19 +330,108 @@ async function supabaseRequest(params, table = BAC_TABLE) {
 function prepareStudents(rows) {
   const normalized = rows
     .map((row, index) => {
-      const track = cleanText(getColumn(row, "TS", "ts", "Serie", "serie") || "غير محددة");
+      const track = cleanText(getColumn(row, "MOD", "mod", "Serie", "serie") || "غير محددة");
       return {
         id: String(getColumn(row, "Numero", "numero", "NUMERO", "N", "id") ?? "").trim(),
         name: cleanText(getColumn(row, "NOM", "nom", "Nom", "name") || "اسم غير متوفر"),
-        ts: cleanText(getColumn(row, "TS", "ts") || "غير محدد"),
+        ts: cleanText(getColumn(row, "MOD", "TS", "ts") || "غير محدد"),
         track,
-        MOD: getColumn(row, "MOD", "mod"),
-        kr: cleanText(getColumn(row, "KR", "kr") || ""),
-        wl: cleanText(getColumn(row, "WL", "wl") || ""),
+        MOD: getColumn(row, "TS", "MOD", "mod"),
+        kr: cleanText(getColumn(row, "MD", "KR", "kr") || ""),
+        wl: cleanText(getColumn(row, "KR", "wl") || ""),
+        moughataa: cleanText(getColumn(row, "WL", "moughataa") || ""),
         ms: cleanText(getColumn(row, "MS", "ms") || ""),
+        source: "bac",
         originalIndex: index,
       };
     })
+    .filter((student) => student.id);
+
+  const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+  sorted.forEach((student, index) => {
+    student.rank = index + 1;
+  });
+
+  return [...new Map(sorted.map((student) => [student.id, student])).values()];
+}
+
+function prepareBacSessionStudents(rows) {
+  const normalized = rows
+    .map((row, index) => ({
+      id: String(getColumn(row, "NODOSS") ?? "").trim(),
+      name: cleanText(getColumn(row, "NOM_AR", "NOM_FR") || "اسم غير متوفر"),
+      nameFr: cleanText(getColumn(row, "NOM_FR") || ""),
+      nameAr: cleanText(getColumn(row, "NOM_AR") || ""),
+      track: cleanText(getColumn(row, "SERIE") || "غير محددة"),
+      MOD: getColumn(row, "Moy Bac_Session"),
+      kr: cleanText(getColumn(row, "Decision") || ""),
+      wl: cleanText(getColumn(row, "Wilaya_AR", "Wilaya_FR") || ""),
+      ms: cleanText(getColumn(row, "Etablissement_AR", "Etablissement_FR") || ""),
+      centre: cleanText(getColumn(row, "Centre Examen_AR", "Centre Examen_FR") || ""),
+      birthPlace: cleanText(getColumn(row, "LIEUNN_AR", "LIEUN_FR") || ""),
+      birthDate: cleanText(getColumn(row, "DATN") || ""),
+      source: "bac_session",
+      originalIndex: index,
+    }))
+    .filter((student) => student.id);
+
+  const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+  sorted.forEach((student, index) => {
+    student.rank = index + 1;
+  });
+
+  return [...new Map(sorted.map((student) => [student.id, student])).values()];
+}
+
+function prepareConcoursStudents(rows) {
+  const normalized = rows
+    .map((row, index) => ({
+      id: String(getColumn(row, "Numéro_C1AS") ?? "").trim(),
+      internalId: cleanText(getColumn(row, "Noreg", "NODOSS") || ""),
+      name: cleanText(getColumn(row, "NOM_AR") || "اسم غير متوفر"),
+      track: cleanText(getColumn(row, "TYPE") || "كونكور"),
+      MOD: getColumn(row, "TOTAL"),
+      kr: "",
+      wl: cleanText(getColumn(row, "WILAYA_AR") || ""),
+      moughataa: cleanText(getColumn(row, "MOUGHATAA_AR") || ""),
+      ms: cleanText(getColumn(row, "Ecole_AR") || ""),
+      centre: cleanText(getColumn(row, "Centre Examen_AR") || ""),
+      birthPlace: cleanText(getColumn(row, "LIEU NAISS_AR") || ""),
+      birthDate: cleanText(getColumn(row, "ANNEE_NAISS") || ""),
+      type: cleanText(getColumn(row, "TYPE") || ""),
+      source: "concours",
+      originalIndex: index,
+    }))
+    .filter((student) => student.id);
+
+  const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+  sorted.forEach((student, index) => {
+    student.rank = index + 1;
+  });
+
+  return [...new Map(sorted.map((student) => [student.id, student])).values()];
+}
+
+function prepareExcellenceStudents(rows) {
+  const normalized = rows
+    .map((row, index) => ({
+      id: String(getColumn(row, "Num_Excellence_1AS") ?? "").trim(),
+      name: cleanText(getColumn(row, "Nom") || "اسم غير متوفر"),
+      track: cleanText(getColumn(row, "SERIE") || "1AS"),
+      MOD: getColumn(row, "Mgex"),
+      kr: cleanText(getColumn(row, "Decision") || ""),
+      wl: cleanText(getColumn(row, "Wilaya_AR") || ""),
+      ms: "",
+      centre: cleanText(getColumn(row, "CENTRE_AR") || ""),
+      birthPlace: cleanText(getColumn(row, "Lieu") || ""),
+      birthDate: cleanText(getColumn(row, "DATEN") || ""),
+      matricule: cleanText(getColumn(row, "Matricule") || ""),
+      arabicMark: cleanText(getColumn(row, "ARABE") || ""),
+      frenchMark: cleanText(getColumn(row, "FRANCAIS") || ""),
+      mathMark: cleanText(getColumn(row, "CALCUL") || ""),
+      source: "excellence_1as",
+      originalIndex: index,
+    }))
     .filter((student) => student.id);
 
   const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
@@ -361,7 +475,7 @@ async function fetchAllResults() {
 
   while (true) {
     const batch = await supabaseRequest({
-      select: "Numero,NOM,TS,MOD,KR,WL,MS",
+      select: "Numero,NOM,TS,MOD,KR,WL,MS,MD",
       limit: PAGE_SIZE,
       offset: from,
     }, BAC_TABLE);
@@ -391,6 +505,48 @@ async function fetchBrevetResults() {
   return prepareBrevetStudents(rows);
 }
 
+async function fetchBacSessionResults() {
+  const rows = [];
+  let from = 0;
+
+  while (true) {
+    const batch = await supabaseRequest({ select: "*", limit: PAGE_SIZE, offset: from }, BAC_SESSION_TABLE);
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return prepareBacSessionStudents(rows);
+}
+
+async function fetchConcoursResults() {
+  const rows = [];
+  let from = 0;
+
+  while (true) {
+    const batch = await supabaseRequest({ select: "*", limit: PAGE_SIZE, offset: from }, CONCOURS_TABLE);
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return prepareConcoursStudents(rows);
+}
+
+async function fetchExcellenceResults() {
+  const rows = [];
+  let from = 0;
+
+  while (true) {
+    const batch = await supabaseRequest({ select: "*", limit: PAGE_SIZE, offset: from }, EXCELLENCE_1AS_TABLE);
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return prepareExcellenceStudents(rows);
+}
+
 async function searchResults(query, exam) {
   const value = escapePostgrestValue(query);
   const isNumeroSearch = /^[0-9A-Za-z-]+$/.test(query);
@@ -405,8 +561,26 @@ async function searchResults(query, exam) {
     return prepareBrevetStudents(rows);
   }
 
+  if (exam?.source === "bac_session") {
+    const rows = await supabaseRequest({
+      select: "*",
+      or: isNumeroSearch ? `(NODOSS.eq.${value},NOM_AR.ilike.*${value}*,NOM_FR.ilike.*${value}*)` : `(NOM_AR.ilike.*${value}*,NOM_FR.ilike.*${value}*)`,
+      limit: 20,
+    }, BAC_SESSION_TABLE);
+    return prepareBacSessionStudents(rows);
+  }
+
+  if (exam?.source === "excellence_1as") {
+    const rows = await supabaseRequest({
+      select: "*",
+      or: isNumeroSearch ? `(Num_Excellence_1AS.eq.${value},Nom.ilike.*${value}*)` : `(Nom.ilike.*${value}*)`,
+      limit: 20,
+    }, EXCELLENCE_1AS_TABLE);
+    return prepareExcellenceStudents(rows);
+  }
+
   const rows = await supabaseRequest({
-    select: "Numero,NOM,TS,MOD,KR,WL,MS",
+    select: "Numero,NOM,TS,MOD,KR,WL,MS,MD",
     or: isNumeroSearch ? `(Numero.eq.${value},NOM.ilike.*${value}*)` : "",
     NOM: isNumeroSearch ? "" : `ilike.*${value}*`,
     limit: 20,
@@ -467,6 +641,9 @@ function groupStudentsByTrack(students) {
 export default function HomePage() {
   const [students, setStudents] = useState([]);
   const [brevetStudents, setBrevetStudents] = useState([]);
+  const [bacSessionStudents, setBacSessionStudents] = useState([]);
+  const [concoursStudents, setConcoursStudents] = useState([]);
+  const [excellenceStudents, setExcellenceStudents] = useState([]);
   const [query, setQuery] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -530,7 +707,15 @@ export default function HomePage() {
   const trackStats = useMemo(() => summarizeStudents(students, "track"), [students]);
   const schoolStats = useMemo(() => summarizeStudents(students, "ms"), [students]);
   const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
-  const activeStudents = selectedExam?.source === "brevet" ? brevetStudents : students;
+  const activeStudents = selectedExam?.source === "brevet"
+    ? brevetStudents
+    : selectedExam?.source === "bac_session"
+      ? bacSessionStudents
+      : selectedExam?.source === "concours"
+        ? concoursStudents
+        : selectedExam?.source === "excellence_1as"
+          ? excellenceStudents
+          : students;
   const text = UI_TEXT[lang];
   const rankingStudents = useMemo(() => {
     if (!rankingTarget) return [];
@@ -539,14 +724,11 @@ export default function HomePage() {
       .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
   }, [activeStudents, rankingTarget]);
   const searchPool = useMemo(() => {
-    if (selectedExam?.filter === "sessionnaire") {
-      return students.filter((student) => getOfficialStatus(student.kr).className === "sessionnaire");
-    }
     return activeStudents;
-  }, [activeStudents, selectedExam, students]);
+  }, [activeStudents]);
   const suggestions = useMemo(() => {
     const value = cleanText(query).toLowerCase();
-    if (!selectedExam?.available || value.length < 2 || resultPageOpen || matches.length) return [];
+    if (!selectedExam?.available || selectedExam.source === "concours" || value.length < 2 || resultPageOpen || matches.length) return [];
     return searchPool
       .filter((student) => cleanText(student.id).toLowerCase().includes(value) || cleanText(student.name).toLowerCase().includes(value))
       .slice(0, 5);
@@ -651,11 +833,18 @@ export default function HomePage() {
     window.history.pushState({ view: "exam" }, "", `#${exam.id}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
 
-    if (exam.source === "brevet" && !brevetStudents.length) {
+    const loaders = {
+      brevet: { hasData: brevetStudents.length > 0, load: fetchBrevetResults, set: setBrevetStudents },
+      bac_session: { hasData: bacSessionStudents.length > 0, load: fetchBacSessionResults, set: setBacSessionStudents },
+      concours: { hasData: concoursStudents.length > 0, load: fetchConcoursResults, set: setConcoursStudents },
+      excellence_1as: { hasData: excellenceStudents.length > 0, load: fetchExcellenceResults, set: setExcellenceStudents },
+    };
+    const loader = loaders[exam.source];
+    if (loader && !loader.hasData) {
       setExamLoading(true);
       try {
-        const rows = await fetchBrevetResults();
-        setBrevetStudents(rows);
+        const rows = await loader.load();
+        loader.set(rows);
       } catch (error) {
         setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
       } finally {
@@ -752,9 +941,13 @@ function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, 
       <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
       <StatsStrip loading={loading} stats={examStats} text={text} />
       <section className="scroll-mt-20" id="resultArea">
-        <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
+        {exam.source === "concours" ? (
+          <ConcoursSearchPanel loading={loading} onSelect={onSelect} students={searchPool} text={text} />
+        ) : (
+          <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
+        )}
         {loading && <ResultLoadingCard text={text} />}
-        {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
+        {exam.source !== "concours" && !loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
       </section>
       <TrackGroupsPreview groups={trackGroups} onSelect={onSelect} text={text} />
     </section>
@@ -769,6 +962,67 @@ function RankingPage({ onSelect, rankingTarget, students, text }) {
       <PageHero eyebrow={text.ranking} title={rankingTarget.value} description={text.rankingDesc} icon={rankingTarget.field === "ms" ? <SchoolIcon /> : <MapIcon />} />
       <TrackGroupsPreview groups={trackGroups} onSelect={onSelect} text={text} />
     </section>
+  );
+}
+
+function uniqueSorted(values) {
+  return [...new Set(values.map(cleanText).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
+}
+
+function ConcoursSearchPanel({ loading, onSelect, students, text }) {
+  const [wilaya, setWilaya] = useState("");
+  const [moughataa, setMoughataa] = useState("");
+  const [centre, setCentre] = useState("");
+  const [number, setNumber] = useState("");
+  const [localError, setLocalError] = useState("");
+
+  const wilayas = useMemo(() => uniqueSorted(students.map((student) => student.wl)), [students]);
+  const moughataas = useMemo(() => uniqueSorted(students.filter((student) => student.wl === wilaya).map((student) => student.moughataa)), [students, wilaya]);
+  const centres = useMemo(() => uniqueSorted(students.filter((student) => student.wl === wilaya && student.moughataa === moughataa).map((student) => student.centre)), [centre, moughataa, students, wilaya]);
+
+  function submit(event) {
+    event.preventDefault();
+    setLocalError("");
+    const found = students.find((student) => (
+      student.wl === wilaya
+      && student.moughataa === moughataa
+      && student.centre === centre
+      && cleanText(student.id) === cleanText(number)
+    ));
+
+    if (!found) {
+      setLocalError(text.notFound);
+      return;
+    }
+    onSelect(found);
+  }
+
+  return (
+    <form className="search-card animate-slide-up" onSubmit={submit}>
+      <SelectField disabled={loading} label={text.chooseWilaya} onChange={(value) => { setWilaya(value); setMoughataa(""); setCentre(""); }} options={wilayas} value={wilaya} />
+      <SelectField disabled={loading || !wilaya} label={text.chooseMoughataa} onChange={(value) => { setMoughataa(value); setCentre(""); }} options={moughataas} value={moughataa} />
+      <SelectField disabled={loading || !moughataa} label={text.chooseCentre} onChange={setCentre} options={centres} value={centre} />
+      <label className="grid gap-1">
+        <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{text.candidateNumber}</span>
+        <input className="search-input pr-4" disabled={loading || !centre} onChange={(event) => setNumber(event.target.value)} placeholder={text.candidateNumber} value={number} />
+      </label>
+      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98]" disabled={loading} type="submit">
+        {loading ? text.searching : text.searchButton}
+      </button>
+      {localError && <p className="col-span-full text-center text-xs font-black text-red-600 dark:text-red-300 md:text-start">{localError}</p>}
+    </form>
+  );
+}
+
+function SelectField({ disabled, label, onChange, options, value }) {
+  return (
+    <label className="grid gap-1">
+      <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{label}</span>
+      <select className="search-input pr-4" disabled={disabled} onChange={(event) => onChange(event.target.value)} value={value}>
+        <option value="">{label}</option>
+        {options.map((option) => <option value={option} key={option}>{option}</option>)}
+      </select>
+    </label>
   );
 }
 
@@ -1036,6 +1290,45 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
       [text.birthPlace, student.birthPlace || text.unavailable, <UserIcon key="birth-place" />],
       [text.birthDate, student.birthDate || text.unavailable, <BookIcon key="birth-date" />],
     ]
+    : student.source === "bac_session"
+      ? [
+        [text.id, student.id, <HashIcon key="hash" />],
+        [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
+        [text.decision, status.label, <InfoIcon key="decision" />],
+        [text.track, student.track, <BookIcon key="track" />],
+        [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
+        [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
+        [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
+        [text.birthPlace, student.birthPlace || text.unavailable, <UserIcon key="birth-place" />],
+        [text.birthDate, student.birthDate || text.unavailable, <BookIcon key="birth-date" />],
+      ]
+      : student.source === "concours"
+        ? [
+          [text.id, student.id, <HashIcon key="hash" />],
+          [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
+          [text.type, student.type || student.track || text.unavailable, <BookIcon key="type" />],
+          [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
+          [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
+          [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
+          [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />],
+          [text.birthPlace, student.birthPlace || text.unavailable, <UserIcon key="birth-place" />],
+          [text.yearBirth, student.birthDate || text.unavailable, <BookIcon key="birth-year" />],
+        ]
+        : student.source === "excellence_1as"
+          ? [
+            [text.id, student.id, <HashIcon key="hash" />],
+            [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
+            [text.decision, status.label, <InfoIcon key="decision" />],
+            [text.track, student.track, <BookIcon key="track" />],
+            [text.nationalId, student.matricule || text.unavailable, <HashIcon key="matricule" />],
+            [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
+            [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
+            [text.birthPlace, student.birthPlace || text.unavailable, <UserIcon key="birth-place" />],
+            [text.birthDate, student.birthDate || text.unavailable, <BookIcon key="birth-date" />],
+            [text.arabicMark, student.arabicMark || text.unavailable, <BookIcon key="arabic" />],
+            [text.frenchMark, student.frenchMark || text.unavailable, <BookIcon key="french" />],
+            [text.mathMark, student.mathMark || text.unavailable, <ChartIcon key="math" />],
+          ]
     : [
       [text.id, student.id, <HashIcon key="hash" />],
       [text.track, student.track, <BookIcon key="book" />],
