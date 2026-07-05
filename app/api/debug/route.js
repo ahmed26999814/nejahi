@@ -12,25 +12,39 @@ function getSupabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const key = serviceKey || anonKey;
+  let host = "";
+  let projectRef = "";
+
+  try {
+    host = url ? new URL(url).host : "";
+    projectRef = host.endsWith(".supabase.co") ? host.replace(".supabase.co", "") : host.split(".")[0] || "";
+  } catch {
+    host = "";
+    projectRef = "";
+  }
 
   return {
     hasUrl: Boolean(url),
     hasAnonKey: Boolean(anonKey),
-    usingServiceRole: Boolean(serviceKey),
+    hasServiceRoleKey: Boolean(serviceKey),
+    host,
+    projectRef,
     url,
-    key,
+    anonKey,
+    serviceKey,
   };
 }
 
-async function inspectTable(table, config) {
-  if (!config.url || !config.key) {
+async function readTableWithKey(table, config, key, mode) {
+  if (!config.url || !key) {
     return {
-      table,
+      mode,
+      available: false,
       ok: false,
       count: null,
       firstRow: null,
-      error: "Missing Supabase URL or key",
+      columns: [],
+      error: `Missing ${mode} key or Supabase URL`,
     };
   }
 
@@ -42,8 +56,8 @@ async function inspectTable(table, config) {
     const response = await fetch(url, {
       cache: "no-store",
       headers: {
-        apikey: config.key,
-        Authorization: `Bearer ${config.key}`,
+        apikey: key,
+        Authorization: `Bearer ${key}`,
         Accept: "application/json",
         Prefer: "count=exact",
         Range: "0-0",
@@ -62,7 +76,8 @@ async function inspectTable(table, config) {
     const countMatch = contentRange.match(/\/(\d+)$/);
 
     return {
-      table,
+      mode,
+      available: true,
       ok: response.ok,
       status: response.status,
       count: countMatch ? Number(countMatch[1]) : rows.length,
@@ -72,13 +87,36 @@ async function inspectTable(table, config) {
     };
   } catch (error) {
     return {
-      table,
+      mode,
+      available: true,
       ok: false,
       count: null,
       firstRow: null,
+      columns: [],
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
+}
+
+async function inspectTable(table, config) {
+  const [anon, serviceRole] = await Promise.all([
+    readTableWithKey(table, config, config.anonKey, "anon"),
+    readTableWithKey(table, config, config.serviceKey, "serviceRole"),
+  ]);
+
+  let diagnosis = "unknown";
+  if (!anon.ok) diagnosis = "anon-request-failed";
+  else if (serviceRole.available && serviceRole.ok && anon.count === 0 && serviceRole.count > 0) diagnosis = "rls-or-anon-select-policy";
+  else if (serviceRole.available && serviceRole.ok && serviceRole.count === 0) diagnosis = "empty-in-this-project-or-wrong-table";
+  else if (!serviceRole.available && anon.count === 0) diagnosis = "anon-sees-zero-add-service-role-to-confirm-rls-vs-empty";
+  else if (anon.count > 0) diagnosis = "anon-can-read";
+
+  return {
+    table,
+    diagnosis,
+    anon,
+    serviceRole,
+  };
 }
 
 export async function GET() {
@@ -86,14 +124,17 @@ export async function GET() {
   const tables = await Promise.all(TABLES.map((table) => inspectTable(table, config)));
 
   return Response.json({
-    ok: tables.every((table) => table.ok),
+    ok: tables.every((table) => table.anon.ok || table.serviceRole.ok),
     source: "supabase-rest",
     generatedAt: new Date().toISOString(),
     env: {
       hasUrl: config.hasUrl,
       hasAnonKey: config.hasAnonKey,
-      usingServiceRole: config.usingServiceRole,
+      hasServiceRoleKey: config.hasServiceRoleKey,
+      supabaseHost: config.host,
+      projectRef: config.projectRef,
     },
+    note: "Counts are read from the Supabase project shown in env.projectRef. serviceRole counts bypass RLS only when SUPABASE_SERVICE_ROLE_KEY is configured on the server.",
     tables,
   });
 }
