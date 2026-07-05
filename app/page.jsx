@@ -659,7 +659,7 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resultLoading, setResultLoading] = useState(false);
-  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
   const [examLoading, setExamLoading] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [resultPageOpen, setResultPageOpen] = useState(false);
@@ -677,10 +677,6 @@ export default function HomePage() {
     setLang(savedLang || "ar");
     window.history.replaceState({ view: "home" }, "", window.location.pathname);
 
-    fetchAllResults()
-      .then(setStudents)
-      .catch((error) => setError(isMissingSupabaseEnv(error) ? UI_TEXT.ar.missingEnv : UI_TEXT.ar.statsLoadError))
-      .finally(() => setDashboardLoading(false));
   }, []);
 
   useEffect(() => {
@@ -824,8 +820,56 @@ export default function HomePage() {
     showStudent(student);
   }
 
-  function openView(view) {
+  function isExamDataLoaded(exam) {
+    if (!exam) return false;
+    if (exam.source === "bac") return students.length > 0;
+    if (exam.source === "brevet") return brevetStudents.length > 0;
+    if (exam.source === "bac_session") return bacSessionStudents.length > 0;
+    if (exam.source === "concours") return concoursStudents.length > 0;
+    if (exam.source === "excellence_1as") return excellenceStudents.length > 0;
+    return false;
+  }
+
+  async function loadExamData(exam) {
+    if (!exam) return [];
+    if (isExamDataLoaded(exam)) {
+      if (exam.source === "bac") return students;
+      if (exam.source === "brevet") return brevetStudents;
+      if (exam.source === "bac_session") return bacSessionStudents;
+      if (exam.source === "concours") return concoursStudents;
+      if (exam.source === "excellence_1as") return excellenceStudents;
+      return [];
+    }
+    const loaders = {
+      bac: { load: fetchAllResults, set: setStudents },
+      brevet: { load: fetchBrevetResults, set: setBrevetStudents },
+      bac_session: { load: fetchBacSessionResults, set: setBacSessionStudents },
+      concours: { load: fetchConcoursResults, set: setConcoursStudents },
+      excellence_1as: { load: fetchExcellenceResults, set: setExcellenceStudents },
+    };
+    const loader = loaders[exam.source];
+    if (!loader) return [];
+    setExamLoading(true);
+    try {
+      const rows = await loader.load();
+      loader.set(rows);
+      return rows;
+    } catch (error) {
+      setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
+      return [];
+    } finally {
+      setExamLoading(false);
+    }
+  }
+
+  async function openView(view) {
     if (view === "exam" && !selectedExamId) {
+      setActiveView("year");
+      window.history.pushState({ view: "year" }, "", "#year-2025");
+      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+      return;
+    }
+    if ((view === "toppers" || view === "analytics") && !selectedExam) {
       setActiveView("year");
       window.history.pushState({ view: "year" }, "", "#year-2025");
       window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
@@ -835,6 +879,9 @@ export default function HomePage() {
     if (view !== "result") setResultPageOpen(false);
     window.history.pushState({ view }, "", view === "home" ? window.location.pathname : `#${view}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+    if ((view === "toppers" || view === "analytics") && selectedExam) {
+      await loadExamData(selectedExam);
+    }
   }
 
   function openYear(year) {
@@ -858,28 +905,12 @@ export default function HomePage() {
     window.history.pushState({ view: "exam" }, "", `#${exam.id}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
 
-    const loaders = {
-      brevet: { hasData: brevetStudents.length > 0, load: fetchBrevetResults, set: setBrevetStudents },
-      bac_session: { hasData: bacSessionStudents.length > 0, load: fetchBacSessionResults, set: setBacSessionStudents },
-      concours: { hasData: concoursStudents.length > 0, load: fetchConcoursResults, set: setConcoursStudents },
-      excellence_1as: { hasData: excellenceStudents.length > 0, load: fetchExcellenceResults, set: setExcellenceStudents },
-    };
-    const loader = loaders[exam.source];
-    if (loader && !loader.hasData) {
-      setExamLoading(true);
-      try {
-        const rows = await loader.load();
-        loader.set(rows);
-      } catch (error) {
-        setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
-      } finally {
-        setExamLoading(false);
-      }
-    }
+    if (exam.source === "concours") await loadExamData(exam);
   }
 
-  function openRanking(field, value, label) {
+  async function openRanking(field, value, label) {
     if (!value || value === "غير متوفرة") return;
+    await loadExamData(selectedExam);
     setRankingTarget({ field, value, label });
     setActiveView("ranking");
     window.history.pushState({ view: "ranking" }, "", "#ranking");
@@ -992,13 +1023,9 @@ function CompetitionCards({ lang, onSelectExam, selectedExamId, text }) {
 }
 
 function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, onPickSuggestion, onSelect, query, searchPool, setQuery, suggestions, text }) {
-  const trackGroups = useMemo(() => groupStudentsByTrack(searchPool), [searchPool]);
-  const examStats = useMemo(() => calculateStats(searchPool), [searchPool]);
-
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
-      <StatsStrip loading={loading} stats={examStats} text={text} />
       <section className="scroll-mt-20" id="resultArea">
         {exam.source === "concours" ? (
           <ConcoursSearchPanel loading={loading} onSelect={onSelect} students={searchPool} text={text} />
@@ -1008,7 +1035,6 @@ function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, 
         {loading && <ResultLoadingCard text={text} />}
         {exam.source !== "concours" && !loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
       </section>
-      <TrackGroupsPreview groups={trackGroups} onSelect={onSelect} text={text} />
     </section>
   );
 }
