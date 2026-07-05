@@ -8,13 +8,14 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const BAC_TABLE = "bac_results";
 const BAC_SESSION_TABLE = "bac_session2_results";
 const CONCOURS_TABLE = "concours_results";
+const CONCOURS_VIEW = "concours_results_view";
 const EXCELLENCE_1AS_TABLE = "excellence_1as_results";
 const BREVET_TABLE = "brevet_results";
 const TABLE_BY_SOURCE = {
   bac: BAC_TABLE,
   bac_session: BAC_SESSION_TABLE,
   brevet: BREVET_TABLE,
-  concours: CONCOURS_TABLE,
+  concours: CONCOURS_VIEW,
   excellence_1as: EXCELLENCE_1AS_TABLE,
 };
 
@@ -358,6 +359,18 @@ function numberSearchValues(query, width = 5) {
   ])].map(escapePostgrestValue);
 }
 
+function concoursNumberSearchValues(query) {
+  const value = cleanText(query);
+  if (!/^\d+$/.test(value)) return [escapePostgrestValue(value)];
+  return [...new Set([
+    value,
+    value.padStart(5, "0"),
+    value.padStart(6, "0"),
+    value.padStart(7, "0"),
+    String(Number(value)),
+  ])].map(escapePostgrestValue);
+}
+
 function logSupabaseQuery(table, params, context = "request") {
   const safeParams = Object.fromEntries(
     Object.entries(params || {}).filter(([, value]) => value !== undefined && value !== null && value !== "")
@@ -457,6 +470,7 @@ function prepareConcoursStudents(rows) {
   const normalized = rows
     .map((row, index) => {
       const total = getColumn(row, "TOTAL");
+      const totalNum = getColumn(row, "total_num");
       return {
         id: String(getColumn(row, "Numéro_C1AS", "Numero_C1AS") ?? "").trim(),
         internalId: cleanText(getColumn(row, "NODOSS", "Noreg") || ""),
@@ -464,7 +478,7 @@ function prepareConcoursStudents(rows) {
         name: cleanText(getColumn(row, "NOM_AR") || "اسم غير متوفر"),
         track: cleanText(getColumn(row, "TYPE") || "كونكور"),
         MOD: total,
-        totalScore: parseAverage(total),
+        totalScore: totalNum !== "" ? parseAverage(totalNum) : parseAverage(total),
         kr: "",
         wl: cleanText(getColumn(row, "WILAYA_AR") || ""),
         moughataa: cleanText(getColumn(row, "MOUGHATAA_AR") || ""),
@@ -485,6 +499,17 @@ function prepareConcoursStudents(rows) {
   });
 
   return [...new Map(sorted.map((student) => [student.id, student])).values()];
+}
+
+function logConcoursRows(context, rawRows, students) {
+  const totals = students.map((student) => getAverage(student)).filter((value) => Number.isFinite(value));
+  console.log("[MauriResults Concours]", {
+    context,
+    rawCount: rawRows.length,
+    preparedCount: students.length,
+    highestTotal: totals.length ? Math.max(...totals) : null,
+    lowestTotal: totals.length ? Math.min(...totals) : null,
+  });
 }
 
 function prepareExcellenceStudents(rows) {
@@ -595,17 +620,45 @@ async function fetchBacSessionResults() {
 }
 
 async function fetchConcoursResults() {
+  const rows = await supabaseRequest({
+    select: "*",
+    order: "total_num.desc.nullslast",
+    limit: 300,
+  }, CONCOURS_VIEW);
+  const students = prepareConcoursStudents(rows);
+  logConcoursRows("top-global", rows, students);
+  return students;
+}
+
+async function fetchConcoursFilteredResults(field, value) {
+  const columnByField = {
+    wl: "WILAYA_AR",
+    moughataa: "MOUGHATAA_AR",
+    centre: "Centre Examen_AR",
+    ms: "Ecole_AR",
+    track: "TYPE",
+  };
+  const column = columnByField[field];
+  if (!column || !value) return [];
+
   const rows = [];
   let from = 0;
-
   while (true) {
-    const batch = await supabaseRequest({ select: "*", limit: PAGE_SIZE, offset: from }, CONCOURS_TABLE);
+    const batch = await supabaseRequest({
+      select: "*",
+      [column]: `eq.${escapePostgrestValue(value)}`,
+      order: "total_num.desc.nullslast",
+      limit: PAGE_SIZE,
+      offset: from,
+    }, CONCOURS_VIEW);
     rows.push(...batch);
     if (batch.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
   }
 
-  return prepareConcoursStudents(rows);
+  const students = prepareConcoursStudents(rows);
+  logConcoursRows(`filtered:${field}`, rows, students);
+  return students;
 }
 
 async function fetchExcellenceResults() {
@@ -645,6 +698,19 @@ async function searchResults(query, exam) {
       limit: 20,
     }, BREVET_TABLE);
     return prepareBrevetStudents(rows);
+  }
+
+  if (exam?.source === "concours") {
+    const numbers = concoursNumberSearchValues(query);
+    const rows = await supabaseRequest({
+      select: "*",
+      or: isNumeroSearch ? `(${numbers.map((number) => `NODOSS.eq.${number}`).join(",")},${numbers.map((number) => `Numéro_C1AS.eq.${number}`).join(",")})` : `(NOM_AR.ilike.*${value}*)`,
+      order: "total_num.desc.nullslast",
+      limit: 20,
+    }, CONCOURS_VIEW);
+    const students = prepareConcoursStudents(rows);
+    logConcoursRows("search", rows, students);
+    return students;
   }
 
   if (exam?.source === "bac_session") {
@@ -1009,12 +1075,23 @@ export default function HomePage() {
     window.history.pushState({ view: "exam" }, "", `#${exam.id}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
 
-    if (exam.source === "concours") await loadExamData(exam);
   }
 
   async function openRanking(field, value, label) {
     if (!value || value === "غير متوفرة") return;
-    await loadExamData(selectedExam);
+    if (selectedExam?.source === "concours") {
+      setExamLoading(true);
+      try {
+        const rows = await fetchConcoursFilteredResults(field, value);
+        setConcoursStudents(rows);
+      } catch (error) {
+        setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
+      } finally {
+        setExamLoading(false);
+      }
+    } else {
+      await loadExamData(selectedExam);
+    }
     setRankingTarget({ field, value, label });
     setActiveView("ranking");
     window.history.pushState({ view: "ranking" }, "", "#ranking");
@@ -1151,13 +1228,9 @@ function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, 
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
       <section className="scroll-mt-20" id="resultArea">
-        {exam.source === "concours" ? (
-          <ConcoursSearchPanel loading={loading} onSelect={onSelect} students={searchPool} text={text} />
-        ) : (
-          <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
-        )}
+        <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
         {loading && <ResultLoadingCard text={text} />}
-        {exam.source !== "concours" && !loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
+        {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
       </section>
     </section>
   );
@@ -1551,9 +1624,9 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
           [text.totalScore, `${average.toFixed(2)} / 200`, <ChartIcon key="chart" />],
           [text.type, student.type || student.track || text.unavailable, <BookIcon key="type" />],
           [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
-          [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
+          [text.center, student.centre || text.unavailable, <MapIcon key="center" />, () => onOpenRanking?.("centre", student.centre, text.center)],
           [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
-          [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />],
+          [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />, () => onOpenRanking?.("moughataa", student.moughataa, text.moughataa)],
           ["NODOSS", student.internalId || text.unavailable, <HashIcon key="nodoss" />],
           [text.birthPlace, student.birthPlace || text.unavailable, <UserIcon key="birth-place" />],
           [text.yearBirth, student.birthDate || text.unavailable, <BookIcon key="birth-year" />],
