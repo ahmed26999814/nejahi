@@ -10,6 +10,13 @@ const BAC_SESSION_TABLE = "bac_session2_results";
 const CONCOURS_TABLE = "concours_results";
 const EXCELLENCE_1AS_TABLE = "excellence_1as_results";
 const BREVET_TABLE = "brevet_results";
+const TABLE_BY_SOURCE = {
+  bac: BAC_TABLE,
+  bac_session: BAC_SESSION_TABLE,
+  brevet: BREVET_TABLE,
+  concours: CONCOURS_TABLE,
+  excellence_1as: EXCELLENCE_1AS_TABLE,
+};
 
 const EXAM_CARDS = [
   { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },
@@ -338,6 +345,18 @@ function numberSearchValues(query, width = 5) {
   ])].map(escapePostgrestValue);
 }
 
+function logSupabaseQuery(table, params, context = "request") {
+  const safeParams = Object.fromEntries(
+    Object.entries(params || {}).filter(([, value]) => value !== undefined && value !== null && value !== "")
+  );
+
+  console.log("[MauriResults Supabase]", {
+    context,
+    table,
+    params: safeParams,
+  });
+}
+
 async function supabaseRequest(params, table = BAC_TABLE) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error("Missing Supabase environment variables.");
@@ -349,6 +368,8 @@ async function supabaseRequest(params, table = BAC_TABLE) {
       url.searchParams.set(key, value);
     }
   });
+
+  logSupabaseQuery(table, params);
 
   const response = await fetch(url, {
     headers: {
@@ -584,8 +605,18 @@ async function fetchExcellenceResults() {
 }
 
 async function searchResults(query, exam) {
+  if (!exam?.source || !TABLE_BY_SOURCE[exam.source]) {
+    throw new Error("Missing selected exam.");
+  }
+
   const value = escapePostgrestValue(query);
   const isNumeroSearch = /^[0-9A-Za-z-]+$/.test(query);
+  console.log("[MauriResults Search]", {
+    examId: exam.id,
+    source: exam.source,
+    table: TABLE_BY_SOURCE[exam.source],
+    query: cleanText(query),
+  });
 
   if (exam?.source === "brevet") {
     const numbers = numberSearchValues(query, 5);
@@ -599,18 +630,20 @@ async function searchResults(query, exam) {
   }
 
   if (exam?.source === "bac_session") {
+    const numbers = numberSearchValues(query, 5);
     const rows = await supabaseRequest({
       select: "*",
-      or: isNumeroSearch ? `(NODOSS.eq.${value},NOM_AR.ilike.*${value}*,NOM_FR.ilike.*${value}*)` : `(NOM_AR.ilike.*${value}*,NOM_FR.ilike.*${value}*)`,
+      or: isNumeroSearch ? `(${numbers.map((number) => `NODOSS.eq.${number}`).join(",")},NOM_AR.ilike.*${value}*,NOM_FR.ilike.*${value}*)` : `(NOM_AR.ilike.*${value}*,NOM_FR.ilike.*${value}*)`,
       limit: 20,
     }, BAC_SESSION_TABLE);
     return prepareBacSessionStudents(rows);
   }
 
   if (exam?.source === "excellence_1as") {
+    const numbers = numberSearchValues(query, 5);
     const rows = await supabaseRequest({
       select: "*",
-      or: isNumeroSearch ? `(Num_Excellence_1AS.eq.${value},Nom.ilike.*${value}*)` : `(Nom.ilike.*${value}*)`,
+      or: isNumeroSearch ? `(${numbers.map((number) => `Num_Excellence_1AS.eq.${number}`).join(",")},Nom.ilike.*${value}*)` : `(Nom.ilike.*${value}*)`,
       limit: 20,
     }, EXCELLENCE_1AS_TABLE);
     return prepareExcellenceStudents(rows);
@@ -803,6 +836,14 @@ export default function HomePage() {
     setResultPageOpen(false);
     setResultLoading(false);
 
+    if (!selectedExam?.source) {
+      setActiveView("year");
+      setError(text.chooseExamFirst);
+      window.history.pushState({ view: "year" }, "", "#year-2025");
+      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+      return;
+    }
+
     const value = query.trim();
     if (!value) {
       setError(text.enterQuery);
@@ -829,6 +870,7 @@ export default function HomePage() {
       if (found.length === 1) showStudent(found[0]);
       else setMatches(found);
     } catch (error) {
+      console.error("[MauriResults Search Error]", error);
       setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
     } finally {
       setLoading(false);
@@ -861,6 +903,12 @@ export default function HomePage() {
 
   async function loadExamData(exam) {
     if (!exam) return [];
+    console.log("[MauriResults Load Exam Data]", {
+      examId: exam.id,
+      source: exam.source,
+      table: TABLE_BY_SOURCE[exam.source],
+      alreadyLoaded: isExamDataLoaded(exam),
+    });
     if (isExamDataLoaded(exam)) {
       if (exam.source === "bac") return students;
       if (exam.source === "brevet") return brevetStudents;
@@ -924,6 +972,11 @@ export default function HomePage() {
   }
 
   async function openExam(exam) {
+    console.log("[MauriResults Select Exam]", {
+      examId: exam.id,
+      source: exam.source,
+      table: TABLE_BY_SOURCE[exam.source],
+    });
     setSelectedExamId(exam.id);
     setMatches([]);
     setSelectedStudent(null);
