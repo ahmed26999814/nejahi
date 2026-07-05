@@ -226,6 +226,16 @@ function cleanText(value) {
   return String(value ?? "").trim();
 }
 
+function normalizeComparable(value) {
+  return cleanText(value).replace(/\s+/g, " ").toLowerCase();
+}
+
+function normalizeCandidateNumber(value) {
+  const text = cleanText(value);
+  if (!/^\d+$/.test(text)) return normalizeComparable(text);
+  return String(Number(text));
+}
+
 function getColumn(row, ...names) {
   const source = row || {};
   const normalizedEntries = Object.entries(source).map(([key, value]) => [cleanText(key).toLowerCase(), value]);
@@ -739,8 +749,9 @@ export default function HomePage() {
   const text = UI_TEXT[lang];
   const rankingStudents = useMemo(() => {
     if (!rankingTarget) return [];
+    const target = normalizeComparable(rankingTarget.value);
     return activeStudents
-      .filter((student) => cleanText(student[rankingTarget.field]) === rankingTarget.value)
+      .filter((student) => normalizeComparable(student[rankingTarget.field]) === target)
       .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
   }, [activeStudents, rankingTarget]);
   const searchPool = useMemo(() => {
@@ -1107,10 +1118,10 @@ function ConcoursSearchPanel({ loading, onSelect, students, text }) {
     event.preventDefault();
     setLocalError("");
     const found = students.find((student) => (
-      student.wl === wilaya
-      && student.moughataa === moughataa
-      && student.centre === centre
-      && cleanText(student.id) === cleanText(number)
+      normalizeComparable(student.wl) === normalizeComparable(wilaya)
+      && normalizeComparable(student.moughataa) === normalizeComparable(moughataa)
+      && normalizeComparable(student.centre) === normalizeComparable(centre)
+      && normalizeCandidateNumber(student.id) === normalizeCandidateNumber(number)
     ));
 
     if (!found) {

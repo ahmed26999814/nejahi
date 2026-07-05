@@ -1,18 +1,18 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "MauriResults | نتائج البكالوريا في موريتانيا",
-  description: "MauriResults منصة موريتانية حديثة وسريعة لعرض نتائج البكالوريا والبريفية والكونكور.",
+  title: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
+  description: "MauriResults منصة موريتانية حديثة وسريعة لعرض نتائج البكالوريا والبريفيه والكونكور ومسابقات الامتياز.",
   keywords: [
     "نتائج البكالوريا موريتانيا",
     "Bac Mauritanie",
     "MauriResults",
-    "نتائج البريفية موريتانيا",
+    "نتائج البريفيه موريتانيا",
     "نتائج الكونكور موريتانيا",
     "Résultats BAC Mauritanie",
   ],
   openGraph: {
-    title: "MauriResults | نتائج البكالوريا في موريتانيا",
+    title: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
     description: "ابحث عن نتيجتك خلال ثوان في منصة موريتانية حديثة وسريعة.",
     type: "website",
   },
