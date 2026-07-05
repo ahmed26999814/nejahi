@@ -34,6 +34,65 @@ const UI_TEXT = {
     ranking: "التصنيف",
     rankingDesc: "ترتيب المترشحين حسب المعدل داخل نفس المجموعة.",
     noData: "لا توجد بيانات كافية.",
+    platformSubtitle: "منصة نتائج الوطنية",
+    toppersTitle: "صفحة أوائل الشعب",
+    toppersDesc: "أفضل ثلاثة مترشحين من كل شعبة في عرض سريع ومنظم.",
+    analyticsTitle: "إحصائيات حسب الولايات والشعب والمدارس",
+    analyticsDesc: "لوحة مختصرة تساعد على فهم النتائج بسرعة.",
+    byRegions: "حسب الولايات",
+    byTracks: "حسب الشعب",
+    bySchools: "حسب المدارس",
+    passedOf: "ناجحون",
+    from: "من",
+    studentCount: "الطلاب",
+    passedCount: "الناجحون",
+    highestAverage: "أعلى معدل",
+    averageLabel: "المتوسط",
+    searchPlaceholder: "أدخل رقم المترشح أو الاسم الكامل",
+    searchButton: "بحث",
+    searching: "بحث...",
+    resultCard: "بطاقة النتيجة",
+    studentName: "اسم الطالب",
+    verify: "تحقق",
+    topRank: "من الأوائل",
+    successFound: "تهانينا، تم العثور على نتيجة ناجحة.",
+    share: "مشاركة",
+    print: "طباعة",
+    searchResults: "نتائج البحث",
+    chooseCandidate: "اختر المترشح",
+    number: "رقم",
+    preparingResult: "جاري تحضير بطاقة النتيجة",
+    moments: "لحظات قليلة...",
+    openingResult: "جاري فتح بطاقة النتيجة",
+    preparingOfficial: "نحضّر لك صفحة النتيجة الرسمية...",
+    trackTopThree: "ثلاثة أوائل من كل شعبة",
+    noTrackData: "لا توجد بيانات كافية لهذه الشعبة.",
+    first: "الأول",
+    second: "الثاني",
+    third: "الثالث",
+    showResult: "عرض النتيجة",
+    footerDesc: "منصة النتائج الوطنية.",
+    preparedBy: "إعداد وتطوير",
+    facebook: "فيسبوك",
+    whatsapp: "واتساب",
+    rights: "جميع الحقوق محفوظة © MauriResults.",
+    id: "رقم المترشح",
+    track: "الشعبة",
+    rank: "الرتبة",
+    school: "المدرسة",
+    region: "الولاية",
+    unavailable: "غير متوفرة",
+    statusLabels: { admis: "ناجح", sessionnaire: "دورة استدراكية", absent: "غائب", ajourne: "راسب", unknown: "غير محددة" },
+    missingEnv: "لم يتم ضبط متغيرات Supabase في بيئة النشر.",
+    statsLoadError: "تعذر تحميل الإحصائيات من Supabase.",
+    enterQuery: "يرجى إدخال رقم المترشح أو الاسم.",
+    shortQuery: "أدخل رقما أو اسما من حرفين على الأقل.",
+    notFound: "لم يتم العثور على نتيجة بهذا الرقم أو الاسم.",
+    sessionNotFound: "لم يتم العثور على مترشح مؤهل للدورة بهذا الرقم أو الاسم.",
+    connectionError: "حدث خطأ أثناء الاتصال بقاعدة البيانات.",
+    copiedShare: "تم نسخ النتيجة للمشاركة.",
+    result: "نتيجة",
+    examResultTitle: "MauriResults - نتيجة الامتحان",
   },
   fr: {
     home: "Accueil",
@@ -51,6 +110,65 @@ const UI_TEXT = {
     ranking: "Classement",
     rankingDesc: "Classement des candidats par moyenne dans le même groupe.",
     noData: "Données insuffisantes.",
+    platformSubtitle: "Plateforme nationale des résultats",
+    toppersTitle: "Lauréats par série",
+    toppersDesc: "Les trois meilleurs candidats de chaque série dans une vue claire.",
+    analyticsTitle: "Statistiques par région, série et établissement",
+    analyticsDesc: "Un tableau synthétique pour lire rapidement les résultats.",
+    byRegions: "Par région",
+    byTracks: "Par série",
+    bySchools: "Par établissement",
+    passedOf: "Admis",
+    from: "sur",
+    studentCount: "Candidats",
+    passedCount: "Admis",
+    highestAverage: "Meilleure moyenne",
+    averageLabel: "Moyenne",
+    searchPlaceholder: "Entrez le numéro ou le nom complet",
+    searchButton: "Rechercher",
+    searching: "Recherche...",
+    resultCard: "Carte du résultat",
+    studentName: "Nom du candidat",
+    verify: "Vérification",
+    topRank: "Parmi les premiers",
+    successFound: "Félicitations, un résultat admis a été trouvé.",
+    share: "Partager",
+    print: "Imprimer",
+    searchResults: "Résultats de recherche",
+    chooseCandidate: "Choisir le candidat",
+    number: "N°",
+    preparingResult: "Préparation de la carte du résultat",
+    moments: "Quelques instants...",
+    openingResult: "Ouverture de la carte du résultat",
+    preparingOfficial: "Préparation de la page officielle du résultat...",
+    trackTopThree: "Top 3 de chaque série",
+    noTrackData: "Données insuffisantes pour cette série.",
+    first: "1er",
+    second: "2e",
+    third: "3e",
+    showResult: "Voir le résultat",
+    footerDesc: "Plateforme nationale des résultats.",
+    preparedBy: "Conception et développement",
+    facebook: "Facebook",
+    whatsapp: "WhatsApp",
+    rights: "Tous droits réservés © MauriResults.",
+    id: "Numéro du candidat",
+    track: "Série",
+    rank: "Rang",
+    school: "Établissement",
+    region: "Région",
+    unavailable: "Non disponible",
+    statusLabels: { admis: "Admis", sessionnaire: "Session complémentaire", absent: "Absent", ajourne: "Ajourné", unknown: "Non défini" },
+    missingEnv: "Les variables Supabase ne sont pas configurées en production.",
+    statsLoadError: "Impossible de charger les statistiques depuis Supabase.",
+    enterQuery: "Veuillez saisir le numéro ou le nom.",
+    shortQuery: "Saisissez au moins deux caractères.",
+    notFound: "Aucun résultat trouvé avec ce numéro ou ce nom.",
+    sessionNotFound: "Aucun candidat admissible à la session avec ce numéro ou ce nom.",
+    connectionError: "Erreur lors de la connexion à la base de données.",
+    copiedShare: "Le résultat a été copié pour le partage.",
+    result: "Résultat",
+    examResultTitle: "MauriResults - Résultat de l'examen",
   },
 };
 
@@ -85,6 +203,10 @@ function getOfficialStatus(value) {
   if (normalized.includes("absent")) return { label: "غائب", icon: <MinusIcon />, className: "absent" };
   if (normalized.includes("ajourn")) return { label: "راسب", icon: <XIcon />, className: "ajourne" };
   return { label: value ? cleanText(value) : "غير محددة", icon: <InfoIcon />, className: "unknown" };
+}
+
+function getStatusDisplay(status, text) {
+  return { ...status, label: text?.statusLabels?.[status.className] || status.label };
 }
 
 function getAverageTone(average) {
@@ -260,6 +382,22 @@ function summarizeStudents(students, field) {
     .slice(0, 10);
 }
 
+function groupStudentsByTrack(students) {
+  const groups = new Map();
+  students.forEach((student) => {
+    const track = cleanText(student.track) || "غير محدد";
+    if (!groups.has(track)) groups.set(track, []);
+    groups.get(track).push(student);
+  });
+
+  return [...groups.entries()]
+    .map(([track, groupStudents]) => ({
+      track,
+      students: [...groupStudents].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex),
+    }))
+    .sort((a, b) => a.track.localeCompare(b.track, "ar"));
+}
+
 export default function HomePage() {
   const [students, setStudents] = useState([]);
   const [query, setQuery] = useState("");
@@ -286,7 +424,7 @@ export default function HomePage() {
 
     fetchAllResults()
       .then(setStudents)
-      .catch((error) => setError(isMissingSupabaseEnv(error) ? "لم يتم ضبط متغيرات Supabase في بيئة النشر." : "تعذر تحميل الإحصائيات من Supabase."))
+      .catch((error) => setError(isMissingSupabaseEnv(error) ? UI_TEXT.ar.missingEnv : UI_TEXT.ar.statsLoadError))
       .finally(() => setDashboardLoading(false));
   }, []);
 
@@ -381,11 +519,11 @@ export default function HomePage() {
 
     const value = query.trim();
     if (!value) {
-      setError("يرجى إدخال رقم المترشح أو الاسم.");
+      setError(text.enterQuery);
       return;
     }
     if (value.length < 2) {
-      setError("أدخل رقما أو اسما من حرفين على الأقل.");
+      setError(text.shortQuery);
       return;
     }
 
@@ -398,27 +536,27 @@ export default function HomePage() {
       }).filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);
 
       if (!found.length) {
-        setError(selectedExam?.filter === "sessionnaire" ? "لم يتم العثور على مترشح مؤهل للدورة بهذا الرقم أو الاسم." : "لم يتم العثور على نتيجة بهذا الرقم أو الاسم.");
+        setError(selectedExam?.filter === "sessionnaire" ? text.sessionNotFound : text.notFound);
         return;
       }
 
       if (found.length === 1) showStudent(found[0]);
       else setMatches(found);
     } catch (error) {
-      setError(isMissingSupabaseEnv(error) ? "لم يتم ضبط متغيرات Supabase في بيئة النشر." : "حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+      setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
     } finally {
       setLoading(false);
     }
   }
 
   function shareResult(student) {
-    const text = `نتيجة ${student.name}\nرقم المترشح: ${student.id}\nالشعبة: ${student.track}\nالمعدل: ${parseAverage(student.MOD).toFixed(2)}\nالترتيب: ${student.rank || "غير متوفر"}\nMauriResults`;
+    const shareText = `${text.result} ${student.name}\n${text.id}: ${student.id}\n${text.track}: ${student.track}\n${text.averageLabel}: ${parseAverage(student.MOD).toFixed(2)}\n${text.rank}: ${student.rank || text.unavailable}\nMauriResults`;
     if (navigator.share) {
-      navigator.share({ title: "MauriResults - نتيجة الامتحان", text }).catch(() => {});
+      navigator.share({ title: text.examResultTitle, text: shareText }).catch(() => {});
       return;
     }
-    navigator.clipboard?.writeText(text);
-    setMessage("تم نسخ النتيجة للمشاركة.");
+    navigator.clipboard?.writeText(shareText);
+    setMessage(text.copiedShare);
   }
 
   function selectStudent(student) {
@@ -479,15 +617,15 @@ export default function HomePage() {
         />
       )}
 
-      {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />}
-      {activeView === "toppers" && <ToppersPage groups={topperGroups} loading={dashboardLoading} onSelect={selectStudent} />}
-      {activeView === "analytics" && <AnalyticsPage loading={dashboardLoading} regionStats={regionStats} schoolStats={schoolStats} stats={stats} trackStats={trackStats} />}
+      {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
+      {activeView === "toppers" && <ToppersPage groups={topperGroups} loading={dashboardLoading} onSelect={selectStudent} text={text} />}
+      {activeView === "analytics" && <AnalyticsPage loading={dashboardLoading} regionStats={regionStats} schoolStats={schoolStats} stats={stats} text={text} trackStats={trackStats} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience lang={lang} onOpenRanking={openRanking} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
-      {activeView !== "result" && <Footer />}
+      {activeView !== "result" && <Footer text={text} />}
       <BottomNav activeView={activeView} onNavigate={openView} text={text} />
-      {resultLoading && <ResultLoadingOverlay />}
+      {resultLoading && <ResultLoadingOverlay text={text} />}
     </main>
   );
 }
@@ -524,60 +662,79 @@ function CompetitionCards({ lang, onSelectExam, selectedExamId, text }) {
   );
 }
 
-function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, onPickSuggestion, onSelect, query, setQuery, suggestions, text }) {
+function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, onPickSuggestion, onSelect, query, searchPool, setQuery, suggestions, text }) {
+  const trackGroups = useMemo(() => groupStudentsByTrack(searchPool), [searchPool]);
+
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
       <section className="scroll-mt-20" id="resultArea">
         <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
-        {loading && <ResultLoadingCard />}
-        {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} />}
+        {loading && <ResultLoadingCard text={text} />}
+        {!loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
       </section>
+      <TrackGroupsPreview groups={trackGroups} onSelect={onSelect} text={text} />
     </section>
   );
 }
 
 function RankingPage({ onSelect, rankingTarget, students, text }) {
+  const trackGroups = useMemo(() => groupStudentsByTrack(students), [students]);
+
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.ranking} title={rankingTarget.value} description={text.rankingDesc} icon={rankingTarget.field === "ms" ? <SchoolIcon /> : <MapIcon />} />
-      <section className="analytics-panel animate-slide-up">
-        <div className="grid gap-2">
-          {students.length ? students.map((student, index) => (
-            <button className="ranking-row" key={student.id} onClick={() => onSelect(student)} type="button">
-              <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-sm font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">#{index + 1}</span>
-              <span className="min-w-0 text-start">
-                <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{student.name}</strong>
-                <small className="line-clamp-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.id} - {student.track}</small>
-              </span>
-              <strong className="text-lg font-black text-mauri-green dark:text-mauri-gold">{getAverage(student).toFixed(2)}</strong>
-            </button>
-          )) : <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{text.noData}</p>}
-        </div>
-      </section>
+      <TrackGroupsPreview groups={trackGroups} onSelect={onSelect} text={text} />
     </section>
   );
 }
 
-function ToppersPage({ groups, loading, onSelect }) {
+function TrackGroupsPreview({ groups, onSelect, text }) {
   return (
-    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow="الأوائل" title="صفحة أوائل الشعب" description="أفضل ثلاثة مترشحين من كل شعبة في عرض سريع ومنظم." icon={<AwardIcon />} />
-      <ToppersSection loading={loading} onSelect={onSelect} groups={groups} />
+    <section className="grid gap-3">
+      {groups.length ? groups.map((group) => (
+        <section className="analytics-panel animate-slide-up" key={group.track}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-base font-black text-slate-950 dark:text-white">{group.track}</h2>
+            <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">{group.students.length.toLocaleString("ar-MR")}</span>
+          </div>
+          <div className="grid gap-2">
+            {group.students.slice(0, 12).map((student, index) => (
+              <button className="ranking-row" key={student.id} onClick={() => onSelect(student)} type="button">
+                <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-sm font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">#{index + 1}</span>
+                <span className="min-w-0 text-start">
+                  <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{student.name}</strong>
+                  <small className="line-clamp-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.id} - {student.ms || text.unavailable}</small>
+                </span>
+                <strong className="text-lg font-black text-mauri-green dark:text-mauri-gold">{getAverage(student).toFixed(2)}</strong>
+              </button>
+            ))}
+          </div>
+        </section>
+      )) : <p className="rounded-[18px] border border-mauri-border bg-white p-4 text-sm font-bold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400">{text.noData}</p>}
     </section>
   );
 }
 
-function AnalyticsPage({ loading, regionStats, schoolStats, stats, trackStats }) {
+function ToppersPage({ groups, loading, onSelect, text }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow="الإحصائيات" title="إحصائيات حسب الولايات والشعب والمدارس" description="لوحة مختصرة تساعد على فهم النتائج بسرعة." icon={<ChartIcon />} />
-      <StatsStrip loading={loading} stats={stats} />
+      <PageHero eyebrow={text.toppers} title={text.toppersTitle} description={text.toppersDesc} icon={<AwardIcon />} />
+      <ToppersSection loading={loading} onSelect={onSelect} groups={groups} text={text} />
+    </section>
+  );
+}
+
+function AnalyticsPage({ loading, regionStats, schoolStats, stats, text, trackStats }) {
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow={text.analytics} title={text.analyticsTitle} description={text.analyticsDesc} icon={<ChartIcon />} />
+      <StatsStrip loading={loading} stats={stats} text={text} />
       <div className="grid gap-4 lg:grid-cols-2">
-        <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} title="حسب الولايات" />
-        <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} title="حسب الشعب" />
+        <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} text={text} title={text.byRegions} />
+        <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} text={text} title={text.byTracks} />
         <div className="lg:col-span-2">
-          <StatsTable icon={<SchoolIcon />} loading={loading} rows={schoolStats} title="حسب المدارس" />
+          <StatsTable icon={<SchoolIcon />} loading={loading} rows={schoolStats} text={text} title={text.bySchools} />
         </div>
       </div>
     </section>
@@ -597,7 +754,7 @@ function PageHero({ description, eyebrow, icon, title }) {
   );
 }
 
-function StatsTable({ icon, loading, rows, title }) {
+function StatsTable({ icon, loading, rows, text, title }) {
   return (
     <section className="analytics-panel animate-slide-up">
       <div className="mb-3 flex items-center gap-2">
@@ -608,21 +765,21 @@ function StatsTable({ icon, loading, rows, title }) {
         {loading ? (
           Array.from({ length: 6 }).map((_, index) => <span className="skeleton h-12 rounded-[16px]" key={index} />)
         ) : rows.length ? (
-          rows.map((row) => <StatsRow row={row} key={row.label} />)
+          rows.map((row) => <StatsRow row={row} text={text} key={row.label} />)
         ) : (
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">لا توجد بيانات كافية.</p>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{text.noData}</p>
         )}
       </div>
     </section>
   );
 }
 
-function StatsRow({ row }) {
+function StatsRow({ row, text }) {
   return (
     <article className="analytics-row">
       <div className="min-w-0">
         <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{row.label}</strong>
-        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">ناجحون {row.passed.toLocaleString("ar-MR")} من {row.total.toLocaleString("ar-MR")}</span>
+        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{text.passedOf} {row.passed.toLocaleString("ar-MR")} {text.from} {row.total.toLocaleString("ar-MR")}</span>
       </div>
       <div className="text-left">
         <strong className="block text-sm font-black text-mauri-green dark:text-mauri-gold">{row.average.toFixed(2)}</strong>
@@ -646,7 +803,7 @@ function Header({ activeView, lang, onNavigate, onToggleLang, text, theme, setTh
           <LogoMark className="h-9 w-9 rounded-[14px]" />
           <span className="min-w-0">
             <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
-            <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">منصة نتائج الوطنية</small>
+            <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">{text.platformSubtitle}</small>
           </span>
         </button>
         <div className="hidden items-center gap-2 md:flex">
@@ -705,7 +862,7 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
             onChange={(event) => setQuery(event.target.value)}
             onBlur={() => window.setTimeout(() => setFocused(false), 140)}
             onFocus={() => setFocused(true)}
-            placeholder="أدخل رقم المترشح أو الاسم الكامل"
+            placeholder={text?.searchPlaceholder || "أدخل رقم المترشح أو الاسم الكامل"}
           />
         </label>
         {visibleSuggestions && (
@@ -723,7 +880,7 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
         )}
       </div>
       <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98]" type="submit">
-        {loading ? "بحث..." : "بحث"}
+        {loading ? (text?.searching || "بحث...") : (text?.searchButton || "بحث")}
       </button>
       {(error || message) && (
         <p className={`col-span-full text-center text-xs font-black md:text-start ${error ? "text-red-600 dark:text-red-300" : "text-mauri-green dark:text-mauri-gold"}`}>{error || message}</p>
@@ -732,12 +889,12 @@ function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickS
   );
 }
 
-function StatsStrip({ loading, stats }) {
+function StatsStrip({ loading, stats, text = UI_TEXT.ar }) {
   const cards = [
-    { label: "الطلاب", value: stats.total, icon: <GraduationIcon /> },
-    { label: "الناجحون", value: stats.passed, icon: <CheckCircleIcon /> },
-    { label: "أعلى معدل", value: stats.highest, decimals: 2, icon: <TrendingIcon /> },
-    { label: "المتوسط", value: stats.average, decimals: 2, icon: <ChartIcon /> },
+    { label: text.studentCount, value: stats.total, icon: <GraduationIcon /> },
+    { label: text.passedCount, value: stats.passed, icon: <CheckCircleIcon /> },
+    { label: text.highestAverage, value: stats.highest, decimals: 2, icon: <TrendingIcon /> },
+    { label: text.averageLabel, value: stats.average, decimals: 2, icon: <ChartIcon /> },
   ];
 
   return (
@@ -777,20 +934,20 @@ function CountUp({ decimals = 0, value }) {
   return <strong className="block text-base font-black text-slate-950 dark:text-white">{decimals ? display.toFixed(decimals) : Math.round(display).toLocaleString("ar-MR")}</strong>;
 }
 
-function ResultCard({ onOpenRanking, student, onShare, verificationCode }) {
+function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verificationCode }) {
   const average = parseAverage(student.MOD);
-  const status = getOfficialStatus(student.kr);
+  const status = getStatusDisplay(getOfficialStatus(student.kr), text);
   const isPassed = status.className === "admis";
   const isFailed = status.className === "ajourne";
   const isTopRanked = student.rank && student.rank <= 3;
   const tone = isFailed ? "calm" : getAverageTone(average);
   const averagePhrase = getAveragePhrase(average);
   const details = [
-    ["رقم المترشح", student.id, <HashIcon key="hash" />],
-    ["الشعبة", student.track, <BookIcon key="book" />],
-    ["الرتبة", student.rank ? `#${student.rank}` : "غير متوفرة", <AwardIcon key="award" />],
-    ["المدرسة", student.ms || "غير متوفرة", <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, "المدرسة")],
-    ["الولاية", student.wl || "غير متوفرة", <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, "الولاية")],
+    [text.id, student.id, <HashIcon key="hash" />],
+    [text.track, student.track, <BookIcon key="book" />],
+    [text.rank, student.rank ? `#${student.rank}` : text.unavailable, <AwardIcon key="award" />],
+    [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
+    [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
   ];
 
   useEffect(() => {
@@ -800,21 +957,21 @@ function ResultCard({ onOpenRanking, student, onShare, verificationCode }) {
   return (
     <article className={`result-modal result-${tone} animate-slide-up`}>
       {isPassed && <Confetti />}
-      {isPassed && <span className="success-stamp">ناجح</span>}
+      {isPassed && <span className="success-stamp">{status.label}</span>}
       <div className="result-modal-header">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">بطاقة النتيجة</p>
+          <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{text.resultCard}</p>
           <div className="student-name-panel">
-            <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">اسم الطالب</span>
+            <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{text.studentName}</span>
             <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
             <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">{average.toFixed(2)}</strong>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">تحقق {verificationCode}</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{text.verify} {verificationCode}</span>
             {isTopRanked && (
               <span className="top-rank-badge">
                 <GoldMedalIcon />
-                من الأوائل #{student.rank}
+                {text.topRank} #{student.rank}
               </span>
             )}
           </div>
@@ -824,7 +981,7 @@ function ResultCard({ onOpenRanking, student, onShare, verificationCode }) {
       {isPassed && (
         <div className="success-banner">
           <AwardIcon />
-          <span>تهانينا، تم العثور على نتيجة ناجحة.</span>
+          <span>{text.successFound}</span>
         </div>
       )}
 
@@ -840,9 +997,9 @@ function ResultCard({ onOpenRanking, student, onShare, verificationCode }) {
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <ActionButton icon={<ShareIcon />} label="مشاركة" onClick={() => onShare(student)} />
+        <ActionButton icon={<ShareIcon />} label={text.share} onClick={() => onShare(student)} />
         <ActionButton icon={<DownloadIcon />} label="PDF" onClick={() => window.print()} variant="light" />
-        <ActionButton icon={<PrinterIcon />} label="طباعة" onClick={() => window.print()} variant="light" />
+        <ActionButton icon={<PrinterIcon />} label={text.print} onClick={() => window.print()} variant="light" />
       </div>
     </article>
   );
@@ -869,11 +1026,11 @@ function AverageLevelBar({ level }) {
 }
 
 function ResultExperience({ onOpenRanking, onShare, student, text }) {
-  const status = getOfficialStatus(student.kr);
+  const status = getStatusDisplay(getOfficialStatus(student.kr), text);
   const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
 
   return (
-    <section className="app-shell result-official-page py-4 md:py-8" aria-label="بطاقة النتيجة الرسمية">
+    <section className="app-shell result-official-page py-4 md:py-8" aria-label={text?.officialResult || "بطاقة النتيجة الرسمية"}>
       <div className="result-page-shell">
         <header className="official-result-header">
           <div className="flex min-w-0 items-center gap-3">
@@ -888,7 +1045,7 @@ function ResultExperience({ onOpenRanking, onShare, student, text }) {
             <span className={`official-status-stamp ${status.className}`}>{status.label}</span>
           </div>
         </header>
-        <ResultCard onOpenRanking={onOpenRanking} student={student} onShare={onShare} verificationCode={verificationCode} />
+        <ResultCard onOpenRanking={onOpenRanking} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
       </div>
     </section>
   );
@@ -916,16 +1073,16 @@ function StatusBadge({ status }) {
   );
 }
 
-function MatchesList({ matches, onSelect }) {
+function MatchesList({ matches, onSelect, text = UI_TEXT.ar }) {
   return (
     <section className="result-card animate-slide-up">
-      <SectionTitle eyebrow="نتائج البحث" title="اختر المترشح" />
+      <SectionTitle eyebrow={text.searchResults} title={text.chooseCandidate} />
       <div className="mt-3 grid gap-2">
         {matches.map((student) => (
           <button className="match-row" key={student.id} onClick={() => onSelect(student)} type="button">
             <span className="min-w-0 text-start">
               <strong className="line-clamp-1 block font-black text-slate-950 dark:text-white">{student.name}</strong>
-              <span className="mt-1 block text-xs font-bold text-slate-500 dark:text-slate-400">رقم {student.id} - {student.track}</span>
+              <span className="mt-1 block text-xs font-bold text-slate-500 dark:text-slate-400">{text.number} {student.id} - {student.track}</span>
             </span>
             <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-sm font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</span>
           </button>
@@ -935,7 +1092,7 @@ function MatchesList({ matches, onSelect }) {
   );
 }
 
-function ResultLoadingCard() {
+function ResultLoadingCard({ text = UI_TEXT.ar }) {
   return (
     <div className="result-modal animate-zoom-in">
       <div className="mb-4 flex items-center gap-3">
@@ -943,8 +1100,8 @@ function ResultLoadingCard() {
           <SearchIcon />
         </span>
         <div>
-          <strong className="block text-sm font-black text-slate-950 dark:text-white">جاري تحضير بطاقة النتيجة</strong>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">لحظات قليلة...</span>
+          <strong className="block text-sm font-black text-slate-950 dark:text-white">{text.preparingResult}</strong>
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{text.moments}</span>
         </div>
       </div>
       <div className="flex justify-between gap-4">
@@ -965,16 +1122,16 @@ function ResultLoadingCard() {
   );
 }
 
-function ResultLoadingOverlay() {
+function ResultLoadingOverlay({ text = UI_TEXT.ar }) {
   return (
-    <section className="result-page" aria-label="تحميل بطاقة النتيجة">
+    <section className="result-page" aria-label={text.openingResult}>
       <div className="result-page-backdrop" />
       <div className="result-loading-panel animate-zoom-in">
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-[20px] bg-mauri-green/10 text-mauri-green">
           <SearchIcon />
         </span>
-        <h2 className="mt-3 text-xl font-black text-slate-950 dark:text-white">جاري فتح بطاقة النتيجة</h2>
-        <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">نحضّر لك صفحة النتيجة الرسمية...</p>
+        <h2 className="mt-3 text-xl font-black text-slate-950 dark:text-white">{text.openingResult}</h2>
+        <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">{text.preparingOfficial}</p>
         <div className="mt-5 grid gap-2">
           <span className="skeleton h-4 w-full" />
           <span className="skeleton h-4 w-3/4" />
@@ -995,11 +1152,11 @@ function Confetti() {
   );
 }
 
-function ToppersSection({ groups, loading, onSelect }) {
+function ToppersSection({ groups, loading, onSelect, text = UI_TEXT.ar }) {
   return (
     <section className="grid gap-3">
       <div className="flex items-end justify-between gap-3">
-        <SectionTitle eyebrow="الأوائل" title="ثلاثة أوائل من كل شعبة" />
+        <SectionTitle eyebrow={text.toppers} title={text.trackTopThree} />
       </div>
       <div className="grid gap-2">
         {loading ? (
@@ -1016,23 +1173,23 @@ function ToppersSection({ groups, loading, onSelect }) {
                 <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green">Top 3</span>
               </div>
               <div className="grid gap-2">
-                {group.students.map((student, index) => <TopperCard student={student} index={index} onSelect={onSelect} key={student.id} />)}
+                {group.students.map((student, index) => <TopperCard student={student} index={index} onSelect={onSelect} text={text} key={student.id} />)}
               </div>
             </section>
           ))
         ) : (
-          <p className="rounded-[18px] border border-mauri-border bg-white p-4 text-sm font-bold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400">لا توجد بيانات كافية لهذه الشعبة.</p>
+          <p className="rounded-[18px] border border-mauri-border bg-white p-4 text-sm font-bold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400">{text.noTrackData}</p>
         )}
       </div>
     </section>
   );
 }
 
-function TopperCard({ student, index, onSelect }) {
+function TopperCard({ student, index, onSelect, text = UI_TEXT.ar }) {
   const medals = [
-    { name: "الأول", className: "bg-[#fff7d6] text-[#8a6500]", icon: <GoldMedalIcon /> },
-    { name: "الثاني", className: "bg-slate-100 text-slate-600", icon: <SilverMedalIcon /> },
-    { name: "الثالث", className: "bg-[#fff0e5] text-[#9a4f18]", icon: <BronzeMedalIcon /> },
+    { name: text.first, className: "bg-[#fff7d6] text-[#8a6500]", icon: <GoldMedalIcon /> },
+    { name: text.second, className: "bg-slate-100 text-slate-600", icon: <SilverMedalIcon /> },
+    { name: text.third, className: "bg-[#fff0e5] text-[#9a4f18]", icon: <BronzeMedalIcon /> },
   ];
   const medal = medals[index] || medals[0];
 
@@ -1048,7 +1205,7 @@ function TopperCard({ student, index, onSelect }) {
       </div>
       <div className="text-center">
         <strong className="block text-lg font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</strong>
-        <button className="text-[11px] font-black text-slate-500 underline-offset-4 hover:text-mauri-green hover:underline" onClick={() => onSelect(student)} type="button">عرض النتيجة</button>
+        <button className="text-[11px] font-black text-slate-500 underline-offset-4 hover:text-mauri-green hover:underline" onClick={() => onSelect(student)} type="button">{text.showResult}</button>
       </div>
     </article>
   );
@@ -1067,7 +1224,7 @@ function TopperSkeleton() {
   );
 }
 
-function Footer() {
+function Footer({ text = UI_TEXT.ar }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
 
   return (
@@ -1078,12 +1235,12 @@ function Footer() {
           <LogoMark className="h-10 w-10 rounded-[14px]" />
           <div>
             <strong className="block text-base font-black text-slate-950 dark:text-white">MauriResults</strong>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">منصة النتائج الوطنية.</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{text.footerDesc}</span>
           </div>
           </div>
           <button className="developer-button" onClick={() => setDeveloperOpen((value) => !value)} type="button">
             <CodeIcon />
-            إعداد وتطوير
+            {text.preparedBy}
           </button>
         </div>
         {developerOpen && (
@@ -1093,23 +1250,23 @@ function Footer() {
                 <UserIcon />
               </span>
               <div className="min-w-0 text-start">
-                <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">إعداد وتطوير</p>
+                <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{text.preparedBy}</p>
                 <h3 className="text-base font-black text-slate-950 dark:text-white">Ahmed abdellahi mady</h3>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <a className="developer-link" href="https://www.facebook.com/ahmed.abde.mady" target="_blank" rel="noopener">
                 <FacebookIcon />
-                فيسبوك
+                {text.facebook}
               </a>
               <a className="developer-link" href="https://wa.me/22244881891" target="_blank" rel="noopener">
                 <WhatsAppIcon />
-                واتساب
+                {text.whatsapp}
               </a>
             </div>
           </div>
         )}
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">جميع الحقوق محفوظة © MauriResults.</p>
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{text.rights}</p>
       </div>
     </footer>
   );
