@@ -278,6 +278,11 @@ function isMissingSupabaseEnv(error) {
   return error instanceof Error && error.message === "Missing Supabase environment variables.";
 }
 
+function isMissingConcoursView(error) {
+  const message = String(error?.message || error || "");
+  return message.includes("PGRST205") && message.includes(CONCOURS_VIEW);
+}
+
 function getOfficialStatus(value) {
   const normalized = cleanText(value).toLowerCase();
   if (normalized.includes("admis") || normalized.includes("ناجح")) return { label: "ناجح", icon: <CheckIcon />, className: "admis" };
@@ -665,17 +670,25 @@ async function fetchConcoursFilteredResults(field, value) {
 
   const rows = [];
   let from = 0;
+  let useView = true;
   while (true) {
-    const batch = await supabaseRequest({
-      select: "*",
-      [column]: `eq.${escapePostgrestValue(value)}`,
-      order: "total_num.desc.nullslast",
-      limit: PAGE_SIZE,
-      offset: from,
-    }, CONCOURS_VIEW);
-    rows.push(...batch);
-    if (batch.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+    try {
+      const batch = await supabaseRequest({
+        select: "*",
+        [column]: `eq.${escapePostgrestValue(value)}`,
+        order: useView ? "total_num.desc.nullslast" : "",
+        limit: PAGE_SIZE,
+        offset: from,
+      }, useView ? CONCOURS_VIEW : CONCOURS_TABLE);
+      rows.push(...batch);
+      if (batch.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    } catch (error) {
+      if (!useView || !isMissingConcoursView(error)) throw error;
+      useView = false;
+      rows.length = 0;
+      from = 0;
+    }
   }
 
   const students = prepareConcoursStudents(rows);
@@ -685,15 +698,21 @@ async function fetchConcoursFilteredResults(field, value) {
 
 async function searchConcoursByLocation({ wilaya, moughataa, centre, number }) {
   const numbers = concoursNumberSearchValues(number);
-  const rows = await supabaseRequest({
+  const params = {
     select: "*",
     WILAYA_AR: `eq.${escapePostgrestValue(wilaya)}`,
     MOUGHATAA_AR: `eq.${escapePostgrestValue(moughataa)}`,
     "Centre Examen_AR": `eq.${escapePostgrestValue(centre)}`,
     or: `(${numbers.map((item) => `NODOSS.eq.${item}`).join(",")},${numbers.map((item) => `Numéro_C1AS.eq.${item}`).join(",")})`,
-    order: "total_num.desc.nullslast",
     limit: 20,
-  }, CONCOURS_VIEW);
+  };
+  let rows;
+  try {
+    rows = await supabaseRequest({ ...params, order: "total_num.desc.nullslast" }, CONCOURS_VIEW);
+  } catch (error) {
+    if (!isMissingConcoursView(error)) throw error;
+    rows = await supabaseRequest(params, CONCOURS_TABLE);
+  }
   const students = prepareConcoursStudents(rows);
   logConcoursRows("location-search", rows, students);
   return students;
@@ -740,12 +759,18 @@ async function searchResults(query, exam) {
 
   if (exam?.source === "concours") {
     const numbers = concoursNumberSearchValues(query);
-    const rows = await supabaseRequest({
+    const params = {
       select: "*",
       or: isNumeroSearch ? `(${numbers.map((number) => `NODOSS.eq.${number}`).join(",")},${numbers.map((number) => `Numéro_C1AS.eq.${number}`).join(",")})` : `(NOM_AR.ilike.*${value}*)`,
-      order: "total_num.desc.nullslast",
       limit: 20,
-    }, CONCOURS_VIEW);
+    };
+    let rows;
+    try {
+      rows = await supabaseRequest({ ...params, order: "total_num.desc.nullslast" }, CONCOURS_VIEW);
+    } catch (error) {
+      if (!isMissingConcoursView(error)) throw error;
+      rows = await supabaseRequest(params, CONCOURS_TABLE);
+    }
     const students = prepareConcoursStudents(rows);
     logConcoursRows("search", rows, students);
     return students;
