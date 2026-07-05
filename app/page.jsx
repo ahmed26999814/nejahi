@@ -14,12 +14,14 @@ const BREVET_TABLE = "brevet_results";
 const EXAM_CARDS = [
   { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },
   { id: "brevet-2025", title: { ar: "نتائج البريفيه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية من جدول البريفيه.", fr: "Résultats du BEPC depuis la table dédiée." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
-  { id: "brevet-2026", title: { ar: "ختم دروس الإعدادية 2026", fr: "Brevet 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "blue", available: false, icon: <BookIcon /> },
-  { id: "concours-2026", title: { ar: "كونكور 2026", fr: "Concours 2026" }, description: { ar: "بحث خاص بالولاية والمقاطعة والمركز ورقم المترشح.", fr: "Recherche par région, département, centre et numéro." }, tone: "gold", available: true, source: "concours", icon: <SchoolIcon /> },
-  { id: "excellence-secondary-2026", title: { ar: "الامتياز - الثانوية 2026", fr: "Excellence - Secondaire 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "purple", available: false, icon: <AwardIcon /> },
-  { id: "excellence-middle-2026", title: { ar: "الامتياز الأولى إعدادية", fr: "Excellence 1AS" }, description: { ar: "نتائج مسابقة الامتياز الأولى إعدادية.", fr: "Résultats du concours Excellence 1AS." }, tone: "teal", available: true, source: "excellence_1as", icon: <AwardIcon /> },
+  { id: "concours-2025", title: { ar: "كونكور 2025", fr: "Concours 2025" }, description: { ar: "بحث خاص بالولاية والمقاطعة والمركز ورقم المترشح.", fr: "Recherche par région, département, centre et numéro." }, tone: "gold", available: true, source: "concours", icon: <SchoolIcon /> },
+  { id: "excellence-1as-2025", title: { ar: "الامتياز الأولى إعدادية 2025", fr: "Excellence 1AS 2025" }, description: { ar: "نتائج مسابقة الامتياز الأولى إعدادية.", fr: "Résultats du concours Excellence 1AS." }, tone: "teal", available: true, source: "excellence_1as", icon: <AwardIcon /> },
   { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "نتائج الدورة التكميلية من جدولها الخاص.", fr: "Résultats depuis la table de session complémentaire." }, tone: "amber", available: true, source: "bac_session", icon: <AlertIcon /> },
-  { id: "bac-2026", title: { ar: "نتائج باكالوريا 2026", fr: "Résultats Bac 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, tone: "rose", available: false, icon: <GraduationIcon /> },
+];
+
+const YEAR_CARDS = [
+  { id: "year-2025", title: { ar: "نتائج مسابقات 2025", fr: "Résultats des concours 2025" }, description: { ar: "كل النتائج المتوفرة الآن في مكان واحد.", fr: "Tous les résultats disponibles au même endroit." }, available: true, tone: "green", icon: <GraduationIcon /> },
+  { id: "year-2026", title: { ar: "نتائج مسابقات 2026", fr: "Résultats des concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, available: false, tone: "rose", icon: <AwardIcon /> },
 ];
 
 const UI_TEXT = {
@@ -36,6 +38,10 @@ const UI_TEXT = {
     officialResult: "بطاقة النتيجة الرسمية",
     verification: "رقم التحقق",
     examPageDesc: "صفحة منظمة للبحث وعرض النتائج الخاصة بهذه المسابقة.",
+    yearPageTitle: "مسابقات 2025",
+    yearPageDesc: "اختر المسابقة التي تريد البحث فيها، وستظهر الإحصائيات والأوائل حسب اختيارك.",
+    chooseExam: "اختر المسابقة",
+    chooseExamFirst: "اختر مسابقة من نتائج 2025 أولًا لعرض الإحصائيات والأوائل الخاصة بها.",
     ranking: "التصنيف",
     rankingDesc: "ترتيب المترشحين حسب المعدل داخل نفس المجموعة.",
     noData: "لا توجد بيانات كافية.",
@@ -127,6 +133,10 @@ const UI_TEXT = {
     officialResult: "Carte officielle du résultat",
     verification: "Code de vérification",
     examPageDesc: "Une page organisée pour rechercher les résultats de ce concours.",
+    yearPageTitle: "Concours 2025",
+    yearPageDesc: "Choisissez le concours à consulter. Les statistiques et les lauréats suivront votre choix.",
+    chooseExam: "Choisir le concours",
+    chooseExamFirst: "Choisissez d'abord un concours 2025 pour afficher ses statistiques et ses lauréats.",
     ranking: "Classement",
     rankingDesc: "Classement des candidats par moyenne dans le même groupe.",
     noData: "Données insuffisantes.",
@@ -701,11 +711,7 @@ export default function HomePage() {
     localStorage.setItem("mauriresults-lang", nextLang);
   }
 
-  const tracks = useMemo(() => [...new Set(students.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar")), [students]);
   const stats = useMemo(() => calculateStats(students), [students]);
-  const regionStats = useMemo(() => summarizeStudents(students, "wl"), [students]);
-  const trackStats = useMemo(() => summarizeStudents(students, "track"), [students]);
-  const schoolStats = useMemo(() => summarizeStudents(students, "ms"), [students]);
   const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
   const activeStudents = selectedExam?.source === "brevet"
     ? brevetStudents
@@ -726,6 +732,10 @@ export default function HomePage() {
   const searchPool = useMemo(() => {
     return activeStudents;
   }, [activeStudents]);
+  const activeStats = useMemo(() => calculateStats(searchPool), [searchPool]);
+  const activeRegionStats = useMemo(() => summarizeStudents(searchPool, "wl"), [searchPool]);
+  const activeTrackStats = useMemo(() => summarizeStudents(searchPool, "track"), [searchPool]);
+  const activeSchoolStats = useMemo(() => summarizeStudents(searchPool, "ms"), [searchPool]);
   const suggestions = useMemo(() => {
     const value = cleanText(query).toLowerCase();
     if (!selectedExam?.available || selectedExam.source === "concours" || value.length < 2 || resultPageOpen || matches.length) return [];
@@ -733,15 +743,15 @@ export default function HomePage() {
       .filter((student) => cleanText(student.id).toLowerCase().includes(value) || cleanText(student.name).toLowerCase().includes(value))
       .slice(0, 5);
   }, [matches.length, query, resultPageOpen, searchPool, selectedExam]);
-  const topperGroups = useMemo(() => tracks
+  const topperGroups = useMemo(() => [...new Set(searchPool.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"))
     .map((track) => ({
       track,
-      students: students
+      students: searchPool
         .filter((student) => student.track === track)
         .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex)
         .slice(0, 3),
     }))
-    .filter((group) => group.students.length > 0), [students, tracks]);
+    .filter((group) => group.students.length > 0), [searchPool]);
 
   function showStudent(student) {
     const known = activeStudents.find((item) => item.id === student.id);
@@ -815,10 +825,25 @@ export default function HomePage() {
   }
 
   function openView(view) {
-    if (view === "exam" && !selectedExamId) setSelectedExamId("bac-2025");
+    if (view === "exam" && !selectedExamId) {
+      setActiveView("year");
+      window.history.pushState({ view: "year" }, "", "#year-2025");
+      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+      return;
+    }
     setActiveView(view);
     if (view !== "result") setResultPageOpen(false);
     window.history.pushState({ view }, "", view === "home" ? window.location.pathname : `#${view}`);
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  }
+
+  function openYear(year) {
+    if (!year.available) return;
+    setActiveView("year");
+    setMatches([]);
+    setError("");
+    setMessage("");
+    window.history.pushState({ view: "year" }, "", "#year-2025");
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
@@ -874,6 +899,7 @@ export default function HomePage() {
           matches={matches}
           message={message}
           lang={lang}
+          onSelectYear={openYear}
           onSelectExam={openExam}
           onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }}
           onSelect={selectStudent}
@@ -887,9 +913,10 @@ export default function HomePage() {
         />
       )}
 
+      {activeView === "year" && <YearPage lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
       {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
-      {activeView === "toppers" && <ToppersPage groups={topperGroups} loading={dashboardLoading} onSelect={selectStudent} text={text} />}
-      {activeView === "analytics" && <AnalyticsPage loading={dashboardLoading} regionStats={regionStats} schoolStats={schoolStats} stats={stats} text={text} trackStats={trackStats} />}
+      {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={dashboardLoading || examLoading} onSelect={selectStudent} selectedExam={selectedExam} text={text} />}
+      {activeView === "analytics" && <AnalyticsPage lang={lang} loading={dashboardLoading || examLoading} regionStats={activeRegionStats} schoolStats={activeSchoolStats} selectedExam={selectedExam} stats={activeStats} text={text} trackStats={activeTrackStats} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience lang={lang} onOpenRanking={openRanking} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
@@ -900,10 +927,42 @@ export default function HomePage() {
   );
 }
 
-function HomeView({ lang, onSelectExam, selectedExamId, text }) {
+function HomeView({ lang, onSelectYear, text }) {
   return (
     <section className="app-shell grid gap-4 pt-4 md:gap-6 md:pt-6">
       <Hero text={text} />
+      <YearCards lang={lang} onSelectYear={onSelectYear} text={text} />
+    </section>
+  );
+}
+
+function YearCards({ lang, onSelectYear, text }) {
+  return (
+    <section className="grid grid-cols-2 gap-3">
+      {YEAR_CARDS.map((year) => (
+        <button
+          className={`exam-card exam-card-${year.tone} ${year.available ? "" : "is-locked"}`}
+          disabled={!year.available}
+          key={year.id}
+          onClick={() => onSelectYear(year)}
+          type="button"
+        >
+          <span className="exam-card-icon">{year.icon}</span>
+          <span className="min-w-0 text-start">
+            <strong className="block text-base font-black text-slate-950 dark:text-white">{year.title[lang]}</strong>
+            <small className="mt-1 block text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{year.description[lang]}</small>
+          </span>
+          {!year.available && <span className="soon-badge">{text.soon}</span>}
+        </button>
+      ))}
+    </section>
+  );
+}
+
+function YearPage({ lang, onSelectExam, selectedExamId, text }) {
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow={text.chooseExam} title={text.yearPageTitle} description={text.yearPageDesc} icon={<GraduationIcon />} />
       <CompetitionCards lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
     </section>
   );
@@ -1053,25 +1112,47 @@ function TrackGroupsPreview({ groups, onSelect, text }) {
   );
 }
 
-function ToppersPage({ groups, loading, onSelect, text }) {
+function ToppersPage({ groups, lang, loading, onSelect, selectedExam, text }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow={text.toppers} title={text.toppersTitle} description={text.toppersDesc} icon={<AwardIcon />} />
-      <ToppersSection loading={loading} onSelect={onSelect} groups={groups} text={text} />
+      <PageHero eyebrow={text.toppers} title={selectedExam ? selectedExam.title[lang] : text.toppersTitle} description={selectedExam ? text.toppersDesc : text.chooseExamFirst} icon={<AwardIcon />} />
+      {selectedExam ? <ToppersSection loading={loading} onSelect={onSelect} groups={groups} text={text} /> : <EmptyChoice text={text} />}
     </section>
   );
 }
 
-function AnalyticsPage({ loading, regionStats, schoolStats, stats, text, trackStats }) {
+function AnalyticsPage({ lang, loading, regionStats, schoolStats, selectedExam, stats, text, trackStats }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow={text.analytics} title={text.analyticsTitle} description={text.analyticsDesc} icon={<ChartIcon />} />
-      <StatsStrip loading={loading} stats={stats} text={text} />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} text={text} title={text.byRegions} />
-        <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} text={text} title={text.byTracks} />
-        <div className="lg:col-span-2">
-          <StatsTable icon={<SchoolIcon />} loading={loading} rows={schoolStats} text={text} title={text.bySchools} />
+      <PageHero eyebrow={text.analytics} title={selectedExam ? selectedExam.title[lang] : text.analyticsTitle} description={selectedExam ? text.analyticsDesc : text.chooseExamFirst} icon={<ChartIcon />} />
+      {selectedExam ? (
+        <>
+          <StatsStrip loading={loading} stats={stats} text={text} />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <StatsTable icon={<MapIcon />} loading={loading} rows={regionStats} text={text} title={text.byRegions} />
+            <StatsTable icon={<BookIcon />} loading={loading} rows={trackStats} text={text} title={text.byTracks} />
+            <div className="lg:col-span-2">
+              <StatsTable icon={<SchoolIcon />} loading={loading} rows={schoolStats} text={text} title={text.bySchools} />
+            </div>
+          </div>
+        </>
+      ) : (
+        <EmptyChoice text={text} />
+      )}
+    </section>
+  );
+}
+
+function EmptyChoice({ text }) {
+  return (
+    <section className="analytics-panel animate-slide-up">
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 place-items-center rounded-[16px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">
+          <SearchIcon />
+        </span>
+        <div>
+          <h2 className="text-base font-black text-slate-950 dark:text-white">{text.chooseExam}</h2>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{text.chooseExamFirst}</p>
         </div>
       </div>
     </section>
