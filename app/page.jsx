@@ -2,7 +2,6 @@
 
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
-import { Clock3, Database, Image as ImageIcon, ShieldCheck, Zap } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useMemo, useState } from "react";
 import { FaFacebookF, FaTelegram, FaWhatsapp } from "react-icons/fa6";
@@ -41,10 +40,10 @@ const actionButtonClass = cva("action-button", {
 
 const EXAM_CARDS = [
   { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },
-  { id: "brevet-2025", title: { ar: "نتائج البريفيه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية من جدول البريفيه.", fr: "Résultats du BEPC depuis la table dédiée." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
+  { id: "brevet-2025", title: { ar: "نتائج أبريفه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية الرسمية.", fr: "Résultats officiels du BEPC." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
   { id: "concours-2025", title: { ar: "كونكور 2025", fr: "Concours 2025" }, description: { ar: "بحث خاص بالولاية والمقاطعة والمركز ورقم المترشح.", fr: "Recherche par région, département, centre et numéro." }, tone: "gold", available: true, source: "concours", icon: <SchoolIcon /> },
   { id: "excellence-1as-2025", title: { ar: "الامتياز الأولى إعدادية 2025", fr: "Excellence 1AS 2025" }, description: { ar: "نتائج مسابقة الامتياز الأولى إعدادية.", fr: "Résultats du concours Excellence 1AS." }, tone: "teal", available: true, source: "excellence_1as", icon: <AwardIcon /> },
-  { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "نتائج الدورة التكميلية من جدولها الخاص.", fr: "Résultats depuis la table de session complémentaire." }, tone: "amber", available: true, source: "bac_session", icon: <AlertIcon /> },
+  { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "نتائج الدورة التكميلية الرسمية.", fr: "Résultats officiels de la session complémentaire." }, tone: "amber", available: true, source: "bac_session", icon: <AlertIcon /> },
 ];
 
 const YEAR_CARDS = [
@@ -88,14 +87,16 @@ const UI_TEXT = {
     yearPageTitle: "مسابقات 2025",
     yearPageDesc: "اختر المسابقة التي تريد البحث فيها، وستظهر الإحصائيات والأوائل حسب اختيارك.",
     chooseExam: "اختر المسابقة",
+    exam: "المسابقة",
+    allTracks: "كل الشعب",
     chooseExamFirst: "اختر مسابقة من نتائج 2025 أولًا لعرض الإحصائيات والأوائل الخاصة بها.",
     ranking: "التصنيف",
     rankingDesc: "ترتيب المترشحين حسب المعدل داخل نفس المجموعة.",
     noData: "لا توجد بيانات كافية.",
     platformSubtitle: "منصة نتائج الوطنية",
-    toppersTitle: "صفحة أوائل الشعب",
+    toppersTitle: "الأوائل",
     toppersDesc: "أفضل ثلاثة مترشحين من كل شعبة في عرض سريع ومنظم.",
-    analyticsTitle: "إحصائيات حسب الولايات والشعب والمدارس",
+    analyticsTitle: "إحصائيات النتائج",
     analyticsDesc: "لوحة مختصرة تساعد على فهم النتائج بسرعة.",
     byRegions: "حسب الولايات",
     byTracks: "حسب الشعب",
@@ -166,13 +167,13 @@ const UI_TEXT = {
     concoursPassedCertificate: "ناجح في المسابقة والشهادة",
     successToast: "🎉 مبروك بالنجاح!",
     statusLabels: { admis: "ناجح", sessionnaire: "دورة استدراكية", absent: "غائب", ajourne: "راسب", unknown: "غير محددة" },
-    missingEnv: "لم يتم ضبط متغيرات Supabase في بيئة النشر.",
-    statsLoadError: "تعذر تحميل الإحصائيات من Supabase.",
+    missingEnv: "لم يتم ضبط إعدادات الاتصال في بيئة النشر.",
+    statsLoadError: "تعذر تحميل الإحصائيات.",
     enterQuery: "يرجى إدخال رقم المترشح أو الاسم.",
     shortQuery: "أدخل رقما أو اسما من حرفين على الأقل.",
     notFound: "لم يتم العثور على نتيجة بهذا الرقم أو الاسم.",
     sessionNotFound: "لم يتم العثور على مترشح مؤهل للدورة بهذا الرقم أو الاسم.",
-    connectionError: "حدث خطأ أثناء الاتصال بقاعدة البيانات.",
+    connectionError: "حدث خطأ أثناء الاتصال بالخدمة.",
     copiedShare: "تم نسخ النتيجة للمشاركة.",
     result: "نتيجة",
     examResultTitle: "MauriResults - نتيجة الامتحان",
@@ -193,14 +194,16 @@ const UI_TEXT = {
     yearPageTitle: "Concours 2025",
     yearPageDesc: "Choisissez le concours à consulter. Les statistiques et les lauréats suivront votre choix.",
     chooseExam: "Choisir le concours",
+    exam: "Concours",
+    allTracks: "Toutes les séries",
     chooseExamFirst: "Choisissez d'abord un concours 2025 pour afficher ses statistiques et ses lauréats.",
     ranking: "Classement",
     rankingDesc: "Classement des candidats par moyenne dans le même groupe.",
     noData: "Données insuffisantes.",
     platformSubtitle: "Plateforme nationale des résultats",
-    toppersTitle: "Lauréats par série",
+    toppersTitle: "Lauréats",
     toppersDesc: "Les trois meilleurs candidats de chaque série dans une vue claire.",
-    analyticsTitle: "Statistiques par région, série et établissement",
+    analyticsTitle: "Statistiques des résultats",
     analyticsDesc: "Un tableau synthétique pour lire rapidement les résultats.",
     byRegions: "Par région",
     byTracks: "Par série",
@@ -271,8 +274,8 @@ const UI_TEXT = {
     concoursPassedCertificate: "Admis au concours et au certificat",
     successToast: "🎉 Félicitations pour la réussite !",
     statusLabels: { admis: "Admis", sessionnaire: "Session complémentaire", absent: "Absent", ajourne: "Ajourné", unknown: "Non défini" },
-    missingEnv: "Les variables Supabase ne sont pas configurées en production.",
-    statsLoadError: "Impossible de charger les statistiques depuis Supabase.",
+    missingEnv: "La configuration de connexion est incomplète en production.",
+    statsLoadError: "Impossible de charger les statistiques.",
     enterQuery: "Veuillez saisir le numéro ou le nom.",
     shortQuery: "Saisissez au moins deux caractères.",
     notFound: "Aucun résultat trouvé avec ce numéro ou ce nom.",
@@ -1025,6 +1028,7 @@ export default function HomePage() {
   const [theme, setThemeState] = useState("light");
   const [activeView, setActiveView] = useState("home");
   const [selectedExamId, setSelectedExamId] = useState("");
+  const [selectedTopperTrack, setSelectedTopperTrack] = useState("");
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
 
@@ -1091,6 +1095,11 @@ export default function HomePage() {
     return activeStudents;
   }, [activeStudents]);
   const showTrackGroups = examHasTrackGroups(selectedExam?.source);
+  const showTopperTrackSelector = selectedExam?.source === "bac";
+  const topperTrackOptions = useMemo(() => {
+    if (!showTopperTrackSelector) return [];
+    return [...new Set(searchPool.map((student) => cleanText(student.track)).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
+  }, [searchPool, showTopperTrackSelector]);
   const activeStats = useMemo(() => calculateStats(searchPool), [searchPool]);
   const activeRegionStats = useMemo(() => summarizeStudents(searchPool, "wl"), [searchPool]);
   const activeTrackStats = useMemo(() => showTrackGroups ? summarizeStudents(searchPool, "track") : [], [searchPool, showTrackGroups]);
@@ -1110,16 +1119,20 @@ export default function HomePage() {
       return students.length ? [{ track: text.toppers, students }] : [];
     }
 
-    return [...new Set(searchPool.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"))
+    const pool = selectedTopperTrack && showTopperTrackSelector
+      ? searchPool.filter((student) => student.track === selectedTopperTrack)
+      : searchPool;
+
+    return [...new Set(pool.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"))
       .map((track) => ({
         track,
-        students: searchPool
+        students: pool
           .filter((student) => student.track === track)
           .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex)
           .slice(0, 3),
       }))
       .filter((group) => group.students.length > 0);
-  }, [searchPool, showTrackGroups, text.toppers]);
+  }, [searchPool, selectedTopperTrack, showTopperTrackSelector, showTrackGroups, text.toppers]);
 
   function showStudent(student) {
     const known = activeStudents.find((item) => item.id === student.id);
@@ -1282,6 +1295,7 @@ export default function HomePage() {
       table: TABLE_BY_SOURCE[exam.source],
     });
     setSelectedExamId(exam.id);
+    setSelectedTopperTrack("");
     setMatches([]);
     setSelectedStudent(null);
     setResultPageOpen(false);
@@ -1291,6 +1305,19 @@ export default function HomePage() {
     window.history.pushState({ view: "exam" }, "", `#${exam.id}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
 
+  }
+
+  async function selectExamForSection(examId) {
+    const exam = EXAM_CARDS.find((item) => item.id === examId);
+    if (!exam?.available) return;
+    setSelectedExamId(exam.id);
+    setSelectedTopperTrack("");
+    setMatches([]);
+    setSelectedStudent(null);
+    setResultPageOpen(false);
+    setError("");
+    setMessage("");
+    await loadExamData(exam);
   }
 
   async function openRanking(field, value, label) {
@@ -1345,8 +1372,8 @@ export default function HomePage() {
 
       {activeView === "year" && <YearPage lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
       {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
-      {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={dashboardLoading || examLoading} onSelect={selectStudent} selectedExam={selectedExam} showTrackGroups={showTrackGroups} text={text} />}
-      {activeView === "analytics" && <AnalyticsPage lang={lang} loading={dashboardLoading || examLoading} regionStats={activeRegionStats} schoolStats={activeSchoolStats} selectedExam={selectedExam} showTrackGroups={showTrackGroups} stats={activeStats} text={text} trackStats={activeTrackStats} />}
+      {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={dashboardLoading || examLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
+      {activeView === "analytics" && <AnalyticsPage lang={lang} loading={dashboardLoading || examLoading} onSelectExam={selectExamForSection} regionStats={activeRegionStats} schoolStats={activeSchoolStats} selectedExam={selectedExam} selectedExamId={selectedExamId} showTrackGroups={showTrackGroups} stats={activeStats} text={text} trackStats={activeTrackStats} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience lang={lang} onOpenRanking={openRanking} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
@@ -1362,65 +1389,9 @@ export default function HomePage() {
 
 function HomeView({ lang, onSelectYear, text }) {
   return (
-    <section className="app-shell grid gap-5 pt-5 md:gap-7 md:pt-8">
+    <section className="app-shell grid gap-6 pt-5 md:gap-8 md:pt-8">
       <Hero text={text} />
-      <HomeHighlights text={text} />
-      <OfficialStats text={text} />
       <YearCards lang={lang} onSelectYear={onSelectYear} text={text} />
-      <AssetPreviewStrip />
-    </section>
-  );
-}
-
-function HomeHighlights({ text }) {
-  const items = [
-    [text.search, <Zap key="search" />],
-    [text.officialResult, <ShieldCheck key="award" />],
-    [text.analytics, <Database key="chart" />],
-  ];
-
-  return (
-    <section className="home-highlights">
-      {items.map(([label, icon]) => (
-        <div className="home-highlight" key={label}>
-          <span>{icon}</span>
-          <strong>{label}</strong>
-        </div>
-      ))}
-    </section>
-  );
-}
-
-function OfficialStats({ text }) {
-  const items = [
-    [text.studentCount, "250k+", <Database key="database" />],
-    [text.open, "2025", <ShieldCheck key="shield" />],
-    ["آخر تحديث", "اليوم", <Clock3 key="clock" />],
-  ];
-
-  return (
-    <section className="official-stats">
-      {items.map(([label, value, icon]) => (
-        <article className="official-stat-card" key={label}>
-          <span>{icon}</span>
-          <strong>{value}</strong>
-          <small>{label}</small>
-        </article>
-      ))}
-    </section>
-  );
-}
-
-function AssetPreviewStrip() {
-  const slots = ["hero", "background", "empty-state", "loading", "footer"];
-  return (
-    <section className="asset-strip" aria-label="Prepared image slots">
-      {slots.map((slot) => (
-        <div className="asset-slot" key={slot}>
-          <ImageIcon />
-          <span>public/images/{slot}.png</span>
-        </div>
-      ))}
     </section>
   );
 }
@@ -1649,19 +1620,68 @@ function TrackGroupsPreview({ groups, onSelect, text }) {
   );
 }
 
-function ToppersPage({ groups, lang, loading, onSelect, selectedExam, showTrackGroups, text }) {
+function ExamSelector({ lang, onSelectExam, selectedExamId, text }) {
   return (
-    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow={text.toppers} title={selectedExam ? selectedExam.title[lang] : text.toppersTitle} description={selectedExam ? text.toppersDesc : text.chooseExamFirst} icon={<AwardIcon />} />
-      {selectedExam ? <ToppersSection loading={loading} onSelect={onSelect} groups={groups} showTrackGroups={showTrackGroups} text={text} /> : <EmptyChoice text={text} />}
+    <section className="section-toolbar animate-slide-up">
+      <Select.Root onValueChange={onSelectExam} value={selectedExamId || undefined}>
+        <Select.Trigger className="exam-selector-trigger" aria-label={text.chooseExam}>
+          <span className="flex items-center gap-2">
+            <GraduationIcon />
+            <Select.Value placeholder={text.chooseExam} />
+          </span>
+          <Select.Icon className="text-mauri-green">
+            <ChevronDownIcon />
+          </Select.Icon>
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Content className="select-content" position="popper" sideOffset={6}>
+            <Select.Viewport className="p-1">
+              {EXAM_CARDS.filter((exam) => exam.available).map((exam) => (
+                <Select.Item className="select-item" value={exam.id} key={exam.id}>
+                  <Select.ItemText>{exam.title[lang]}</Select.ItemText>
+                </Select.Item>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
     </section>
   );
 }
 
-function AnalyticsPage({ lang, loading, regionStats, schoolStats, selectedExam, showTrackGroups, stats, text, trackStats }) {
+function TrackSelector({ onSelectTrack, selectedTrack, text, trackOptions }) {
+  if (!trackOptions.length) return null;
+
+  return (
+    <section className="stream-filter-row animate-slide-up">
+      <button className={`stream-filter-chip ${!selectedTrack ? "is-active" : ""}`} onClick={() => onSelectTrack("")} type="button">
+        {text.allTracks || "كل الشعب"}
+      </button>
+      {trackOptions.map((track) => (
+        <button className={`stream-filter-chip ${selectedTrack === track ? "is-active" : ""}`} onClick={() => onSelectTrack(track)} type="button" key={track}>
+          {track}
+        </button>
+      ))}
+    </section>
+  );
+}
+
+function ToppersPage({ groups, lang, loading, onSelect, onSelectExam, onSelectTrack, selectedExam, selectedExamId, selectedTrack, showTrackGroups, showTrackSelector, text, trackOptions }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow={text.analytics} title={selectedExam ? selectedExam.title[lang] : text.analyticsTitle} description={selectedExam ? text.analyticsDesc : text.chooseExamFirst} icon={<ChartIcon />} />
+      <PageHero eyebrow={text.toppers} title={text.toppersTitle} icon={<AwardIcon />} />
+      <ExamSelector lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
+      {showTrackSelector && <TrackSelector onSelectTrack={onSelectTrack} selectedTrack={selectedTrack} text={text} trackOptions={trackOptions} />}
+      {selectedExam ? <ToppersSection loading={loading} onSelect={onSelect} groups={groups} showTrackGroups={showTrackGroups} text={text} /> : null}
+    </section>
+  );
+}
+
+function AnalyticsPage({ lang, loading, onSelectExam, regionStats, schoolStats, selectedExam, selectedExamId, showTrackGroups, stats, text, trackStats }) {
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow={text.analytics} title={text.analyticsTitle} icon={<ChartIcon />} />
+      <ExamSelector lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
       {selectedExam ? (
         <>
           <StatsStrip loading={loading} stats={stats} text={text} />
@@ -1673,9 +1693,7 @@ function AnalyticsPage({ lang, loading, regionStats, schoolStats, selectedExam, 
             </div>
           </div>
         </>
-      ) : (
-        <EmptyChoice text={text} />
-      )}
+      ) : null}
     </section>
   );
 }
@@ -1702,7 +1720,7 @@ function PageHero({ description, eyebrow, icon, title }) {
       <div>
         <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">{eyebrow}</p>
         <h1 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white md:text-4xl">{title}</h1>
-        <p className="mt-1 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">{description}</p>
+        {description && <p className="mt-1 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">{description}</p>}
       </div>
     </section>
   );
@@ -1905,17 +1923,14 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
   const status = isConcours ? getConcoursStatus(average, text) : getStatusDisplay(getOfficialStatus(student.kr), text);
   const isPassed = status.className === "admis";
   const isFailed = status.className === "ajourne";
-  const isTopRanked = student.rank && student.rank <= 3;
   const tone = isFailed ? "calm" : getAverageTone(average);
-  const averagePhrase = getAveragePhrase(average);
   const resultUrl = getResultUrl(student);
   const encodedUrl = encodeURIComponent(resultUrl);
   const encodedText = encodeURIComponent(getResultShareText(student, text));
   const details = student.source === "brevet"
     ? [
       [text.id, student.id, <HashIcon key="hash" />],
-      [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
-      [text.decision, status.label, <InfoIcon key="decision" />],
+      [text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -1925,8 +1940,7 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
     : student.source === "bac_session"
       ? [
         [text.id, student.id, <HashIcon key="hash" />],
-        [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
-        [text.decision, status.label, <InfoIcon key="decision" />],
+        [text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],
         [text.track, student.track, <BookIcon key="track" />],
         [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
         [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
@@ -1937,8 +1951,7 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
       : student.source === "concours"
         ? [
           [text.id, student.id, <HashIcon key="hash" />],
-          [text.totalScore, `${average.toFixed(2)} / 200`, <ChartIcon key="chart" />],
-          [text.decision, status.label, <InfoIcon key="decision" />],
+          [text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],
           [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
           [text.center, student.centre || text.unavailable, <MapIcon key="center" />, () => onOpenRanking?.("centre", student.centre, text.center)],
           [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -1950,8 +1963,7 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
         : student.source === "excellence_1as"
           ? [
             [text.id, student.id, <HashIcon key="hash" />],
-            [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
-            [text.decision, status.label, <InfoIcon key="decision" />],
+            [text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],
             [text.nationalId, student.matricule || text.unavailable, <HashIcon key="matricule" />],
             [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
             [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -1963,11 +1975,9 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
           ]
     : [
       [text.id, student.id, <HashIcon key="hash" />],
-      [text.averageLabel, average.toFixed(2), <ChartIcon key="chart" />],
-      [text.decision, status.label, <InfoIcon key="decision" />],
+      [text.exam || "المسابقة", student.sessionType || "البكالوريا 2025", <BookIcon key="exam" />],
       [text.track, student.track, <BookIcon key="book" />],
       [text.rank, student.rank ? `#${student.rank}` : text.unavailable, <AwardIcon key="award" />],
-      [text.type, student.sessionType || "الدورة الرئيسية 2025", <AlertIcon key="type" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
       [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />],
@@ -1983,7 +1993,6 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
 
   return (
     <article className={`result-modal result-${tone} animate-slide-up`}>
-      {isPassed && <span className="success-stamp">{status.label}</span>}
       <div className="result-modal-header">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{text.resultCard}</p>
@@ -1994,39 +2003,8 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
               {isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}
             </strong>
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <StatusBadge status={status} />
-            <span className="top-rank-badge">
-              <AwardIcon />
-              {text.rank} {student.rank ? `#${student.rank}` : text.unavailable}
-            </span>
-            <span className="rounded-full border border-mauri-gold/25 bg-mauri-gold/10 px-3 py-1.5 text-xs font-black text-yellow-800 shadow-soft dark:text-yellow-200">
-              {isConcours ? text.totalScore : student.sessionType || (student.source === "bac_session" ? text.statusLabels.sessionnaire : "2025")}
-            </span>
-            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 shadow-soft dark:bg-white/10 dark:text-slate-200">{text.verify} {verificationCode}</span>
-            {isTopRanked && (
-              <span className="top-rank-badge">
-                <GoldMedalIcon />
-                {text.topRank} #{student.rank}
-              </span>
-            )}
-          </div>
         </div>
       </div>
-
-      {isPassed && (
-        <div className="success-banner">
-          <AwardIcon />
-          <span>{text.successFound}</span>
-        </div>
-      )}
-
-      {!isConcours && (
-        <div className="result-phrase">
-          <MessageIcon />
-          <span>{averagePhrase}</span>
-        </div>
-      )}
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         {details.map(([label, value, icon, onClick]) => (
@@ -2051,26 +2029,6 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
         </div>
       </div>
     </article>
-  );
-}
-
-function AverageLevelBar({ level }) {
-  return (
-    <div className={`average-level average-level-${level.className}`}>
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">مستوى المعدل</span>
-        <strong className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-black text-slate-900 shadow-soft dark:bg-white/10 dark:text-white">{level.label}</strong>
-      </div>
-      <div className="average-level-track">
-        <span style={{ width: `${level.percent}%` }} />
-      </div>
-      <div className="mt-1 grid grid-cols-4 text-[10px] font-black text-slate-400 dark:text-slate-500">
-        <span>ضعيف</span>
-        <span className="text-center">جيد</span>
-        <span className="text-center">جيد جدًا</span>
-        <span className="text-left">ممتاز</span>
-      </div>
-    </div>
   );
 }
 
@@ -2111,15 +2069,6 @@ function InfoTile({ icon, label, onClick, value }) {
         <strong className="block overflow-wrap-anywhere text-sm font-black text-slate-950 dark:text-white">{value}</strong>
       </div>
     </Component>
-  );
-}
-
-function StatusBadge({ status }) {
-  return (
-    <span className={`status-badge ${status.className}`}>
-      {status.icon}
-      {status.label}
-    </span>
   );
 }
 
