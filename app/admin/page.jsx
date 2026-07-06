@@ -1,190 +1,261 @@
 "use client";
 
-import { m, LazyMotion, domAnimation } from "framer-motion";
+import Image from "next/image";
+import { LazyMotion, domAnimation, m } from "framer-motion";
 import { Toaster, toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const ASSETS_TABLE = "site_assets";
-const BUCKET = "site-assets";
+const IMAGE_ITEMS = [
+  ["hero_background", "Hero Background", "خلفية القسم الرئيسي"],
+  ["home_banner_image", "Homepage Banner", "البنر أسفل بطاقات السنوات"],
+  ["result_card_image", "Result Card Banner", "البنر داخل بطاقة النتيجة"],
+  ["footer_banner", "Footer Banner", "صورة خلفية الفوتر"],
+  ["developer_avatar", "Developer Avatar", "صورة المطور"],
+  ["developer_background", "Developer Background", "خلفية مودال المطور"],
+  ["logo", "Logo", "شعار المنصة"],
+  ["favicon", "Favicon", "أيقونة الموقع"],
+].map(([key, title, description]) => ({ key, title, description, type: "image" }));
 
-const BANNERS = [
-  { key: "homepage_banner", title: "بنر الصفحة الرئيسية", description: "يظهر أسفل بطاقتي نتائج 2025 و2026." },
-  { key: "result_page_banner", title: "بنر صفحة النتيجة", description: "يظهر داخل بطاقة النتيجة تحت أزرار المشاركة والطباعة." },
-];
+const DEVELOPER_FIELDS = [
+  ["developer_name", "Developer Name", "text"],
+  ["developer_job_title", "Job Title", "text"],
+  ["developer_description", "Description", "textarea"],
+  ["developer_whatsapp", "WhatsApp Link", "url"],
+  ["developer_facebook", "Facebook Link", "url"],
+  ["developer_telegram", "Telegram Link", "url"],
+  ["developer_website", "Website Link", "url"],
+  ["developer_email", "Email", "email"],
+  ["developer_support_message", "Support Message", "textarea"],
+].map(([key, title, type]) => ({ key, title, type }));
 
-function assetUrl(path) {
-  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+const BANNER_ITEMS = IMAGE_ITEMS.filter((item) => ["home_banner_image", "result_card_image"].includes(item.key));
+
+function itemMap(items) {
+  return items.reduce((map, item) => ({ ...map, [item.content_key]: item }), {});
 }
 
-async function request(path, options = {}) {
-  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error("missing-env");
-  const response = await fetch(`${SUPABASE_URL}${path}`, {
+function getValue(content, key) {
+  return content[key]?.value || "";
+}
+
+async function compressImage(file) {
+  if (!file.type.startsWith("image/")) return file;
+  const bitmap = await createImageBitmap(file);
+  const maxWidth = 1800;
+  const scale = Math.min(1, maxWidth / bitmap.width);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const context = canvas.getContext("2d", { alpha: true });
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.82));
+  if (!blob) return file;
+  return new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" });
+}
+
+async function adminFetch(path, secret, options = {}) {
+  const response = await fetch(path, {
     ...options,
     headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "x-admin-secret": secret,
       ...(options.headers || {}),
     },
   });
-  if (!response.ok) throw new Error(await response.text());
-  if (response.status === 204) return null;
-  return response.json();
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Request failed");
+  return data;
 }
 
-async function fetchAssets() {
-  const params = new URLSearchParams({
-    select: "key,image_url,storage_path,is_active,updated_at",
-    key: "in.(homepage_banner,result_page_banner)",
+function uploadWithProgress({ file, item, previousPath, secret, onProgress }) {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("content_key", item.key);
+    form.append("title", item.title);
+    if (previousPath) form.append("previous_path", previousPath);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/admin/upload");
+    xhr.setRequestHeader("x-admin-secret", secret);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText || "{}");
+        if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+        else reject(new Error(data.error || "Upload failed"));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.send(form);
   });
-  const rows = await request(`/rest/v1/${ASSETS_TABLE}?${params.toString()}`);
-  return rows.reduce((items, row) => ({ ...items, [row.key]: row }), {});
-}
-
-async function upsertAsset(asset) {
-  const params = new URLSearchParams({ on_conflict: "key" });
-  const rows = await request(`/rest/v1/${ASSETS_TABLE}?${params.toString()}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates,return=representation",
-    },
-    body: JSON.stringify(asset),
-  });
-  return rows?.[0] || asset;
-}
-
-async function uploadImage(key, file) {
-  const extension = file.name.split(".").pop() || "jpg";
-  const path = `${key}/${Date.now()}-${Math.random().toString(16).slice(2)}.${extension}`;
-  await request(`/storage/v1/object/${BUCKET}/${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": file.type || "application/octet-stream",
-      "x-upsert": "true",
-    },
-    body: file,
-  });
-  return { path, url: assetUrl(path) };
-}
-
-async function removeStorageObject(path) {
-  if (!path) return;
-  await request(`/storage/v1/object/${BUCKET}`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prefixes: [path] }),
-  }).catch(() => {});
 }
 
 export default function AdminPage() {
-  const [assets, setAssets] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [savingKey, setSavingKey] = useState("");
+  const [secret, setSecret] = useState("");
+  const [draftSecret, setDraftSecret] = useState("");
+  const [content, setContent] = useState({});
+  const [draft, setDraft] = useState({});
+  const [activeTab, setActiveTab] = useState("images");
+  const [loading, setLoading] = useState(false);
+
+  const unlocked = Boolean(secret);
 
   useEffect(() => {
-    fetchAssets()
-      .then(setAssets)
-      .catch(() => toast.error("تعذر تحميل إعدادات البنرات"))
-      .finally(() => setLoading(false));
+    const saved = sessionStorage.getItem("mauriresults-admin-secret") || "";
+    if (saved) setSecret(saved);
   }, []);
 
-  async function refresh() {
-    setAssets(await fetchAssets());
+  useEffect(() => {
+    if (!secret) return;
+    loadContent(secret);
+  }, [secret]);
+
+  async function loadContent(adminSecret = secret) {
+    setLoading(true);
+    try {
+      const data = await adminFetch("/api/admin/content", adminSecret);
+      const mapped = itemMap(data.items || []);
+      setContent(mapped);
+      setDraft(Object.fromEntries(DEVELOPER_FIELDS.map((field) => [field.key, mapped[field.key]?.value || ""])));
+    } catch (error) {
+      toast.error(error.message === "Unauthorized" ? "كود الإدارة غير صحيح" : "تعذر تحميل المحتوى");
+      setSecret("");
+      sessionStorage.removeItem("mauriresults-admin-secret");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function handleUpload(key, file) {
-    if (!file) return;
-    setSavingKey(key);
+  function unlock(event) {
+    event.preventDefault();
+    if (!draftSecret.trim()) return;
+    sessionStorage.setItem("mauriresults-admin-secret", draftSecret.trim());
+    setSecret(draftSecret.trim());
+  }
+
+  async function saveDeveloper() {
+    setLoading(true);
     try {
-      const previous = assets[key];
-      const uploaded = await uploadImage(key, file);
-      await upsertAsset({
-        key,
-        image_url: uploaded.url,
-        storage_path: uploaded.path,
-        is_active: true,
+      const items = DEVELOPER_FIELDS.map((field) => ({
+        content_key: field.key,
+        title: field.title,
+        value: draft[field.key] || "",
+        type: field.type,
+      }));
+      const data = await adminFetch("/api/admin/content", secret, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
       });
-      await removeStorageObject(previous?.storage_path);
-      await refresh();
+      setContent((current) => ({ ...current, ...itemMap(data.items || []) }));
+      toast.success("تم حفظ بيانات المطور");
+    } catch (error) {
+      toast.error(error.message || "تعذر الحفظ");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function resetDeveloper() {
+    setDraft(Object.fromEntries(DEVELOPER_FIELDS.map((field) => [field.key, content[field.key]?.value || ""])));
+    toast.info("تمت إعادة القيم كما كانت");
+  }
+
+  async function uploadImage(item, file, onProgress) {
+    if (!file) return;
+    try {
+      onProgress(4);
+      const compressed = await compressImage(file);
+      const data = await uploadWithProgress({
+        file: compressed,
+        item,
+        previousPath: content[item.key]?.storage_path,
+        secret,
+        onProgress,
+      });
+      setContent((current) => ({ ...current, [item.key]: data.item }));
+      onProgress(100);
       toast.success("تم رفع الصورة بنجاح");
     } catch (error) {
-      console.error(error);
-      toast.error("فشل رفع الصورة");
-    } finally {
-      setSavingKey("");
+      toast.error(error.message || "فشل رفع الصورة");
     }
   }
 
-  async function toggleAsset(key) {
-    setSavingKey(key);
+  async function deleteImage(item) {
     try {
-      const current = assets[key] || { key };
-      const updated = await upsertAsset({
-        key,
-        image_url: current.image_url || null,
-        storage_path: current.storage_path || null,
-        is_active: !current.is_active,
+      const data = await adminFetch("/api/admin/upload", secret, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content_key: item.key, storage_path: content[item.key]?.storage_path }),
       });
-      setAssets((value) => ({ ...value, [key]: updated }));
-      toast.success("تم حفظ التغييرات");
-    } catch (error) {
-      console.error(error);
-      toast.error("تعذر حفظ التغييرات");
-    } finally {
-      setSavingKey("");
-    }
-  }
-
-  async function removeAsset(key) {
-    setSavingKey(key);
-    try {
-      const current = assets[key];
-      await removeStorageObject(current?.storage_path);
-      const updated = await upsertAsset({
-        key,
-        image_url: null,
-        storage_path: null,
-        is_active: false,
-      });
-      setAssets((value) => ({ ...value, [key]: updated }));
+      setContent((current) => ({ ...current, [item.key]: data.items?.[0] || { content_key: item.key, value: "" } }));
       toast.success("تم حذف الصورة");
     } catch (error) {
-      console.error(error);
-      toast.error("تعذر حذف الصورة");
-    } finally {
-      setSavingKey("");
+      toast.error(error.message || "تعذر حذف الصورة");
     }
+  }
+
+  const tabs = useMemo(() => [
+    ["images", "Images"],
+    ["developer", "Developer Card"],
+    ["banners", "Banners"],
+  ], []);
+
+  if (!unlocked) {
+    return (
+      <main className="admin-page grid min-h-screen place-items-center px-3 py-6">
+        <form className="admin-login" onSubmit={unlock}>
+          <span className="admin-logo mx-auto">MR</span>
+          <h1>Website Content</h1>
+          <p>أدخل كود الإدارة للوصول إلى نظام إدارة محتوى MauriResults.</p>
+          <input value={draftSecret} onChange={(event) => setDraftSecret(event.target.value)} placeholder="Admin secret" type="password" />
+          <button type="submit">دخول</button>
+        </form>
+        <Toaster richColors position="top-center" dir="rtl" />
+      </main>
+    );
   }
 
   return (
     <LazyMotion features={domAnimation}>
       <main className="admin-page min-h-screen px-3 py-5 text-mauri-ink">
-        <section className="mx-auto grid w-full max-w-5xl gap-5">
+        <section className="mx-auto grid w-full max-w-6xl gap-5">
           <m.header className="admin-hero" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <span className="admin-logo">MR</span>
             <div>
-              <p className="text-xs font-black text-mauri-green">MauriResults Admin</p>
-              <h1 className="text-2xl font-black text-slate-950 md:text-4xl">إدارة الصور والبنرات</h1>
-              <p className="mt-1 text-sm font-bold text-slate-500">تحكم في صور الصفحة الرئيسية وبطاقة النتيجة من مكان واحد.</p>
+              <p className="text-xs font-black text-mauri-green">MauriResults CMS</p>
+              <h1 className="text-2xl font-black text-slate-950 md:text-4xl">Website Content</h1>
+              <p className="mt-1 text-sm font-bold text-slate-500">إدارة الصور، البنرات، وبطاقة المطور من Supabase بدون تعديل الكود.</p>
             </div>
+            <button className="admin-remove md:justify-self-end" onClick={() => { sessionStorage.removeItem("mauriresults-admin-secret"); setSecret(""); }} type="button">خروج</button>
           </m.header>
 
-          <section className="grid gap-4 md:grid-cols-2">
-            {BANNERS.map((banner) => (
-              <BannerManager
-                asset={assets[banner.key]}
-                banner={banner}
-                key={banner.key}
-                loading={loading}
-                onRemove={() => removeAsset(banner.key)}
-                onToggle={() => toggleAsset(banner.key)}
-                onUpload={(file) => handleUpload(banner.key, file)}
-                saving={savingKey === banner.key}
-              />
+          <nav className="admin-tabs">
+            {tabs.map(([id, label]) => (
+              <button className={activeTab === id ? "is-active" : ""} onClick={() => setActiveTab(id)} type="button" key={id}>{label}</button>
             ))}
-          </section>
+          </nav>
+
+          {activeTab === "images" && (
+            <section className="grid gap-4 md:grid-cols-2">
+              {IMAGE_ITEMS.map((item) => <ImageManager content={content} item={item} key={item.key} loading={loading} onDelete={deleteImage} onUpload={uploadImage} />)}
+            </section>
+          )}
+
+          {activeTab === "developer" && (
+            <DeveloperEditor content={content} draft={draft} loading={loading} onChange={setDraft} onDelete={deleteImage} onReset={resetDeveloper} onSave={saveDeveloper} onUpload={uploadImage} />
+          )}
+
+          {activeTab === "banners" && (
+            <section className="grid gap-4 md:grid-cols-2">
+              {BANNER_ITEMS.map((item) => <ImageManager content={content} item={item} key={item.key} loading={loading} onDelete={deleteImage} onUpload={uploadImage} />)}
+            </section>
+          )}
         </section>
         <Toaster richColors position="top-center" dir="rtl" />
       </main>
@@ -192,42 +263,90 @@ export default function AdminPage() {
   );
 }
 
-function BannerManager({ asset, banner, loading, onRemove, onToggle, onUpload, saving }) {
-  const disabled = loading || saving;
+function DeveloperEditor({ content, draft, loading, onChange, onDelete, onReset, onSave, onUpload }) {
+  return (
+    <section className="grid gap-4 lg:grid-cols-[1fr_.85fr]">
+      <article className="admin-card">
+        <div>
+          <h2 className="text-xl font-black text-slate-950">Developer Card</h2>
+          <p className="mt-1 text-sm font-bold text-slate-500">كل هذه البيانات تظهر مباشرة في نافذة “عن المطور”.</p>
+        </div>
+        <div className="grid gap-3">
+          {DEVELOPER_FIELDS.map((field) => (
+            <label className="admin-field" key={field.key}>
+              <span>{field.title}</span>
+              {field.type === "textarea" ? (
+                <textarea value={draft[field.key] || ""} onChange={(event) => onChange((value) => ({ ...value, [field.key]: event.target.value }))} rows={4} />
+              ) : (
+                <input value={draft[field.key] || ""} onChange={(event) => onChange((value) => ({ ...value, [field.key]: event.target.value }))} type={field.type === "email" ? "email" : "text"} />
+              )}
+            </label>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button className="admin-upload" disabled={loading} onClick={onSave} type="button">Save</button>
+          <button className="admin-remove" disabled={loading} onClick={onReset} type="button">Reset</button>
+        </div>
+      </article>
+
+      <section className="grid gap-4">
+        {IMAGE_ITEMS.filter((item) => ["developer_avatar", "developer_background"].includes(item.key)).map((item) => (
+          <ImageManager content={content} item={item} key={item.key} loading={loading} onDelete={onDelete} onUpload={onUpload} compact />
+        ))}
+      </section>
+    </section>
+  );
+}
+
+function ImageManager({ compact = false, content, item, loading, onDelete, onUpload }) {
+  const [dragging, setDragging] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const current = content[item.key];
+  const busy = loading || (progress > 0 && progress < 100);
+
+  async function upload(file) {
+    setProgress(1);
+    await onUpload(item, file, setProgress);
+    window.setTimeout(() => setProgress(0), 900);
+  }
+
+  function drop(event) {
+    event.preventDefault();
+    setDragging(false);
+    upload(event.dataTransfer.files?.[0]);
+  }
 
   return (
-    <m.article className="admin-card" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-slate-950">{banner.title}</h2>
-          <p className="mt-1 text-sm font-bold leading-6 text-slate-500">{banner.description}</p>
-        </div>
-        <button className={`admin-toggle ${asset?.is_active ? "is-on" : ""}`} disabled={disabled} onClick={onToggle} type="button">
-          {asset?.is_active ? "ظاهر" : "مخفي"}
-        </button>
+    <m.article className={`admin-card ${compact ? "admin-card-compact" : ""}`} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
+        <h2 className="text-lg font-black text-slate-950">{item.title}</h2>
+        <p className="mt-1 text-sm font-bold leading-6 text-slate-500">{item.description}</p>
+        <code className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-500">{item.key}</code>
       </div>
 
-      <div className="admin-preview">
-        {loading ? (
-          <span className="admin-skeleton" />
-        ) : asset?.image_url ? (
-          <img src={asset.image_url} alt={banner.title} loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+      <div
+        className={`admin-preview ${dragging ? "is-dragging" : ""}`}
+        onDragLeave={() => setDragging(false)}
+        onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+        onDrop={drop}
+      >
+        {current?.value ? (
+          <Image src={current.value} alt={item.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
         ) : (
           <div className="admin-empty">
             <ImageIcon />
-            <span>لا توجد صورة حالياً</span>
+            <span>اسحب الصورة هنا أو ارفعها من الجهاز</span>
           </div>
         )}
+        {busy && <span className="admin-progress" style={{ width: `${progress}%` }} />}
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <label className="admin-upload">
-          <input accept="image/*" className="sr-only" disabled={disabled} onChange={(event) => onUpload(event.target.files?.[0])} type="file" />
-          {saving ? "جاري الحفظ..." : "رفع / تغيير"}
+          <input accept="image/*" className="sr-only" disabled={busy} onChange={(event) => upload(event.target.files?.[0])} type="file" />
+          {current?.value ? "Replace" : "Upload"}
         </label>
-        <button className="admin-remove" disabled={disabled || !asset?.image_url} onClick={onRemove} type="button">
-          حذف الصورة
-        </button>
+        <button className="admin-remove" disabled={busy || !current?.value} onClick={() => onDelete(item)} type="button">Delete</button>
       </div>
     </m.article>
   );

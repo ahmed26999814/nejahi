@@ -18,7 +18,7 @@ const CONCOURS_VIEW = "concours_results_view";
 const CONCOURS_LOCATIONS_VIEW = "concours_locations_view";
 const EXCELLENCE_1AS_TABLE = "excellence_1as_results";
 const BREVET_TABLE = "brevet_results";
-const SITE_ASSETS_TABLE = "site_assets";
+const SITE_CONTENT_TABLE = "site_content";
 const TABLE_BY_SOURCE = {
   bac: BAC_TABLE,
   bac_session: BAC_SESSION_TABLE,
@@ -139,6 +139,7 @@ const UI_TEXT = {
     showResult: "عرض النتيجة",
     footerDesc: "منصة النتائج الوطنية.",
     preparedBy: "إعداد وتطوير",
+    aboutDeveloper: "عن المطور",
     developerRole: "مطور الموقع",
     developerMessage: "تم تطوير MauriResults لتقديم تجربة سريعة وواضحة لعرض نتائج المسابقات الوطنية في موريتانيا.",
     close: "إغلاق",
@@ -249,6 +250,7 @@ const UI_TEXT = {
     showResult: "Voir le résultat",
     footerDesc: "Plateforme nationale des résultats.",
     preparedBy: "Conception et développement",
+    aboutDeveloper: "À propos du développeur",
     developerRole: "Développeur du site",
     developerMessage: "MauriResults a été développé pour offrir une expérience rapide et claire des résultats nationaux en Mauritanie.",
     close: "Fermer",
@@ -567,20 +569,30 @@ async function supabaseRequest(params, table = BAC_TABLE) {
   return response.json();
 }
 
-async function fetchSiteAssets() {
+async function fetchSiteContent() {
   try {
     const rows = await supabaseRequest({
-      select: "key,image_url,storage_path,is_active,updated_at",
-      key: "in.(homepage_banner,result_page_banner)",
-    }, SITE_ASSETS_TABLE);
+      select: "content_key,title,value,type,storage_path,updated_at",
+      limit: 1000,
+    }, SITE_CONTENT_TABLE);
     return rows.reduce((assets, row) => ({
       ...assets,
-      [row.key]: row,
+      [row.content_key]: row,
     }), {});
   } catch (error) {
-    console.warn("[MauriResults Site Assets]", error);
+    console.warn("[MauriResults Site Content]", error);
     return {};
   }
+}
+
+function contentValue(content, key, fallback = "") {
+  const value = content?.[key]?.value;
+  return value == null || value === "" ? fallback : value;
+}
+
+function imageAsset(content, key) {
+  const value = contentValue(content, key);
+  return value ? { value, image_url: value, is_active: true } : null;
 }
 
 function prepareStudents(rows) {
@@ -1052,7 +1064,7 @@ export default function HomePage() {
   const [activeView, setActiveView] = useState("home");
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedTopperTrack, setSelectedTopperTrack] = useState("");
-  const [siteAssets, setSiteAssets] = useState({});
+  const [siteContent, setSiteContent] = useState({});
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
 
@@ -1070,13 +1082,25 @@ export default function HomePage() {
 
   useEffect(() => {
     let ignore = false;
-    fetchSiteAssets().then((assets) => {
-      if (!ignore) setSiteAssets(assets);
+    fetchSiteContent().then((content) => {
+      if (!ignore) setSiteContent(content);
     });
     return () => {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    const favicon = contentValue(siteContent, "favicon");
+    if (!favicon) return;
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = favicon;
+  }, [siteContent]);
 
   useEffect(() => {
     function handlePopState(event) {
@@ -1379,7 +1403,7 @@ export default function HomePage() {
     <LazyMotion features={domAnimation}>
       <MotionConfig reducedMotion="user">
     <m.main className="app-background min-h-screen pb-20 text-mauri-ink dark:text-white md:pb-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.32, ease: "easeOut" }}>
-      <Header activeView={activeView} lang={lang} onNavigate={openView} onToggleLang={toggleLang} text={text} theme={theme} setTheme={setTheme} />
+      <Header activeView={activeView} content={siteContent} lang={lang} onNavigate={openView} onToggleLang={toggleLang} text={text} theme={theme} setTheme={setTheme} />
 
       {activeView === "home" && (
         <HomeView
@@ -1390,7 +1414,8 @@ export default function HomePage() {
           matches={matches}
           message={message}
           lang={lang}
-          homepageBanner={siteAssets.homepage_banner}
+          content={siteContent}
+          homepageBanner={imageAsset(siteContent, "home_banner_image")}
           onSelectYear={openYear}
           onSelectExam={openExam}
           onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }}
@@ -1410,9 +1435,9 @@ export default function HomePage() {
       {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={dashboardLoading || examLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
       {activeView === "analytics" && <AnalyticsPage lang={lang} loading={dashboardLoading || examLoading} onSelectExam={selectExamForSection} regionStats={activeRegionStats} schoolStats={activeSchoolStats} selectedExam={selectedExam} selectedExamId={selectedExamId} showTrackGroups={showTrackGroups} stats={activeStats} text={text} trackStats={activeTrackStats} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
-      {activeView === "result" && selectedStudent && <ResultExperience lang={lang} onOpenRanking={openRanking} resultBanner={siteAssets.result_page_banner} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
+      {activeView === "result" && selectedStudent && <ResultExperience content={siteContent} lang={lang} onOpenRanking={openRanking} resultBanner={imageAsset(siteContent, "result_card_image")} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
-      {activeView === "home" && <Footer text={text} />}
+      {activeView === "home" && <Footer content={siteContent} text={text} />}
       <BottomNav activeView={activeView} onNavigate={openView} text={text} />
       <Toaster richColors position="top-center" dir="rtl" toastOptions={{ duration: 4200 }} />
       {resultLoading && <ResultLoadingOverlay text={text} />}
@@ -1422,10 +1447,10 @@ export default function HomePage() {
   );
 }
 
-function HomeView({ homepageBanner, lang, onSelectYear, text }) {
+function HomeView({ content, homepageBanner, lang, onSelectYear, text }) {
   return (
     <section className="app-shell grid gap-6 pt-5 md:gap-8 md:pt-8">
-      <Hero text={text} />
+      <Hero content={content} text={text} />
       <YearCards lang={lang} onSelectYear={onSelectYear} text={text} />
       <SiteBanner asset={homepageBanner} />
     </section>
@@ -1821,7 +1846,7 @@ function StatsRow({ isConcours, row, text }) {
   );
 }
 
-function Header({ activeView, lang, onNavigate, onToggleLang, text, theme, setTheme }) {
+function Header({ activeView, content, lang, onNavigate, onToggleLang, text, theme, setTheme }) {
   const navItems = [
     { label: text.home, view: "home" },
     { label: text.toppers, view: "toppers" },
@@ -1832,7 +1857,7 @@ function Header({ activeView, lang, onNavigate, onToggleLang, text, theme, setTh
     <header className="sticky top-0 z-40 border-b border-mauri-border/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
       <nav className="app-shell flex h-14 items-center justify-between gap-3">
         <button className="flex min-w-0 items-center gap-2.5 text-start" onClick={() => onNavigate("home")} type="button">
-          <LogoMark className="h-9 w-9 rounded-[14px]" />
+          <LogoMark className="h-9 w-9 rounded-[14px]" src={contentValue(content, "logo", "/logo.png")} />
           <span className="min-w-0">
             <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
             <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">{text.platformSubtitle}</small>
@@ -1856,11 +1881,15 @@ function Header({ activeView, lang, onNavigate, onToggleLang, text, theme, setTh
   );
 }
 
-function Hero({ text }) {
+function Hero({ content, text }) {
+  const heroBackground = contentValue(content, "hero_background");
+  const logo = contentValue(content, "logo", "/logo.png");
+
   return (
     <section className="compact-hero hero-logo-panel animate-slide-up">
+      {heroBackground && <img className="hero-background-image" src={heroBackground} alt="" loading="lazy" />}
       <div className="hero-logo-glow">
-        <LogoMark className="h-28 w-28 rounded-[30px] md:h-36 md:w-36" />
+        <LogoMark className="h-28 w-28 rounded-[30px] md:h-36 md:w-36" src={logo} />
       </div>
       <div className="grid gap-2 text-center">
         <p className="mx-auto w-fit rounded-full border border-mauri-green/15 bg-mauri-green/10 px-3 py-1 text-xs font-black text-mauri-green dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300">{text.platformSubtitle}</p>
@@ -2091,7 +2120,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
   );
 }
 
-function ResultExperience({ onOpenRanking, onShare, resultBanner, student, text }) {
+function ResultExperience({ content, onOpenRanking, onShare, resultBanner, student, text }) {
   const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
   const isConcours = student.source === "concours";
   const status = isConcours ? getConcoursStatus(getAverage(student), text) : getStatusDisplay(getOfficialStatus(student.kr), text);
@@ -2101,7 +2130,7 @@ function ResultExperience({ onOpenRanking, onShare, resultBanner, student, text 
       <div className="result-page-shell">
         <header className="official-result-header">
           <div className="flex min-w-0 items-center gap-3">
-            <LogoMark className="h-12 w-12 rounded-[18px]" />
+            <LogoMark className="h-12 w-12 rounded-[18px]" src={contentValue(content, "logo", "/logo.png")} />
             <div className="min-w-0">
               <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">MauriResults</p>
               <h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl">{text?.officialResult || "بطاقة النتيجة الرسمية"}</h1>
@@ -2282,15 +2311,17 @@ function TopperSkeleton() {
   );
 }
 
-function Footer({ text = UI_TEXT.ar }) {
+function Footer({ content = {}, text = UI_TEXT.ar }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
+  const footerBanner = contentValue(content, "footer_banner");
 
   return (
     <footer id="developer" className="app-shell py-6 md:py-10">
       <section className="premium-footer">
+        {footerBanner && <img className="footer-banner-image" src={footerBanner} alt="" loading="lazy" />}
         <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
           <div className="flex items-center gap-3">
-            <LogoMark className="h-12 w-12 rounded-[18px]" />
+            <LogoMark className="h-12 w-12 rounded-[18px]" src={contentValue(content, "logo", "/logo.png")} />
             <div className="min-w-0">
               <strong className="block text-lg font-black text-slate-950 dark:text-white">MauriResults</strong>
               <span className="text-sm font-bold text-slate-500 dark:text-slate-300">منصة نتائج وطنية</span>
@@ -2298,7 +2329,7 @@ function Footer({ text = UI_TEXT.ar }) {
           </div>
           <button className="developer-button" onClick={() => setDeveloperOpen((value) => !value)} type="button">
             <CodeIcon />
-            {text.preparedBy}
+            {text.aboutDeveloper || text.preparedBy}
           </button>
         </div>
         <div className="mt-5 flex flex-col gap-2 border-t border-mauri-border/70 pt-4 text-xs font-bold text-slate-500 dark:border-white/10 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
@@ -2307,35 +2338,46 @@ function Footer({ text = UI_TEXT.ar }) {
         </div>
       </section>
       {developerOpen && (
-        <DeveloperModal onClose={() => setDeveloperOpen(false)} text={text} />
+        <DeveloperModal content={content} onClose={() => setDeveloperOpen(false)} text={text} />
       )}
     </footer>
   );
 }
 
-function DeveloperModal({ onClose, text }) {
+function DeveloperModal({ content = {}, onClose, text }) {
+  const avatar = contentValue(content, "developer_avatar");
+  const background = contentValue(content, "developer_background");
+  const name = contentValue(content, "developer_name", "Ahmed abdellahi mady");
+  const role = contentValue(content, "developer_job_title", text.developerRole);
+  const description = contentValue(content, "developer_description", text.developerMessage);
+  const supportMessage = contentValue(content, "developer_support_message");
+  const whatsapp = contentValue(content, "developer_whatsapp", "https://wa.me/22244881891");
+  const facebook = contentValue(content, "developer_facebook", "https://www.facebook.com/ahmed.abde.mady");
+  const telegram = contentValue(content, "developer_telegram");
+  const website = contentValue(content, "developer_website");
+  const email = contentValue(content, "developer_email");
+
   return (
     <div className="developer-modal-backdrop" role="dialog" aria-modal="true" aria-label={text.preparedBy}>
       <m.article className="developer-modal" initial={{ opacity: 0, scale: 0.94, y: 18 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.24, ease: "easeOut" }}>
+        {background && <img className="developer-modal-bg" src={background} alt="" loading="lazy" />}
         <button className="developer-close" onClick={onClose} type="button" aria-label={text.close}>
           <XIcon />
         </button>
         <div className="developer-avatar">
-          <UserIcon />
+          {avatar ? <img src={avatar} alt={name} loading="lazy" /> : <UserIcon />}
         </div>
         <p className="text-[11px] font-black text-mauri-gold">{text.preparedBy}</p>
-        <h3 className="mt-1 text-2xl font-black text-white">Ahmed abdellahi mady</h3>
-        <p className="mt-1 text-sm font-black text-emerald-100">{text.developerRole}</p>
-        <p className="mt-4 text-sm font-bold leading-7 text-white/80">{text.developerMessage}</p>
+        <h3 className="mt-1 text-2xl font-black text-white">{name}</h3>
+        <p className="mt-1 text-sm font-black text-emerald-100">{role}</p>
+        <p className="mt-4 text-sm font-bold leading-7 text-white/80">{description}</p>
+        {supportMessage && <p className="mt-3 rounded-[18px] border border-white/15 bg-white/10 p-3 text-sm font-bold leading-7 text-white/85">{supportMessage}</p>}
         <div className="mt-5 grid grid-cols-2 gap-2">
-          <a className="developer-modal-link" href="https://wa.me/22244881891" target="_blank" rel="noopener">
-            <FaWhatsapp />
-            {text.whatsapp}
-          </a>
-          <a className="developer-modal-link" href="https://www.facebook.com/ahmed.abde.mady" target="_blank" rel="noopener">
-            <FaFacebookF />
-            {text.facebook}
-          </a>
+          {whatsapp && <a className="developer-modal-link" href={whatsapp} target="_blank" rel="noopener"><FaWhatsapp />{text.whatsapp}</a>}
+          {facebook && <a className="developer-modal-link" href={facebook} target="_blank" rel="noopener"><FaFacebookF />{text.facebook}</a>}
+          {telegram && <a className="developer-modal-link" href={telegram} target="_blank" rel="noopener"><FaTelegram />{text.telegram}</a>}
+          {website && <a className="developer-modal-link" href={website} target="_blank" rel="noopener"><HomeIcon />Website</a>}
+          {email && <a className="developer-modal-link" href={`mailto:${email}`}><MessageIcon />Email</a>}
         </div>
       </m.article>
     </div>
@@ -2382,10 +2424,10 @@ function ActionButton({ icon, label, onClick, variant = "solid" }) {
   );
 }
 
-function LogoMark({ className = "h-10 w-10" }) {
+function LogoMark({ className = "h-10 w-10", src = "/logo.png" }) {
   return (
     <span className={`${className} grid shrink-0 place-items-center overflow-hidden border border-mauri-green/10 bg-white shadow-soft dark:border-white/10`}>
-      <img className="h-full w-full object-contain p-1" src="/logo.png" alt="MauriResults" loading="eager" />
+      <img className="h-full w-full object-contain p-1" src={src} alt="MauriResults" loading="eager" onError={(event) => { event.currentTarget.src = "/logo.png"; }} />
     </span>
   );
 }
