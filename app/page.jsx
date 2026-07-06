@@ -3,8 +3,9 @@
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
 import { Clock3, Database, Image as ImageIcon, ShieldCheck, Zap } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useMemo, useState } from "react";
-import { FaFacebookF, FaWhatsapp } from "react-icons/fa6";
+import { FaFacebookF, FaTelegram, FaWhatsapp } from "react-icons/fa6";
 import * as Select from "@radix-ui/react-select";
 import { Toaster, toast } from "sonner";
 
@@ -118,6 +119,8 @@ const UI_TEXT = {
     topRank: "من الأوائل",
     successFound: "تهانينا، تم العثور على نتيجة ناجحة.",
     share: "مشاركة",
+    copyLink: "نسخ الرابط",
+    telegram: "تلغرام",
     print: "طباعة",
     searchResults: "نتائج البحث",
     chooseCandidate: "اختر المترشح",
@@ -221,6 +224,8 @@ const UI_TEXT = {
     topRank: "Parmi les premiers",
     successFound: "Félicitations, un résultat admis a été trouvé.",
     share: "Partager",
+    copyLink: "Copier le lien",
+    telegram: "Telegram",
     print: "Imprimer",
     searchResults: "Résultats de recherche",
     chooseCandidate: "Choisir le candidat",
@@ -339,6 +344,19 @@ function getAverage(student) {
 function formatScore(student, text = UI_TEXT.ar) {
   const score = getAverage(student);
   return student.source === "concours" ? `${score.toFixed(2)} / 200` : score.toFixed(2);
+}
+
+function getResultUrl(student) {
+  if (typeof window === "undefined") return "https://mauri-results.vercel.app";
+  const url = new URL(window.location.href);
+  url.hash = `result-${encodeURIComponent(student?.source || "exam")}-${encodeURIComponent(student?.id || "")}`;
+  return url.toString();
+}
+
+function getResultShareText(student, text = UI_TEXT.ar) {
+  const scoreLabel = student.source === "concours" ? text.totalScore : text.averageLabel;
+  const trackLine = examHasTrackGroups(student.source) ? `\n${text.track}: ${student.track}` : "";
+  return `${text.result} ${student.name}\n${text.id}: ${student.id}${trackLine}\n${scoreLabel}: ${formatScore(student, text)}\n${text.rank}: ${student.rank || text.unavailable}\nMauriResults`;
 }
 
 function isMissingSupabaseEnv(error) {
@@ -1170,11 +1188,9 @@ export default function HomePage() {
   }
 
   function shareResult(student) {
-    const scoreLabel = student.source === "concours" ? text.totalScore : text.averageLabel;
-    const trackLine = examHasTrackGroups(student.source) ? `\n${text.track}: ${student.track}` : "";
-    const shareText = `${text.result} ${student.name}\n${text.id}: ${student.id}${trackLine}\n${scoreLabel}: ${formatScore(student, text)}\n${text.rank}: ${student.rank || text.unavailable}\nMauriResults`;
+    const shareText = getResultShareText(student, text);
     if (navigator.share) {
-      navigator.share({ title: text.examResultTitle, text: shareText }).catch(() => {});
+      navigator.share({ title: text.examResultTitle, text: shareText, url: getResultUrl(student) }).catch(() => {});
       return;
     }
     navigator.clipboard?.writeText(shareText);
@@ -1666,15 +1682,14 @@ function AnalyticsPage({ lang, loading, regionStats, schoolStats, selectedExam, 
 
 function EmptyChoice({ text }) {
   return (
-    <section className="analytics-panel animate-slide-up">
-      <div className="flex items-center gap-3">
-        <span className="grid h-11 w-11 place-items-center rounded-[16px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">
-          <SearchIcon />
-        </span>
-        <div>
-          <h2 className="text-base font-black text-slate-950 dark:text-white">{text.chooseExam}</h2>
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{text.chooseExamFirst}</p>
-        </div>
+    <section className="empty-state animate-slide-up">
+      <div className="empty-illustration">
+        <img src="/images/empty-state.png" alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+        <SearchIcon />
+      </div>
+      <div>
+        <h2>{text.chooseExam}</h2>
+        <p>{text.chooseExamFirst}</p>
       </div>
     </section>
   );
@@ -1893,6 +1908,9 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
   const isTopRanked = student.rank && student.rank <= 3;
   const tone = isFailed ? "calm" : getAverageTone(average);
   const averagePhrase = getAveragePhrase(average);
+  const resultUrl = getResultUrl(student);
+  const encodedUrl = encodeURIComponent(resultUrl);
+  const encodedText = encodeURIComponent(getResultShareText(student, text));
   const details = student.source === "brevet"
     ? [
       [text.id, student.id, <HashIcon key="hash" />],
@@ -2020,6 +2038,17 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
         <ActionButton icon={<ShareIcon />} label={text.share} onClick={() => onShare(student)} />
         <ActionButton icon={<DownloadIcon />} label="PDF" onClick={() => window.print()} variant="light" />
         <ActionButton icon={<PrinterIcon />} label={text.print} onClick={() => window.print()} variant="light" />
+      </div>
+      <div className="result-share-panel">
+        <div className="qr-card" aria-label="QR Code">
+          <QRCodeSVG value={resultUrl} size={96} bgColor="transparent" fgColor="#15803D" level="M" />
+        </div>
+        <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
+          <ActionButton icon={<HashIcon />} label={text.copyLink} onClick={() => { navigator.clipboard?.writeText(resultUrl); toast.success(text.copiedShare); }} variant="light" />
+          <ActionButton icon={<FaWhatsapp />} label={text.whatsapp} onClick={() => window.open(`https://wa.me/?text=${encodedText}%0A${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
+          <ActionButton icon={<FaFacebookF />} label={text.facebook} onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
+          <ActionButton icon={<FaTelegram />} label={text.telegram} onClick={() => window.open(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`, "_blank", "noopener,noreferrer")} variant="light" />
+        </div>
       </div>
     </article>
   );

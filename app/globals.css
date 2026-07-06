@@ -152,6 +152,26 @@ svg {
     @apply flex items-center gap-2 rounded-[16px] bg-white/70 p-2 text-[11px] font-black text-slate-500 dark:bg-white/[.06] dark:text-slate-300;
   }
 
+  .empty-state {
+    @apply grid justify-items-center gap-4 rounded-[26px] border border-dashed border-mauri-green/25 bg-white/70 p-6 text-center shadow-soft backdrop-blur-xl dark:border-emerald-300/20 dark:bg-white/[.06];
+  }
+
+  .empty-state h2 {
+    @apply text-xl font-black text-slate-950 dark:text-white;
+  }
+
+  .empty-state p {
+    @apply mt-1 max-w-md text-sm font-bold leading-7 text-slate-500 dark:text-slate-300;
+  }
+
+  .empty-illustration {
+    @apply grid h-24 w-24 place-items-center overflow-hidden rounded-[28px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300;
+  }
+
+  .empty-illustration img {
+    @apply h-full w-full object-cover;
+  }
+
   .search-card {
     @apply grid gap-2 rounded-[24px] border border-white/70 bg-white/[.78] p-3 shadow-premium backdrop-blur-xl transition focus-within:-translate-y-0.5 focus-within:border-mauri-green/40 focus-within:shadow-glow dark:border-white/10 dark:bg-[#10231a]/[.78] md:grid-cols-[1fr_auto];
   }
@@ -346,6 +366,14 @@ svg {
   .result-phrase {
     @apply mt-4 flex items-center gap-2 rounded-[18px] border border-mauri-gold/30 bg-mauri-gold/15 px-3 py-3 text-sm font-black leading-6 text-yellow-800 shadow-soft backdrop-blur-xl dark:text-yellow-100;
     animation: slideUp 420ms cubic-bezier(.2, .8, .2, 1) both;
+  }
+
+  .result-share-panel {
+    @apply mt-4 grid gap-3 rounded-[20px] border border-mauri-border bg-white/55 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.06] sm:grid-cols-[auto_1fr];
+  }
+
+  .qr-card {
+    @apply grid h-28 w-full place-items-center rounded-[18px] border border-mauri-green/15 bg-white shadow-soft dark:border-emerald-300/15 dark:bg-white/90 sm:w-28;
   }
 
   .result-success {

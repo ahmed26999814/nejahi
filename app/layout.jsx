@@ -66,9 +66,27 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "MauriResults",
+    url: siteUrl,
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    inLanguage: ["ar-MR", "fr-MR"],
+    description: "منصة نتائج المسابقات الوطنية في موريتانيا.",
+    creator: {
+      "@type": "Person",
+      name: "Ahmed abdellahi mady",
+    },
+  };
+
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
-      <body className="font-arabic antialiased">{children}</body>
+      <body className="font-arabic antialiased">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        {children}
+      </body>
     </html>
   );
 }
