@@ -18,6 +18,7 @@ const CONCOURS_VIEW = "concours_results_view";
 const CONCOURS_LOCATIONS_VIEW = "concours_locations_view";
 const EXCELLENCE_1AS_TABLE = "excellence_1as_results";
 const BREVET_TABLE = "brevet_results";
+const SITE_ASSETS_TABLE = "site_assets";
 const TABLE_BY_SOURCE = {
   bac: BAC_TABLE,
   bac_session: BAC_SESSION_TABLE,
@@ -138,6 +139,9 @@ const UI_TEXT = {
     showResult: "عرض النتيجة",
     footerDesc: "منصة النتائج الوطنية.",
     preparedBy: "إعداد وتطوير",
+    developerRole: "مطور الموقع",
+    developerMessage: "تم تطوير MauriResults لتقديم تجربة سريعة وواضحة لعرض نتائج المسابقات الوطنية في موريتانيا.",
+    close: "إغلاق",
     facebook: "فيسبوك",
     whatsapp: "واتساب",
     rights: "جميع الحقوق محفوظة © MauriResults.",
@@ -245,6 +249,9 @@ const UI_TEXT = {
     showResult: "Voir le résultat",
     footerDesc: "Plateforme nationale des résultats.",
     preparedBy: "Conception et développement",
+    developerRole: "Développeur du site",
+    developerMessage: "MauriResults a été développé pour offrir une expérience rapide et claire des résultats nationaux en Mauritanie.",
+    close: "Fermer",
     facebook: "Facebook",
     whatsapp: "WhatsApp",
     rights: "Tous droits réservés © MauriResults.",
@@ -558,6 +565,22 @@ async function supabaseRequest(params, table = BAC_TABLE) {
 
   if (!response.ok) throw new Error(await response.text());
   return response.json();
+}
+
+async function fetchSiteAssets() {
+  try {
+    const rows = await supabaseRequest({
+      select: "key,image_url,storage_path,is_active,updated_at",
+      key: "in.(homepage_banner,result_page_banner)",
+    }, SITE_ASSETS_TABLE);
+    return rows.reduce((assets, row) => ({
+      ...assets,
+      [row.key]: row,
+    }), {});
+  } catch (error) {
+    console.warn("[MauriResults Site Assets]", error);
+    return {};
+  }
 }
 
 function prepareStudents(rows) {
@@ -1029,6 +1052,7 @@ export default function HomePage() {
   const [activeView, setActiveView] = useState("home");
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedTopperTrack, setSelectedTopperTrack] = useState("");
+  const [siteAssets, setSiteAssets] = useState({});
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
 
@@ -1042,6 +1066,16 @@ export default function HomePage() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchSiteAssets().then((assets) => {
+      if (!ignore) setSiteAssets(assets);
+    });
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -1356,6 +1390,7 @@ export default function HomePage() {
           matches={matches}
           message={message}
           lang={lang}
+          homepageBanner={siteAssets.homepage_banner}
           onSelectYear={openYear}
           onSelectExam={openExam}
           onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }}
@@ -1375,7 +1410,7 @@ export default function HomePage() {
       {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={dashboardLoading || examLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
       {activeView === "analytics" && <AnalyticsPage lang={lang} loading={dashboardLoading || examLoading} onSelectExam={selectExamForSection} regionStats={activeRegionStats} schoolStats={activeSchoolStats} selectedExam={selectedExam} selectedExamId={selectedExamId} showTrackGroups={showTrackGroups} stats={activeStats} text={text} trackStats={activeTrackStats} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
-      {activeView === "result" && selectedStudent && <ResultExperience lang={lang} onOpenRanking={openRanking} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
+      {activeView === "result" && selectedStudent && <ResultExperience lang={lang} onOpenRanking={openRanking} resultBanner={siteAssets.result_page_banner} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
       {activeView === "home" && <Footer text={text} />}
       <BottomNav activeView={activeView} onNavigate={openView} text={text} />
@@ -1387,11 +1422,12 @@ export default function HomePage() {
   );
 }
 
-function HomeView({ lang, onSelectYear, text }) {
+function HomeView({ homepageBanner, lang, onSelectYear, text }) {
   return (
     <section className="app-shell grid gap-6 pt-5 md:gap-8 md:pt-8">
       <Hero text={text} />
       <YearCards lang={lang} onSelectYear={onSelectYear} text={text} />
+      <SiteBanner asset={homepageBanner} />
     </section>
   );
 }
@@ -1416,6 +1452,28 @@ function YearCards({ lang, onSelectYear, text }) {
         </button>
       ))}
     </section>
+  );
+}
+
+function SiteBanner({ asset }) {
+  if (!asset?.is_active || !asset?.image_url) return null;
+
+  return (
+    <m.figure
+      className="site-banner"
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.42, ease: "easeOut" }}
+    >
+      <img
+        src={asset.image_url}
+        alt=""
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.closest(".site-banner")?.remove();
+        }}
+      />
+    </m.figure>
   );
 }
 
@@ -1917,7 +1975,7 @@ function CountUp({ decimals = 0, value }) {
   return <strong className="block text-base font-black text-slate-950 dark:text-white">{decimals ? display.toFixed(decimals) : Math.round(display).toLocaleString("ar-MR")}</strong>;
 }
 
-function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verificationCode }) {
+function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_TEXT.ar, verificationCode }) {
   const average = parseAverage(student.MOD);
   const isConcours = student.source === "concours";
   const status = isConcours ? getConcoursStatus(average, text) : getStatusDisplay(getOfficialStatus(student.kr), text);
@@ -2017,6 +2075,7 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
         <ActionButton icon={<DownloadIcon />} label="PDF" onClick={() => window.print()} variant="light" />
         <ActionButton icon={<PrinterIcon />} label={text.print} onClick={() => window.print()} variant="light" />
       </div>
+      <SiteBanner asset={resultBanner} />
       <div className="result-share-panel">
         <div className="qr-card" aria-label="QR Code">
           <QRCodeSVG value={resultUrl} size={96} bgColor="transparent" fgColor="#15803D" level="M" />
@@ -2032,7 +2091,7 @@ function ResultCard({ onOpenRanking, student, onShare, text = UI_TEXT.ar, verifi
   );
 }
 
-function ResultExperience({ onOpenRanking, onShare, student, text }) {
+function ResultExperience({ onOpenRanking, onShare, resultBanner, student, text }) {
   const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
   const isConcours = student.source === "concours";
   const status = isConcours ? getConcoursStatus(getAverage(student), text) : getStatusDisplay(getOfficialStatus(student.kr), text);
@@ -2053,7 +2112,7 @@ function ResultExperience({ onOpenRanking, onShare, student, text }) {
             <span className={`official-status-stamp ${status.className}`}>{status.label}</span>
           </div>
         </header>
-        <ResultCard onOpenRanking={onOpenRanking} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
+        <ResultCard onOpenRanking={onOpenRanking} resultBanner={resultBanner} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
       </div>
     </section>
   );
@@ -2227,47 +2286,59 @@ function Footer({ text = UI_TEXT.ar }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
 
   return (
-    <footer id="developer" className="border-t border-mauri-border bg-white py-5 dark:border-white/10 dark:bg-white/5">
-      <div className="app-shell grid gap-3 text-center md:text-start">
-        <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
-          <div className="flex items-center justify-center gap-3 md:justify-start">
-          <LogoMark className="h-10 w-10 rounded-[14px]" />
-          <div>
-            <strong className="block text-base font-black text-slate-950 dark:text-white">MauriResults</strong>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{text.footerDesc}</span>
-          </div>
+    <footer id="developer" className="app-shell py-6 md:py-10">
+      <section className="premium-footer">
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="flex items-center gap-3">
+            <LogoMark className="h-12 w-12 rounded-[18px]" />
+            <div className="min-w-0">
+              <strong className="block text-lg font-black text-slate-950 dark:text-white">MauriResults</strong>
+              <span className="text-sm font-bold text-slate-500 dark:text-slate-300">منصة نتائج وطنية</span>
+            </div>
           </div>
           <button className="developer-button" onClick={() => setDeveloperOpen((value) => !value)} type="button">
             <CodeIcon />
             {text.preparedBy}
           </button>
         </div>
-        {developerOpen && (
-          <div className="developer-card animate-slide-up">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-[16px] bg-mauri-green text-white">
-                <UserIcon />
-              </span>
-              <div className="min-w-0 text-start">
-                <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{text.preparedBy}</p>
-                <h3 className="text-base font-black text-slate-950 dark:text-white">Ahmed abdellahi mady</h3>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <a className="developer-link" href="https://www.facebook.com/ahmed.abde.mady" target="_blank" rel="noopener">
-                <FaFacebookF />
-                {text.facebook}
-              </a>
-              <a className="developer-link" href="https://wa.me/22244881891" target="_blank" rel="noopener">
-                <FaWhatsapp />
-                {text.whatsapp}
-              </a>
-            </div>
-          </div>
-        )}
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{text.rights}</p>
-      </div>
+        <div className="mt-5 flex flex-col gap-2 border-t border-mauri-border/70 pt-4 text-xs font-bold text-slate-500 dark:border-white/10 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <span>{text.rights}</span>
+          <span>© {new Date().getFullYear()} MauriResults</span>
+        </div>
+      </section>
+      {developerOpen && (
+        <DeveloperModal onClose={() => setDeveloperOpen(false)} text={text} />
+      )}
     </footer>
+  );
+}
+
+function DeveloperModal({ onClose, text }) {
+  return (
+    <div className="developer-modal-backdrop" role="dialog" aria-modal="true" aria-label={text.preparedBy}>
+      <m.article className="developer-modal" initial={{ opacity: 0, scale: 0.94, y: 18 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.24, ease: "easeOut" }}>
+        <button className="developer-close" onClick={onClose} type="button" aria-label={text.close}>
+          <XIcon />
+        </button>
+        <div className="developer-avatar">
+          <UserIcon />
+        </div>
+        <p className="text-[11px] font-black text-mauri-gold">{text.preparedBy}</p>
+        <h3 className="mt-1 text-2xl font-black text-white">Ahmed abdellahi mady</h3>
+        <p className="mt-1 text-sm font-black text-emerald-100">{text.developerRole}</p>
+        <p className="mt-4 text-sm font-bold leading-7 text-white/80">{text.developerMessage}</p>
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <a className="developer-modal-link" href="https://wa.me/22244881891" target="_blank" rel="noopener">
+            <FaWhatsapp />
+            {text.whatsapp}
+          </a>
+          <a className="developer-modal-link" href="https://www.facebook.com/ahmed.abde.mady" target="_blank" rel="noopener">
+            <FaFacebookF />
+            {text.facebook}
+          </a>
+        </div>
+      </m.article>
+    </div>
   );
 }
 

@@ -526,15 +526,119 @@ svg {
   }
 
   .developer-button {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-l from-mauri-green to-emerald-600 px-5 text-sm font-black text-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-premium active:scale-[.98];
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[18px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_45px_rgba(21,128,61,.30)] active:scale-[.98];
   }
 
-  .developer-card {
-    @apply mx-auto grid w-full max-w-md gap-3 rounded-[20px] border border-mauri-green/20 bg-emerald-50/80 p-4 text-start shadow-premium backdrop-blur-xl dark:border-emerald-300/10 dark:bg-emerald-300/10;
+  .premium-footer {
+    @apply relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/85 p-5 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/80 md:p-6;
   }
 
-  .developer-link {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-mauri-border bg-white px-3 text-xs font-black text-slate-700 shadow-soft transition hover:border-mauri-green/40 hover:text-mauri-green dark:border-white/10 dark:bg-white/10 dark:text-slate-100;
+  .premium-footer::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-l from-transparent via-mauri-gold/60 to-transparent;
+  }
+
+  .developer-modal-backdrop {
+    @apply fixed inset-0 z-[90] grid place-items-center bg-slate-950/70 px-3 py-6 backdrop-blur-xl;
+    animation: fadeIn 180ms ease both;
+  }
+
+  .developer-modal {
+    @apply relative w-full max-w-md overflow-hidden rounded-[30px] border border-white/15 bg-gradient-to-br from-[#092016] via-mauri-green to-emerald-700 p-6 text-center shadow-[0_30px_90px_rgba(0,0,0,.35)];
+  }
+
+  .developer-modal::before {
+    content: "";
+    @apply pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-mauri-gold/20 blur-3xl;
+  }
+
+  .developer-close {
+    @apply absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/10 text-white shadow-soft transition hover:bg-white/20 active:scale-95;
+  }
+
+  .developer-avatar {
+    @apply mx-auto mb-4 grid h-24 w-24 place-items-center rounded-[28px] border border-white/20 bg-white/15 text-white shadow-premium backdrop-blur-xl;
+  }
+
+  .developer-avatar svg {
+    @apply h-11 w-11;
+  }
+
+  .developer-modal-link {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-white/15 bg-white/[.12] px-3 text-xs font-black text-white shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/20 active:scale-[.98];
+  }
+
+  .site-banner {
+    @apply mt-1 overflow-hidden rounded-[26px] border border-slate-200/80 bg-white shadow-premium dark:border-white/10 dark:bg-[#10231a]/75;
+  }
+
+  .site-banner img {
+    @apply block aspect-[16/7] w-full object-cover;
+  }
+
+  .result-modal .site-banner {
+    @apply mt-4 rounded-[22px];
+  }
+
+  .admin-page {
+    background:
+      radial-gradient(circle at 12% 10%, rgba(21, 128, 61, .10), transparent 28rem),
+      radial-gradient(circle at 88% 8%, rgba(212, 175, 55, .12), transparent 24rem),
+      linear-gradient(180deg, #ffffff, #f4faf6);
+  }
+
+  .admin-hero {
+    @apply grid gap-4 rounded-[30px] border border-slate-200/80 bg-white/85 p-5 shadow-premium backdrop-blur-2xl sm:grid-cols-[auto_1fr] sm:items-center md:p-7;
+  }
+
+  .admin-logo {
+    @apply grid h-16 w-16 place-items-center rounded-[22px] bg-gradient-to-br from-mauri-green to-emerald-500 text-lg font-black text-white shadow-[0_18px_40px_rgba(21,128,61,.24)];
+  }
+
+  .admin-card {
+    @apply grid gap-4 rounded-[28px] border border-slate-200/80 bg-white/90 p-4 shadow-premium backdrop-blur-2xl md:p-5;
+  }
+
+  .admin-toggle {
+    @apply shrink-0 rounded-full border border-mauri-border bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-500 shadow-soft transition hover:-translate-y-0.5 active:scale-95 disabled:opacity-60;
+  }
+
+  .admin-toggle.is-on {
+    @apply border-mauri-green/25 bg-mauri-green/10 text-mauri-green;
+  }
+
+  .admin-preview {
+    @apply grid aspect-[16/8] place-items-center overflow-hidden rounded-[22px] border border-dashed border-mauri-green/25 bg-emerald-50/60 shadow-soft;
+  }
+
+  .admin-preview img {
+    @apply h-full w-full object-cover;
+  }
+
+  .admin-empty {
+    @apply grid justify-items-center gap-2 text-sm font-black text-slate-400;
+  }
+
+  .admin-empty svg {
+    @apply h-9 w-9;
+  }
+
+  .admin-skeleton {
+    @apply h-full w-full bg-slate-200;
+    animation: pulseSoft 1.2s ease-in-out infinite;
+  }
+
+  .admin-upload,
+  .admin-remove {
+    @apply inline-flex min-h-12 cursor-pointer items-center justify-center rounded-[16px] px-3 text-sm font-black shadow-soft transition hover:-translate-y-0.5 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .admin-upload {
+    @apply bg-gradient-to-l from-mauri-green to-emerald-500 text-white;
+  }
+
+  .admin-remove {
+    @apply border border-red-200 bg-red-50 text-red-700;
   }
 
   .skeleton {
