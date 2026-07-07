@@ -3,6 +3,7 @@
 import PremiumHomeView from "../components/home/PremiumHomeView";
 import BottomNav from "../components/layout/BottomNav";
 import FloatingActionButton from "../components/ui/FloatingActionButton";
+import { CandidateProfileCard, StatusBadge } from "../components/results/ResultDesignKit";
 import Footer from "../components/layout/Footer";
 import Header from "../components/layout/Header";
 import { cva } from "class-variance-authority";
@@ -2344,9 +2345,18 @@ function ResultExperience({ content, onOpenRanking, onShare, resultBanner, stude
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`official-status-stamp ${status.className}`}>{status.label}</span>
+            <StatusBadge status={status.className} label={status.label} />
           </div>
         </header>
+        <CandidateProfileCard
+          name={student.name}
+          id={student.id}
+          school={student.ms || student.centre || text.unavailable}
+          status={status.className}
+          statusLabel={status.label}
+          score={getAverage(student).toFixed(2)}
+          maxScore={isConcours ? 200 : undefined}
+        />
         <ResultCard onOpenRanking={onOpenRanking} resultBanner={resultBanner} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
       </div>
     </section>
