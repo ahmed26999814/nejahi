@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import PremiumHomeView from "../components/home/PremiumHomeView";
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
@@ -1641,13 +1642,16 @@ export default function HomePage() {
   );
 }
 
-function HomeView({ content, homepageBanner, lang, onSelectYear, text }) {
+function HomeView({ homepageBanner, lang, onSelectYear, stats, text }) {
   return (
-    <section className="app-shell grid gap-6 pt-5 md:gap-8 md:pt-8">
-      <Hero content={content} text={text} />
-      <YearCards lang={lang} onSelectYear={onSelectYear} text={text} />
-      <SiteBanner asset={homepageBanner} />
-    </section>
+    <PremiumHomeView
+      homepageBanner={homepageBanner}
+      lang={lang}
+      onSelectYear={onSelectYear}
+      stats={stats}
+      text={text}
+      yearCards={YEAR_CARDS}
+    />
   );
 }
 
@@ -2659,4 +2663,8 @@ function ChevronDownIcon() { return <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
 function SilverMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 12a2 2 0 0 1 4 0c0 2-4 2-4 4h4" /></svg>; }
 function BronzeMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 11h4l-2 2a2 2 0 1 1-2 2" /></svg>; }
+
+
+
+
 
