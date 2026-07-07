@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import PremiumHomeView from "../components/home/PremiumHomeView";
+import AnalyticsPage from "../components/analytics/AnalyticsPage";
+import SearchPanel from "../components/search/SearchPanel";
 import BottomNav from "../components/layout/BottomNav";
 import FloatingActionButton from "../components/ui/FloatingActionButton";
 import { CandidateProfileCard, StatusBadge } from "../components/results/ResultDesignKit";
@@ -1633,7 +1635,7 @@ export default function HomePage() {
       {activeView === "year" && <YearPage lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
       {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
       {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={selectedSourceLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
-      {activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} lang={lang} loading={selectedSourceLoading} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}
+      {activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} components={{ PageHero, ExamSelector, StatsStrip, AnalyticsModeSelector, StatsTable, EmptyChoice, ChartIcon }} lang={lang} loading={selectedSourceLoading} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience content={siteContent} lang={lang} onOpenRanking={openRanking} resultBanner={imageAsset(siteContent, "result_card_image")} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
@@ -1964,7 +1966,7 @@ function ToppersPage({ groups, lang, loading, onSelect, onSelectExam, onSelectTr
   );
 }
 
-function AnalyticsPage({ analyticsMode, analyticsOptions, lang, loading, onSelectAnalyticsMode, onSelectExam, rows, selectedExam, selectedExamId, stats, tableIcon, tableTitle, text }) {
+function LegacyAnalyticsPage({ analyticsMode, analyticsOptions, lang, loading, onSelectAnalyticsMode, onSelectExam, rows, selectedExam, selectedExamId, stats, tableIcon, tableTitle, text }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.analytics} title={text.analyticsTitle} icon={<ChartIcon />} />
@@ -2112,7 +2114,7 @@ function Hero({ content, text }) {
   );
 }
 
-function SearchPanel({ error, examTitle, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions, text }) {
+function LegacySearchPanel({ error, examTitle, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions, text }) {
   const [focused, setFocused] = useState(false);
   const visibleSuggestions = focused && suggestions.length > 0;
 
