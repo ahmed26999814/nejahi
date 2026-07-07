@@ -569,6 +569,16 @@ async function supabaseRequest(params, table = BAC_TABLE) {
   return response.json();
 }
 
+async function fetchView(viewName, limit = 100) {
+  return supabaseRequest(
+    {
+      select: "*",
+      limit,
+    },
+    viewName
+  );
+}
+
 async function fetchSiteContent() {
   try {
     const rows = await supabaseRequest({
@@ -1067,6 +1077,7 @@ export default function HomePage() {
   const [siteContent, setSiteContent] = useState({});
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
+  const [analyticsViews, setAnalyticsViews] = useState({});
 
   useEffect(() => {
     const saved = localStorage.getItem("mauriresults-theme");
