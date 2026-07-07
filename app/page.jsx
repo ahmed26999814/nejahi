@@ -1967,22 +1967,6 @@ function ToppersPage({ groups, lang, loading, onSelect, onSelectExam, onSelectTr
   );
 }
 
-function LegacyAnalyticsPage({ analyticsMode, analyticsOptions, lang, loading, onSelectAnalyticsMode, onSelectExam, rows, selectedExam, selectedExamId, stats, tableIcon, tableTitle, text }) {
-  return (
-    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow={text.analytics} title={text.analyticsTitle} icon={<ChartIcon />} />
-      <ExamSelector lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
-      {selectedExam ? (
-        <>
-          <StatsStrip loading={loading} stats={stats} text={text} />
-          <AnalyticsModeSelector modes={analyticsOptions} selectedMode={analyticsMode} onSelect={onSelectAnalyticsMode} />
-          <StatsTable icon={tableIcon} isConcours={stats.isConcours} loading={loading} rows={rows} text={text} title={tableTitle} />
-        </>
-      ) : null}
-    </section>
-  );
-}
-
 function AnalyticsModeSelector({ modes, selectedMode, onSelect }) {
   if (!modes?.length) return null;
   return (
@@ -2061,41 +2045,6 @@ function StatsRow({ isConcours, row, text }) {
   );
 }
 
-function LegacyHeader({ activeView, content, lang, onNavigate, onToggleLang, text, theme, setTheme }) {
-  const navItems = [
-    { label: text.home, view: "home" },
-    { label: text.toppers, view: "toppers" },
-    { label: text.analytics, view: "analytics" },
-  ];
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-mauri-border/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
-      <nav className="app-shell flex h-14 items-center justify-between gap-3">
-        <button className="flex min-w-0 items-center gap-2.5 text-start" onClick={() => onNavigate("home")} type="button">
-          <LogoMark className="h-9 w-9 rounded-[14px]" src={contentValue(content, "logo", "/logo.png")} />
-          <span className="min-w-0">
-            <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
-            <small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">{text.platformSubtitle}</small>
-          </span>
-        </button>
-        <div className="hidden items-center gap-2 md:flex">
-          {navItems.map((item) => (
-            <button className={`nav-link ${activeView === item.view ? "bg-mauri-green/10 text-mauri-green" : ""}`} onClick={() => onNavigate(item.view)} type="button" key={item.view}>
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <button className="icon-button h-9 w-9" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="تبديل الوضع الليلي">
-          {theme === "dark" ? <MoonIcon /> : <SunIcon />}
-        </button>
-        <button className="lang-button" onClick={onToggleLang} type="button" aria-label="Changer la langue">
-          {lang === "ar" ? "FR" : "AR"}
-        </button>
-      </nav>
-    </header>
-  );
-}
-
 function Hero({ content, text }) {
   const heroBackground = contentValue(content, "hero_background");
   const logo = contentValue(content, "logo", "/logo.png");
@@ -2112,59 +2061,6 @@ function Hero({ content, text }) {
         <p className="mx-auto max-w-xl text-sm font-bold leading-7 text-slate-600 dark:text-slate-300">{text.heroDesc}</p>
       </div>
     </section>
-  );
-}
-
-function LegacySearchPanel({ error, examTitle, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions, text }) {
-  const [focused, setFocused] = useState(false);
-  const visibleSuggestions = focused && suggestions.length > 0;
-
-  function pickSuggestion(student) {
-    setFocused(false);
-    onPickSuggestion(student);
-  }
-
-  return (
-    <form onSubmit={(event) => { setFocused(false); handleSubmit(event); }} className="search-card animate-slide-up">
-      <div className="col-span-full flex items-center justify-between gap-2 px-1">
-        <span className="text-xs font-black text-mauri-green dark:text-mauri-gold">{examTitle}</span>
-        <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">{text?.open || "البحث مفتوح"}</span>
-      </div>
-      <div className="relative min-w-0 flex-1">
-        <label className="relative block">
-          <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true">
-            <SearchIcon />
-          </span>
-          <input
-            className="search-input"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onBlur={() => window.setTimeout(() => setFocused(false), 140)}
-            onFocus={() => setFocused(true)}
-            placeholder={text?.searchPlaceholder || "أدخل رقم المترشح أو الاسم الكامل"}
-          />
-        </label>
-        {visibleSuggestions && (
-          <div className="suggestions-panel">
-            {suggestions.map((student) => (
-              <button className="suggestion-item" key={student.id} onMouseDown={(event) => event.preventDefault()} onClick={() => pickSuggestion(student)} type="button">
-                <span className="min-w-0 text-start">
-                  <strong className="line-clamp-1 block">{student.name}</strong>
-                  <small className="line-clamp-1 text-slate-500 dark:text-slate-400">{student.id}{examHasTrackGroups(student.source) ? ` - ${student.track}` : ""}</small>
-                </span>
-                <span className="rounded-full bg-mauri-green/10 px-2 py-1 text-xs font-black text-mauri-green">{parseAverage(student.MOD).toFixed(2)}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={loading}>
-        {loading ? (text?.searching || "بحث...") : (text?.searchButton || "بحث")}
-      </button>
-      {(error || message) && (
-        <p className={`col-span-full text-center text-xs font-black md:text-start ${error ? "text-red-600 dark:text-red-300" : "text-mauri-green dark:text-mauri-gold"}`}>{error || message}</p>
-      )}
-    </form>
   );
 }
 
