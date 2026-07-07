@@ -6,6 +6,7 @@ import SearchPanel from "../components/search/SearchPanel";
 import BottomNav from "../components/layout/BottomNav";
 import FloatingActionButton from "../components/ui/FloatingActionButton";
 import { CandidateProfileCard, StatusBadge } from "../components/results/ResultDesignKit";
+import ResultOfficialSummary from "../components/results/ResultOfficialSummary";
 import Footer from "../components/layout/Footer";
 import Header from "../components/layout/PremiumHeader";
 import { cva } from "class-variance-authority";
@@ -2350,14 +2351,16 @@ function ResultExperience({ content, onOpenRanking, onShare, resultBanner, stude
             <StatusBadge status={status.className} label={status.label} />
           </div>
         </header>
-        <CandidateProfileCard
+        <ResultOfficialSummary
+          average={getAverage(student).toFixed(2)}
+          code={verificationCode}
+          exam={student.sessionType || (isConcours ? "كونكور 2025" : student.source === "brevet" ? "أبريفه 2025" : student.source === "excellence_1as" ? "الامتياز الأولى إعدادية 2025" : "البكالوريا 2025")}
+          maxScore={isConcours ? 200 : undefined}
           name={student.name}
-          id={student.id}
-          school={student.ms || student.centre || text.unavailable}
+          number={student.id}
           status={status.className}
           statusLabel={status.label}
-          score={getAverage(student).toFixed(2)}
-          maxScore={isConcours ? 200 : undefined}
+          text={text}
         />
         <ResultCard onOpenRanking={onOpenRanking} resultBanner={resultBanner} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
       </div>
