@@ -4,24 +4,35 @@ const file = "app/page.jsx";
 let source = readFileSync(file, "utf8");
 const original = source;
 
-function replaceFunction(name, next) {
-  const marker = `function ${name}(`;
-  const start = source.indexOf(marker);
-  if (start < 0) return false;
-  const bodyStart = source.indexOf("{", start);
-  if (bodyStart < 0) return false;
-  let depth = 0;
-  for (let i = bodyStart; i < source.length; i += 1) {
-    const char = source[i];
-    if (char === "{") depth += 1;
-    if (char === "}") depth -= 1;
-    if (depth === 0) {
-      source = source.slice(0, start) + next + source.slice(i + 1);
-      return true;
+function replaceNamedFunction(name, next) {
+  for (const marker of [`async function ${name}(`, `function ${name}(`]) {
+    const start = source.indexOf(marker);
+    if (start < 0) continue;
+    const bodyStart = source.indexOf("{", start);
+    if (bodyStart < 0) continue;
+    let depth = 0;
+    for (let i = bodyStart; i < source.length; i += 1) {
+      const char = source[i];
+      if (char === "{") depth += 1;
+      if (char === "}") depth -= 1;
+      if (depth === 0) {
+        source = source.slice(0, start) + next + source.slice(i + 1);
+        return true;
+      }
     }
   }
   return false;
 }
+
+source = source.replace(
+  `\n\n  const compactDetails = details.filter(([label]) => label !== text.id && label !== (text.exam || "المسابقة"));\n\n  useEffect(() => {`,
+  `\n\n  useEffect(() => {`
+);
+
+source = source.replace(
+  `<PremiumHomeView\n      homepageBanner={homepageBanner}`,
+  `<PremiumHomeView\n      content={content}\n      homepageBanner={homepageBanner}`
+);
 
 const rankingMemoOld = `  const rankingStudents = useMemo(() => {
     if (!rankingTarget) return [];
@@ -72,20 +83,11 @@ const openRankingNew = `  async function openRanking(field, value, label) {
       setExamLoading(false);
     }
   }`;
-replaceFunction("openRanking", openRankingNew);
-
-const resetMarkers = [
-  "setMatches([]);\n    setError(\"\");\n    setMessage(\"\");",
-  "setMatches([]);\n    setSelectedStudent(null);\n    setResultPageOpen(false);\n    setError(\"\");\n    setMessage(\"\");"
-];
-for (const marker of resetMarkers) {
-  const replacement = marker.replace('setMessage("");', 'setMessage("");\n    setRankingRows([]);');
-  if (source.includes(marker) && !source.includes(replacement)) source = source.replace(marker, replacement);
-}
+replaceNamedFunction("openRanking", openRankingNew);
 
 if (source !== original) {
   writeFileSync(file, source, "utf8");
-  console.log("Vercel ranking stage fixed.");
+  console.log("Ranking stage fixed.");
 } else {
-  console.log("No Vercel ranking stage changes needed.");
+  console.log("No ranking stage changes needed.");
 }
