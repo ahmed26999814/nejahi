@@ -1101,13 +1101,6 @@ export default function HomePage() {
     };
   }, []);
 
-  loadAnalyticsViews();
-
-  return () => {
-    ignore = true;
-  };
-}, []);
-
   useEffect(() => {
     const favicon = contentValue(siteContent, "favicon");
     if (!favicon) return;
