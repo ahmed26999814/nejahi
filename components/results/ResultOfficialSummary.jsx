@@ -1,4 +1,4 @@
-import { AwardIcon, HashIcon, InfoIcon } from "../common/icons";
+import { AwardIcon, HashIcon } from "../common/icons";
 import { ScoreBadge, StatusBadge } from "./ResultDesignKit";
 import VerificationBadge from "./VerificationBadge";
 
