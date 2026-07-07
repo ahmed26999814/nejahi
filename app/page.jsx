@@ -27,6 +27,15 @@ const TABLE_BY_SOURCE = {
   excellence_1as: EXCELLENCE_1AS_TABLE,
 };
 
+const ANALYTICS_VIEW_LIMIT = 20;
+const ANALYTICS_VIEW_NAMES = {
+  bac: { stats: "bac_stats", regionStats: "bac_region_stats", schoolStats: "bac_school_stats", trackStats: "bac_track_stats", topStudents: "bac_top_students" },
+  brevet: { stats: "brevet_stats", regionStats: "brevet_region_stats", schoolStats: "brevet_school_stats", topStudents: "brevet_top_students" },
+  concours: { stats: "concours_stats", regionStats: "concours_region_stats", moughataaStats: "concours_moughataa_stats", schoolStats: "concours_school_stats", topStudents: "concours_top_students" },
+  excellence_1as: { stats: "excellence_1as_stats", regionStats: "excellence_1as_region_stats", topStudents: "excellence_1as_top_students" },
+  bac_session: { stats: "bac_session2_stats", regionStats: "bac_session2_region_stats", trackStats: "bac_session2_track_stats", topStudents: "bac_session2_top_students" },
+};
+
 const actionButtonClass = cva("action-button", {
   variants: {
     variant: {
@@ -579,6 +588,116 @@ async function fetchView(viewName, limit = 100) {
   );
 }
 
+
+async function fetchOptionalView(viewName, limit = 100) {
+  if (!viewName) return [];
+  try {
+    return await fetchView(viewName, limit);
+  } catch (error) {
+    console.warn(`[MauriResults Optional View Missing] ${viewName}`, error);
+    return [];
+  }
+}
+
+function numberValue(value) {
+  const normalized = String(value ?? "").replace(",", ".").trim();
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeStatsRow(row, { labelKey, isConcours = false } = {}) {
+  const total = numberValue(row.total_students ?? row.total);
+  const passed = isConcours ? 0 : numberValue(row.passed);
+  const highest = numberValue(row.highest_score ?? row.highest);
+  const average = numberValue(row.average_score ?? row.average);
+  return {
+    label: cleanText(row[labelKey] ?? row.label ?? "غير محدد") || "غير محدد",
+    total,
+    passed,
+    highest,
+    average,
+    isConcours,
+    passRate: total ? (passed / total) * 100 : 0,
+  };
+}
+
+function normalizeStatsRows(rows, options = {}) {
+  const isConcours = !!options.isConcours;
+  return (rows || [])
+    .map((row) => normalizeStatsRow(row, options))
+    .filter((row) => row.label && row.total > 0)
+    .sort((a, b) => {
+      if (isConcours) return b.total - a.total || b.average - a.average;
+      return b.passed - a.passed || b.total - a.total || b.average - a.average;
+    })
+    .slice(0, ANALYTICS_VIEW_LIMIT);
+}
+
+function normalizeViewStats(row, source) {
+  const isConcours = source === "concours";
+  return {
+    total: numberValue(row?.total_students ?? row?.total),
+    passed: isConcours ? 0 : numberValue(row?.passed),
+    failed: isConcours ? 0 : numberValue(row?.failed),
+    highest: numberValue(row?.highest_score ?? row?.highest),
+    average: numberValue(row?.average_score ?? row?.average),
+    isConcours,
+  };
+}
+
+function normalizeTopStudent(row, source, index = 0) {
+  const id = String(row.numero ?? row.id ?? row.NODOSS ?? row.Numero ?? "").trim();
+  const score = numberValue(row.average_score ?? row.total_score ?? row.MOD ?? row.Mgex ?? row["Moy Bac_Session"] ?? row.Moyenne_Bepc);
+  const student = {
+    id,
+    name: cleanText(row.name ?? row.NOM ?? row.NOM_AR ?? row.Nom ?? "اسم غير متوفر"),
+    track: cleanText(row.track ?? row.serie ?? row.SERIE ?? row.TYPE ?? (source === "concours" ? "كونكور" : "غير محددة")),
+    MOD: score,
+    kr: cleanText(row.decision ?? row.Decision ?? ""),
+    wl: cleanText(row.wilaya ?? row.WILAYA ?? row.Wilaya_AR ?? row.WL ?? ""),
+    moughataa: cleanText(row.moughataa ?? row.MOUGHATAA_AR ?? row.MD ?? ""),
+    ms: cleanText(row.school ?? row.Ecole ?? row.Ecole_AR ?? row.Etablissement_AR ?? row.MS ?? ""),
+    centre: cleanText(row.center ?? row.Centre ?? row.CENTRE_AR ?? row["Centre Examen_AR"] ?? ""),
+    totalScore: source === "concours" ? score : undefined,
+    source,
+    rank: index + 1,
+    originalIndex: index,
+  };
+  return student.id ? student : null;
+}
+
+function groupTopStudentsByTrackFromViews(students, { showTrackGroups = true, selectedTrack = "", allowTrackFilter = false, text = UI_TEXT.ar } = {}) {
+  const pool = selectedTrack && allowTrackFilter
+    ? students.filter((student) => student.track === selectedTrack)
+    : students;
+
+  if (!showTrackGroups) {
+    const top = [...pool].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex).slice(0, 3);
+    return top.length ? [{ track: text.toppers, students: top }] : [];
+  }
+
+  return [...new Set(pool.map((student) => cleanText(student.track)).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "ar"))
+    .map((track) => ({
+      track,
+      students: pool
+        .filter((student) => student.track === track)
+        .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex)
+        .slice(0, 3),
+    }))
+    .filter((group) => group.students.length > 0);
+}
+
+function analyticsModeOptions(source, text = UI_TEXT.ar) {
+  const moughataas = text.moughataas || "حسب المقاطعات";
+  if (source === "bac") return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }];
+  if (source === "brevet") return [{ id: "region", label: text.byRegions }, { id: "school", label: text.bySchools }];
+  if (source === "concours") return [{ id: "region", label: text.byRegions }, { id: "moughataa", label: moughataas }];
+  if (source === "excellence_1as") return [{ id: "region", label: text.byRegions }];
+  if (source === "bac_session") return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }];
+  return [];
+}
+
 async function fetchSiteContent() {
   try {
     const rows = await supabaseRequest({
@@ -1034,8 +1153,8 @@ function summarizeStudents(students, field) {
       isConcours,
       passRate: group.total ? (group.passed / group.total) * 100 : 0,
     }))
-    .sort((a, b) => b.total - a.total || b.average - a.average)
-    .slice(0, 10);
+    .sort((a, b) => isConcours ? (b.total - a.total || b.average - a.average) : (b.passed - a.passed || b.total - a.total || b.average - a.average))
+    .slice(0, ANALYTICS_VIEW_LIMIT);
 }
 
 function groupStudentsByTrack(students) {
@@ -1074,6 +1193,7 @@ export default function HomePage() {
   const [activeView, setActiveView] = useState("home");
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedTopperTrack, setSelectedTopperTrack] = useState("");
+  const [analyticsMode, setAnalyticsMode] = useState("");
   const [siteContent, setSiteContent] = useState({});
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
@@ -1101,127 +1221,33 @@ export default function HomePage() {
     };
   }, []);
 
+
   useEffect(() => {
     let ignore = false;
 
-    function numberFrom(row, ...keys) {
-      for (const key of keys) {
-        const value = row?.[key];
-        if (value !== undefined && value !== null && value !== "") {
-          const numeric = Number(String(value).replace(",", "."));
-          return Number.isFinite(numeric) ? numeric : 0;
-        }
-      }
-      return 0;
-    }
-
-    function mapStats(rows, isConcours = false) {
-      const row = rows?.[0] || {};
-      return {
-        total: numberFrom(row, "total_students", "total"),
-        passed: isConcours ? 0 : numberFrom(row, "passed"),
-        failed: isConcours ? 0 : numberFrom(row, "failed"),
-        highest: numberFrom(row, "highest_score", "highest"),
-        average: numberFrom(row, "average_score", "average"),
-        isConcours,
-      };
-    }
-
-    function mapRows(rows, labelKey, isConcours = false) {
-      return (rows || []).map((row) => {
-        const total = numberFrom(row, "total_students", "total");
-        const passed = isConcours ? 0 : numberFrom(row, "passed");
-        return {
-          label: cleanText(row?.[labelKey]) || "غير محدد",
-          total,
-          passed,
-          failed: isConcours ? 0 : numberFrom(row, "failed"),
-          highest: numberFrom(row, "highest_score", "highest"),
-          average: numberFrom(row, "average_score", "average"),
-          isConcours,
-          passRate: !isConcours && total ? (passed / total) * 100 : 0,
-        };
-      });
-    }
-
-    async function fetchViewSafe(viewName, limit = 100) {
-      try {
-        return await fetchView(viewName, limit);
-      } catch (error) {
-        console.warn(`[MauriResults Analytics View Missing] ${viewName}`, error);
-        return [];
-      }
-    }
-
     async function loadAnalyticsViews() {
-      try {
-        const [
-          bacStats,
-          bacRegions,
-          bacSchools,
-          bacTracks,
-          brevetStats,
-          brevetRegions,
-          bacSessionStats,
-          bacSessionRegions,
-          excellenceStats,
-          excellenceRegions,
-          concoursStats,
-          concoursRegions,
-          concoursSchools,
-        ] = await Promise.all([
-          fetchViewSafe("bac_stats", 1),
-          fetchViewSafe("bac_region_stats", 100),
-          fetchViewSafe("bac_school_stats", 100),
-          fetchViewSafe("bac_track_stats", 100),
-          fetchViewSafe("brevet_stats", 1),
-          fetchViewSafe("brevet_region_stats", 100),
-          fetchViewSafe("bac_session2_stats", 1),
-          fetchViewSafe("bac_session2_region_stats", 100),
-          fetchViewSafe("excellence_1as_stats", 1),
-          fetchViewSafe("excellence_1as_region_stats", 100),
-          fetchViewSafe("concours_stats", 1),
-          fetchViewSafe("concours_region_stats", 100),
-          fetchViewSafe("concours_school_stats", 100),
+      const entries = await Promise.all(Object.entries(ANALYTICS_VIEW_NAMES).map(async ([source, views]) => {
+        const [statsRows, regionRows, schoolRows, trackRows, moughataaRows, topRows] = await Promise.all([
+          fetchOptionalView(views.stats, 1),
+          fetchOptionalView(views.regionStats, 100),
+          fetchOptionalView(views.schoolStats, 100),
+          fetchOptionalView(views.trackStats, 100),
+          fetchOptionalView(views.moughataaStats, 100),
+          fetchOptionalView(views.topStudents, 100),
         ]);
+        const isConcours = source === "concours";
+        const topStudents = topRows.map((row, index) => normalizeTopStudent(row, source, index)).filter(Boolean);
+        return [source, {
+          stats: normalizeViewStats(statsRows?.[0], source),
+          regionStats: normalizeStatsRows(regionRows, { labelKey: "wilaya", isConcours }),
+          schoolStats: normalizeStatsRows(schoolRows, { labelKey: "school", isConcours }),
+          trackStats: normalizeStatsRows(trackRows, { labelKey: "track", isConcours }),
+          moughataaStats: normalizeStatsRows(moughataaRows, { labelKey: "moughataa", isConcours }),
+          topStudents,
+        }];
+      }));
 
-        if (ignore) return;
-
-        setAnalyticsViews({
-          bac: {
-            stats: mapStats(bacStats),
-            regionStats: mapRows(bacRegions, "wilaya"),
-            schoolStats: mapRows(bacSchools, "school"),
-            trackStats: mapRows(bacTracks, "track"),
-          },
-          brevet: {
-            stats: mapStats(brevetStats),
-            regionStats: mapRows(brevetRegions, "wilaya"),
-            schoolStats: [],
-            trackStats: [],
-          },
-          bac_session: {
-            stats: mapStats(bacSessionStats),
-            regionStats: mapRows(bacSessionRegions, "wilaya"),
-            schoolStats: [],
-            trackStats: [],
-          },
-          excellence_1as: {
-            stats: mapStats(excellenceStats),
-            regionStats: mapRows(excellenceRegions, "wilaya"),
-            schoolStats: [],
-            trackStats: [],
-          },
-          concours: {
-            stats: mapStats(concoursStats, true),
-            regionStats: mapRows(concoursRegions, "wilaya", true),
-            schoolStats: mapRows(concoursSchools, "school", true),
-            trackStats: [],
-          },
-        });
-      } catch (error) {
-        console.error("[MauriResults Analytics Views Error]", error);
-      }
+      if (!ignore) setAnalyticsViews(Object.fromEntries(entries));
     }
 
     loadAnalyticsViews();
@@ -1271,7 +1297,6 @@ export default function HomePage() {
     localStorage.setItem("mauriresults-lang", nextLang);
   }
 
-  const stats = useMemo(() => calculateStats(students), [students]);
   const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
   const activeStudents = selectedExam?.source === "brevet"
     ? brevetStudents
@@ -1283,6 +1308,7 @@ export default function HomePage() {
           ? excellenceStudents
           : students;
   const text = UI_TEXT[lang];
+  const homeStats = useMemo(() => analyticsViews.bac?.stats || calculateStats(students), [analyticsViews.bac?.stats, students]);
   const rankingStudents = useMemo(() => {
     if (!rankingTarget) return [];
     const target = normalizeComparable(rankingTarget.value);
@@ -1299,23 +1325,31 @@ export default function HomePage() {
     if (!showTopperTrackSelector) return [];
     return [...new Set(searchPool.map((student) => cleanText(student.track)).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
   }, [searchPool, showTopperTrackSelector]);
+  const viewsReady = Object.keys(analyticsViews).length > 0;
   const viewStats = analyticsViews[selectedExam?.source] || {};
-  const activeStats = useMemo(() => {
-    return viewStats.stats || calculateStats(searchPool);
-  }, [viewStats, searchPool]);
-
-  const activeRegionStats = useMemo(() => {
-    return viewStats.regionStats || summarizeStudents(searchPool, "wl");
-  }, [viewStats, searchPool]);
-
+  const analyticsOptions = useMemo(() => analyticsModeOptions(selectedExam?.source, text), [selectedExam?.source, text]);
+  const activeAnalyticsMode = analyticsOptions.some((option) => option.id === analyticsMode) ? analyticsMode : analyticsOptions[0]?.id || "";
+  const activeStats = useMemo(() => viewStats.stats || calculateStats(searchPool), [viewStats, searchPool]);
+  const activeRegionStats = useMemo(() => viewStats.regionStats || summarizeStudents(searchPool, "wl"), [viewStats, searchPool]);
   const activeTrackStats = useMemo(() => {
-    if (viewStats.trackStats) return viewStats.trackStats;
+    if (viewStats.trackStats?.length) return viewStats.trackStats;
     return showTrackGroups ? summarizeStudents(searchPool, "track") : [];
   }, [viewStats, searchPool, showTrackGroups]);
-
-  const activeSchoolStats = useMemo(() => {
-    return viewStats.schoolStats || summarizeStudents(searchPool, "ms");
-  }, [viewStats, searchPool]);
+  const activeSchoolStats = useMemo(() => viewStats.schoolStats || summarizeStudents(searchPool, "ms"), [viewStats, searchPool]);
+  const activeMoughataaStats = useMemo(() => viewStats.moughataaStats || summarizeStudents(searchPool, "moughataa"), [viewStats, searchPool]);
+  const selectedAnalyticsRows = activeAnalyticsMode === "track"
+    ? activeTrackStats
+    : activeAnalyticsMode === "school"
+      ? activeSchoolStats
+      : activeAnalyticsMode === "moughataa"
+        ? activeMoughataaStats
+        : activeRegionStats;
+  const selectedAnalyticsTitle = analyticsOptions.find((option) => option.id === activeAnalyticsMode)?.label || text.byRegions;
+  const selectedAnalyticsIcon = activeAnalyticsMode === "track"
+    ? <BookIcon />
+    : activeAnalyticsMode === "school"
+      ? <SchoolIcon />
+      : <MapIcon />;
   const suggestions = useMemo(() => {
     const value = cleanText(query).toLowerCase();
     if (!selectedExam?.available || selectedExam.source === "concours" || value.length < 2 || resultPageOpen || matches.length) return [];
@@ -1324,27 +1358,14 @@ export default function HomePage() {
       .slice(0, 5);
   }, [matches.length, query, resultPageOpen, searchPool, selectedExam]);
   const topperGroups = useMemo(() => {
-    if (!showTrackGroups) {
-      const students = [...searchPool]
-        .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex)
-        .slice(0, 3);
-      return students.length ? [{ track: text.toppers, students }] : [];
-    }
-
-    const pool = selectedTopperTrack && showTopperTrackSelector
-      ? searchPool.filter((student) => student.track === selectedTopperTrack)
-      : searchPool;
-
-    return [...new Set(pool.map((student) => student.track).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"))
-      .map((track) => ({
-        track,
-        students: pool
-          .filter((student) => student.track === track)
-          .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex)
-          .slice(0, 3),
-      }))
-      .filter((group) => group.students.length > 0);
-  }, [searchPool, selectedTopperTrack, showTopperTrackSelector, showTrackGroups, text.toppers]);
+    const topStudents = viewStats.topStudents?.length ? viewStats.topStudents : searchPool;
+    return groupTopStudentsByTrackFromViews(topStudents, {
+      showTrackGroups,
+      selectedTrack: selectedTopperTrack,
+      allowTrackFilter: showTopperTrackSelector,
+      text,
+    });
+  }, [viewStats, searchPool, selectedTopperTrack, showTopperTrackSelector, showTrackGroups, text]);
 
   function showStudent(student) {
     const known = activeStudents.find((item) => item.id === student.id);
@@ -1485,7 +1506,7 @@ export default function HomePage() {
     if (view !== "result") setResultPageOpen(false);
     window.history.pushState({ view }, "", view === "home" ? window.location.pathname : `#${view}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-    if (view === "toppers" && selectedExam) {
+    if (view === "exam" && selectedExam) {
       await loadExamData(selectedExam);
     }
   }
@@ -1529,8 +1550,7 @@ export default function HomePage() {
     setResultPageOpen(false);
     setError("");
     setMessage("");
-    if (activeView === "analytics") return;
-    await loadExamData(exam);
+    setAnalyticsMode("");
   }
 
   async function openRanking(field, value, label) {
@@ -1579,7 +1599,7 @@ export default function HomePage() {
           selectedExam={selectedExam}
           selectedExamId={selectedExamId}
           setQuery={setQuery}
-          stats={stats}
+          stats={homeStats}
           suggestions={suggestions}
           text={text}
         />
@@ -1587,8 +1607,8 @@ export default function HomePage() {
 
       {activeView === "year" && <YearPage lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
       {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
-      {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={dashboardLoading || examLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
-      {activeView === "analytics" && <AnalyticsPage lang={lang} loading={dashboardLoading || examLoading} onSelectExam={selectExamForSection} regionStats={activeRegionStats} schoolStats={activeSchoolStats} selectedExam={selectedExam} selectedExamId={selectedExamId} showTrackGroups={showTrackGroups} stats={activeStats} text={text} trackStats={activeTrackStats} />}
+      {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={!viewsReady} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
+      {activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} lang={lang} loading={!viewsReady} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience content={siteContent} lang={lang} onOpenRanking={openRanking} resultBanner={imageAsset(siteContent, "result_card_image")} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
@@ -1915,7 +1935,7 @@ function ToppersPage({ groups, lang, loading, onSelect, onSelectExam, onSelectTr
   );
 }
 
-function AnalyticsPage({ lang, loading, onSelectExam, regionStats, schoolStats, selectedExam, selectedExamId, showTrackGroups, stats, text, trackStats }) {
+function AnalyticsPage({ analyticsMode, analyticsOptions, lang, loading, onSelectAnalyticsMode, onSelectExam, rows, selectedExam, selectedExamId, stats, tableIcon, tableTitle, text }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.analytics} title={text.analyticsTitle} icon={<ChartIcon />} />
@@ -1923,15 +1943,23 @@ function AnalyticsPage({ lang, loading, onSelectExam, regionStats, schoolStats, 
       {selectedExam ? (
         <>
           <StatsStrip loading={loading} stats={stats} text={text} />
-          <div className="grid gap-4 lg:grid-cols-2">
-            <StatsTable icon={<MapIcon />} isConcours={stats.isConcours} loading={loading} rows={regionStats} text={text} title={text.byRegions} />
-            {showTrackGroups && <StatsTable icon={<BookIcon />} isConcours={stats.isConcours} loading={loading} rows={trackStats} text={text} title={text.byTracks} />}
-            <div className={showTrackGroups ? "lg:col-span-2" : ""}>
-              <StatsTable icon={<SchoolIcon />} isConcours={stats.isConcours} loading={loading} rows={schoolStats} text={text} title={text.bySchools} />
-            </div>
-          </div>
+          <AnalyticsModeSelector modes={analyticsOptions} selectedMode={analyticsMode} onSelect={onSelectAnalyticsMode} />
+          <StatsTable icon={tableIcon} isConcours={stats.isConcours} loading={loading} rows={rows} text={text} title={tableTitle} />
         </>
       ) : null}
+    </section>
+  );
+}
+
+function AnalyticsModeSelector({ modes, selectedMode, onSelect }) {
+  if (!modes?.length) return null;
+  return (
+    <section className="stream-filter-row animate-slide-up">
+      {modes.map((mode) => (
+        <button className={`stream-filter-chip ${selectedMode === mode.id ? "is-active" : ""}`} onClick={() => onSelect(mode.id)} type="button" key={mode.id}>
+          {mode.label}
+        </button>
+      ))}
     </section>
   );
 }
@@ -1995,7 +2023,7 @@ function StatsRow({ isConcours, row, text }) {
       </div>
       <div className="text-left">
         <strong className="block text-sm font-black text-mauri-green dark:text-mauri-gold">{row.average.toFixed(2)}</strong>
-        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{isConcours ? text.averageScore : `${row.passRate.toFixed(1)}%`}</span>
+        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">{isConcours ? text.averageScore : `${(row.passRate || 0).toFixed(1)}%`}</span>
       </div>
     </article>
   );
