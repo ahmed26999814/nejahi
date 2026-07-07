@@ -1576,24 +1576,24 @@ function ConcoursSearchPanel({ onSelect, text }) {
   const [searching, setSearching] = useState(false);
   const [localError, setLocalError] = useState("");
 
-  useEffect(() => {
-    let ignore = false;
-    setLoading(true);
-    fetchConcoursLocations()
-      .then((rows) => {
-        if (!ignore) setLocations(rows);
-      })
-      .catch((error) => {
-        console.error("[MauriResults Concours Locations Error]", error);
-        if (!ignore) setLocalError(text.connectionError);
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [text.connectionError]);
+  // useEffect(() => {
+   // let ignore = false;
+   // setLoading(true);
+    // fetchConcoursLocations()
+     // .then((rows) => {
+      //  if (!ignore) setLocations(rows);
+     // })
+     // .catch((error) => {
+     //   console.error("[MauriResults Concours Locations Error]", error);
+      //  if (!ignore) setLocalError(text.connectionError);
+     // })
+     // .finally(() => {
+      //  if (!ignore) setLoading(false);
+     // });
+    // return () => {
+     // ignore = true;
+    //};
+  //}, [text.connectionError]);
 
   const wilayas = useMemo(() => uniqueSorted(locations.map((row) => normalizeWilayaLabel(getColumn(row, "WILAYA_AR")))), [locations]);
   const wilayaRawValues = useMemo(() => uniqueSorted(locations
