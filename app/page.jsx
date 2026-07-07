@@ -1101,50 +1101,6 @@ export default function HomePage() {
     };
   }, []);
 
-  useEffect(() => {
-  let ignore = false;
-
-  async function loadAnalyticsViews() {
-    try {
-      const [concoursStats, concoursRegions, concoursSchools] = await Promise.all([
-        fetchView("concours_stats", 1),
-        fetchView("concours_region_stats", 100),
-        fetchView("concours_school_stats", 100),
-      ]);
-
-      if (ignore) return;
-
-      setAnalyticsViews({
-        concours: {
-          stats: {
-            total: Number(concoursStats?.[0]?.total_students || 0),
-            passed: 0,
-            failed: 0,
-            highest: Number(concoursStats?.[0]?.highest_score || 0),
-            average: Number(concoursStats?.[0]?.average_score || 0),
-            isConcours: true,
-          },
-          regionStats: concoursRegions.map((row) => ({
-            label: row.wilaya,
-            total: Number(row.total_students || 0),
-            passed: 0,
-            highest: Number(row.highest_score || 0),
-            average: Number(row.average_score || 0),
-          })),
-          schoolStats: concoursSchools.map((row) => ({
-            label: row.school,
-            total: Number(row.total_students || 0),
-            passed: 0,
-            highest: Number(row.highest_score || 0),
-            average: Number(row.average_score || 0),
-          })),
-        },
-      });
-    } catch (error) {
-      console.error("[MauriResults Analytics Views Error]", error);
-    }
-  }
-
   loadAnalyticsViews();
 
   return () => {
