@@ -100,7 +100,7 @@ svg {
   .admin-card,
   .admin-hero,
   .admin-login {
-    @apply border border-white/70 bg-white/80 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75;
+    @apply border border-white/70 bg-white/[.80] shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75;
   }
 
   .premium-card { @apply rounded-[24px]; }
@@ -114,7 +114,7 @@ svg {
   .lang-button,
   .premium-button,
   .close-result-button {
-    @apply inline-grid place-items-center border border-white/70 bg-white/85 text-slate-700 shadow-soft backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-mauri-green/35 hover:text-mauri-green hover:shadow-premium active:scale-[.97] dark:border-white/10 dark:bg-white/10 dark:text-slate-100;
+    @apply inline-grid place-items-center border border-white/70 bg-white/[.85] text-slate-700 shadow-soft backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-mauri-green/35 hover:text-mauri-green hover:shadow-premium active:scale-[.97] dark:border-white/10 dark:bg-white/[.10] dark:text-slate-100;
   }
 
   .icon-button { @apply h-10 w-10 rounded-full; }
@@ -123,7 +123,7 @@ svg {
   .close-result-button { @apply min-h-10 rounded-[16px] px-3 text-xs font-black; }
 
   .nav-link {
-    @apply rounded-full px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300;
+    @apply rounded-full px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-mauri-green/[.10] hover:text-mauri-green dark:text-slate-300;
   }
 
   .compact-hero {
@@ -145,7 +145,7 @@ svg {
   .hero-logo-glow { @apply relative; }
   .hero-logo-glow::before {
     content: "";
-    @apply absolute inset-3 -z-10 rounded-full bg-mauri-green/15 blur-3xl dark:bg-emerald-300/15;
+    @apply absolute inset-3 -z-10 rounded-full bg-mauri-green/[.15] blur-3xl dark:bg-emerald-300/[.15];
     animation: pulseSoft 3.2s ease-in-out infinite;
   }
 
@@ -178,23 +178,23 @@ svg {
     @apply grid place-items-center;
   }
 
-  .home-highlight span { @apply h-10 w-10 rounded-[15px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300; }
+  .home-highlight span { @apply h-10 w-10 rounded-[15px] bg-mauri-green/[.10] text-mauri-green dark:bg-emerald-300/[.10] dark:text-emerald-300; }
   .home-highlight strong { @apply text-xs font-black text-slate-700 dark:text-slate-200; }
 
   .official-stat-card { @apply grid min-h-24 content-center justify-items-center gap-1 rounded-[24px] p-3 text-center; }
-  .official-stat-card span { @apply h-9 w-9 rounded-[14px] bg-mauri-gold/15 text-yellow-700 dark:text-yellow-300; }
+  .official-stat-card span { @apply h-9 w-9 rounded-[14px] bg-mauri-gold/[.15] text-yellow-700 dark:text-yellow-300; }
   .official-stat-card strong { @apply text-lg font-black text-slate-950 dark:text-white; }
   .official-stat-card small { @apply text-[11px] font-black text-slate-500 dark:text-slate-400; }
 
-  .asset-strip { @apply grid gap-2 rounded-[24px] border border-dashed border-mauri-green/25 bg-white/60 p-3 shadow-soft backdrop-blur-xl dark:border-emerald-300/20 dark:bg-white/[.06] md:grid-cols-5; }
-  .asset-slot { @apply flex items-center gap-2 rounded-[16px] bg-white/70 p-2 text-[11px] font-black text-slate-500 dark:bg-white/[.06] dark:text-slate-300; }
+  .asset-strip { @apply grid gap-2 rounded-[24px] border border-dashed border-mauri-green/25 bg-white/[.60] p-3 shadow-soft backdrop-blur-xl dark:border-emerald-300/20 dark:bg-white/[.06] md:grid-cols-5; }
+  .asset-slot { @apply flex items-center gap-2 rounded-[16px] bg-white/[.70] p-2 text-[11px] font-black text-slate-500 dark:bg-white/[.06] dark:text-slate-300; }
 
   .empty-state {
-    @apply grid justify-items-center gap-4 rounded-[28px] border border-dashed border-mauri-green/25 bg-white/70 p-6 text-center shadow-soft backdrop-blur-xl dark:border-emerald-300/20 dark:bg-white/[.06];
+    @apply grid justify-items-center gap-4 rounded-[28px] border border-dashed border-mauri-green/25 bg-white/[.70] p-6 text-center shadow-soft backdrop-blur-xl dark:border-emerald-300/20 dark:bg-white/[.06];
   }
   .empty-state h2 { @apply text-xl font-black text-slate-950 dark:text-white; }
   .empty-state p { @apply mt-1 max-w-md text-sm font-bold leading-7 text-slate-500 dark:text-slate-300; }
-  .empty-illustration { @apply grid h-24 w-24 place-items-center overflow-hidden rounded-[28px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300; }
+  .empty-illustration { @apply grid h-24 w-24 place-items-center overflow-hidden rounded-[28px] bg-mauri-green/[.10] text-mauri-green dark:bg-emerald-300/[.10] dark:text-emerald-300; }
   .empty-illustration img { @apply h-full w-full object-cover; }
 
   .search-card {
@@ -206,34 +206,34 @@ svg {
   }
 
   .exam-card {
-    @apply relative grid min-h-48 content-start gap-3 overflow-hidden rounded-[28px] border border-white/70 bg-white/85 p-4 text-start shadow-soft backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-mauri-green/30 hover:shadow-premium active:scale-[.98] dark:border-white/10 dark:bg-[#10231a]/75 sm:p-5;
+    @apply relative grid min-h-48 content-start gap-3 overflow-hidden rounded-[28px] border border-white/70 bg-white/[.85] p-4 text-start shadow-soft backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-mauri-green/30 hover:shadow-premium active:scale-[.98] dark:border-white/10 dark:bg-[#10231a]/75 sm:p-5;
     animation: slideUp 520ms cubic-bezier(.2, .8, .2, 1) both;
   }
   .exam-card:hover .exam-card-icon { transform: scale(1.08) rotate(-3deg); }
   .exam-card::before { content: ""; @apply pointer-events-none absolute inset-x-0 top-0 h-1.5; }
-  .exam-card::after { content: ""; @apply pointer-events-none absolute -left-10 -top-12 h-32 w-32 rounded-full bg-white/40 blur-3xl dark:bg-white/5; }
-  .exam-card-green::before, .exam-card-green .exam-card-icon { @apply bg-mauri-green/10 text-mauri-green; }
-  .exam-card-blue::before, .exam-card-blue .exam-card-icon { @apply bg-sky-500/10 text-sky-700 dark:text-sky-300; }
-  .exam-card-gold::before, .exam-card-gold .exam-card-icon { @apply bg-mauri-gold/20 text-yellow-700 dark:text-yellow-300; }
-  .exam-card-purple::before, .exam-card-purple .exam-card-icon { @apply bg-violet-500/10 text-violet-700 dark:text-violet-300; }
-  .exam-card-teal::before, .exam-card-teal .exam-card-icon { @apply bg-teal-500/10 text-teal-700 dark:text-teal-300; }
-  .exam-card-amber::before, .exam-card-amber .exam-card-icon { @apply bg-amber-500/15 text-amber-700 dark:text-amber-300; }
-  .exam-card-rose::before, .exam-card-rose .exam-card-icon { @apply bg-rose-500/10 text-rose-700 dark:text-rose-300; }
-  .exam-card.is-selected { @apply border-mauri-green/40 bg-emerald-50/80 shadow-premium dark:border-emerald-300/25 dark:bg-emerald-300/10; }
+  .exam-card::after { content: ""; @apply pointer-events-none absolute -left-10 -top-12 h-32 w-32 rounded-full bg-white/[.40] blur-3xl dark:bg-white/[.5]; }
+  .exam-card-green::before, .exam-card-green .exam-card-icon { @apply bg-mauri-green/[.10] text-mauri-green; }
+  .exam-card-blue::before, .exam-card-blue .exam-card-icon { @apply bg-sky-500/[.10] text-sky-700 dark:text-sky-300; }
+  .exam-card-gold::before, .exam-card-gold .exam-card-icon { @apply bg-mauri-gold/[.20] text-yellow-700 dark:text-yellow-300; }
+  .exam-card-purple::before, .exam-card-purple .exam-card-icon { @apply bg-violet-500/[.10] text-violet-700 dark:text-violet-300; }
+  .exam-card-teal::before, .exam-card-teal .exam-card-icon { @apply bg-teal-500/[.10] text-teal-700 dark:text-teal-300; }
+  .exam-card-amber::before, .exam-card-amber .exam-card-icon { @apply bg-amber-500/[.15] text-amber-700 dark:text-amber-300; }
+  .exam-card-rose::before, .exam-card-rose .exam-card-icon { @apply bg-rose-500/[.10] text-rose-700 dark:text-rose-300; }
+  .exam-card.is-selected { @apply border-mauri-green/40 bg-emerald-50/80 shadow-premium dark:border-emerald-300/25 dark:bg-emerald-300/[.10]; }
   .exam-card.is-locked { @apply cursor-not-allowed opacity-75 hover:translate-y-0 hover:shadow-soft; }
-  .exam-card-icon { @apply h-14 w-14 rounded-[20px] transition-transform duration-300 dark:bg-white/10; }
-  .soon-badge { @apply absolute left-3 top-3 rounded-full border border-mauri-gold/35 bg-mauri-gold/15 px-2.5 py-1 text-[11px] font-black text-yellow-700 shadow-soft dark:text-yellow-200; }
+  .exam-card-icon { @apply h-14 w-14 rounded-[20px] transition-transform duration-300 dark:bg-white/[.10]; }
+  .soon-badge { @apply absolute left-3 top-3 rounded-full border border-mauri-gold/35 bg-mauri-gold/[.15] px-2.5 py-1 text-[11px] font-black text-yellow-700 shadow-soft dark:text-yellow-200; }
 
-  .select-content { @apply z-[80] max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[18px] border border-mauri-border bg-white/95 p-1 shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95; }
-  .select-item { @apply cursor-pointer rounded-[14px] px-3 py-2 text-sm font-black text-slate-700 outline-none transition data-[highlighted]:bg-mauri-green/10 data-[highlighted]:text-mauri-green dark:text-slate-100; }
+  .select-content { @apply z-[80] max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[18px] border border-mauri-border bg-white/[.95] p-1 shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95; }
+  .select-item { @apply cursor-pointer rounded-[14px] px-3 py-2 text-sm font-black text-slate-700 outline-none transition data-[highlighted]:bg-mauri-green/[.10] data-[highlighted]:text-mauri-green dark:text-slate-100; }
   .exam-selector-trigger { @apply flex min-h-14 w-full items-center justify-between gap-3 rounded-[18px] border border-mauri-border bg-white px-4 text-start text-sm font-black text-slate-800 shadow-soft outline-none transition hover:border-mauri-green/35 focus:border-mauri-green/50 focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-[#172b22] dark:text-white; }
   .exam-selector-trigger svg { @apply h-5 w-5 shrink-0 text-mauri-green dark:text-mauri-gold; }
   .stream-filter-row { @apply -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1; }
-  .stream-filter-chip { @apply min-h-10 shrink-0 snap-start rounded-full border border-mauri-border bg-white px-4 text-xs font-black text-slate-600 shadow-soft transition hover:-translate-y-0.5 hover:border-mauri-green/35 hover:text-mauri-green active:scale-[.98] dark:border-white/10 dark:bg-white/10 dark:text-slate-200; }
+  .stream-filter-chip { @apply min-h-10 shrink-0 snap-start rounded-full border border-mauri-border bg-white px-4 text-xs font-black text-slate-600 shadow-soft transition hover:-translate-y-0.5 hover:border-mauri-green/35 hover:text-mauri-green active:scale-[.98] dark:border-white/10 dark:bg-white/[.10] dark:text-slate-200; }
   .stream-filter-chip.is-active { @apply border-mauri-green/30 bg-mauri-green text-white shadow-[0_14px_32px_rgba(21,128,61,.22)] dark:bg-mauri-gold dark:text-slate-950; }
 
-  .suggestions-panel { @apply absolute inset-x-0 top-[calc(100%+.45rem)] z-50 grid max-h-80 gap-1 overflow-y-auto rounded-[20px] border border-mauri-border bg-white/95 p-2 shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#0c1c14]/95; animation: slideUp 220ms ease both; }
-  .suggestion-item { @apply grid grid-cols-[1fr_auto] items-center gap-3 rounded-[15px] p-3 text-sm font-black transition hover:bg-mauri-green/10 active:scale-[.99]; }
+  .suggestions-panel { @apply absolute inset-x-0 top-[calc(100%+.45rem)] z-50 grid max-h-80 gap-1 overflow-y-auto rounded-[20px] border border-mauri-border bg-white/[.95] p-2 shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#0c1c14]/95; animation: slideUp 220ms ease both; }
+  .suggestion-item { @apply grid grid-cols-[1fr_auto] items-center gap-3 rounded-[15px] p-3 text-sm font-black transition hover:bg-mauri-green/[.10] active:scale-[.99]; }
 
   .stat-chip { @apply flex min-w-[9.5rem] items-center gap-3 rounded-[18px] p-3; }
   .mini-card { @apply flex items-center gap-3 rounded-[18px] p-3; }
@@ -247,27 +247,27 @@ svg {
   .match-row { @apply grid grid-cols-[1fr_auto] items-center gap-3 rounded-[16px] p-3; }
 
   .result-card { @apply rounded-[24px] border border-white/70 bg-white/[.82] p-4 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/95 md:p-5; }
-  .result-modal { @apply relative overflow-hidden rounded-[30px] border border-white/70 bg-white/95 p-4 shadow-premium backdrop-blur-2xl transition hover:shadow-[0_28px_90px_rgba(15,23,42,.14)] dark:border-white/10 dark:bg-[#10231a]/[.88] md:p-6; animation: zoomIn 460ms cubic-bezier(.2, .8, .2, 1) both; }
+  .result-modal { @apply relative overflow-hidden rounded-[30px] border border-white/70 bg-white/[.95] p-4 shadow-premium backdrop-blur-2xl transition hover:shadow-[0_28px_90px_rgba(15,23,42,.14)] dark:border-white/10 dark:bg-[#10231a]/[.88] md:p-6; animation: zoomIn 460ms cubic-bezier(.2, .8, .2, 1) both; }
   .result-modal::before { content: ""; @apply pointer-events-none absolute inset-x-0 top-0 h-1.5; }
   .result-modal-header { @apply relative z-10 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between; }
-  .student-name-panel { @apply mt-2 rounded-[22px] border border-mauri-green/15 bg-white/80 p-3 shadow-soft dark:border-white/10 dark:bg-[#172b22]; }
+  .student-name-panel { @apply mt-2 rounded-[22px] border border-mauri-green/15 bg-white/[.80] p-3 shadow-soft dark:border-white/10 dark:bg-[#172b22]; }
   .result-page { @apply fixed inset-0 z-[80] grid place-items-center overflow-y-auto px-3 py-4; animation: fadeIn 260ms ease both; }
-  .result-page-backdrop { @apply fixed inset-0 bg-slate-950/80 backdrop-blur-xl; }
+  .result-page-backdrop { @apply fixed inset-0 bg-slate-950/[.80] backdrop-blur-xl; }
   .result-page-shell { @apply relative z-10 grid w-full max-w-4xl gap-3; animation: zoomIn 420ms cubic-bezier(.2, .8, .2, 1) both; }
   .result-official-page { @apply min-h-[calc(100vh-5rem)] content-start; }
   .result-page-header, .official-result-header { @apply flex items-center justify-between gap-3 rounded-[26px] border border-white/70 bg-white/[.92] p-3 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/90; }
   .official-result-header { @apply relative flex-col p-4 sm:flex-row sm:items-center md:p-5; animation: slideUp 520ms cubic-bezier(.2, .8, .2, 1) both; }
   .official-status-stamp { @apply inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-sm font-black shadow-soft; animation: stampPop 620ms cubic-bezier(.18, .9, .2, 1.25) both; }
-  .official-status-stamp.admis { @apply border-green-600/30 bg-green-600/10 text-green-700 dark:text-green-200; }
-  .official-status-stamp.ajourne { @apply border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-100; }
-  .official-status-stamp.sessionnaire { @apply border-mauri-gold/40 bg-mauri-gold/15 text-yellow-700 dark:text-yellow-200; }
+  .official-status-stamp.admis { @apply border-green-600/30 bg-green-600/[.10] text-green-700 dark:text-green-200; }
+  .official-status-stamp.ajourne { @apply border-amber-500/30 bg-amber-500/[.10] text-amber-700 dark:text-amber-100; }
+  .official-status-stamp.sessionnaire { @apply border-mauri-gold/40 bg-mauri-gold/[.15] text-yellow-700 dark:text-yellow-200; }
   .official-status-stamp.absent, .official-status-stamp.unknown { @apply border-slate-400/30 bg-slate-400/10 text-slate-700 dark:text-slate-200; }
-  .result-loading-panel { @apply relative z-10 w-[min(24rem,calc(100%-1rem))] rounded-[28px] border border-white/70 bg-white/95 p-6 text-center shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95; }
-  .result-average { @apply w-fit rounded-[22px] border border-mauri-green/15 bg-white/80 px-5 py-3 text-center shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 dark:border-white/10 dark:bg-white/10; }
+  .result-loading-panel { @apply relative z-10 w-[min(24rem,calc(100%-1rem))] rounded-[28px] border border-white/70 bg-white/[.95] p-6 text-center shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95; }
+  .result-average { @apply w-fit rounded-[22px] border border-mauri-green/15 bg-white/[.80] px-5 py-3 text-center shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 dark:border-white/10 dark:bg-white/[.10]; }
   .success-banner { @apply mt-4 flex items-center gap-2 rounded-[18px] border border-green-600/20 bg-green-50 px-3 py-3 text-sm font-black text-green-800 shadow-soft dark:bg-green-400/10 dark:text-green-200; animation: successPulse 1.6s ease-in-out 2; }
   .failure-note { @apply mt-4 flex items-start gap-2 rounded-[18px] border border-amber-500/20 bg-amber-50/80 px-3 py-3 text-sm font-black leading-6 text-amber-900 shadow-soft backdrop-blur-xl dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100; animation: slideUp 420ms cubic-bezier(.2, .8, .2, 1) both; }
-  .result-phrase { @apply mt-4 flex items-center gap-2 rounded-[18px] border border-mauri-gold/30 bg-mauri-gold/15 px-3 py-3 text-sm font-black leading-6 text-yellow-800 shadow-soft backdrop-blur-xl dark:text-yellow-100; animation: slideUp 420ms cubic-bezier(.2, .8, .2, 1) both; }
-  .result-share-panel { @apply mt-4 grid gap-3 rounded-[20px] border border-mauri-border bg-white/55 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.06] sm:grid-cols-[auto_1fr]; }
+  .result-phrase { @apply mt-4 flex items-center gap-2 rounded-[18px] border border-mauri-gold/30 bg-mauri-gold/[.15] px-3 py-3 text-sm font-black leading-6 text-yellow-800 shadow-soft backdrop-blur-xl dark:text-yellow-100; animation: slideUp 420ms cubic-bezier(.2, .8, .2, 1) both; }
+  .result-share-panel { @apply mt-4 grid gap-3 rounded-[20px] border border-mauri-border bg-white/[.55] p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.06] sm:grid-cols-[auto_1fr]; }
   .qr-card { @apply hidden; }
 
   .result-success { @apply border-green-500/30; box-shadow: 0 24px 80px rgba(34, 197, 94, .18); }
@@ -281,10 +281,10 @@ svg {
   .result-calm { @apply border-amber-400/30; box-shadow: 0 24px 80px rgba(245, 158, 11, .11); }
   .result-calm::before { @apply bg-amber-400; }
   .success-stamp { @apply pointer-events-none absolute left-4 top-20 z-20 rounded-full border-2 border-green-600/70 bg-green-50/80 px-5 py-2 text-lg font-black text-green-700 shadow-premium backdrop-blur-xl dark:border-green-300/50 dark:bg-green-300/10 dark:text-green-200; transform: rotate(-12deg); animation: stampPop 680ms cubic-bezier(.18, .9, .2, 1.25) both, stampGlow 1.8s ease-in-out 700ms 2; }
-  .success-toast { @apply fixed left-1/2 top-20 z-[90] -translate-x-1/2 rounded-full border border-green-500/25 bg-white/90 px-4 py-2 text-sm font-black text-green-700 shadow-premium backdrop-blur-2xl dark:border-green-300/20 dark:bg-[#10231a]/90 dark:text-green-200; animation: toastPop 360ms cubic-bezier(.2, .8, .2, 1) both; }
-  .top-rank-badge { @apply inline-flex items-center gap-1.5 rounded-full border border-mauri-gold/40 bg-mauri-gold/15 px-3 py-1.5 text-xs font-black text-yellow-700 shadow-soft dark:text-yellow-200; }
-  .average-level { @apply mt-4 rounded-[20px] border border-mauri-border bg-white/70 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.08]; }
-  .average-level-track { @apply h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10; }
+  .success-toast { @apply fixed left-1/2 top-20 z-[90] -translate-x-1/2 rounded-full border border-green-500/25 bg-white/[.90] px-4 py-2 text-sm font-black text-green-700 shadow-premium backdrop-blur-2xl dark:border-green-300/20 dark:bg-[#10231a]/90 dark:text-green-200; animation: toastPop 360ms cubic-bezier(.2, .8, .2, 1) both; }
+  .top-rank-badge { @apply inline-flex items-center gap-1.5 rounded-full border border-mauri-gold/40 bg-mauri-gold/[.15] px-3 py-1.5 text-xs font-black text-yellow-700 shadow-soft dark:text-yellow-200; }
+  .average-level { @apply mt-4 rounded-[20px] border border-mauri-border bg-white/[.70] p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.08]; }
+  .average-level-track { @apply h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-white/[.10]; }
   .average-level-track span { @apply block h-full rounded-full; background: linear-gradient(90deg, #f59e0b, #22c55e); animation: levelFill 780ms cubic-bezier(.2, .8, .2, 1) both; }
   .average-level-weak .average-level-track span { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
   .average-level-good .average-level-track span, .average-level-very-good .average-level-track span, .average-level-excellent .average-level-track span { background: linear-gradient(90deg, #15803d, #22c55e, #d4af37); }
@@ -292,15 +292,15 @@ svg {
   .action-button { @apply inline-flex min-h-12 items-center justify-center gap-1.5 rounded-[16px] px-3 text-xs font-black shadow-soft transition hover:-translate-y-0.5 active:scale-[.98]; }
   .developer-button { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[18px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_45px_rgba(21,128,61,.30)] active:scale-[.98]; }
   .footer-banner-image { @apply pointer-events-none absolute inset-0 h-full w-full object-cover opacity-10 saturate-[.75]; }
-  .developer-modal-backdrop { @apply fixed inset-0 z-[90] grid place-items-center bg-slate-950/70 px-3 py-6 backdrop-blur-xl; animation: fadeIn 180ms ease both; }
+  .developer-modal-backdrop { @apply fixed inset-0 z-[90] grid place-items-center bg-slate-950/[.70] px-3 py-6 backdrop-blur-xl; animation: fadeIn 180ms ease both; }
   .developer-modal { @apply relative w-full max-w-md overflow-hidden rounded-[30px] border border-white/15 bg-gradient-to-br from-[#092016] via-mauri-green to-emerald-700 p-6 text-center shadow-[0_30px_90px_rgba(0,0,0,.35)]; }
   .developer-modal-bg { @apply pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[.18] saturate-[.75]; }
-  .developer-modal::before { content: ""; @apply pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-mauri-gold/20 blur-3xl; }
-  .developer-close { @apply absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/10 text-white shadow-soft transition hover:bg-white/20 active:scale-95; }
-  .developer-avatar { @apply relative mx-auto mb-4 grid h-24 w-24 place-items-center overflow-hidden rounded-[28px] border border-white/20 bg-white/15 text-white shadow-premium backdrop-blur-xl; }
+  .developer-modal::before { content: ""; @apply pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-mauri-gold/[.20] blur-3xl; }
+  .developer-close { @apply absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/[.10] text-white shadow-soft transition hover:bg-white/[.20] active:scale-95; }
+  .developer-avatar { @apply relative mx-auto mb-4 grid h-24 w-24 place-items-center overflow-hidden rounded-[28px] border border-white/20 bg-white/[.15] text-white shadow-premium backdrop-blur-xl; }
   .developer-avatar img { @apply h-full w-full object-cover; }
   .developer-avatar svg { @apply h-11 w-11; }
-  .developer-modal-link { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-white/15 bg-white/[.12] px-3 text-xs font-black text-white shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/20 active:scale-[.98]; }
+  .developer-modal-link { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-white/15 bg-white/[.12] px-3 text-xs font-black text-white shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/[.20] active:scale-[.98]; }
   .site-banner { @apply mt-1 overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-premium dark:border-white/10 dark:bg-[#10231a]/75; }
   .site-banner img { @apply block aspect-[16/7] w-full object-cover; }
   .result-modal .site-banner { @apply mt-4 rounded-[22px]; }
@@ -315,17 +315,17 @@ svg {
   .admin-logo { @apply grid h-16 w-16 place-items-center rounded-[22px] bg-gradient-to-br from-mauri-green to-emerald-500 text-lg font-black text-white shadow-[0_18px_40px_rgba(21,128,61,.24)]; }
   .admin-card { @apply grid gap-4 rounded-[28px] p-4 md:p-5; }
   .admin-card-compact { @apply gap-3 rounded-[24px] p-4; }
-  .admin-tabs { @apply flex gap-2 overflow-x-auto rounded-[24px] border border-slate-200/80 bg-white/80 p-2 shadow-soft backdrop-blur-xl; }
-  .admin-tabs button { @apply min-h-11 shrink-0 rounded-[16px] px-4 text-sm font-black text-slate-500 transition hover:bg-mauri-green/10 hover:text-mauri-green; }
+  .admin-tabs { @apply flex gap-2 overflow-x-auto rounded-[24px] border border-slate-200/80 bg-white/[.80] p-2 shadow-soft backdrop-blur-xl; }
+  .admin-tabs button { @apply min-h-11 shrink-0 rounded-[16px] px-4 text-sm font-black text-slate-500 transition hover:bg-mauri-green/[.10] hover:text-mauri-green; }
   .admin-tabs button.is-active { @apply bg-mauri-green text-white shadow-soft; }
   .admin-toggle { @apply shrink-0 rounded-full border border-mauri-border bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-500 shadow-soft transition hover:-translate-y-0.5 active:scale-95 disabled:opacity-60; }
-  .admin-toggle.is-on { @apply border-mauri-green/25 bg-mauri-green/10 text-mauri-green; }
+  .admin-toggle.is-on { @apply border-mauri-green/25 bg-mauri-green/[.10] text-mauri-green; }
   .admin-preview { @apply relative grid aspect-[16/8] place-items-center overflow-hidden rounded-[22px] border border-dashed border-mauri-green/25 bg-emerald-50/60 shadow-soft transition; }
-  .admin-preview.is-dragging { @apply border-mauri-green bg-mauri-green/10 ring-4 ring-mauri-green/10; }
+  .admin-preview.is-dragging { @apply border-mauri-green bg-mauri-green/[.10] ring-4 ring-mauri-green/10; }
   .admin-preview img { @apply h-full w-full object-cover; }
   .admin-empty { @apply grid justify-items-center gap-2 text-sm font-black text-slate-400; }
   .admin-empty svg { @apply h-9 w-9; }
-  .admin-skeleton, .skeleton { @apply bg-slate-200 dark:bg-white/10; animation: pulseSoft 1.2s ease-in-out infinite; }
+  .admin-skeleton, .skeleton { @apply bg-slate-200 dark:bg-white/[.10]; animation: pulseSoft 1.2s ease-in-out infinite; }
   .skeleton { @apply rounded-full; }
   .admin-progress { @apply absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-l from-mauri-green to-mauri-gold transition-all; }
   .admin-field { @apply grid gap-1.5; }
@@ -336,14 +336,14 @@ svg {
 
   .hero-surface { @apply pointer-events-none absolute inset-0 -z-10; background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(248,250,248,1)), linear-gradient(135deg, rgba(21,128,61,.08), transparent 42%), linear-gradient(225deg, rgba(212,175,55,.08), transparent 44%); }
   .dark .hero-surface { background: linear-gradient(180deg, rgba(7,19,13,.94), rgba(7,19,13,1)), linear-gradient(135deg, rgba(16,185,129,.12), transparent 42%), linear-gradient(225deg, rgba(212,175,55,.09), transparent 44%); }
-  .topper-card { @apply grid min-h-[20rem] content-between gap-5 rounded-[22px] border border-white/70 bg-white/80 p-5 shadow-soft backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:shadow-premium dark:border-white/10 dark:bg-[#10231a]/75; }
+  .topper-card { @apply grid min-h-[20rem] content-between gap-5 rounded-[22px] border border-white/70 bg-white/[.80] p-5 shadow-soft backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:shadow-premium dark:border-white/10 dark:bg-[#10231a]/75; }
   .ripple-button { @apply relative isolate overflow-hidden; }
   .ripple-button::after { content: ""; @apply pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300; background: radial-gradient(circle at center, rgba(255,255,255,.34), transparent 42%); transform: scale(.35); }
   .ripple-button:active::after { @apply opacity-100 duration-75; transform: scale(1.15); }
   .status-badge { @apply inline-flex w-fit max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold; }
-  .status-badge.admis { @apply border-green-600/30 bg-green-600/10 text-green-700 dark:text-green-300; }
-  .status-badge.sessionnaire { @apply border-mauri-gold/40 bg-mauri-gold/15 text-yellow-700 dark:text-yellow-300; }
-  .status-badge.ajourne { @apply border-red-600/30 bg-red-600/10 text-red-600 dark:text-red-300; }
+  .status-badge.admis { @apply border-green-600/30 bg-green-600/[.10] text-green-700 dark:text-green-300; }
+  .status-badge.sessionnaire { @apply border-mauri-gold/40 bg-mauri-gold/[.15] text-yellow-700 dark:text-yellow-300; }
+  .status-badge.ajourne { @apply border-red-600/30 bg-red-600/[.10] text-red-600 dark:text-red-300; }
   .status-badge.absent, .status-badge.unknown { @apply border-slate-400/30 bg-slate-400/10 text-slate-600 dark:text-slate-300; }
   .confetti-layer { @apply pointer-events-none absolute inset-0 overflow-hidden; }
   .confetti-layer span { --x: calc((var(--i) * 37) % 100); @apply absolute top-0 h-2 w-1 rounded-full; left: calc(var(--x) * 1%); background: hsl(calc(var(--i) * 38), 80%, 55%); animation: confettiFall 1.8s ease-out both; animation-delay: calc(var(--i) * 55ms); }
