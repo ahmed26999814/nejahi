@@ -4,26 +4,12 @@ const file = "app/page.jsx";
 let source = readFileSync(file, "utf8");
 const original = source;
 
-const helperAnchor = `async function fetchConcoursFilteredResults(field, value) {
-  const columnByField = {
-    wl: "WILAYA_AR",
-    moughataa: "MOUGHATAA_AR",
-    centre: "Centre Examen_AR",
-    ms: "Ecole_AR",
-    track: "TYPE",
-  };
-  const column = columnByField[field];
-  if (!column || !value) return [];
-  const filterValue = field === "wl"
-    ? postgrestInFilter(concoursWilayaQueryValues(value))
-    : `;
-
 if (!source.includes("async function fetchFastRankingResults(")) {
   const start = source.indexOf("async function fetchConcoursFilteredResults(field, value)");
   const end = source.indexOf("async function searchConcoursByLocation", start);
   if (start >= 0 && end > start) {
     const concoursFunction = source.slice(start, end);
-    const fastFunction = `${concoursFunction}
+    const fastFunction = concoursFunction + `
 async function fetchFastRankingResults(source, field, value) {
   if (!source || !field || !value) return [];
   if (source === "concours") return fetchConcoursFilteredResults(field, value);
@@ -59,7 +45,7 @@ async function fetchFastRankingResults(source, field, value) {
   while (true) {
     const batch = await supabaseRequest({
       select: "*",
-      [column]: `eq.${escapePostgrestValue(value)}`,
+      [column]: "eq." + escapePostgrestValue(value),
       limit: PAGE_SIZE,
       offset: from,
     }, config.table);
@@ -99,12 +85,14 @@ const newRankingMemo = `  const rankingStudents = useMemo(() => {
   }, [activeStudents, rankingRows, rankingTarget]);`;
 if (source.includes(oldRankingMemo)) source = source.replace(oldRankingMemo, newRankingMemo);
 
-for (const marker of [
+const resetMarkers = [
   "setSelectedStudent(null);\n    setResultPageOpen(false);\n    setError(\"\");\n    setMessage(\"\");",
   "setSelectedStudent(null);\n    setResultPageOpen(false);\n    setError(\"\");\n    setMessage(\"\");\n    setAnalyticsMode(\"\");"
-]) {
-  if (source.includes(marker) && !source.includes(marker.replace('setMessage("");', 'setMessage("");\n    setRankingRows([]);'))) {
-    source = source.replace(marker, marker.replace('setMessage("");', 'setMessage("");\n    setRankingRows([]);'));
+];
+for (const marker of resetMarkers) {
+  const replacement = marker.replace('setMessage("");', 'setMessage("");\n    setRankingRows([]);');
+  if (source.includes(marker) && !source.includes(replacement)) {
+    source = source.replace(marker, replacement);
   }
 }
 
