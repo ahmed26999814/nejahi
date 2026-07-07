@@ -14,3 +14,4 @@ export function CheckCircleIcon() { return <svg viewBox="0 0 24 24"><circle cx="
 export function InfoIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><path d="M12 8h.01" /></svg>; }
 export function ArrowUpIcon() { return <svg viewBox="0 0 24 24"><path d="m6 15 6-6 6 6" /></svg>; }
 export function FilterIcon() { return <svg viewBox="0 0 24 24"><path d="M4 5h16" /><path d="M7 12h10" /><path d="M10 19h4" /></svg>; }
+export function HashIcon() { return <svg viewBox="0 0 24 24"><path d="M5 9h14M4 15h14M10 3 8 21M16 3l-2 18" /></svg>; }
