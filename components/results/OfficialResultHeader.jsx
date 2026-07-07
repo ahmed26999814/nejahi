@@ -1,6 +1,7 @@
 import LogoMark from "../common/LogoMark";
 import { contentValue } from "../common/content";
 import { StatusBadge } from "./ResultDesignKit";
+import VerificationBadge from "./VerificationBadge";
 
 export default function OfficialResultHeader({ content, status, text, verificationCode }) {
   return (
@@ -10,7 +11,9 @@ export default function OfficialResultHeader({ content, status, text, verificati
         <div className="min-w-0">
           <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">MauriResults</p>
           <h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl">{text?.officialResult || "بطاقة النتيجة الرسمية"}</h1>
-          <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{text?.verification || "رقم التحقق"}: {verificationCode}</p>
+          <div className="mt-2">
+            <VerificationBadge label={text?.verification || "رقم التحقق"} value={verificationCode} />
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
