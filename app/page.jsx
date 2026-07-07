@@ -1572,7 +1572,7 @@ function ConcoursSearchPanel({ onSelect, text }) {
   const [centre, setCentre] = useState("");
   const [number, setNumber] = useState("");
   const [locations, setLocations] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [localError, setLocalError] = useState("");
 
