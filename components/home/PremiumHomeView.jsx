@@ -1,6 +1,11 @@
 "use client";
 
 import PremiumHero from "../hero/Hero";
+import BackToTopButton from "../ui/BackToTopButton";
+import ScrollProgress from "../ui/ScrollProgress";
+import FAQSection from "./FAQSection";
+import FeaturedStatistics from "./FeaturedStatistics";
+import TestimonialsSection from "./TestimonialsSection";
 
 function metricValue(value) {
   const number = Number(value);
@@ -63,6 +68,7 @@ export default function PremiumHomeView({ homepageBanner, lang = "ar", onSelectY
 
   return (
     <section className="app-shell grid gap-6 py-4 md:gap-8 md:py-8">
+      <ScrollProgress />
       <PremiumHero
         eyebrow="MauriResults"
         title={text.heroTitle}
@@ -74,6 +80,8 @@ export default function PremiumHomeView({ homepageBanner, lang = "ar", onSelectY
         exploreLabel={text.chooseExam || "اختر المسابقة"}
       />
 
+      <FeaturedStatistics stats={stats} text={text} />
+
       <section className="grid gap-2 text-start">
         <span className="text-xs font-black text-mauri-green dark:text-mauri-gold">{text.chooseExam}</span>
         <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">{text.yearPageTitle}</h2>
@@ -81,7 +89,10 @@ export default function PremiumHomeView({ homepageBanner, lang = "ar", onSelectY
       </section>
 
       <PremiumYearCards lang={lang} onSelectYear={onSelectYear} text={text} yearCards={yearCards} />
+      <TestimonialsSection />
+      <FAQSection />
       <PremiumSiteBanner asset={homepageBanner} />
+      <BackToTopButton />
     </section>
   );
 }
