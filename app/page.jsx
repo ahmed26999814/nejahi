@@ -7,7 +7,7 @@ import BottomNav from "../components/layout/BottomNav";
 import FloatingActionButton from "../components/ui/FloatingActionButton";
 import { CandidateProfileCard, StatusBadge } from "../components/results/ResultDesignKit";
 import Footer from "../components/layout/Footer";
-import Header from "../components/layout/Header";
+import Header from "../components/layout/PremiumHeader";
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
