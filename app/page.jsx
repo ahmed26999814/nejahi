@@ -1130,7 +1130,20 @@ export default function HomePage() {
     localStorage.setItem("mauriresults-lang", nextLang);
   }
 
-  const stats = useMemo(() => calculateStats(students), [students]);
+   const stats = useMemo(() => {
+  if (selectedExam?.source === "concours") {
+    return calculateStats(concoursStudents);
+  }
+
+  return {
+    total: students.length || activeStudents.length || 0,
+    passed: activeStudents.filter((student) => getOfficialStatus(student.kr).className === "admis").length,
+    failed: activeStudents.filter((student) => getOfficialStatus(student.kr).className === "ajourne").length,
+    highest: 0,
+    average: 0,
+    isConcours: false,
+  };
+}, [students.length, activeStudents, selectedExam, concoursStudents]);, [students]);
   const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
   const activeStudents = selectedExam?.source === "brevet"
     ? brevetStudents
@@ -1158,7 +1171,7 @@ export default function HomePage() {
     if (!showTopperTrackSelector) return [];
     return [...new Set(searchPool.map((student) => cleanText(student.track)).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
   }, [searchPool, showTopperTrackSelector]);
-  const activeStats = useMemo(() => calculateStats(searchPool), [searchPool]);
+  const activeStats = useMemo(() => calculateStats(searchPool.slice(0, 1000)), [searchPool]);;
   const activeRegionStats = useMemo(() => summarizeStudents(searchPool, "wl"), [searchPool]);
   const activeTrackStats = useMemo(() => showTrackGroups ? summarizeStudents(searchPool, "track") : [], [searchPool, showTrackGroups]);
   const activeSchoolStats = useMemo(() => summarizeStudents(searchPool, "ms"), [searchPool]);
