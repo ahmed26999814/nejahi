@@ -2,7 +2,6 @@
 
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
-import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useMemo, useState } from "react";
 import { FaFacebookF, FaTelegram, FaWhatsapp } from "react-icons/fa6";
 import * as Select from "@radix-ui/react-select";
@@ -698,6 +697,32 @@ function analyticsModeOptions(source, text = UI_TEXT.ar) {
   return [];
 }
 
+async function fetchAnalyticsViewSet(source) {
+  const views = ANALYTICS_VIEW_NAMES[source];
+  if (!views) return null;
+
+  const [statsRows, regionRows, schoolRows, trackRows, moughataaRows, topRows] = await Promise.all([
+    fetchOptionalView(views.stats, 1),
+    fetchOptionalView(views.regionStats, 100),
+    fetchOptionalView(views.schoolStats, 100),
+    fetchOptionalView(views.trackStats, 100),
+    fetchOptionalView(views.moughataaStats, 100),
+    fetchOptionalView(views.topStudents, 100),
+  ]);
+
+  const isConcours = source === "concours";
+  const topStudents = topRows.map((row, index) => normalizeTopStudent(row, source, index)).filter(Boolean);
+
+  return {
+    stats: normalizeViewStats(statsRows?.[0], source),
+    regionStats: normalizeStatsRows(regionRows, { labelKey: "wilaya", isConcours }),
+    schoolStats: normalizeStatsRows(schoolRows, { labelKey: "school", isConcours }),
+    trackStats: normalizeStatsRows(trackRows, { labelKey: "track", isConcours }),
+    moughataaStats: normalizeStatsRows(moughataaRows, { labelKey: "moughataa", isConcours }),
+    topStudents,
+  };
+}
+
 async function fetchSiteContent() {
   try {
     const rows = await supabaseRequest({
@@ -1198,6 +1223,7 @@ export default function HomePage() {
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
   const [analyticsViews, setAnalyticsViews] = useState({});
+  const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});
 
   useEffect(() => {
     const saved = localStorage.getItem("mauriresults-theme");
@@ -1222,40 +1248,28 @@ export default function HomePage() {
   }, []);
 
 
-  useEffect(() => {
-    let ignore = false;
+  async function loadAnalyticsSource(source) {
+    if (!source || analyticsViews[source] || analyticsLoadingSources[source]) return;
 
-    async function loadAnalyticsViews() {
-      const entries = await Promise.all(Object.entries(ANALYTICS_VIEW_NAMES).map(async ([source, views]) => {
-        const [statsRows, regionRows, schoolRows, trackRows, moughataaRows, topRows] = await Promise.all([
-          fetchOptionalView(views.stats, 1),
-          fetchOptionalView(views.regionStats, 100),
-          fetchOptionalView(views.schoolStats, 100),
-          fetchOptionalView(views.trackStats, 100),
-          fetchOptionalView(views.moughataaStats, 100),
-          fetchOptionalView(views.topStudents, 100),
-        ]);
-        const isConcours = source === "concours";
-        const topStudents = topRows.map((row, index) => normalizeTopStudent(row, source, index)).filter(Boolean);
-        return [source, {
-          stats: normalizeViewStats(statsRows?.[0], source),
-          regionStats: normalizeStatsRows(regionRows, { labelKey: "wilaya", isConcours }),
-          schoolStats: normalizeStatsRows(schoolRows, { labelKey: "school", isConcours }),
-          trackStats: normalizeStatsRows(trackRows, { labelKey: "track", isConcours }),
-          moughataaStats: normalizeStatsRows(moughataaRows, { labelKey: "moughataa", isConcours }),
-          topStudents,
-        }];
-      }));
-
-      if (!ignore) setAnalyticsViews(Object.fromEntries(entries));
+    setAnalyticsLoadingSources((current) => ({ ...current, [source]: true }));
+    try {
+      const data = await fetchAnalyticsViewSet(source);
+      if (!data) return;
+      setAnalyticsViews((current) => current[source] ? current : { ...current, [source]: data });
+    } catch (error) {
+      console.error(`[MauriResults Analytics Source Error] ${source}`, error);
+    } finally {
+      setAnalyticsLoadingSources((current) => ({ ...current, [source]: false }));
     }
+  }
 
-    loadAnalyticsViews();
-
-    return () => {
-      ignore = true;
-    };
+  useEffect(() => {
+    loadAnalyticsSource("bac");
   }, []);
+
+  useEffect(() => {
+    if (selectedExam?.source) loadAnalyticsSource(selectedExam.source);
+  }, [selectedExam?.source]);
 
   useEffect(() => {
     const favicon = contentValue(siteContent, "favicon");
@@ -1326,6 +1340,8 @@ export default function HomePage() {
     return [...new Set(searchPool.map((student) => cleanText(student.track)).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
   }, [searchPool, showTopperTrackSelector]);
   const viewsReady = Object.keys(analyticsViews).length > 0;
+  const selectedSourceViewsReady = selectedExam?.source ? !!analyticsViews[selectedExam.source] : viewsReady;
+  const selectedSourceLoading = selectedExam?.source ? !!analyticsLoadingSources[selectedExam.source] && !selectedSourceViewsReady : !viewsReady;
   const viewStats = analyticsViews[selectedExam?.source] || {};
   const analyticsOptions = useMemo(() => analyticsModeOptions(selectedExam?.source, text), [selectedExam?.source, text]);
   const activeAnalyticsMode = analyticsOptions.some((option) => option.id === analyticsMode) ? analyticsMode : analyticsOptions[0]?.id || "";
@@ -1535,6 +1551,7 @@ export default function HomePage() {
     setError("");
     setMessage("");
     setActiveView("exam");
+    loadAnalyticsSource(exam.source);
     window.history.pushState({ view: "exam" }, "", `#${exam.id}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
 
@@ -1551,6 +1568,7 @@ export default function HomePage() {
     setError("");
     setMessage("");
     setAnalyticsMode("");
+    loadAnalyticsSource(exam.source);
   }
 
   async function openRanking(field, value, label) {
@@ -1607,8 +1625,8 @@ export default function HomePage() {
 
       {activeView === "year" && <YearPage lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
       {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
-      {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={!viewsReady} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
-      {activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} lang={lang} loading={!viewsReady} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}
+      {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={selectedSourceLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
+      {activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} lang={lang} loading={selectedSourceLoading} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience content={siteContent} lang={lang} onOpenRanking={openRanking} resultBanner={imageAsset(siteContent, "result_card_image")} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
@@ -2288,16 +2306,11 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
         <ActionButton icon={<PrinterIcon />} label={text.print} onClick={() => window.print()} variant="light" />
       </div>
       <SiteBanner asset={resultBanner} />
-      <div className="result-share-panel">
-        <div className="qr-card" aria-label="QR Code">
-          <QRCodeSVG value={resultUrl} size={96} bgColor="transparent" fgColor="#15803D" level="M" />
-        </div>
-        <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
-          <ActionButton icon={<HashIcon />} label={text.copyLink} onClick={() => { navigator.clipboard?.writeText(resultUrl); toast.success(text.copiedShare); }} variant="light" />
-          <ActionButton icon={<FaWhatsapp />} label={text.whatsapp} onClick={() => window.open(`https://wa.me/?text=${encodedText}%0A${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
-          <ActionButton icon={<FaFacebookF />} label={text.facebook} onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
-          <ActionButton icon={<FaTelegram />} label={text.telegram} onClick={() => window.open(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`, "_blank", "noopener,noreferrer")} variant="light" />
-        </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <ActionButton icon={<HashIcon />} label={text.copyLink} onClick={() => { navigator.clipboard?.writeText(resultUrl); toast.success(text.copiedShare); }} variant="light" />
+        <ActionButton icon={<FaWhatsapp />} label={text.whatsapp} onClick={() => window.open(`https://wa.me/?text=${encodedText}%0A${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
+        <ActionButton icon={<FaFacebookF />} label={text.facebook} onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
+        <ActionButton icon={<FaTelegram />} label={text.telegram} onClick={() => window.open(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`, "_blank", "noopener,noreferrer")} variant="light" />
       </div>
     </article>
   );
