@@ -5,7 +5,7 @@ import AnalyticsPage from "../components/analytics/AnalyticsPage";
 import SearchPanel from "../components/search/SearchPanel";
 import BottomNav from "../components/layout/BottomNav";
 import FloatingActionButton from "../components/ui/FloatingActionButton";
-import { CandidateProfileCard, StatusBadge } from "../components/results/ResultDesignKit";
+import { CandidateProfileCard, ResultDetailsGrid, StatusBadge } from "../components/results/ResultDesignKit";
 import ResultOfficialSummary from "../components/results/ResultOfficialSummary";
 import Footer from "../components/layout/Footer";
 import Header from "../components/layout/PremiumHeader";
