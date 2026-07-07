@@ -2,6 +2,7 @@
 
 import PremiumHomeView from "../components/home/PremiumHomeView";
 import BottomNav from "../components/layout/BottomNav";
+import FloatingActionButton from "../components/ui/FloatingActionButton";
 import Footer from "../components/layout/Footer";
 import Header from "../components/layout/Header";
 import { cva } from "class-variance-authority";
@@ -1636,6 +1637,7 @@ export default function HomePage() {
       {activeView === "result" && selectedStudent && <ResultExperience content={siteContent} lang={lang} onOpenRanking={openRanking} resultBanner={imageAsset(siteContent, "result_card_image")} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
       {activeView === "home" && <Footer content={siteContent} text={text} />}
+      <FloatingActionButton onNavigate={openView} text={text} />
       <BottomNav activeView={activeView} onNavigate={openView} text={text} />
       <Toaster richColors position="top-center" dir="rtl" toastOptions={{ duration: 4200 }} />
       {resultLoading && <ResultLoadingOverlay text={text} />}
