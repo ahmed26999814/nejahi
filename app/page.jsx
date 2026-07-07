@@ -1225,6 +1225,8 @@ export default function HomePage() {
   const [analyticsViews, setAnalyticsViews] = useState({});
   const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});
 
+  const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
+
   useEffect(() => {
     const saved = localStorage.getItem("mauriresults-theme");
     const savedLang = localStorage.getItem("mauriresults-lang");
@@ -1311,7 +1313,6 @@ export default function HomePage() {
     localStorage.setItem("mauriresults-lang", nextLang);
   }
 
-  const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
   const activeStudents = selectedExam?.source === "brevet"
     ? brevetStudents
     : selectedExam?.source === "bac_session"
