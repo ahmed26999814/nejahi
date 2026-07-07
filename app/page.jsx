@@ -1102,6 +1102,136 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    let ignore = false;
+
+    function numberFrom(row, ...keys) {
+      for (const key of keys) {
+        const value = row?.[key];
+        if (value !== undefined && value !== null && value !== "") {
+          const numeric = Number(String(value).replace(",", "."));
+          return Number.isFinite(numeric) ? numeric : 0;
+        }
+      }
+      return 0;
+    }
+
+    function mapStats(rows, isConcours = false) {
+      const row = rows?.[0] || {};
+      return {
+        total: numberFrom(row, "total_students", "total"),
+        passed: isConcours ? 0 : numberFrom(row, "passed"),
+        failed: isConcours ? 0 : numberFrom(row, "failed"),
+        highest: numberFrom(row, "highest_score", "highest"),
+        average: numberFrom(row, "average_score", "average"),
+        isConcours,
+      };
+    }
+
+    function mapRows(rows, labelKey, isConcours = false) {
+      return (rows || []).map((row) => {
+        const total = numberFrom(row, "total_students", "total");
+        const passed = isConcours ? 0 : numberFrom(row, "passed");
+        return {
+          label: cleanText(row?.[labelKey]) || "غير محدد",
+          total,
+          passed,
+          failed: isConcours ? 0 : numberFrom(row, "failed"),
+          highest: numberFrom(row, "highest_score", "highest"),
+          average: numberFrom(row, "average_score", "average"),
+          isConcours,
+          passRate: !isConcours && total ? (passed / total) * 100 : 0,
+        };
+      });
+    }
+
+    async function fetchViewSafe(viewName, limit = 100) {
+      try {
+        return await fetchView(viewName, limit);
+      } catch (error) {
+        console.warn(`[MauriResults Analytics View Missing] ${viewName}`, error);
+        return [];
+      }
+    }
+
+    async function loadAnalyticsViews() {
+      try {
+        const [
+          bacStats,
+          bacRegions,
+          bacSchools,
+          bacTracks,
+          brevetStats,
+          brevetRegions,
+          bacSessionStats,
+          bacSessionRegions,
+          excellenceStats,
+          excellenceRegions,
+          concoursStats,
+          concoursRegions,
+          concoursSchools,
+        ] = await Promise.all([
+          fetchViewSafe("bac_stats", 1),
+          fetchViewSafe("bac_region_stats", 100),
+          fetchViewSafe("bac_school_stats", 100),
+          fetchViewSafe("bac_track_stats", 100),
+          fetchViewSafe("brevet_stats", 1),
+          fetchViewSafe("brevet_region_stats", 100),
+          fetchViewSafe("bac_session2_stats", 1),
+          fetchViewSafe("bac_session2_region_stats", 100),
+          fetchViewSafe("excellence_1as_stats", 1),
+          fetchViewSafe("excellence_1as_region_stats", 100),
+          fetchViewSafe("concours_stats", 1),
+          fetchViewSafe("concours_region_stats", 100),
+          fetchViewSafe("concours_school_stats", 100),
+        ]);
+
+        if (ignore) return;
+
+        setAnalyticsViews({
+          bac: {
+            stats: mapStats(bacStats),
+            regionStats: mapRows(bacRegions, "wilaya"),
+            schoolStats: mapRows(bacSchools, "school"),
+            trackStats: mapRows(bacTracks, "track"),
+          },
+          brevet: {
+            stats: mapStats(brevetStats),
+            regionStats: mapRows(brevetRegions, "wilaya"),
+            schoolStats: [],
+            trackStats: [],
+          },
+          bac_session: {
+            stats: mapStats(bacSessionStats),
+            regionStats: mapRows(bacSessionRegions, "wilaya"),
+            schoolStats: [],
+            trackStats: [],
+          },
+          excellence_1as: {
+            stats: mapStats(excellenceStats),
+            regionStats: mapRows(excellenceRegions, "wilaya"),
+            schoolStats: [],
+            trackStats: [],
+          },
+          concours: {
+            stats: mapStats(concoursStats, true),
+            regionStats: mapRows(concoursRegions, "wilaya", true),
+            schoolStats: mapRows(concoursSchools, "school", true),
+            trackStats: [],
+          },
+        });
+      } catch (error) {
+        console.error("[MauriResults Analytics Views Error]", error);
+      }
+    }
+
+    loadAnalyticsViews();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const favicon = contentValue(siteContent, "favicon");
     if (!favicon) return;
     let link = document.querySelector("link[rel='icon']");
@@ -1170,23 +1300,22 @@ export default function HomePage() {
     return [...new Set(searchPool.map((student) => cleanText(student.track)).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
   }, [searchPool, showTopperTrackSelector]);
   const viewStats = analyticsViews[selectedExam?.source] || {};
+  const activeStats = useMemo(() => {
+    return viewStats.stats || calculateStats(searchPool);
+  }, [viewStats, searchPool]);
 
-const activeStats = useMemo(() => {
-  return viewStats.stats || calculateStats(searchPool);
-}, [viewStats, searchPool]);
+  const activeRegionStats = useMemo(() => {
+    return viewStats.regionStats || summarizeStudents(searchPool, "wl");
+  }, [viewStats, searchPool]);
 
-const activeRegionStats = useMemo(() => {
-  return viewStats.regionStats || summarizeStudents(searchPool, "wl");
-}, [viewStats, searchPool]);
+  const activeTrackStats = useMemo(() => {
+    if (viewStats.trackStats) return viewStats.trackStats;
+    return showTrackGroups ? summarizeStudents(searchPool, "track") : [];
+  }, [viewStats, searchPool, showTrackGroups]);
 
-const activeTrackStats = useMemo(() => {
-  if (viewStats.trackStats) return viewStats.trackStats;
-  return showTrackGroups ? summarizeStudents(searchPool, "track") : [];
-}, [viewStats, searchPool, showTrackGroups]);
-
-const activeSchoolStats = useMemo(() => {
-  return viewStats.schoolStats || summarizeStudents(searchPool, "ms");
-}, [viewStats, searchPool]);
+  const activeSchoolStats = useMemo(() => {
+    return viewStats.schoolStats || summarizeStudents(searchPool, "ms");
+  }, [viewStats, searchPool]);
   const suggestions = useMemo(() => {
     const value = cleanText(query).toLowerCase();
     if (!selectedExam?.available || selectedExam.source === "concours" || value.length < 2 || resultPageOpen || matches.length) return [];
@@ -1356,7 +1485,7 @@ const activeSchoolStats = useMemo(() => {
     if (view !== "result") setResultPageOpen(false);
     window.history.pushState({ view }, "", view === "home" ? window.location.pathname : `#${view}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-    if ((view === "toppers" || view === "analytics") && selectedExam) {
+    if (view === "toppers" && selectedExam) {
       await loadExamData(selectedExam);
     }
   }
@@ -1400,6 +1529,7 @@ const activeSchoolStats = useMemo(() => {
     setResultPageOpen(false);
     setError("");
     setMessage("");
+    if (activeView === "analytics") return;
     await loadExamData(exam);
   }
 
