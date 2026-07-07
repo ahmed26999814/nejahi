@@ -1651,7 +1651,7 @@ export default function HomePage() {
   );
 }
 
-function HomeView({ homepageBanner, lang, onSelectYear, stats, text }) {
+function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text }) {
   return (
     <PremiumHomeView
       homepageBanner={homepageBanner}
@@ -1759,6 +1759,32 @@ function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, 
 }
 
 function RankingPage({ onSelect, rankingTarget, students, text }) {
+  const orderedStudents = useMemo(() => [...students].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex), [students]);
+
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow={text.ranking} title={rankingTarget.value} description={text.rankingDesc} icon={rankingTarget.field === "ms" ? <SchoolIcon /> : <MapIcon />} />
+      <section className="analytics-panel animate-slide-up">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-base font-black text-slate-950 dark:text-white">{rankingTarget.label}</h2>
+          <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">{orderedStudents.length.toLocaleString("ar-MR")}</span>
+        </div>
+        <div className="grid gap-2">
+          {orderedStudents.length ? orderedStudents.slice(0, 200).map((student, index) => (
+            <button className="ranking-row" key={student.id} onClick={() => onSelect(student)} type="button">
+              <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-sm font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">#{index + 1}</span>
+              <span className="min-w-0 text-start">
+                <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{student.name}</strong>
+                <small className="line-clamp-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.id} - {student.ms || student.moughataa || text.unavailable}</small>
+              </span>
+              <strong className="text-lg font-black text-mauri-green dark:text-mauri-gold">{formatScore(student, text)}</strong>
+            </button>
+          )) : <p className="rounded-[18px] border border-mauri-border bg-white p-4 text-sm font-bold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-400">{text.noData}</p>}
+        </div>
+      </section>
+    </section>
+  );
+}) {
   const trackGroups = useMemo(() => groupStudentsByTrack(students), [students]);
 
   return (
@@ -2178,7 +2204,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
       [text.rank, student.rank ? `#${student.rank}` : text.unavailable, <AwardIcon key="award" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
-      [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />],
+      [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />, () => onOpenRanking?.("moughataa", student.moughataa, text.moughataa)],
     ];
 
   useEffect(() => {
@@ -2205,7 +2231,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        {details.map(([label, value, icon, onClick]) => (
+        {compactDetails.map(([label, value, icon, onClick]) => (
           <InfoTile icon={icon} label={label} onClick={onClick} value={value} key={label} />
         ))}
       </div>
