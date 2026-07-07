@@ -23,7 +23,6 @@ function replaceFunction(name, next) {
   return false;
 }
 
-// Pass site content to the simplified home view so the hero can use the real logo.
 source = source.replace(
   "function HomeView({ homepageBanner, lang, onSelectYear, stats, text })",
   "function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text })"
@@ -33,7 +32,6 @@ source = source.replace(
   `<PremiumHomeView\n      content={content}\n      homepageBanner={homepageBanner}`
 );
 
-// Fix BAC rank: search results used to rank only the returned search rows, so single results appeared rank #1.
 const oldSearchRank = `const rows = await searchResults(value, selectedExam);
       const found = rows.map((student) => {
         const known = searchPool.find((item) => item.id === student.id);
@@ -47,32 +45,24 @@ const newSearchRank = `const rankingPool = selectedExam?.source === "bac" ? awai
       }).filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);`;
 if (source.includes(oldSearchRank)) source = source.replace(oldSearchRank, newSearchRank);
 
-// Let BAC moughataa clicks open a ranked list just like school and wilaya.
 source = source.replace(
   `[text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />],`,
   `[text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />, () => onOpenRanking?.("moughataa", student.moughataa, text.moughataa)],`
 );
 
-// Remove duplicate identity/score header inside ResultCard because ResultOfficialSummary already shows it.
-const oldResultHeader = `      <div className="result-modal-header">
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{text.resultCard}</p>
-          <div className="student-name-panel">
-            <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{text.studentName}</span>
-            <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
-            <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">
-              {isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}
-            </strong>
-          </div>
-        </div>
-      </div>`;
-const newResultHeader = `      <div className="result-modal-header">
+const resultCardMarker = "function ResultCard(";
+const resultCardIndex = source.indexOf(resultCardMarker);
+const resultHeaderStart = resultCardIndex >= 0 ? source.indexOf('      <div className="result-modal-header">', resultCardIndex) : -1;
+const detailsGridStart = resultHeaderStart >= 0 ? source.indexOf('\n\n      <div className="mt-4 grid grid-cols-2 gap-2">', resultHeaderStart) : -1;
+if (resultHeaderStart >= 0 && detailsGridStart > resultHeaderStart) {
+  const newResultHeader = `      <div className="result-modal-header">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{text.resultCard}</p>
           <h2 className="mt-1 text-lg font-black text-slate-950 dark:text-white">تفاصيل النتيجة</h2>
         </div>
       </div>`;
-if (source.includes(oldResultHeader)) source = source.replace(oldResultHeader, newResultHeader);
+  source = source.slice(0, resultHeaderStart) + newResultHeader + source.slice(detailsGridStart);
+}
 
 if (!source.includes("const compactDetails = details.filter")) {
   source = source.replace(
