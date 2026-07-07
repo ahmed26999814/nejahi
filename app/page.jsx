@@ -1,6 +1,9 @@
 ﻿"use client";
 
 import PremiumHomeView from "../components/home/PremiumHomeView";
+import BottomNav from "../components/layout/BottomNav";
+import Footer from "../components/layout/Footer";
+import Header from "../components/layout/Header";
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
@@ -2052,7 +2055,7 @@ function StatsRow({ isConcours, row, text }) {
   );
 }
 
-function Header({ activeView, content, lang, onNavigate, onToggleLang, text, theme, setTheme }) {
+function LegacyHeader({ activeView, content, lang, onNavigate, onToggleLang, text, theme, setTheme }) {
   const navItems = [
     { label: text.home, view: "home" },
     { label: text.toppers, view: "toppers" },
@@ -2512,7 +2515,7 @@ function TopperSkeleton() {
   );
 }
 
-function Footer({ content = {}, text = UI_TEXT.ar }) {
+function LegacyFooter({ content = {}, text = UI_TEXT.ar }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
   const footerBanner = contentValue(content, "footer_banner");
 
@@ -2585,7 +2588,7 @@ function DeveloperModal({ content = {}, onClose, text }) {
   );
 }
 
-function BottomNav({ activeView, onNavigate, text }) {
+function LegacyBottomNav({ activeView, onNavigate, text }) {
   const items = [
     { label: text.home, view: "home", icon: <HomeIcon /> },
     { label: text.search, view: "exam", icon: <SearchIcon /> },
