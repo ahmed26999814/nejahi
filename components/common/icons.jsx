@@ -8,3 +8,9 @@ export function CodeIcon() { return <svg viewBox="0 0 24 24"><path d="m8 9-4 3 4
 export function XIcon() { return <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>; }
 export function UserIcon() { return <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="8" r="4" /></svg>; }
 export function MessageIcon() { return <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" /></svg>; }
+export function MenuIcon() { return <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" /></svg>; }
+export function ChevronDownIcon() { return <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>; }
+export function CheckCircleIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" /></svg>; }
+export function InfoIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><path d="M12 8h.01" /></svg>; }
+export function ArrowUpIcon() { return <svg viewBox="0 0 24 24"><path d="m6 15 6-6 6 6" /></svg>; }
+export function FilterIcon() { return <svg viewBox="0 0 24 24"><path d="M4 5h16" /><path d="M7 12h10" /><path d="M10 19h4" /></svg>; }
