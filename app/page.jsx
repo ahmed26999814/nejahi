@@ -1629,7 +1629,7 @@ export default function HomePage() {
     loadAnalyticsSource(exam.source);
   }
 
-  async   async function openRanking(field, value, label) {
+  async     async function openRanking(field, value, label) {
     if (!value || value === "غير متوفرة" || value === text.unavailable) return;
     setRankingRows([]);
     setRankingTarget({ field, value, label });
