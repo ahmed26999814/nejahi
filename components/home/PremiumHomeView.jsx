@@ -9,20 +9,20 @@ function metricValue(value) {
 
 function PremiumYearCards({ lang, onSelectYear, text, yearCards }) {
   return (
-    <section className="premium-year-grid" aria-label={text.chooseExam || "اختر المسابقة"}>
+    <section className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4" aria-label={text.chooseExam || "اختر المسابقة"}>
       {yearCards.map((year) => (
         <button
-          className={`premium-year-card exam-card-${year.tone} ${year.available ? "" : "is-locked"}`}
+          className={`exam-card exam-card-${year.tone} ${year.available ? "" : "is-locked"}`}
           disabled={!year.available}
           key={year.id}
           onClick={() => onSelectYear(year)}
           type="button"
         >
-          <span className="premium-year-card-glow" aria-hidden="true" />
-          <span className="premium-year-card-icon">{year.icon}</span>
+          <span className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-white/40 blur-3xl dark:bg-white/10" aria-hidden="true" />
+          <span className="exam-card-icon">{year.icon}</span>
           <span className="min-w-0 text-start">
-            <strong>{year.title[lang]}</strong>
-            <small>{year.description[lang]}</small>
+            <strong className="block text-lg font-black text-slate-950 dark:text-white">{year.title[lang]}</strong>
+            <small className="mt-1 block text-sm font-bold leading-6 text-slate-500 dark:text-slate-300">{year.description[lang]}</small>
           </span>
           {!year.available && <span className="soon-badge">{text.soon}</span>}
         </button>
@@ -35,13 +35,14 @@ function PremiumSiteBanner({ asset }) {
   if (!asset?.is_active || !asset?.image_url) return null;
 
   return (
-    <figure className="premium-site-banner">
+    <figure className="overflow-hidden rounded-[30px] border border-white/70 bg-white/[.78] shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75">
       <img
+        className="h-full max-h-[320px] w-full object-cover"
         src={asset.image_url}
         alt=""
         loading="lazy"
         onError={(event) => {
-          event.currentTarget.closest(".premium-site-banner")?.remove();
+          event.currentTarget.closest("figure")?.remove();
         }}
       />
     </figure>
@@ -61,7 +62,7 @@ export default function PremiumHomeView({ homepageBanner, lang = "ar", onSelectY
   ];
 
   return (
-    <section className="app-shell premium-home-view">
+    <section className="app-shell grid gap-6 py-4 md:gap-8 md:py-8">
       <PremiumHero
         eyebrow="MauriResults"
         title={text.heroTitle}
@@ -73,10 +74,10 @@ export default function PremiumHomeView({ homepageBanner, lang = "ar", onSelectY
         exploreLabel={text.chooseExam || "اختر المسابقة"}
       />
 
-      <section className="premium-home-section-header">
-        <span>{text.chooseExam}</span>
-        <h2>{text.yearPageTitle}</h2>
-        <p>{text.yearPageDesc}</p>
+      <section className="grid gap-2 text-start">
+        <span className="text-xs font-black text-mauri-green dark:text-mauri-gold">{text.chooseExam}</span>
+        <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">{text.yearPageTitle}</h2>
+        <p className="max-w-2xl text-sm font-bold leading-7 text-slate-500 dark:text-slate-300">{text.yearPageDesc}</p>
       </section>
 
       <PremiumYearCards lang={lang} onSelectYear={onSelectYear} text={text} yearCards={yearCards} />
