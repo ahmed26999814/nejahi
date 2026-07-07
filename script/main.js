@@ -44,15 +44,19 @@ function bindEvents() {
 
 async function loadDashboardData() {
   try {
+    await renderGlobalStatsFast();
+
     state.students = await fetchAllResults();
     state.statsReady = true;
+
     renderGlobalStats();
     renderTrackOptions();
     renderTrackDashboard();
   } catch (error) {
     console.error(error);
     dom.globalStats.innerHTML = statCard("حالة البيانات", "تعذر التحميل");
-    dom.toppersList.innerHTML = `<p class="form-message error">تعذر تحميل الإحصائيات من Supabase.</p>`;
+    dom.toppersList.innerHTML =
+      `<p class="form-message error">تعذر تحميل الإحصائيات من Supabase.</p>`;
   }
 }
 
@@ -302,6 +306,56 @@ function infoItem(icon, label, value, allowHtml = false) {
       </div>
     </div>
   `;
+}
+
+async function countRows(filters = {}) {
+  const url = new URL(`${SUPABASE.url}/rest/v1/${SUPABASE.table}`);
+
+  url.searchParams.set("select", "id");
+  url.searchParams.set("limit", "1");
+
+  Object.entries(filters).forEach(([key, value]) => {
+    url.searchParams.set(key, `eq.${value}`);
+  });
+
+  const response = await fetch(url, {
+    headers: {
+      apikey: SUPABASE.anonKey,
+      Authorization: `Bearer ${SUPABASE.anonKey}`,
+      Prefer: "count=exact",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load statistics");
+  }
+
+  const range = response.headers.get("content-range");
+  return range ? Number(range.split("/")[1]) : 0;
+}
+
+async function renderGlobalStatsFast() {
+  dom.globalStats.innerHTML = [
+    statCard("عدد الطلاب", "..."),
+    statCard("عدد الناجحين", "..."),
+    statCard("عدد الراسبين", "..."),
+    statCard("أعلى معدل", "..."),
+    statCard("متوسط المعدلات", "...")
+  ].join("");
+
+  const [total, passed, failed] = await Promise.all([
+    countRows(),
+    countRows({ KR: "Admis" }),
+    countRows({ KR: "Ajourné" }),
+  ]);
+
+  dom.globalStats.innerHTML = [
+    statCard("عدد الطلاب", total),
+    statCard("عدد الناجحين", passed),
+    statCard("عدد الراسبين", failed),
+    statCard("أعلى معدل", "يحسب لاحقًا"),
+    statCard("متوسط المعدلات", "يحسب لاحقًا")
+  ].join("");
 }
 
 function renderStatsLoading() {
