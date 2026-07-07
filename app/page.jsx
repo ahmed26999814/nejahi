@@ -1044,6 +1044,53 @@ async function fetchConcoursFilteredResults(field, value) {
   return students;
 }
 
+
+async function fetchFastRankingResults(source, field, value) {
+  if (!source || !field || !value) return [];
+  if (source === "concours") return fetchConcoursFilteredResults(field, value);
+
+  const config = {
+    bac: {
+      table: BAC_TABLE,
+      columns: { wl: "WL", moughataa: "MD", ms: "MS", track: "TS" },
+      prepare: prepareStudents,
+    },
+    brevet: {
+      table: BREVET_TABLE,
+      columns: { wl: "WILAYA", ms: "Ecole", centre: "Centre" },
+      prepare: prepareBrevetStudents,
+    },
+    bac_session: {
+      table: BAC_SESSION_TABLE,
+      columns: { wl: "Wilaya_AR", ms: "Etablissement_AR", centre: "Centre Examen_AR", track: "SERIE" },
+      prepare: prepareBacSessionStudents,
+    },
+    excellence_1as: {
+      table: EXCELLENCE_1AS_TABLE,
+      columns: { wl: "Wilaya_AR", centre: "CENTRE_AR" },
+      prepare: prepareExcellenceStudents,
+    },
+  }[source];
+
+  const column = config?.columns?.[field];
+  if (!config || !column) return [];
+
+  const rows = [];
+  let from = 0;
+  while (true) {
+    const batch = await supabaseRequest({
+      select: "*",
+      [column]: "eq." + escapePostgrestValue(value),
+      limit: PAGE_SIZE,
+      offset: from,
+    }, config.table);
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return config.prepare(rows).sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+}
 async function searchConcoursByLocation({ wilaya, wilayaValues = [], moughataa, centre, number }) {
   const numbers = concoursNumberSearchValues(number);
   const params = {
@@ -1231,6 +1278,7 @@ export default function HomePage() {
   const [siteContent, setSiteContent] = useState({});
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
+  const [rankingRows, setRankingRows] = useState([]);
   const [analyticsViews, setAnalyticsViews] = useState({});
   const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});
 
