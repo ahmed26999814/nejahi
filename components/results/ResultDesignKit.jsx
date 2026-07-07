@@ -1,4 +1,4 @@
-import { AwardIcon, UserIcon } from "../common/icons";
+import { AwardIcon, CheckCircleIcon, InfoIcon, UserIcon } from "../common/icons";
 
 export function StatusBadge({ status = "unknown", label }) {
   const styles = {
@@ -6,11 +6,13 @@ export function StatusBadge({ status = "unknown", label }) {
     sessionnaire: "bg-amber-500/10 text-amber-700 ring-amber-500/20 dark:text-amber-300",
     ajourne: "bg-red-500/10 text-red-700 ring-red-500/20 dark:text-red-300",
     absent: "bg-slate-500/10 text-slate-600 ring-slate-500/20 dark:text-slate-300",
+    calm: "bg-slate-500/10 text-slate-600 ring-slate-500/20 dark:text-slate-300",
     unknown: "bg-mauri-green/10 text-mauri-green ring-mauri-green/20 dark:text-emerald-300",
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black ring-1 ${styles[status] || styles.unknown}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-black ring-1 ${styles[status] || styles.unknown}`}>
+      <CheckCircleIcon />
       {label || status}
     </span>
   );
@@ -30,11 +32,12 @@ export function CandidateProfileCard({ name, id, school, status, statusLabel, sc
   return (
     <article className="relative overflow-hidden rounded-[30px] border border-white/70 bg-white/[.82] p-5 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75">
       <span className="pointer-events-none absolute -left-16 -top-16 h-44 w-44 rounded-full bg-mauri-green/10 blur-3xl" />
+      <span className="pointer-events-none absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-mauri-gold/10 blur-3xl" />
       <div className="flex items-start justify-between gap-3">
         <span className="grid h-12 w-12 place-items-center rounded-[18px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300"><UserIcon /></span>
         <StatusBadge status={status} label={statusLabel} />
       </div>
-      <h3 className="mt-4 text-2xl font-black text-slate-950 dark:text-white">{name}</h3>
+      <h3 className="mt-4 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{name}</h3>
       <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-300">{id} - {school}</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-[.7fr_1fr] sm:items-center">
         <ScoreBadge value={score} max={maxScore} />
@@ -44,5 +47,27 @@ export function CandidateProfileCard({ name, id, school, status, statusLabel, sc
         </div>
       </div>
     </article>
+  );
+}
+
+export function ResultDetailsGrid({ details = [] }) {
+  return (
+    <section className="grid grid-cols-2 gap-2 md:grid-cols-3">
+      {details.map((item) => (
+        <article className="rounded-[20px] border border-white/70 bg-white/[.72] p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.06]" key={item.label}>
+          <span className="grid h-8 w-8 place-items-center rounded-[12px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300"><InfoIcon /></span>
+          <span className="mt-2 block text-[11px] font-black text-slate-500 dark:text-slate-400">{item.label}</span>
+          <strong className="mt-1 block break-words text-sm font-black text-slate-950 dark:text-white">{item.value}</strong>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+export function ResultActionRail({ children }) {
+  return (
+    <div className="grid gap-2 rounded-[26px] border border-white/70 bg-white/[.72] p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.06] sm:grid-cols-4">
+      {children}
+    </div>
   );
 }
