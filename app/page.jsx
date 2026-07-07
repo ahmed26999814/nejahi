@@ -2045,7 +2045,7 @@ function StatsRow({ isConcours, row, text }) {
   );
 }
 
-function Hero({ content, text }) {
+) {
   const heroBackground = contentValue(content, "hero_background");
   const logo = contentValue(content, "logo", "/logo.png");
 
