@@ -52,14 +52,21 @@ export function CandidateProfileCard({ name, id, school, status, statusLabel, sc
 
 export function ResultDetailsGrid({ details = [] }) {
   return (
-    <section className="grid grid-cols-2 gap-2 md:grid-cols-3">
-      {details.map((item) => (
-        <article className="rounded-[20px] border border-white/70 bg-white/[.72] p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/[.06]" key={item.label}>
-          <span className="grid h-8 w-8 place-items-center rounded-[12px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300"><InfoIcon /></span>
-          <span className="mt-2 block text-[11px] font-black text-slate-500 dark:text-slate-400">{item.label}</span>
-          <strong className="mt-1 block break-words text-sm font-black text-slate-950 dark:text-white">{item.value}</strong>
-        </article>
-      ))}
+    <section className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-3">
+      {details.map((item) => {
+        const label = Array.isArray(item) ? item[0] : item.label;
+        const value = Array.isArray(item) ? item[1] : item.value;
+        const icon = Array.isArray(item) ? item[2] : item.icon;
+        const onClick = Array.isArray(item) ? item[3] : item.onClick;
+        const Component = onClick ? "button" : "article";
+        return (
+          <Component className={`rounded-[20px] border border-white/70 bg-white/[.72] p-3 text-start shadow-soft backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-mauri-green/30 dark:border-white/10 dark:bg-white/[.06] ${onClick ? "cursor-pointer" : ""}`} onClick={onClick} type={onClick ? "button" : undefined} key={label}>
+            <span className="grid h-8 w-8 place-items-center rounded-[12px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon || <InfoIcon />}</span>
+            <span className="mt-2 block text-[11px] font-black text-slate-500 dark:text-slate-400">{label}</span>
+            <strong className="mt-1 block break-words text-sm font-black text-slate-950 dark:text-white">{value}</strong>
+          </Component>
+        );
+      })}
     </section>
   );
 }
