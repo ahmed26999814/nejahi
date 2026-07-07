@@ -38,6 +38,23 @@ export function BarChartCard({ title = "Bar Chart", rows = [] }) {
   );
 }
 
+export function PieChartCard({ title = "Pie Chart", value = 68, label = "نسبة النجاح" }) {
+  const p = percent(value);
+  return (
+    <section className="rounded-[30px] border border-white/70 bg-white/[.78] p-5 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75">
+      <h3 className="text-lg font-black text-slate-950 dark:text-white">{title}</h3>
+      <div className="mt-5 grid place-items-center gap-4">
+        <div className="grid h-36 w-36 place-items-center rounded-full shadow-soft" style={{ background: `conic-gradient(#15803d ${p * 3.6}deg, rgba(21,128,61,.10) 0deg)` }}>
+          <div className="grid h-24 w-24 place-items-center rounded-full bg-white text-center shadow-soft dark:bg-[#10231a]">
+            <strong className="text-2xl font-black text-mauri-green dark:text-mauri-gold">{p.toFixed(0)}%</strong>
+            <span className="text-[10px] font-black text-slate-500 dark:text-slate-300">{label}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function LeaderboardCard({ title = "Leaderboard", rows = [] }) {
   return (
     <section className="rounded-[30px] border border-white/70 bg-white/[.78] p-5 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75">
