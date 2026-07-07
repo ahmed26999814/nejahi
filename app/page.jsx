@@ -1629,25 +1629,24 @@ export default function HomePage() {
     loadAnalyticsSource(exam.source);
   }
 
-  async function openRanking(field, value, label) {
-    if (!value || value === "غير متوفرة") return;
-    if (selectedExam?.source === "concours") {
-      setExamLoading(true);
-      try {
-        const rows = await fetchConcoursFilteredResults(field, value);
-        setConcoursStudents(rows);
-      } catch (error) {
-        setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
-      } finally {
-        setExamLoading(false);
-      }
-    } else {
-      await loadExamData(selectedExam);
-    }
+  async   async function openRanking(field, value, label) {
+    if (!value || value === "غير متوفرة" || value === text.unavailable) return;
+    setRankingRows([]);
     setRankingTarget({ field, value, label });
     setActiveView("ranking");
     window.history.pushState({ view: "ranking" }, "", "#ranking");
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+
+    setExamLoading(true);
+    try {
+      const rows = await fetchFastRankingResults(selectedExam?.source, field, value);
+      setRankingRows(rows);
+    } catch (error) {
+      console.error("[MauriResults Ranking Error]", error);
+      setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
+    } finally {
+      setExamLoading(false);
+    }
   }
 
   return (
