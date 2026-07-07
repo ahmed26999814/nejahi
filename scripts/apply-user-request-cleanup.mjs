@@ -64,11 +64,11 @@ if (resultHeaderStart >= 0 && detailsGridStart > resultHeaderStart) {
   source = source.slice(0, resultHeaderStart) + newResultHeader + source.slice(detailsGridStart);
 }
 
-if (!source.includes("const compactDetails = details.filter")) {
-  source = source.replace(
-    `\n\n  useEffect(() => {`,
-    `\n\n  const compactDetails = details.filter(([label]) => label !== text.id && label !== (text.exam || "المسابقة"));\n\n  useEffect(() => {`
-  );
+const nextResultCardIndex = source.indexOf(resultCardMarker);
+const resultUseEffect = nextResultCardIndex >= 0 ? source.indexOf("\n\n  useEffect(() => {", nextResultCardIndex) : -1;
+if (!source.includes("const compactDetails = details.filter") && resultUseEffect > nextResultCardIndex) {
+  const compactCode = `\n\n  const compactDetails = details.filter(([label]) => label !== text.id && label !== (text.exam || "المسابقة"));`;
+  source = source.slice(0, resultUseEffect) + compactCode + source.slice(resultUseEffect);
 }
 source = source.replace("{details.map(([label, value, icon, onClick]) => (", "{compactDetails.map(([label, value, icon, onClick]) => (");
 source = source.replace("<ResultDetailsGrid details={details} />", "<ResultDetailsGrid details={compactDetails} />");
