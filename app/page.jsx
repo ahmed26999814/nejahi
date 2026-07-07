@@ -1639,7 +1639,7 @@ export default function HomePage() {
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience content={siteContent} lang={lang} onOpenRanking={openRanking} resultBanner={imageAsset(siteContent, "result_card_image")} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
-      {activeView === "home" && <Footer content={siteContent} text={text} />}
+      {activeView === "home" && <Footer content={siteContent} onNavigate={openView} text={text} />}
       <FloatingActionButton onNavigate={openView} text={text} />
       <BottomNav activeView={activeView} onNavigate={openView} text={text} />
       <Toaster richColors position="top-center" dir="rtl" toastOptions={{ duration: 4200 }} />
