@@ -127,7 +127,7 @@ svg {
   }
 
   .compact-hero {
-    @apply relative grid items-center gap-5 overflow-hidden rounded-[34px] border border-white/70 bg-white/78 p-5 shadow-premium backdrop-blur-2xl transition duration-300 hover:-translate-y-0.5 dark:border-white/10 dark:bg-[#10231a]/75 md:grid-cols-[1fr_auto] md:p-8;
+    @apply relative grid items-center gap-5 overflow-hidden rounded-[34px] border border-white/70 bg-white/[.78] p-5 shadow-premium backdrop-blur-2xl transition duration-300 hover:-translate-y-0.5 dark:border-white/10 dark:bg-[#10231a]/75 md:grid-cols-[1fr_auto] md:p-8;
   }
 
   .compact-hero::before,
@@ -165,7 +165,7 @@ svg {
   .ranking-row,
   .info-tile,
   .match-row {
-    @apply border border-white/70 bg-white/78 shadow-soft backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-mauri-green/30 hover:shadow-premium active:scale-[.99] dark:border-white/10 dark:bg-white/[.08];
+    @apply border border-white/70 bg-white/[.78] shadow-soft backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-mauri-green/30 hover:shadow-premium active:scale-[.99] dark:border-white/10 dark:bg-white/[.08];
   }
 
   .home-highlight {
@@ -246,7 +246,7 @@ svg {
   .info-tile-clickable { @apply w-full text-start; }
   .match-row { @apply grid grid-cols-[1fr_auto] items-center gap-3 rounded-[16px] p-3; }
 
-  .result-card { @apply rounded-[24px] border border-white/70 bg-white/82 p-4 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/95 md:p-5; }
+  .result-card { @apply rounded-[24px] border border-white/70 bg-white/[.82] p-4 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/95 md:p-5; }
   .result-modal { @apply relative overflow-hidden rounded-[30px] border border-white/70 bg-white/95 p-4 shadow-premium backdrop-blur-2xl transition hover:shadow-[0_28px_90px_rgba(15,23,42,.14)] dark:border-white/10 dark:bg-[#10231a]/[.88] md:p-6; animation: zoomIn 460ms cubic-bezier(.2, .8, .2, 1) both; }
   .result-modal::before { content: ""; @apply pointer-events-none absolute inset-x-0 top-0 h-1.5; }
   .result-modal-header { @apply relative z-10 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between; }
@@ -255,7 +255,7 @@ svg {
   .result-page-backdrop { @apply fixed inset-0 bg-slate-950/80 backdrop-blur-xl; }
   .result-page-shell { @apply relative z-10 grid w-full max-w-4xl gap-3; animation: zoomIn 420ms cubic-bezier(.2, .8, .2, 1) both; }
   .result-official-page { @apply min-h-[calc(100vh-5rem)] content-start; }
-  .result-page-header, .official-result-header { @apply flex items-center justify-between gap-3 rounded-[26px] border border-white/70 bg-white/92 p-3 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/90; }
+  .result-page-header, .official-result-header { @apply flex items-center justify-between gap-3 rounded-[26px] border border-white/70 bg-white/[.92] p-3 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/90; }
   .official-result-header { @apply relative flex-col p-4 sm:flex-row sm:items-center md:p-5; animation: slideUp 520ms cubic-bezier(.2, .8, .2, 1) both; }
   .official-status-stamp { @apply inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-sm font-black shadow-soft; animation: stampPop 620ms cubic-bezier(.18, .9, .2, 1.25) both; }
   .official-status-stamp.admis { @apply border-green-600/30 bg-green-600/10 text-green-700 dark:text-green-200; }
