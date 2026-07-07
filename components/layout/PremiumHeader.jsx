@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import LogoMark from "../common/LogoMark";
 import { contentValue } from "../common/content";
-import { MenuIcon, MoonIcon, SunIcon, XIcon } from "../common/icons";
-import MegaMenu from "./MegaMenu";
+import { MoonIcon, SunIcon } from "../common/icons";
 
 export default function PremiumHeader({ activeView, content, lang, onNavigate, onToggleLang, text, theme, setTheme }) {
-  const [megaOpen, setMegaOpen] = useState(false);
   const navItems = [
     { label: text.home, view: "home" },
     { label: text.toppers, view: "toppers" },
@@ -15,7 +12,6 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
   ];
 
   function go(view) {
-    setMegaOpen(false);
     onNavigate(view);
   }
 
@@ -34,16 +30,12 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
           {navItems.map((item) => (
             <button className={`nav-link ${activeView === item.view ? "bg-mauri-green/10 text-mauri-green" : ""}`} onClick={() => go(item.view)} type="button" key={item.view}>{item.label}</button>
           ))}
-          <button className="nav-link inline-flex items-center gap-2" onClick={() => setMegaOpen(!megaOpen)} type="button"><MenuIcon />Menu</button>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="icon-button h-9 w-9 md:hidden" onClick={() => setMegaOpen(!megaOpen)} type="button" aria-label="القائمة">{megaOpen ? <XIcon /> : <MenuIcon />}</button>
           <button className="icon-button h-9 w-9" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} type="button" aria-label="تبديل الوضع الليلي">{theme === "dark" ? <MoonIcon /> : <SunIcon />}</button>
           <button className="lang-button" onClick={onToggleLang} type="button" aria-label="Changer la langue">{lang === "ar" ? "FR" : "AR"}</button>
         </div>
-
-        {megaOpen && <div className="absolute left-0 right-0 top-[calc(100%+.65rem)] z-50 mx-auto w-full max-w-2xl"><MegaMenu lang={lang} onNavigate={go} /></div>}
       </nav>
     </header>
   );
