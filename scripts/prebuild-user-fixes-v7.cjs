@@ -35,8 +35,87 @@ function replaceFunction(name, next) {
   s = s.slice(0, bounds.start) + next + s.slice(bounds.end);
 }
 
+function replaceOnce(search, replacement) {
+  if (s.includes(search)) s = s.replace(search, replacement);
+}
+
+function insertOnce(anchor, text) {
+  if (!s.includes(text.trim().split("\n")[0])) {
+    const index = s.indexOf(anchor);
+    if (index >= 0) s = s.slice(0, index) + text + s.slice(index);
+  }
+}
+
+// Bac 2026 uploaded from /admin/results uses table bac26 and ranked view bac26_ranked_results.
+replaceOnce(`  bac: BAC_TABLE,\n`, `  bac: BAC_TABLE,\n  bac26: "bac26",\n`);
+
+if (!s.includes('id: "bac-2026"')) {
+  replaceOnce(
+    `  { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },`,
+    `  { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },\n  { id: "bac-2026", title: { ar: "نتائج باكالوريا 2026", fr: "Résultats Bac 2026" }, description: { ar: "نتائج الباكالوريا 2026 المرفوعة من ملف XLSX.", fr: "Résultats du Bac 2026 importés depuis XLSX." }, tone: "green", available: true, source: "bac26", icon: <GraduationIcon /> },`
+  );
+}
+
+replaceOnce(
+  `  { id: "year-2026", title: { ar: "نتائج مسابقات 2026", fr: "Résultats des concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, available: false, tone: "rose", icon: <AwardIcon /> },`,
+  `  { id: "year-2026", title: { ar: "نتائج المسابقات 2026", fr: "Résultats des concours 2026" }, description: { ar: "النتائج الجديدة المرفوعة من لوحة الأدمن.", fr: "Nouveaux résultats importés depuis l'administration." }, available: true, tone: "rose", icon: <AwardIcon /> },`
+);
+
+const prepareBac2026Students = `
+function prepareBac2026Students(rows) {
+  const normalized = rows
+    .map((row, index) => {
+      const track = cleanText(getColumn(row, "SERIE", "Serie_AR", "Serie_FR", "TS") || "غير محددة");
+      return {
+        id: String(getColumn(row, "Num_Bac", "Numero", "NODOSS") ?? "").trim(),
+        name: cleanText(getColumn(row, "NOM_AR", "Nom_FR", "NOM_FR", "NOM") || "اسم غير متوفر"),
+        nameFr: cleanText(getColumn(row, "Nom_FR", "NOM_FR") || ""),
+        nameAr: cleanText(getColumn(row, "NOM_AR") || ""),
+        ts: track,
+        track,
+        MOD: getColumn(row, "Moy_Bac", "MOD", "Moyenne"),
+        rankFromDb: Number(getColumn(row, "rank", "Rank", "RANK")) || null,
+        kr: cleanText(getColumn(row, "Decision", "KR") || ""),
+        wl: cleanText(getColumn(row, "Wilaya_AR", "Wilaya_FR", "WL") || ""),
+        moughataa: "",
+        ms: cleanText(getColumn(row, "Etablissement_AR", "Etablissement_FR", "MS") || ""),
+        centre: cleanText(getColumn(row, "Centre Examen AR", "Centre Examen_AR", "Centre Examen FR", "Centre Examen_FR", "Centre") || ""),
+        birthPlace: cleanText(getColumn(row, "Lieu_AR", "Lieu_FR", "LIEUNN_AR", "LIEUN_FR") || ""),
+        birthDate: cleanText(getColumn(row, "Date Naiss", "DATN") || ""),
+        nationalId: cleanText(getColumn(row, "NNI") || ""),
+        sessionType: "باكالوريا 2026",
+        source: "bac26",
+        originalIndex: index,
+      };
+    })
+    .filter((student) => student.id);
+
+  const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+  sorted.forEach((student, index) => {
+    student.rank = student.rankFromDb || index + 1;
+  });
+
+  return [...new Map(sorted.map((student) => [student.id, student])).values()];
+}
+`;
+insertOnce("function prepareBacSessionStudents", prepareBac2026Students);
+
+replaceOnce(
+  `function examHasTrackGroups(source) {\n  return source === "bac" || source === "bac_session";\n}`,
+  `function examHasTrackGroups(source) {\n  return source === "bac" || source === "bac26" || source === "bac_session";\n}`
+);
+replaceOnce(
+  `if (source === "bac") return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }];`,
+  `if (source === "bac" || source === "bac26") return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }];`
+);
+replaceOnce(
+  `  const showTopperTrackSelector = selectedExam?.source === "bac";`,
+  `  const showTopperTrackSelector = selectedExam?.source === "bac" || selectedExam?.source === "bac26";`
+);
+
 const rankingHelpers = `
 function prepareRowsForSource(source, rows) {
+  if (source === "bac26") return prepareBac2026Students(rows);
   if (source === "brevet") return prepareBrevetStudents(rows);
   if (source === "concours") return prepareConcoursStudents(rows);
   if (source === "bac_session") return prepareBacSessionStudents(rows);
@@ -45,6 +124,7 @@ function prepareRowsForSource(source, rows) {
 }
 
 function sourceRowId(source, row) {
+  if (source === "bac26") return String(getColumn(row, "Num_Bac", "Numero") ?? "").trim();
   if (source === "brevet") return String(getColumn(row, "Num_Bepc", "num_bepc", "NUM_BEPC") ?? "").trim();
   if (source === "concours") return String(getColumn(row, "Numéro_C1AS", "Numero_C1AS") ?? "").trim();
   if (source === "bac_session") return String(getColumn(row, "NODOSS") ?? "").trim();
@@ -65,6 +145,8 @@ function preserveSourceRanks(source, rows, students) {
 
 if (!s.includes("function prepareRowsForSource(source, rows)")) {
   s = s.replace("\nexport default function HomePage() {", `${rankingHelpers}\nexport default function HomePage() {`);
+} else {
+  s = s.replace(/function prepareRowsForSource\(source, rows\) \{[\s\S]*?function preserveSourceRanks\(source, rows, students\) \{[\s\S]*?\n\}/, rankingHelpers.trim());
 }
 
 replaceFunction("searchResults", `async function searchResults(query, exam) {
@@ -137,7 +219,7 @@ replaceFunction("openRanking", `async function openRanking(field, value, label) 
       const data = await response.json();
       const rows = prepareRowsForSource(selectedExam.source, data.rows || []);
 
-      if (selectedExam.source === "bac") setStudents(rows);
+      if (selectedExam.source === "bac" || selectedExam.source === "bac26") setStudents(rows);
       else if (selectedExam.source === "brevet") setBrevetStudents(rows);
       else if (selectedExam.source === "bac_session") setBacSessionStudents(rows);
       else if (selectedExam.source === "concours") setConcoursStudents(rows);
@@ -179,7 +261,7 @@ if (!s.includes('key="decision"')) {
   );
 }
 
-// Show result immediately after search; no artificial 520ms delay.
+// Show result immediately after search; no artificial delay.
 s = s.replace(/\},\s*120\);/g, "}, 20);");
 s = s.replace(/\},\s*520\);/g, "}, 20);");
 
