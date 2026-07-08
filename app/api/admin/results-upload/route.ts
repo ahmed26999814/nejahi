@@ -32,6 +32,12 @@ function safeTableName(value: string) {
   return table;
 }
 
+function safeColumnName(value: string) {
+  const column = String(value || "").replace(/\u0000/g, "").trim();
+  if (!column || column.length > 120) return "";
+  return column;
+}
+
 function cleanCell(value: unknown) {
   if (value == null) return null;
   if (value instanceof Date) return value.toISOString().slice(0, 10);
@@ -102,6 +108,36 @@ async function createUploadTable(table: string, columns: string[]) {
   return { ok: true, status: response.status, data: text ? JSON.parse(text) : null } as const;
 }
 
+async function prepareSpeed(table: string, numberColumn: string, nameColumn: string, scoreColumn: string) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return { ok: false, status: 500, error: "Missing Supabase service role environment variables" } as const;
+  }
+
+  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/prepare_results_table_speed`);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      p_table_name: table,
+      p_number_column: numberColumn || null,
+      p_name_column: nameColumn || null,
+      p_score_column: scoreColumn || null,
+    }),
+  });
+
+  const text = await response.text();
+  if (!response.ok) {
+    return { ok: false, status: response.status, error: text.replace(/\s+/g, " ").slice(0, 700) } as const;
+  }
+
+  return { ok: true, status: response.status, data: text ? JSON.parse(text) : null } as const;
+}
+
 async function insertChunk(table: string, rows: Record<string, unknown>[]) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return { ok: false, status: 500, error: "Missing Supabase service role environment variables" } as const;
@@ -142,6 +178,10 @@ export async function POST(request: Request) {
   const customTable = safeTableName(String(form.get("table") || ""));
   const dryRun = String(form.get("dryRun") || "true") !== "false";
   const createTable = String(form.get("createTable") || "false") === "true";
+  const speedSetup = String(form.get("speedSetup") || "true") !== "false";
+  const numberColumn = safeColumnName(String(form.get("numberColumn") || ""));
+  const nameColumn = safeColumnName(String(form.get("nameColumn") || ""));
+  const scoreColumn = safeColumnName(String(form.get("scoreColumn") || ""));
   const sheetName = String(form.get("sheetName") || "").trim() || undefined;
   const table = customTable || TABLE_BY_SOURCE[source];
 
@@ -168,6 +208,8 @@ export async function POST(request: Request) {
       ok: true,
       dryRun: true,
       createTable,
+      speedSetup,
+      speedColumns: { numberColumn, nameColumn, scoreColumn },
       table,
       source: source || "custom",
       fileName: file.name,
@@ -176,7 +218,7 @@ export async function POST(request: Request) {
       columns,
       previewRows,
       message: createTable
-        ? "Preview only. The table will be created automatically when dryRun=false."
+        ? "Preview only. The table and speed setup will run when dryRun=false."
         : "Preview only. Send dryRun=false to publish rows to Supabase.",
     });
   }
@@ -212,6 +254,29 @@ export async function POST(request: Request) {
     inserted += chunk.length;
   }
 
+  let speedResult: unknown = null;
+  if (speedSetup && (numberColumn || nameColumn || scoreColumn)) {
+    const prepared = await prepareSpeed(table, numberColumn, nameColumn, scoreColumn);
+    if (!prepared.ok) {
+      return json(200, {
+        ok: true,
+        warning: true,
+        dryRun: false,
+        createTable,
+        tableCreated,
+        table,
+        source: source || "custom",
+        fileName: file.name,
+        sheetName: parsed.sheetName,
+        inserted,
+        columns,
+        speedError: prepared.error,
+        hint: "Rows were uploaded, but speed setup failed. Run the prepare_results_table_speed SQL migration in Supabase first, then run speed setup again.",
+      });
+    }
+    speedResult = prepared.data;
+  }
+
   return json(200, {
     ok: true,
     dryRun: false,
@@ -223,6 +288,8 @@ export async function POST(request: Request) {
     sheetName: parsed.sheetName,
     inserted,
     columns,
-    message: tableCreated ? "Table created and results uploaded successfully." : "Results uploaded successfully.",
+    speedSetup,
+    speedResult,
+    message: tableCreated ? "Table created, results uploaded, and speed setup completed." : "Results uploaded successfully.",
   });
 }
