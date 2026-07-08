@@ -16,6 +16,9 @@ type UploadResult = {
   dryRun?: boolean;
   createTable?: boolean;
   tableCreated?: boolean;
+  speedSetup?: boolean;
+  speedResult?: unknown;
+  speedError?: string;
   table?: string;
   fileName?: string;
   sheetName?: string;
@@ -26,6 +29,7 @@ type UploadResult = {
   message?: string;
   error?: string;
   hint?: string;
+  warning?: boolean;
 };
 
 export default function ResultsUploadAdminPage() {
@@ -33,6 +37,10 @@ export default function ResultsUploadAdminPage() {
   const [source, setSource] = useState("custom");
   const [customTable, setCustomTable] = useState("");
   const [sheetName, setSheetName] = useState("");
+  const [numberColumn, setNumberColumn] = useState("");
+  const [nameColumn, setNameColumn] = useState("");
+  const [scoreColumn, setScoreColumn] = useState("");
+  const [speedSetup, setSpeedSetup] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [dryRun, setDryRun] = useState(true);
   const [createTable, setCreateTable] = useState(true);
@@ -50,6 +58,14 @@ export default function ResultsUploadAdminPage() {
   function saveSecret(value: string) {
     setSecret(value);
     localStorage.setItem("mauriresults-admin-secret", value);
+  }
+
+  function setSuggestedColumns(columns: string[] = []) {
+    if (!columns.length) return;
+    const findColumn = (patterns: RegExp[]) => columns.find((column) => patterns.some((pattern) => pattern.test(column))) || "";
+    if (!numberColumn) setNumberColumn(findColumn([/numero/i, /num/i, /nodos/i, /doss/i, /رقم/i]));
+    if (!nameColumn) setNameColumn(findColumn([/^nom/i, /name/i, /اسم/i]));
+    if (!scoreColumn) setScoreColumn(findColumn([/moy/i, /mod/i, /mg/i, /total/i, /score/i, /معدل/i, /مجموع/i]));
   }
 
   async function submitUpload(event: FormEvent<HTMLFormElement>) {
@@ -76,6 +92,10 @@ export default function ResultsUploadAdminPage() {
     form.set("sheetName", sheetName.trim());
     form.set("dryRun", dryRun ? "true" : "false");
     form.set("createTable", isCustom && createTable ? "true" : "false");
+    form.set("speedSetup", speedSetup ? "true" : "false");
+    form.set("numberColumn", numberColumn.trim());
+    form.set("nameColumn", nameColumn.trim());
+    form.set("scoreColumn", scoreColumn.trim());
 
     setLoading(true);
     try {
@@ -86,6 +106,7 @@ export default function ResultsUploadAdminPage() {
       });
       const data = await response.json();
       setResult(data);
+      if (data?.columns?.length) setSuggestedColumns(data.columns);
     } catch (error) {
       setResult({ ok: false, error: String(error) });
     } finally {
@@ -176,6 +197,32 @@ export default function ResultsUploadAdminPage() {
             </label>
           )}
 
+          <section className="grid gap-3 rounded-2xl bg-slate-50 p-4">
+            <label className="flex items-center justify-between gap-3 text-sm font-black">
+              <span>
+                تجهيز السرعة تلقائيًا
+                <span className="block text-xs font-bold text-slate-500">ينشئ فهارس و View للترتيب حتى تظهر النتائج الجديدة بسرعة.</span>
+              </span>
+              <input checked={speedSetup} onChange={(event) => setSpeedSetup(event.target.checked)} type="checkbox" className="h-6 w-6" />
+            </label>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              <label className="grid gap-1 text-xs font-black">
+                عمود رقم المترشح
+                <input value={numberColumn} onChange={(event) => setNumberColumn(event.target.value)} placeholder="Numero" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" />
+              </label>
+              <label className="grid gap-1 text-xs font-black">
+                عمود الاسم
+                <input value={nameColumn} onChange={(event) => setNameColumn(event.target.value)} placeholder="NOM" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" />
+              </label>
+              <label className="grid gap-1 text-xs font-black">
+                عمود المعدل/المجموع
+                <input value={scoreColumn} onChange={(event) => setScoreColumn(event.target.value)} placeholder="MOD أو TOTAL" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" />
+              </label>
+            </div>
+            <p className="text-xs font-bold text-slate-500">بعد المعاينة، ستظهر الأعمدة. اكتب أسماءها كما هي تمامًا قبل النشر.</p>
+          </section>
+
           <label className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-black">
             <span>
               وضع المعاينة فقط
@@ -187,6 +234,7 @@ export default function ResultsUploadAdminPage() {
           <div className="rounded-2xl bg-slate-100 p-3 text-xs font-bold text-slate-600">
             الهدف الحالي: <span dir="ltr" className="font-black text-slate-950">{targetTable || "غير محدد"}</span>
             {isCustom && createTable && <span className="mt-1 block text-emerald-700">سيحاول النظام إنشاء هذا الجدول عند النشر.</span>}
+            {speedSetup && <span className="mt-1 block text-emerald-700">سيتم تجهيز فهارس السرعة و Ranked View بعد رفع النتائج.</span>}
           </div>
 
           <button
@@ -202,6 +250,7 @@ export default function ResultsUploadAdminPage() {
           <section className={`rounded-[28px] border p-4 shadow-2xl ${result.ok ? "border-emerald-300/30 bg-emerald-950/70" : "border-red-300/30 bg-red-950/70"}`}>
             <h2 className="text-lg font-black">{result.ok ? "تمت العملية" : "حدث خطأ"}</h2>
             {result.error && <p className="mt-2 rounded-2xl bg-black/20 p-3 text-sm font-bold text-red-100">{result.error}</p>}
+            {result.speedError && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">تحذير السرعة: {result.speedError}</p>}
             {result.hint && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">{result.hint}</p>}
             {result.message && <p className="mt-2 text-sm font-bold text-slate-200">{result.message}</p>}
             <div className="mt-3 grid gap-2 text-sm font-bold text-slate-200">
@@ -211,6 +260,7 @@ export default function ResultsUploadAdminPage() {
               {typeof result.totalRows === "number" && <p>عدد الصفوف: {result.totalRows.toLocaleString("ar-MR")}</p>}
               {typeof result.inserted === "number" && <p>تم نشر: {result.inserted.toLocaleString("ar-MR")} صف</p>}
               {result.tableCreated && <p>تم إنشاء الجدول تلقائيًا.</p>}
+              {result.speedSetup && <p>تم تجهيز السرعة أو محاولة تجهيزها.</p>}
               {result.columns?.length ? <p>الأعمدة: <span className="text-xs">{result.columns.join("، ")}</span></p> : null}
             </div>
 
