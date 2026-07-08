@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 
 const SOURCES = [
   { value: "bac", label: "الباكالوريا", table: "bac_results" },
@@ -10,6 +11,9 @@ const SOURCES = [
   { value: "excellence_1as", label: "الامتياز الأولى إعدادية", table: "excellence_1as_results" },
   { value: "custom", label: "مسابقة جديدة / جدول مخصص", table: "" },
 ];
+
+const CLIENT_CHUNK_SIZE = 400;
+const MAX_ROWS = 120_000;
 
 type UploadResult = {
   ok?: boolean;
@@ -30,6 +34,13 @@ type UploadResult = {
   error?: string;
   hint?: string;
   warning?: boolean;
+  progress?: string;
+};
+
+type ParsedXlsx = {
+  sheetName: string;
+  rows: Record<string, unknown>[];
+  columns: string[];
 };
 
 function normalizeTableName(value: string) {
@@ -41,6 +52,69 @@ function normalizeTableName(value: string) {
     .replace(/^_+|_+$/g, "");
   if (!normalized) return "";
   return /^[a-z_]/.test(normalized) ? normalized : `results_${normalized}`;
+}
+
+function cleanCell(value: unknown) {
+  if (value == null) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "boolean") return value;
+  const text = String(value).replace(/\u0000/g, "").trim();
+  return text === "" ? null : text;
+}
+
+function cleanColumnName(value: unknown) {
+  return String(value || "").replace(/\u0000/g, "").trim();
+}
+
+function normalizeRow(row: Record<string, unknown>) {
+  const output: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row || {})) {
+    const cleanKey = cleanColumnName(key);
+    if (!cleanKey || cleanKey.startsWith("__EMPTY")) continue;
+    output[cleanKey] = cleanCell(value);
+  }
+  return output;
+}
+
+function inferColumns(rows: Record<string, unknown>[]) {
+  return Array.from(new Set(rows.flatMap((row) => Object.keys(row || {})).map(cleanColumnName).filter(Boolean)));
+}
+
+async function parseXlsxFile(file: File, requestedSheetName?: string): Promise<ParsedXlsx> {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: "array", cellDates: true, dense: false });
+  const sheetName = requestedSheetName && workbook.SheetNames.includes(requestedSheetName)
+    ? requestedSheetName
+    : workbook.SheetNames[0];
+
+  if (!sheetName) return { sheetName: "", rows: [], columns: [] };
+
+  const sheet = workbook.Sheets[sheetName];
+  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null, raw: false });
+  const rows = rawRows
+    .map(normalizeRow)
+    .filter((row) => Object.values(row).some((value) => value !== null && value !== ""));
+
+  return { sheetName, rows, columns: inferColumns(rows) };
+}
+
+function chunkRows(rows: Record<string, unknown>[], size = CLIENT_CHUNK_SIZE) {
+  const chunks: Record<string, unknown>[][] = [];
+  for (let index = 0; index < rows.length; index += size) {
+    chunks.push(rows.slice(index, index + size));
+  }
+  return chunks;
+}
+
+async function readJsonOrText(response: Response) {
+  const text = await response.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { ok: false, error: text.replace(/\s+/g, " ").slice(0, 500) };
+  }
 }
 
 export default function ResultsUploadAdminPage() {
@@ -97,28 +171,122 @@ export default function ResultsUploadAdminPage() {
       return;
     }
 
-    const form = new FormData();
-    form.set("file", file);
-    form.set("source", isCustom ? "" : source);
-    form.set("table", isCustom ? targetTable : "");
-    form.set("sheetName", sheetName.trim());
-    form.set("dryRun", dryRun ? "true" : "false");
-    form.set("createTable", isCustom && createTable ? "true" : "false");
-    form.set("speedSetup", speedSetup ? "true" : "false");
-    form.set("numberColumn", numberColumn.trim());
-    form.set("nameColumn", nameColumn.trim());
-    form.set("scoreColumn", scoreColumn.trim());
-
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/results-upload", {
-        method: "POST",
-        headers: { "x-admin-secret": secret.trim() },
-        body: form,
+      const parsed = await parseXlsxFile(file, sheetName.trim());
+      const rows = parsed.rows;
+      const columns = parsed.columns;
+      setSuggestedColumns(columns);
+
+      if (!rows.length) {
+        setResult({ ok: false, error: "لم يتم العثور على صفوف داخل ملف Excel." });
+        return;
+      }
+      if (rows.length > MAX_ROWS) {
+        setResult({ ok: false, error: `الملف كبير جدًا. الحد الأقصى ${MAX_ROWS.toLocaleString("ar-MR")} صف.` });
+        return;
+      }
+
+      if (dryRun) {
+        setResult({
+          ok: true,
+          dryRun: true,
+          createTable: isCustom && createTable,
+          speedSetup,
+          table: targetTable,
+          fileName: file.name,
+          sheetName: parsed.sheetName,
+          totalRows: rows.length,
+          columns,
+          previewRows: rows.slice(0, 5),
+          message: "تمت قراءة الملف من المتصفح بدون رفع الملف كاملًا. راجع الأعمدة ثم ألغِ وضع المعاينة للنشر.",
+        });
+        return;
+      }
+
+      const chunks = chunkRows(rows);
+      let inserted = 0;
+      let tableCreated = false;
+      let lastResponse: UploadResult = {};
+
+      for (let index = 0; index < chunks.length; index += 1) {
+        const isFirstChunk = index === 0;
+        const isLastChunk = index === chunks.length - 1;
+        setResult({
+          ok: true,
+          table: targetTable,
+          fileName: file.name,
+          sheetName: parsed.sheetName,
+          totalRows: rows.length,
+          inserted,
+          columns,
+          progress: `جاري رفع الدفعة ${index + 1} من ${chunks.length}`,
+        });
+
+        const response = await fetch("/api/admin/results-upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-secret": secret.trim(),
+          },
+          body: JSON.stringify({
+            source: isCustom ? "" : source,
+            table: isCustom ? targetTable : "",
+            rows: chunks[index],
+            columns,
+            createTable: isCustom && createTable && isFirstChunk,
+            speedSetup: speedSetup && isLastChunk,
+            numberColumn: numberColumn.trim(),
+            nameColumn: nameColumn.trim(),
+            scoreColumn: scoreColumn.trim(),
+            isLastChunk,
+            chunkIndex: index + 1,
+            totalChunks: chunks.length,
+            fileName: file.name,
+            sheetName: parsed.sheetName,
+          }),
+        });
+
+        const data = await readJsonOrText(response) as UploadResult;
+        if (!response.ok || data.ok === false) {
+          setResult({
+            ok: false,
+            table: targetTable,
+            fileName: file.name,
+            sheetName: parsed.sheetName,
+            inserted,
+            columns,
+            error: data.error || `HTTP ${response.status}`,
+            hint: data.hint,
+          });
+          return;
+        }
+
+        inserted += Number(data.inserted || chunks[index].length);
+        tableCreated = tableCreated || Boolean(data.tableCreated);
+        lastResponse = data;
+      }
+
+      setResult({
+        ok: true,
+        dryRun: false,
+        createTable: isCustom && createTable,
+        tableCreated,
+        table: targetTable,
+        fileName: file.name,
+        sheetName: parsed.sheetName,
+        totalRows: rows.length,
+        inserted,
+        columns,
+        speedSetup,
+        speedResult: lastResponse.speedResult,
+        speedError: lastResponse.speedError,
+        hint: lastResponse.hint,
+        warning: lastResponse.warning,
+        message: lastResponse.warning
+          ? "تم رفع النتائج، لكن تجهيز السرعة يحتاج مراجعة التحذير."
+          : "تم نشر النتائج على دفعات وتجهيز السرعة بنجاح.",
       });
-      const data = await response.json();
-      setResult(data);
-      if (data?.columns?.length) setSuggestedColumns(data.columns);
     } catch (error) {
       setResult({ ok: false, error: String(error) });
     } finally {
@@ -252,6 +420,7 @@ export default function ResultsUploadAdminPage() {
             الهدف الحالي: <span dir="ltr" className="font-black text-slate-950">{targetTable || "غير محدد"}</span>
             {isCustom && createTable && <span className="mt-1 block text-emerald-700">سيحاول النظام إنشاء هذا الجدول عند النشر.</span>}
             {speedSetup && <span className="mt-1 block text-emerald-700">سيتم تجهيز فهارس السرعة و Ranked View بعد رفع النتائج.</span>}
+            <span className="mt-1 block text-slate-500">الملف يُقرأ داخل المتصفح ثم تُرسل الصفوف على دفعات صغيرة حتى تعمل من الهاتف.</span>
           </div>
 
           <button
@@ -266,6 +435,7 @@ export default function ResultsUploadAdminPage() {
         {result && (
           <section className={`rounded-[28px] border p-4 shadow-2xl ${result.ok ? "border-emerald-300/30 bg-emerald-950/70" : "border-red-300/30 bg-red-950/70"}`}>
             <h2 className="text-lg font-black">{result.ok ? "تمت العملية" : "حدث خطأ"}</h2>
+            {result.progress && <p className="mt-2 rounded-2xl bg-black/20 p-3 text-sm font-bold text-emerald-100">{result.progress}</p>}
             {result.error && <p className="mt-2 rounded-2xl bg-black/20 p-3 text-sm font-bold text-red-100">{result.error}</p>}
             {result.speedError && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">تحذير السرعة: {result.speedError}</p>}
             {result.hint && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">{result.hint}</p>}
