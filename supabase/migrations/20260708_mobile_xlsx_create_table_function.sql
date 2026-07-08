@@ -58,10 +58,14 @@ begin
   execute format('grant select on public.%I to anon, authenticated', clean_table);
   execute format('grant insert, update, delete, select on public.%I to service_role', clean_table);
 
+  -- Force Supabase/PostgREST to see the newly created table immediately.
+  perform pg_notify('pgrst', 'reload schema');
+
   return jsonb_build_object(
     'ok', true,
     'table', clean_table,
-    'columns', clean_columns
+    'columns', clean_columns,
+    'schemaReloadRequested', true
   );
 end;
 $$;
