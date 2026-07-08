@@ -163,7 +163,27 @@ if (summaryStart >= 0) {
   const cardStart = s.indexOf("<ResultCard", summaryStart);
   if (cardStart > summaryStart) s = s.slice(0, summaryStart) + s.slice(cardStart);
 }
+
+s = s.replace(/\n\s*<div className="flex items-center gap-2">\s*\n\s*<StatusBadge status=\{status\.className\} label=\{status\.label\} \/>\s*\n\s*<\/div>/, "");
+s = s.replace('LogoMark className="h-12 w-12 rounded-[18px]"', 'LogoMark className="h-16 w-16 rounded-[22px]"');
+s = s.replace('h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl"', 'h1 className="text-balance text-3xl font-black leading-tight text-slate-950 dark:text-white md:text-4xl"');
 s = s.replace(/بطاقة النتيجة الرسمية/g, "النتيجة الرسمية");
+
+replaceSimpleFunction("InfoTile", `function InfoTile({ icon, label, onClick, value }) {
+  const Component = onClick ? "button" : "div";
+  return (
+    <Component className={\`info-tile \${onClick ? "info-tile-clickable border-mauri-green/30 bg-mauri-green/5 ring-1 ring-mauri-green/15 dark:border-emerald-300/20 dark:bg-emerald-300/10" : ""}\`} onClick={onClick} type={onClick ? "button" : undefined}>
+      <span className={\`grid h-8 w-8 place-items-center rounded-[12px] \${onClick ? "bg-mauri-green text-white" : "bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300"}\`}>{icon}</span>
+      <div className="min-w-0">
+        <span className="flex items-center gap-1 text-[11px] font-black text-slate-500 dark:text-slate-400">
+          {label}
+          {onClick && <em className="not-italic text-[10px] text-mauri-green dark:text-emerald-300">اضغط</em>}
+        </span>
+        <strong className="block overflow-wrap-anywhere text-sm font-black text-slate-950 dark:text-white">{value}</strong>
+      </div>
+    </Component>
+  );
+}`);
 
 s = s.replace("function HomeView({ homepageBanner, lang, onSelectYear, stats, text })", "function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text })");
 s = s.replace("<PremiumHomeView\n      homepageBanner={homepageBanner}", "<PremiumHomeView\n      content={content}\n      homepageBanner={homepageBanner}");
