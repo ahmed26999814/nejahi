@@ -2,11 +2,24 @@ const fs = require("fs");
 const p = "app/page.jsx";
 let s = fs.readFileSync(p, "utf8");
 
+function findFunctionBodyStart(start) {
+  const paramsStart = s.indexOf("(", start);
+  if (paramsStart < 0) return -1;
+  let parenDepth = 0;
+  for (let i = paramsStart; i < s.length; i++) {
+    if (s[i] === "(") parenDepth++;
+    if (s[i] === ")") parenDepth--;
+    if (parenDepth === 0) return s.indexOf("{", i);
+  }
+  return -1;
+}
+
 function replaceSimpleFunction(name, next) {
   for (const marker of [`async function ${name}(`, `function ${name}(`]) {
     const start = s.indexOf(marker);
     if (start < 0) continue;
-    const bodyStart = s.indexOf("{", start);
+    const bodyStart = findFunctionBodyStart(start);
+    if (bodyStart < 0) continue;
     let depth = 0;
     for (let i = bodyStart; i < s.length; i++) {
       if (s[i] === "{") depth++;
