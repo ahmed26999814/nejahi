@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { SearchIcon } from "../common/icons";
-import { QuickSearchChips } from "./SearchDesignKit";
 
 function parseAverageValue(value) {
   const number = Number(String(value ?? "").replace(",", "."));
@@ -13,7 +12,6 @@ export default function SearchPanel(props) {
   const { error, examTitle, handleSubmit, loading, message, onPickSuggestion, query, setQuery, suggestions = [], text } = props;
   const [focused, setFocused] = useState(false);
   const visibleSuggestions = focused && suggestions.length > 0;
-  const quickSearchChips = [text?.candidateNumber || "رقم المترشح", text?.studentName || "اسم المترشح", examTitle].filter(Boolean);
 
   function pickSuggestion(student) {
     setFocused(false);
@@ -27,9 +25,6 @@ export default function SearchPanel(props) {
         <span className="w-fit rounded-full border border-mauri-green/15 bg-mauri-green/10 px-3 py-1.5 text-[11px] font-black text-mauri-green dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300">
           البحث عن طريق الرقم أو الاسم
         </span>
-      </div>
-      <div className="col-span-full">
-        <QuickSearchChips chips={quickSearchChips} onPick={() => { setQuery(""); setFocused(true); }} />
       </div>
       <div className="relative min-w-0 flex-1">
         <label className="relative block">
