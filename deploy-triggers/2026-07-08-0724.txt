@@ -1,0 +1,2 @@
+Trigger Vercel deploy for latest UI fixes.
+commit should include final home card polish and mobile UX changes.
