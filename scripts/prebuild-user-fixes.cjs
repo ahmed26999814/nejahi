@@ -21,6 +21,18 @@ function replaceNamedFunction(name, next) {
   throw new Error("Function not found: " + name);
 }
 
+// Remove broken leftover from an old compact hero insertion.
+s = s.replace(
+  /\n\)\s*\{\s*\n\s*const heroBackground = contentValue\(content,\s*"hero_background"\);[\s\S]*?\nfunction StatsStrip/,
+  "\nfunction StatsStrip"
+);
+
+// Remove broken duplicated RankingPage tail if it exists.
+s = s.replace(
+  /\n\}\)\s*\{\s*\n\s*const trackGroups = useMemo\(\(\) => groupStudentsByTrack\(students\), \[students\]\);[\s\S]*?\nfunction uniqueSorted/,
+  "\nfunction uniqueSorted"
+);
+
 if (!s.includes("function normalizeCandidateNumber(")) {
   s = s.replace(
     "function prepareStudents(rows) {",
