@@ -6,9 +6,6 @@ const REQUEST_TIMEOUT_MS = 10_000;
 const NUMBER_RESULT_LIMIT = "1";
 const NAME_RESULT_LIMIT = "20";
 
-const BAC26_SELECT = 'Num_Bac,Wilaya_FR,Wilaya_AR,"Centre Examen FR","Centre Examen AR",Etablissement_FR,Etablissement_AR,SERIE,Serie_FR,Serie_AR,NNI,Nom_FR,NOM_AR,Lieu_FR,Lieu_AR,"Date Naiss",Moy_Bac,Decision,rank';
-const BAC26_FALLBACK_SELECT = 'Num_Bac,Wilaya_FR,Wilaya_AR,"Centre Examen FR","Centre Examen AR",Etablissement_FR,Etablissement_AR,SERIE,Serie_FR,Serie_AR,NNI,Nom_FR,NOM_AR,Lieu_FR,Lieu_AR,"Date Naiss",Moy_Bac,Decision';
-
 const SEARCH_CONFIG: Record<string, {
   table: string;
   fallbackTable?: string;
@@ -25,15 +22,6 @@ const SEARCH_CONFIG: Record<string, {
     fallbackSelect: "Numero,NOM,TS,MOD,KR,WL,MS,MD",
     numberColumns: ["Numero"],
     nameColumns: ["NOM"],
-    order: "rank.asc",
-  },
-  bac26: {
-    table: "bac26_ranked_results",
-    fallbackTable: "bac26",
-    select: BAC26_SELECT,
-    fallbackSelect: BAC26_FALLBACK_SELECT,
-    numberColumns: ["Num_Bac"],
-    nameColumns: ["NOM_AR", "Nom_FR"],
     order: "rank.asc",
   },
   brevet: {
