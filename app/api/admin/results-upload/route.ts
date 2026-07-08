@@ -200,7 +200,9 @@ export async function POST(request: Request) {
   if (!rows.length) return json(400, { ok: false, error: "No rows found in the first sheet" });
   if (rows.length > MAX_ROWS) return json(413, { ok: false, error: `Too many rows. Maximum is ${MAX_ROWS}. Split the file first.` });
 
-  const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+  const columns: string[] = Array.from(
+    new Set(rows.flatMap((row) => Object.keys(row)))
+  ).map((column) => String(column)).filter(Boolean);
   const previewRows = rows.slice(0, 5);
 
   if (dryRun) {
