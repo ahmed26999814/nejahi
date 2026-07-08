@@ -77,6 +77,31 @@ function extractRows(fileBuffer: ArrayBuffer, sheetName?: string) {
   return { sheetName: targetSheetName, rows };
 }
 
+async function createUploadTable(table: string, columns: string[]) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return { ok: false, status: 500, error: "Missing Supabase service role environment variables" } as const;
+  }
+
+  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/create_results_upload_table`);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ p_table_name: table, p_columns: columns }),
+  });
+
+  const text = await response.text();
+  if (!response.ok) {
+    return { ok: false, status: response.status, error: text.replace(/\s+/g, " ").slice(0, 700) } as const;
+  }
+
+  return { ok: true, status: response.status, data: text ? JSON.parse(text) : null } as const;
+}
+
 async function insertChunk(table: string, rows: Record<string, unknown>[]) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return { ok: false, status: 500, error: "Missing Supabase service role environment variables" } as const;
@@ -116,6 +141,7 @@ export async function POST(request: Request) {
   const source = String(form.get("source") || "").trim();
   const customTable = safeTableName(String(form.get("table") || ""));
   const dryRun = String(form.get("dryRun") || "true") !== "false";
+  const createTable = String(form.get("createTable") || "false") === "true";
   const sheetName = String(form.get("sheetName") || "").trim() || undefined;
   const table = customTable || TABLE_BY_SOURCE[source];
 
@@ -134,13 +160,14 @@ export async function POST(request: Request) {
   if (!rows.length) return json(400, { ok: false, error: "No rows found in the first sheet" });
   if (rows.length > MAX_ROWS) return json(413, { ok: false, error: `Too many rows. Maximum is ${MAX_ROWS}. Split the file first.` });
 
-  const columns = Object.keys(rows[0] || {});
+  const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
   const previewRows = rows.slice(0, 5);
 
   if (dryRun) {
     return json(200, {
       ok: true,
       dryRun: true,
+      createTable,
       table,
       source: source || "custom",
       fileName: file.name,
@@ -148,8 +175,24 @@ export async function POST(request: Request) {
       totalRows: rows.length,
       columns,
       previewRows,
-      message: "Preview only. Send dryRun=false to publish rows to Supabase.",
+      message: createTable
+        ? "Preview only. The table will be created automatically when dryRun=false."
+        : "Preview only. Send dryRun=false to publish rows to Supabase.",
     });
+  }
+
+  let tableCreated = false;
+  if (createTable) {
+    const created = await createUploadTable(table, columns);
+    if (!created.ok) {
+      return json(created.status, {
+        ok: false,
+        table,
+        error: created.error,
+        hint: "Run the create_results_upload_table SQL migration in Supabase first.",
+      });
+    }
+    tableCreated = true;
   }
 
   let inserted = 0;
@@ -160,6 +203,7 @@ export async function POST(request: Request) {
       return json(result.status, {
         ok: false,
         table,
+        tableCreated,
         inserted,
         failedAtRow: index + 1,
         error: result.error,
@@ -171,12 +215,14 @@ export async function POST(request: Request) {
   return json(200, {
     ok: true,
     dryRun: false,
+    createTable,
+    tableCreated,
     table,
     source: source || "custom",
     fileName: file.name,
     sheetName: parsed.sheetName,
     inserted,
     columns,
-    message: "Results uploaded successfully.",
+    message: tableCreated ? "Table created and results uploaded successfully." : "Results uploaded successfully.",
   });
 }
