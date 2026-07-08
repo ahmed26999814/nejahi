@@ -11,7 +11,6 @@ function insertOnce(marker, text) {
   }
 }
 
-// Use a ranked SQL view for fast Bac lookup when available.
 s = s.replace('const BAC_TABLE = "bac_results";', 'const BAC_TABLE = "bac_results";\nconst BAC_RANKED_VIEW = "bac_ranked_results";');
 
 s = s.replace(
@@ -46,7 +45,6 @@ s = s.replace(
   }`
 );
 
-// Do not load the full Bac table when showing one result.
 s = s.replace(
 `      const rankingPool = selectedExam?.source === "bac" ? await loadExamData(selectedExam) : searchPool;
       const rows = await searchResults(value, selectedExam);
@@ -61,12 +59,10 @@ s = s.replace(
       }).filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);`
 );
 
-// Loading wording.
 s = s.replace(/جاري تحضير بطاقة النتيجة/g, "جاري تحضير النتيجة");
 s = s.replace(/جاري فتح بطاقة النتيجة/g, "جاري عرض النتيجة");
 s = s.replace(/جاري عرض بطاقة النتيجة/g, "جاري عرض النتيجة");
 
-// Contact page view.
 if (!s.includes('activeView === "contact" && <ContactPage')) {
   s = s.replace(
     '      {activeView === "analytics" && <AnalyticsPage',
@@ -78,7 +74,7 @@ const contactPage = `
 function ContactPage({ text }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow="MauriResults" title="اتصل بنا" description="اختر طريقة التواصل المناسبة، وسنكون سعداء باستقبال ملاحظاتك حول النتائج." icon={<MessageIcon />} />
+      <PageHero eyebrow="MauriResults" title="اتصل بنا" description="اختر طريقة التواصل المناسبة، وسنكون سعداء باستقبال ملاحظاتك حول النتائج." icon={<InfoIcon />} />
       <section className="grid gap-3 md:grid-cols-2">
         <a className="group relative overflow-hidden rounded-[30px] border border-emerald-200 bg-emerald-50 p-5 text-start shadow-premium transition hover:-translate-y-1 dark:border-emerald-300/20 dark:bg-emerald-300/10" href="https://wa.me/22232965875" target="_blank" rel="noopener">
           <span className="grid h-14 w-14 place-items-center rounded-2xl bg-emerald-600 text-2xl text-white shadow-soft">💬</span>
