@@ -32,7 +32,7 @@ function safeTableName(value: string) {
   return table;
 }
 
-function safeColumnName(value: string) {
+function safeColumnName(value: unknown) {
   const column = String(value || "").replace(/\u0000/g, "").trim();
   if (!column || column.length > 120) return "";
   return column;
@@ -49,12 +49,18 @@ function cleanCell(value: unknown) {
 
 function normalizeRow(row: Record<string, unknown>) {
   const output: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(row)) {
-    const cleanKey = String(key || "").replace(/\u0000/g, "").trim();
+  for (const [key, value] of Object.entries(row || {})) {
+    const cleanKey = safeColumnName(key);
     if (!cleanKey || cleanKey.startsWith("__EMPTY")) continue;
     output[cleanKey] = cleanCell(value);
   }
   return output;
+}
+
+function inferColumns(rows: Record<string, unknown>[], supplied: unknown[] = []) {
+  const fromPayload = supplied.map(safeColumnName).filter(Boolean);
+  const fromRows = rows.flatMap((row) => Object.keys(row || {}).map(safeColumnName)).filter(Boolean);
+  return Array.from(new Set([...fromPayload, ...fromRows]));
 }
 
 function extractRows(fileBuffer: ArrayBuffer, sheetName?: string) {
@@ -163,9 +169,99 @@ async function insertChunk(table: string, rows: Record<string, unknown>[]) {
   return { ok: true, status: response.status } as const;
 }
 
-export async function POST(request: Request) {
-  if (!isAdmin(request)) return json(401, { ok: false, error: "Unauthorized admin upload" });
+type JsonUploadPayload = {
+  source?: string;
+  table?: string;
+  rows?: Record<string, unknown>[];
+  columns?: unknown[];
+  createTable?: boolean;
+  speedSetup?: boolean;
+  numberColumn?: string;
+  nameColumn?: string;
+  scoreColumn?: string;
+  isLastChunk?: boolean;
+  chunkIndex?: number;
+  totalChunks?: number;
+  fileName?: string;
+  sheetName?: string;
+};
 
+async function handleJsonUpload(payload: JsonUploadPayload) {
+  const source = String(payload.source || "").trim();
+  const customTable = safeTableName(String(payload.table || ""));
+  const table = customTable || TABLE_BY_SOURCE[source];
+  const rows = Array.isArray(payload.rows) ? payload.rows.map(normalizeRow).filter((row) => Object.keys(row).length) : [];
+  const columns = inferColumns(rows, Array.isArray(payload.columns) ? payload.columns : []);
+  const createTable = Boolean(payload.createTable);
+  const speedSetup = payload.speedSetup !== false;
+  const isLastChunk = Boolean(payload.isLastChunk);
+  const numberColumn = safeColumnName(payload.numberColumn);
+  const nameColumn = safeColumnName(payload.nameColumn);
+  const scoreColumn = safeColumnName(payload.scoreColumn);
+
+  if (!table) return json(400, { ok: false, error: "Choose a known exam source or provide a safe custom table name" });
+  if (!rows.length) return json(400, { ok: false, error: "Missing rows chunk" });
+  if (!columns.length) return json(400, { ok: false, error: "Missing columns" });
+  if (rows.length > INSERT_CHUNK_SIZE * 2) return json(413, { ok: false, error: "Chunk too large. Send fewer rows per request." });
+
+  let tableCreated = false;
+  if (createTable) {
+    const created = await createUploadTable(table, columns);
+    if (!created.ok) {
+      return json(created.status, {
+        ok: false,
+        table,
+        error: created.error,
+        hint: "Run the create_results_upload_table SQL migration in Supabase first.",
+      });
+    }
+    tableCreated = true;
+  }
+
+  const insertedResult = await insertChunk(table, rows);
+  if (!insertedResult.ok) {
+    return json(insertedResult.status, {
+      ok: false,
+      table,
+      tableCreated,
+      inserted: 0,
+      error: insertedResult.error,
+    });
+  }
+
+  let speedResult: unknown = null;
+  if (isLastChunk && speedSetup && (numberColumn || nameColumn || scoreColumn)) {
+    const prepared = await prepareSpeed(table, numberColumn, nameColumn, scoreColumn);
+    if (!prepared.ok) {
+      return json(200, {
+        ok: true,
+        warning: true,
+        table,
+        tableCreated,
+        inserted: rows.length,
+        columns,
+        speedError: prepared.error,
+        hint: "Rows were uploaded, but speed setup failed. Run the prepare_results_table_speed SQL migration in Supabase first, then try again.",
+      });
+    }
+    speedResult = prepared.data;
+  }
+
+  return json(200, {
+    ok: true,
+    table,
+    tableCreated,
+    inserted: rows.length,
+    columns,
+    speedSetup,
+    speedResult,
+    chunkIndex: payload.chunkIndex,
+    totalChunks: payload.totalChunks,
+    message: isLastChunk ? "Upload completed." : "Chunk uploaded.",
+  });
+}
+
+async function handleFormUpload(request: Request) {
   let form: FormData;
   try {
     form = await request.formData();
@@ -179,9 +275,9 @@ export async function POST(request: Request) {
   const dryRun = String(form.get("dryRun") || "true") !== "false";
   const createTable = String(form.get("createTable") || "false") === "true";
   const speedSetup = String(form.get("speedSetup") || "true") !== "false";
-  const numberColumn = safeColumnName(String(form.get("numberColumn") || ""));
-  const nameColumn = safeColumnName(String(form.get("nameColumn") || ""));
-  const scoreColumn = safeColumnName(String(form.get("scoreColumn") || ""));
+  const numberColumn = safeColumnName(form.get("numberColumn"));
+  const nameColumn = safeColumnName(form.get("nameColumn"));
+  const scoreColumn = safeColumnName(form.get("scoreColumn"));
   const sheetName = String(form.get("sheetName") || "").trim() || undefined;
   const table = customTable || TABLE_BY_SOURCE[source];
 
@@ -200,9 +296,7 @@ export async function POST(request: Request) {
   if (!rows.length) return json(400, { ok: false, error: "No rows found in the first sheet" });
   if (rows.length > MAX_ROWS) return json(413, { ok: false, error: `Too many rows. Maximum is ${MAX_ROWS}. Split the file first.` });
 
-  const columns: string[] = Array.from(
-    new Set(rows.flatMap((row) => Object.keys(row)))
-  ).map((column) => String(column)).filter(Boolean);
+  const columns = inferColumns(rows);
   const previewRows = rows.slice(0, 5);
 
   if (dryRun) {
@@ -294,4 +388,20 @@ export async function POST(request: Request) {
     speedResult,
     message: tableCreated ? "Table created, results uploaded, and speed setup completed." : "Results uploaded successfully.",
   });
+}
+
+export async function POST(request: Request) {
+  if (!isAdmin(request)) return json(401, { ok: false, error: "Unauthorized admin upload" });
+
+  const contentType = request.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    try {
+      const payload = await request.json();
+      return handleJsonUpload(payload as JsonUploadPayload);
+    } catch (error) {
+      return json(400, { ok: false, error: `Invalid JSON upload payload: ${String(error)}` });
+    }
+  }
+
+  return handleFormUpload(request);
 }
