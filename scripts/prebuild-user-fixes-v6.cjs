@@ -11,7 +11,9 @@ function insertOnce(marker, text) {
   }
 }
 
-s = s.replace('const BAC_TABLE = "bac_results";', 'const BAC_TABLE = "bac_results";\nconst BAC_RANKED_VIEW = "bac_ranked_results";');
+if (!s.includes('const BAC_RANKED_VIEW = "bac_ranked_results";')) {
+  s = s.replace('const BAC_TABLE = "bac_results";', 'const BAC_TABLE = "bac_results";\nconst BAC_RANKED_VIEW = "bac_ranked_results";');
+}
 
 s = s.replace(
   '        MOD: getColumn(row, "MOD", "mod", "Moyenne", "moyenne"),\n        kr:',
