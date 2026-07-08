@@ -27,27 +27,31 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards = [] }) {
 
   return (
     <section className="grid gap-3 md:grid-cols-2">
-      {cards.map((year) => {
+      {cards.map((year, index) => {
         const rawTitle = year.title?.[lang] || year.title?.ar || `نتائج المسابقات ${year.id}`;
         const title = normalizeYearTitle(rawTitle, year.id);
         const description = year.description?.[lang] || year.description?.ar || "كل النتائج المتوفرة الآن في مكان واحد.";
         const available = year.available !== false;
+        const tone = index === 0
+          ? "border-emerald-200/80 from-emerald-950/90 via-emerald-800/70 to-emerald-500/20 text-emerald-50"
+          : "border-amber-200/70 from-slate-900/90 via-amber-900/35 to-amber-400/20 text-amber-50";
         return (
           <button
             key={year.id || title}
             type="button"
             disabled={!available}
             onClick={() => available && onSelectYear?.(year)}
-            className={`group relative min-h-[158px] overflow-hidden rounded-[34px] border p-5 text-start shadow-premium transition duration-300 active:scale-[.99] ${available ? "border-emerald-200/80 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,.20),transparent_38%),linear-gradient(135deg,rgba(255,255,255,.98),rgba(236,253,245,.86),rgba(255,255,255,.96))] hover:-translate-y-1 hover:border-mauri-green/50 dark:border-emerald-300/15 dark:bg-[radial-gradient(circle_at_top_left,rgba(110,231,183,.20),transparent_40%),linear-gradient(135deg,#10231a,#143621,#07130d)]" : "border-slate-200 bg-white/65 opacity-80 dark:border-white/10 dark:bg-white/10"}`}
+            className={`group relative min-h-[132px] overflow-hidden rounded-[28px] border bg-gradient-to-br p-4 text-start shadow-premium transition duration-300 active:scale-[.99] hover:-translate-y-0.5 ${tone} ${available ? "" : "opacity-80"}`}
           >
-            <span className="absolute -left-16 -top-16 h-40 w-40 rounded-full bg-mauri-green/10 transition group-hover:scale-125" />
-            <span className="absolute bottom-4 left-4 h-16 w-16 rounded-full border border-mauri-green/10" />
-            <span className="relative z-10 flex h-full flex-col justify-between gap-4">
-              <span className="flex items-start justify-between gap-3">
-                <strong className="block max-w-[78%] text-3xl font-black leading-tight text-slate-950 dark:text-white md:text-4xl">{title}</strong>
-                <span className={`rounded-full px-3 py-1 text-[11px] font-black shadow-sm ${available ? "bg-mauri-green text-white" : "bg-amber-100 text-amber-700 dark:bg-amber-300/15 dark:text-amber-200"}`}>{available ? "فتح النتائج" : "قريبًا"}</span>
+            <span className="absolute -left-12 -top-12 h-28 w-28 rounded-full bg-white/10 transition group-hover:scale-125" />
+            <span className="absolute bottom-3 left-3 h-14 w-14 rounded-full border border-white/10" />
+            <span className="relative z-10 grid h-full grid-cols-[1fr_auto] items-start gap-3">
+              <span className="min-w-0">
+                <span className="mb-3 grid h-11 w-11 place-items-center rounded-2xl bg-white/15 text-xl shadow-soft ring-1 ring-white/10">{index === 0 ? "🎓" : "⏳"}</span>
+                <strong className="block text-2xl font-black leading-tight text-white md:text-3xl">{title}</strong>
+                <small className="mt-2 block text-xs font-bold leading-5 text-white/75">{description}</small>
               </span>
-              <small className="block text-xs font-bold leading-6 text-slate-500 dark:text-slate-300 md:text-sm">{description}</small>
+              <span className={`rounded-full px-3 py-1 text-[11px] font-black shadow-sm ${available ? "bg-white text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{available ? "فتح" : "قريبًا"}</span>
             </span>
           </button>
         );
