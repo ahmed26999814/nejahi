@@ -7,16 +7,8 @@ export default function BottomNav({ activeView, onNavigate, text }) {
     { label: text.home, view: "home", icon: <HomeIcon /> },
     { label: text.toppers, view: "toppers", icon: <AwardIcon /> },
     { label: text.analytics, view: "analytics", icon: <ChartIcon /> },
-    { label: "اتصل بنا", section: "contact", icon: <MessageIcon /> },
+    { label: "اتصل بنا", view: "contact", icon: <MessageIcon /> },
   ];
-
-  function handleClick(item) {
-    if (item.section) {
-      document.getElementById(item.section)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-    onNavigate(item.view);
-  }
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(.55rem,env(safe-area-inset-bottom))] pt-2 md:hidden">
@@ -24,7 +16,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
         {items.map((item) => (
           <button
             className={`grid justify-items-center gap-1 rounded-[18px] px-2 py-1.5 text-[10px] font-black transition hover:-translate-y-0.5 active:scale-95 ${activeView === item.view ? "bg-mauri-green text-white shadow-soft" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
-            onClick={() => handleClick(item)}
+            onClick={() => onNavigate(item.view)}
             type="button"
             key={item.label}
           >
