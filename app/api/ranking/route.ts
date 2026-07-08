@@ -29,30 +29,40 @@ const CONFIGS: Record<Source, RankingConfig> = {
     fallbackOrder: "MOD.desc.nullslast",
   },
   brevet: {
-    table: "brevet_results",
-    select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS",
+    table: "brevet_ranked_results",
+    fallbackTable: "brevet_results",
+    select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS,rank",
+    fallbackSelect: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS",
     columns: { wl: "WILAYA", ms: "Ecole", centre: "Centre" },
-    order: "Moyenne_Bepc.desc.nullslast",
+    order: "rank.asc",
+    fallbackOrder: "Moyenne_Bepc.desc.nullslast",
   },
   concours: {
-    table: "concours_results_view",
-    fallbackTable: "concours_results",
-    select: 'NODOSS,"Numéro_C1AS",NOM_AR,TYPE,TOTAL,total_num,WILAYA_AR,MOUGHATAA_AR,Ecole_AR,"Centre Examen_AR","LIEU NAISS_AR",ANNEE_NAISS,Noreg',
-    fallbackSelect: 'NODOSS,"Numéro_C1AS",NOM_AR,TYPE,TOTAL,WILAYA_AR,MOUGHATAA_AR,Ecole_AR,"Centre Examen_AR","LIEU NAISS_AR",ANNEE_NAISS,Noreg',
+    table: "concours_ranked_results",
+    fallbackTable: "concours_results_view",
+    select: 'NODOSS,"Numéro_C1AS",NOM_AR,TYPE,TOTAL,total_num,WILAYA_AR,MOUGHATAA_AR,Ecole_AR,"Centre Examen_AR","LIEU NAISS_AR",ANNEE_NAISS,Noreg,rank',
+    fallbackSelect: 'NODOSS,"Numéro_C1AS",NOM_AR,TYPE,TOTAL,total_num,WILAYA_AR,MOUGHATAA_AR,Ecole_AR,"Centre Examen_AR","LIEU NAISS_AR",ANNEE_NAISS,Noreg',
     columns: { wl: "WILAYA_AR", moughataa: "MOUGHATAA_AR", centre: "Centre Examen_AR", ms: "Ecole_AR", track: "TYPE" },
-    order: "total_num.desc.nullslast",
+    order: "rank.asc",
+    fallbackOrder: "total_num.desc.nullslast",
   },
   bac_session: {
-    table: "bac_session2_results",
-    select: 'NODOSS,NOM_AR,NOM_FR,SERIE,"Moy Bac_Session",Decision,Wilaya_AR,Wilaya_FR,Etablissement_AR,Etablissement_FR,"Centre Examen_AR","Centre Examen_FR",LIEUNN_AR,LIEUN_FR,DATN',
+    table: "bac_session2_ranked_results",
+    fallbackTable: "bac_session2_results",
+    select: 'NODOSS,NOM_AR,NOM_FR,SERIE,"Moy Bac_Session",Decision,Wilaya_AR,Wilaya_FR,Etablissement_AR,Etablissement_FR,"Centre Examen_AR","Centre Examen_FR",LIEUNN_AR,LIEUN_FR,DATN,rank',
+    fallbackSelect: 'NODOSS,NOM_AR,NOM_FR,SERIE,"Moy Bac_Session",Decision,Wilaya_AR,Wilaya_FR,Etablissement_AR,Etablissement_FR,"Centre Examen_AR","Centre Examen_FR",LIEUNN_AR,LIEUN_FR,DATN',
     columns: { wl: "Wilaya_AR", ms: "Etablissement_AR", centre: "Centre Examen_AR", track: "SERIE" },
-    order: '"Moy Bac_Session".desc.nullslast',
+    order: "rank.asc",
+    fallbackOrder: '"Moy Bac_Session".desc.nullslast',
   },
   excellence_1as: {
-    table: "excellence_1as_results",
-    select: "Num_Excellence_1AS,Nom,SERIE,Mgex,Decision,Wilaya_AR,CENTRE_AR,Lieu,DATEN,Matricule,ARABE,FRANCAIS,CALCUL",
+    table: "excellence_1as_ranked_results",
+    fallbackTable: "excellence_1as_results",
+    select: "Num_Excellence_1AS,Nom,SERIE,Mgex,Decision,Wilaya_AR,CENTRE_AR,Lieu,DATEN,Matricule,ARABE,FRANCAIS,CALCUL,rank",
+    fallbackSelect: "Num_Excellence_1AS,Nom,SERIE,Mgex,Decision,Wilaya_AR,CENTRE_AR,Lieu,DATEN,Matricule,ARABE,FRANCAIS,CALCUL",
     columns: { wl: "Wilaya_AR", centre: "CENTRE_AR", track: "SERIE" },
-    order: "Mgex.desc.nullslast",
+    order: "rank.asc",
+    fallbackOrder: "Mgex.desc.nullslast",
   },
 };
 
@@ -98,8 +108,8 @@ function buildParams(config: RankingConfig, column: string, value: string, useFa
   const params = new URLSearchParams({
     select: useFallback ? (config.fallbackSelect || config.select) : config.select,
     limit: LIMIT,
-    [column]: `eq.${escapePostgrestValue(value)}`,
   });
+  params.set(column, `eq.${escapePostgrestValue(value)}`);
   const order = useFallback ? (config.fallbackOrder || config.order) : config.order;
   if (order) params.set("order", order);
   return params;
