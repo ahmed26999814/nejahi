@@ -14,6 +14,8 @@ const SOURCES = [
 type UploadResult = {
   ok?: boolean;
   dryRun?: boolean;
+  createTable?: boolean;
+  tableCreated?: boolean;
   table?: string;
   fileName?: string;
   sheetName?: string;
@@ -23,6 +25,7 @@ type UploadResult = {
   previewRows?: Record<string, unknown>[];
   message?: string;
   error?: string;
+  hint?: string;
 };
 
 export default function ResultsUploadAdminPage() {
@@ -32,6 +35,7 @@ export default function ResultsUploadAdminPage() {
   const [sheetName, setSheetName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [dryRun, setDryRun] = useState(true);
+  const [createTable, setCreateTable] = useState(true);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
 
@@ -41,6 +45,7 @@ export default function ResultsUploadAdminPage() {
 
   const selectedSource = useMemo(() => SOURCES.find((item) => item.value === source), [source]);
   const targetTable = source === "custom" ? customTable.trim() : selectedSource?.table || "";
+  const isCustom = source === "custom";
 
   function saveSecret(value: string) {
     setSecret(value);
@@ -66,10 +71,11 @@ export default function ResultsUploadAdminPage() {
 
     const form = new FormData();
     form.set("file", file);
-    form.set("source", source === "custom" ? "" : source);
-    form.set("table", source === "custom" ? customTable.trim() : "");
+    form.set("source", isCustom ? "" : source);
+    form.set("table", isCustom ? customTable.trim() : "");
     form.set("sheetName", sheetName.trim());
     form.set("dryRun", dryRun ? "true" : "false");
+    form.set("createTable", isCustom && createTable ? "true" : "false");
 
     setLoading(true);
     try {
@@ -114,7 +120,10 @@ export default function ResultsUploadAdminPage() {
             المسابقة
             <select
               value={source}
-              onChange={(event) => setSource(event.target.value)}
+              onChange={(event) => {
+                setSource(event.target.value);
+                if (event.target.value === "custom") setCreateTable(true);
+              }}
               className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-emerald-500"
             >
               {SOURCES.map((item) => (
@@ -123,7 +132,7 @@ export default function ResultsUploadAdminPage() {
             </select>
           </label>
 
-          {source === "custom" && (
+          {isCustom && (
             <label className="grid gap-1 text-sm font-black">
               اسم جدول Supabase للمسابقة الجديدة
               <input
@@ -133,7 +142,7 @@ export default function ResultsUploadAdminPage() {
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-base outline-none focus:border-emerald-500"
                 dir="ltr"
               />
-              <span className="text-xs font-bold text-slate-500">يجب أن يكون الجدول موجودًا مسبقًا في Supabase.</span>
+              <span className="text-xs font-bold text-slate-500">يمكن إنشاء الجدول تلقائيًا عند النشر بعد تشغيل SQL الخاص بهذه الميزة.</span>
             </label>
           )}
 
@@ -157,6 +166,16 @@ export default function ResultsUploadAdminPage() {
             />
           </label>
 
+          {isCustom && (
+            <label className="flex items-center justify-between gap-3 rounded-2xl bg-emerald-50 p-4 text-sm font-black text-emerald-950">
+              <span>
+                إنشاء الجدول تلقائيًا عند النشر
+                <span className="block text-xs font-bold text-emerald-700">مفيد عند صدور مسابقة جديدة وملف XLSX فقط.</span>
+              </span>
+              <input checked={createTable} onChange={(event) => setCreateTable(event.target.checked)} type="checkbox" className="h-6 w-6" />
+            </label>
+          )}
+
           <label className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-black">
             <span>
               وضع المعاينة فقط
@@ -167,6 +186,7 @@ export default function ResultsUploadAdminPage() {
 
           <div className="rounded-2xl bg-slate-100 p-3 text-xs font-bold text-slate-600">
             الهدف الحالي: <span dir="ltr" className="font-black text-slate-950">{targetTable || "غير محدد"}</span>
+            {isCustom && createTable && <span className="mt-1 block text-emerald-700">سيحاول النظام إنشاء هذا الجدول عند النشر.</span>}
           </div>
 
           <button
@@ -182,6 +202,7 @@ export default function ResultsUploadAdminPage() {
           <section className={`rounded-[28px] border p-4 shadow-2xl ${result.ok ? "border-emerald-300/30 bg-emerald-950/70" : "border-red-300/30 bg-red-950/70"}`}>
             <h2 className="text-lg font-black">{result.ok ? "تمت العملية" : "حدث خطأ"}</h2>
             {result.error && <p className="mt-2 rounded-2xl bg-black/20 p-3 text-sm font-bold text-red-100">{result.error}</p>}
+            {result.hint && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">{result.hint}</p>}
             {result.message && <p className="mt-2 text-sm font-bold text-slate-200">{result.message}</p>}
             <div className="mt-3 grid gap-2 text-sm font-bold text-slate-200">
               {result.table && <p>الجدول: <span dir="ltr" className="font-black text-white">{result.table}</span></p>}
@@ -189,6 +210,7 @@ export default function ResultsUploadAdminPage() {
               {result.sheetName && <p>الورقة: {result.sheetName}</p>}
               {typeof result.totalRows === "number" && <p>عدد الصفوف: {result.totalRows.toLocaleString("ar-MR")}</p>}
               {typeof result.inserted === "number" && <p>تم نشر: {result.inserted.toLocaleString("ar-MR")} صف</p>}
+              {result.tableCreated && <p>تم إنشاء الجدول تلقائيًا.</p>}
               {result.columns?.length ? <p>الأعمدة: <span className="text-xs">{result.columns.join("، ")}</span></p> : null}
             </div>
 
