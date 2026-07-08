@@ -32,6 +32,17 @@ type UploadResult = {
   warning?: boolean;
 };
 
+function normalizeTableName(value: string) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  if (!normalized) return "";
+  return /^[a-z_]/.test(normalized) ? normalized : `results_${normalized}`;
+}
+
 export default function ResultsUploadAdminPage() {
   const [secret, setSecret] = useState("");
   const [source, setSource] = useState("custom");
@@ -52,7 +63,8 @@ export default function ResultsUploadAdminPage() {
   }, []);
 
   const selectedSource = useMemo(() => SOURCES.find((item) => item.value === source), [source]);
-  const targetTable = source === "custom" ? customTable.trim() : selectedSource?.table || "";
+  const normalizedCustomTable = normalizeTableName(customTable);
+  const targetTable = source === "custom" ? normalizedCustomTable : selectedSource?.table || "";
   const isCustom = source === "custom";
 
   function saveSecret(value: string) {
@@ -88,7 +100,7 @@ export default function ResultsUploadAdminPage() {
     const form = new FormData();
     form.set("file", file);
     form.set("source", isCustom ? "" : source);
-    form.set("table", isCustom ? customTable.trim() : "");
+    form.set("table", isCustom ? targetTable : "");
     form.set("sheetName", sheetName.trim());
     form.set("dryRun", dryRun ? "true" : "false");
     form.set("createTable", isCustom && createTable ? "true" : "false");
@@ -159,11 +171,16 @@ export default function ResultsUploadAdminPage() {
               <input
                 value={customTable}
                 onChange={(event) => setCustomTable(event.target.value)}
-                placeholder="مثال: probatoire_2026_results"
+                placeholder="مثال: results-bac-26 أو probatoire_2026_results"
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-base outline-none focus:border-emerald-500"
                 dir="ltr"
               />
-              <span className="text-xs font-bold text-slate-500">يمكن إنشاء الجدول تلقائيًا عند النشر بعد تشغيل SQL الخاص بهذه الميزة.</span>
+              <span className="text-xs font-bold text-slate-500">يمكنك كتابة شرطات، وسيحوّلها النظام تلقائيًا إلى underscores.</span>
+              {customTable && normalizedCustomTable !== customTable.trim() && (
+                <span className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700" dir="ltr">
+                  سيستخدم: {normalizedCustomTable}
+                </span>
+              )}
             </label>
           )}
 
