@@ -155,6 +155,30 @@ replaceFunction("openRanking", `async function openRanking(field, value, label) 
     }
   }`);
 
+// أعد بطاقة القرار مرة واحدة داخل تفاصيل النتيجة، مع بقاء الشارة العليا كما هي.
+if (!s.includes('key="decision"')) {
+  s = s.replace(
+    `[text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],`,
+    `[text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],\n      [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
+  );
+  s = s.replace(
+    `[text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],`,
+    `[text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],\n        [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
+  );
+  s = s.replace(
+    `[text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],`,
+    `[text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],\n          [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
+  );
+  s = s.replace(
+    `[text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],`,
+    `[text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],\n            [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
+  );
+  s = s.replace(
+    `[text.exam || "المسابقة", student.sessionType || "البكالوريا 2025", <BookIcon key="exam" />],`,
+    `[text.exam || "المسابقة", student.sessionType || "البكالوريا 2025", <BookIcon key="exam" />],\n      [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
+  );
+}
+
 // Show result immediately after search; no artificial 520ms delay.
 s = s.replace(/\},\s*120\);/g, "}, 20);");
 s = s.replace(/\},\s*520\);/g, "}, 20);");
