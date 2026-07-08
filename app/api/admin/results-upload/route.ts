@@ -63,6 +63,27 @@ function inferColumns(rows: Record<string, unknown>[], supplied: unknown[] = [])
   return Array.from(new Set([...fromPayload, ...fromRows]));
 }
 
+function compactError(text: string) {
+  return text.replace(/\s+/g, " ").slice(0, 700);
+}
+
+function parseJson(text: string) {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function getInsertedCount(data: unknown, fallback: number) {
+  if (data && typeof data === "object" && "inserted" in data) {
+    const value = Number((data as { inserted?: unknown }).inserted);
+    if (Number.isFinite(value)) return value;
+  }
+  return fallback;
+}
+
 function extractRows(fileBuffer: ArrayBuffer, sheetName?: string) {
   const workbook = XLSX.read(fileBuffer, {
     type: "array",
@@ -107,11 +128,9 @@ async function createUploadTable(table: string, columns: string[]) {
   });
 
   const text = await response.text();
-  if (!response.ok) {
-    return { ok: false, status: response.status, error: text.replace(/\s+/g, " ").slice(0, 700) } as const;
-  }
+  if (!response.ok) return { ok: false, status: response.status, error: compactError(text) } as const;
 
-  return { ok: true, status: response.status, data: text ? JSON.parse(text) : null } as const;
+  return { ok: true, status: response.status, data: parseJson(text) } as const;
 }
 
 async function prepareSpeed(table: string, numberColumn: string, nameColumn: string, scoreColumn: string) {
@@ -137,11 +156,9 @@ async function prepareSpeed(table: string, numberColumn: string, nameColumn: str
   });
 
   const text = await response.text();
-  if (!response.ok) {
-    return { ok: false, status: response.status, error: text.replace(/\s+/g, " ").slice(0, 700) } as const;
-  }
+  if (!response.ok) return { ok: false, status: response.status, error: compactError(text) } as const;
 
-  return { ok: true, status: response.status, data: text ? JSON.parse(text) : null } as const;
+  return { ok: true, status: response.status, data: parseJson(text) } as const;
 }
 
 async function insertChunk(table: string, rows: Record<string, unknown>[]) {
@@ -163,10 +180,33 @@ async function insertChunk(table: string, rows: Record<string, unknown>[]) {
 
   if (!response.ok) {
     const text = await response.text();
-    return { ok: false, status: response.status, error: text.replace(/\s+/g, " ").slice(0, 600) } as const;
+    return { ok: false, status: response.status, error: compactError(text) } as const;
   }
 
-  return { ok: true, status: response.status } as const;
+  return { ok: true, status: response.status, data: null } as const;
+}
+
+async function insertRowsRpc(table: string, rows: Record<string, unknown>[], columns: string[]) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return { ok: false, status: 500, error: "Missing Supabase service role environment variables" } as const;
+  }
+
+  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/insert_results_upload_rows`);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ p_table_name: table, p_rows: rows, p_columns: columns }),
+  });
+
+  const text = await response.text();
+  if (!response.ok) return { ok: false, status: response.status, error: compactError(text) } as const;
+
+  return { ok: true, status: response.status, data: parseJson(text) } as const;
 }
 
 type JsonUploadPayload = {
@@ -198,6 +238,7 @@ async function handleJsonUpload(payload: JsonUploadPayload) {
   const numberColumn = safeColumnName(payload.numberColumn);
   const nameColumn = safeColumnName(payload.nameColumn);
   const scoreColumn = safeColumnName(payload.scoreColumn);
+  const useRpcInsert = Boolean(customTable);
 
   if (!table) return json(400, { ok: false, error: "Choose a known exam source or provide a safe custom table name" });
   if (!rows.length) return json(400, { ok: false, error: "Missing rows chunk" });
@@ -218,7 +259,7 @@ async function handleJsonUpload(payload: JsonUploadPayload) {
     tableCreated = true;
   }
 
-  const insertedResult = await insertChunk(table, rows);
+  const insertedResult = useRpcInsert ? await insertRowsRpc(table, rows, columns) : await insertChunk(table, rows);
   if (!insertedResult.ok) {
     return json(insertedResult.status, {
       ok: false,
@@ -226,8 +267,11 @@ async function handleJsonUpload(payload: JsonUploadPayload) {
       tableCreated,
       inserted: 0,
       error: insertedResult.error,
+      hint: useRpcInsert ? "Run the insert_results_upload_rows SQL in Supabase, then try again." : undefined,
     });
   }
+
+  const insertedCount = getInsertedCount(insertedResult.data, rows.length);
 
   let speedResult: unknown = null;
   if (isLastChunk && speedSetup && (numberColumn || nameColumn || scoreColumn)) {
@@ -238,7 +282,7 @@ async function handleJsonUpload(payload: JsonUploadPayload) {
         warning: true,
         table,
         tableCreated,
-        inserted: rows.length,
+        inserted: insertedCount,
         columns,
         speedError: prepared.error,
         hint: "Rows were uploaded, but speed setup failed. Run the prepare_results_table_speed SQL migration in Supabase first, then try again.",
@@ -251,7 +295,7 @@ async function handleJsonUpload(payload: JsonUploadPayload) {
     ok: true,
     table,
     tableCreated,
-    inserted: rows.length,
+    inserted: insertedCount,
     columns,
     speedSetup,
     speedResult,
@@ -280,6 +324,7 @@ async function handleFormUpload(request: Request) {
   const scoreColumn = safeColumnName(form.get("scoreColumn"));
   const sheetName = String(form.get("sheetName") || "").trim() || undefined;
   const table = customTable || TABLE_BY_SOURCE[source];
+  const useRpcInsert = Boolean(customTable);
 
   if (!table) return json(400, { ok: false, error: "Choose a known exam source or provide a safe custom table name" });
   if (!(file instanceof File)) return json(400, { ok: false, error: "Missing XLSX file" });
@@ -336,7 +381,7 @@ async function handleFormUpload(request: Request) {
   let inserted = 0;
   for (let index = 0; index < rows.length; index += INSERT_CHUNK_SIZE) {
     const chunk = rows.slice(index, index + INSERT_CHUNK_SIZE);
-    const result = await insertChunk(table, chunk);
+    const result = useRpcInsert ? await insertRowsRpc(table, chunk, columns) : await insertChunk(table, chunk);
     if (!result.ok) {
       return json(result.status, {
         ok: false,
@@ -345,9 +390,10 @@ async function handleFormUpload(request: Request) {
         inserted,
         failedAtRow: index + 1,
         error: result.error,
+        hint: useRpcInsert ? "Run the insert_results_upload_rows SQL in Supabase, then try again." : undefined,
       });
     }
-    inserted += chunk.length;
+    inserted += getInsertedCount(result.data, chunk.length);
   }
 
   let speedResult: unknown = null;
