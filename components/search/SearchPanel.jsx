@@ -22,9 +22,11 @@ export default function SearchPanel(props) {
 
   return (
     <form onSubmit={(event) => { setFocused(false); handleSubmit(event); }} className="search-card animate-slide-up">
-      <div className="col-span-full flex items-center justify-between gap-2 px-1">
+      <div className="col-span-full grid gap-2 px-1 md:flex md:items-center md:justify-between">
         <span className="text-xs font-black text-mauri-green dark:text-mauri-gold">{examTitle}</span>
-        <span className="rounded-full bg-mauri-green/10 px-2.5 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">{text?.open || "البحث مفتوح"}</span>
+        <span className="w-fit rounded-full border border-mauri-green/15 bg-mauri-green/10 px-3 py-1.5 text-[11px] font-black text-mauri-green dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300">
+          البحث عن طريق الرقم أو الاسم
+        </span>
       </div>
       <div className="col-span-full">
         <QuickSearchChips chips={quickSearchChips} onPick={() => { setQuery(""); setFocused(true); }} />
