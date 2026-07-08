@@ -19,7 +19,7 @@ export default function Footer({ content = {}, text }) {
         <div className="grid gap-5 lg:grid-cols-[1fr_.9fr_.8fr]">
           <FooterInfoPanel content={content} text={text} />
 
-          <div className="rounded-[26px] border border-white/70 bg-white/70 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/10">
+          <div id="contact" className="scroll-mt-28 rounded-[26px] border border-white/70 bg-white/70 p-4 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-white/10">
             <h3 className="text-sm font-black text-slate-950 dark:text-white">اتصل بنا</h3>
             <p className="mt-1 text-xs font-bold leading-6 text-slate-500 dark:text-slate-300">للتواصل، الشراكات، أو ملاحظات حول النتائج.</p>
             <div className="mt-3 grid gap-2">
