@@ -150,7 +150,7 @@ s = s.replace(`  const status = isConcours ? getConcoursStatus(average, text) : 
 
 s = s.replace(`          <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{text.resultCard}</p>\n`, "");
 s = s.replace(`      <div className="mt-4 grid grid-cols-2 gap-2">
-        {details.map(([label, value, icon, onClick]) => (`, `      <div className={\`mt-4 rounded-[22px] border-r-4 p-4 shadow-soft ${decisionToneClass}\`}>
+        {details.map(([label, value, icon, onClick]) => (`, `      <div className={\`mt-4 rounded-[22px] border-r-4 p-4 shadow-soft \${decisionToneClass}\`}>
         <span className="text-[11px] font-black opacity-75">القرار</span>
         <strong className="mt-1 block text-xl font-black">{status.label}</strong>
       </div>
