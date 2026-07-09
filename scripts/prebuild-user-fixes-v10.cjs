@@ -42,11 +42,16 @@ function replaceFunction(name, body) {
 function dedupeExactLine(line) {
   let seen = false;
   s = s.split("\n").filter((currentLine) => {
-    if (currentLine !== line) return true;
+    if (currentLine.trimEnd() !== line) return true;
     if (seen) return false;
     seen = true;
     return true;
   }).join("\n");
+}
+
+function collapseDuplicateState(name, setter, initial) {
+  const pattern = new RegExp(`(\\n\\s*const \\[${name}, ${setter}\\] = useState\\(${initial}\\);)(?:\\n\\s*const \\[${name}, ${setter}\\] = useState\\(${initial}\\);)+`, "g");
+  s = s.replace(pattern, "$1");
 }
 
 // Published exams analytics: make uploaded results appear in الإحصائيات and الأوائل.
@@ -193,6 +198,10 @@ dedupeExactLine(`  const [rankingRows, setRankingRows] = useState([]);`);
 dedupeExactLine(`  const [publishedExams, setPublishedExams] = useState([]);`);
 dedupeExactLine(`  const [analyticsViews, setAnalyticsViews] = useState({});`);
 dedupeExactLine(`  const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});`);
+collapseDuplicateState("rankingRows", "setRankingRows", "\\[\\]");
+collapseDuplicateState("publishedExams", "setPublishedExams", "\\[\\]");
+collapseDuplicateState("analyticsViews", "setAnalyticsViews", "\\{\\}");
+collapseDuplicateState("analyticsLoadingSources", "setAnalyticsLoadingSources", "\\{\\}");
 
 fs.writeFileSync(p, s, "utf8");
 console.log("Applied MauriResults year-separated published exams and analytics v10");
