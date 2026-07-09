@@ -105,7 +105,6 @@ replaceFunction("openYear", `function openYear(year) {
     setError("");
     setMessage("");
     window.history.pushState({ view: "year", yearId }, "", \`#\${yearId}\`);
-    window.dispatchEvent(new HashChangeEvent("hashchange"));
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }`);
 
