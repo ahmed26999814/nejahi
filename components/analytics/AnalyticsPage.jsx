@@ -1,4 +1,4 @@
-import { BarChartCard, DashboardMetricCard, LeaderboardCard, PieChartCard } from "../dashboard/DashboardDesignKit";
+import { BarChartCard, LeaderboardCard, PieChartCard } from "../dashboard/DashboardDesignKit";
 
 function safeNumber(value) {
   const number = Number(value || 0);
@@ -44,25 +44,12 @@ export default function AnalyticsPage(props) {
 
   const safeTotal = safeNumber(stats.total);
   const safePassed = safeNumber(stats.passed);
-  const safeHighest = safeNumber(stats.highest);
   const safeAverage = safeNumber(stats.average);
   const successPercent = stats.isConcours
     ? Math.min(100, Math.max(0, (safeAverage / 200) * 100))
     : safeTotal
       ? Math.min(100, Math.max(0, (safePassed / safeTotal) * 100))
       : 0;
-
-  const analyticsCards = stats.isConcours
-    ? [
-      { label: text.participants, value: safeTotal, hint: text.analytics },
-      { label: text.highestScore, value: safeHighest, hint: text.highestScore },
-      { label: text.averageScore, value: safeAverage, hint: text.averageScore },
-    ]
-    : [
-      { label: text.studentCount, value: safeTotal, hint: text.analytics },
-      { label: text.passedCount, value: safePassed, hint: successPercent.toFixed(1) + "%" },
-      { label: text.highestAverage, value: safeHighest, hint: text.highestAverage },
-    ];
 
   const analyticsDashboardRows = buildRows(rows, stats, text);
   const chartIcon = ChartIcon ? <ChartIcon /> : null;
@@ -74,11 +61,6 @@ export default function AnalyticsPage(props) {
       {selectedExam ? (
         <>
           {StatsStrip && <StatsStrip loading={loading} stats={stats} text={text} />}
-          <section className="grid gap-3 md:grid-cols-3">
-            {analyticsCards.map((card) => (
-              <DashboardMetricCard label={card.label} value={card.value} hint={card.hint} key={card.label} />
-            ))}
-          </section>
           <section className="grid gap-3 lg:grid-cols-[.75fr_1.25fr]">
             <PieChartCard title={stats.isConcours ? text.averageScore : text.passedCount} value={successPercent} label={stats.isConcours ? text.averageScore : text.passedCount} />
             <BarChartCard title={tableTitle} rows={analyticsDashboardRows} />
