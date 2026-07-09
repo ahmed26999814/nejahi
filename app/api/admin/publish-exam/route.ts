@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -30,6 +31,11 @@ function safeText(value: unknown, fallback = "") {
   return text || fallback;
 }
 
+function safeSearchMode(value: unknown) {
+  const mode = String(value || "simple").trim();
+  return ["simple", "concours"].includes(mode) ? mode : "simple";
+}
+
 function rankedViewName(tableName: string) {
   return tableName.replace(/_results$/, "") + "_ranked_results";
 }
@@ -49,6 +55,7 @@ export async function POST(request: Request) {
   const numberColumn = safeColumn(body.numberColumn);
   const nameColumn = safeColumn(body.nameColumn);
   const scoreColumn = safeColumn(body.scoreColumn);
+  const searchMode = safeSearchMode(body.searchMode);
 
   if (!tableName) return json(400, { ok: false, error: "Invalid table name" });
   if (!numberColumn || !nameColumn || !scoreColumn) {
@@ -65,13 +72,15 @@ export async function POST(request: Request) {
     description_ar: safeText(body.descriptionAr, "نتائج منشورة من لوحة الأدمن."),
     description_fr: safeText(body.descriptionFr, "Résultats publiés depuis l'administration."),
     year,
-    tone: safeText(body.tone, "green"),
+    tone: safeText(body.tone, searchMode === "concours" ? "amber" : "green"),
+    search_mode: searchMode,
     number_column: numberColumn,
     name_column: nameColumn,
     score_column: scoreColumn,
     decision_column: safeColumn(body.decisionColumn),
     track_column: safeColumn(body.trackColumn),
     wilaya_column: safeColumn(body.wilayaColumn),
+    moughataa_column: safeColumn(body.moughataaColumn),
     school_column: safeColumn(body.schoolColumn),
     centre_column: safeColumn(body.centreColumn),
     birth_place_column: safeColumn(body.birthPlaceColumn),
