@@ -94,7 +94,7 @@ s = s.replace(
 s = s.replace(
   `    window.history.replaceState({ view: "home" }, "", window.location.pathname);`,
   `    const initialRoute = getInitialRouteState();
-    window.history.replaceState({ view: initialRoute.view }, "", window.location.hash ? \`${window.location.pathname}${window.location.hash}\` : window.location.pathname);`
+    window.history.replaceState({ view: initialRoute.view }, "", window.location.hash ? window.location.pathname + window.location.hash : window.location.pathname);`
 );
 if (!s.includes('localStorage.setItem("mauriresults-selected-exam", selectedExamId)')) {
   s = s.replace(
