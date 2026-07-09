@@ -41,13 +41,6 @@ function normalizeHomeYearId(year) {
   return `year-${matchedYear}`;
 }
 
-function openYearFallback(yearId) {
-  if (typeof window === "undefined") return;
-  window.history.pushState({ view: "year" }, "", `#${yearId}`);
-  window.dispatchEvent(new PopStateEvent("popstate", { state: { view: "year" } }));
-  window.dispatchEvent(new HashChangeEvent("hashchange"));
-}
-
 function YearChoiceCards({ lang = "ar", onSelectYear }) {
   const cards = HOME_YEAR_CARDS;
 
@@ -73,8 +66,10 @@ function YearChoiceCards({ lang = "ar", onSelectYear }) {
                 return;
               }
               const payload = { ...year, id: yearId, available: true };
-              if (typeof onSelectYear === "function") onSelectYear(payload);
-              window.setTimeout(() => openYearFallback(yearId), 0);
+              if (typeof onSelectYear === "function") {
+                event.preventDefault();
+                onSelectYear(payload);
+              }
             }}
             className={`group relative block min-h-[132px] overflow-hidden rounded-[28px] border bg-gradient-to-br p-4 text-start shadow-premium transition duration-300 active:scale-[.99] hover:-translate-y-0.5 ${tone} ${available ? "" : "pointer-events-none opacity-80"}`}
           >
