@@ -9,22 +9,25 @@ s = s.replace(/;\s*const \[analyticsViews, setAnalyticsViews\]/g, ";\n  const [a
 s = s.replace(/;\s*const \[analyticsLoadingSources, setAnalyticsLoadingSources\]/g, ";\n  const [analyticsLoadingSources, setAnalyticsLoadingSources]");
 s = s.replace(/;\s*const \[publishedExams, setPublishedExams\]/g, ";\n  const [publishedExams, setPublishedExams]");
 
-function dedupeState(name) {
-  const pattern = new RegExp(`^\\s*const \\[${name}, [^\\]]+\\] = useState\\([^\\n]*$`);
+function collapseDuplicateState(name) {
+  const sameLine = new RegExp(`(\\s*const \\[${name}, [^\\]]+\\] = useState\\([^;]+\\);)(?:\\s*const \\[${name}, [^\\]]+\\] = useState\\([^;]+\\);)+`, "g");
+  s = s.replace(sameLine, "$1");
+
+  const line = new RegExp(`^\\s*const \\[${name}, [^\\]]+\\] = useState\\([^;]+\\);\\s*$`);
   let seen = false;
-  s = s.split("\n").filter((line) => {
-    if (!pattern.test(line)) return true;
+  s = s.split("\n").filter((currentLine) => {
+    if (!line.test(currentLine)) return true;
     if (seen) return false;
     seen = true;
     return true;
   }).join("\n");
 }
 
-dedupeState("rankingRows");
-dedupeState("analyticsViews");
-dedupeState("analyticsLoadingSources");
-dedupeState("publishedExams");
-dedupeState("selectedYearId");
+collapseDuplicateState("rankingRows");
+collapseDuplicateState("analyticsViews");
+collapseDuplicateState("analyticsLoadingSources");
+collapseDuplicateState("publishedExams");
+collapseDuplicateState("selectedYearId");
 
 fs.writeFileSync(p, s, "utf8");
 console.log("Applied MauriResults final prebuild cleanup v11");
