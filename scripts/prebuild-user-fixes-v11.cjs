@@ -72,11 +72,21 @@ replaceFunction("getInitialRouteState", `function getInitialRouteState() {
   return { view: "home", examId: savedExamId, yearId: "year-2025" };
 }`);
 
-// Make selectedYearId initialize from the hash route, not always 2025/2026 ad hoc.
+// Force stable route states. The old string replacement sometimes missed the base source file.
 s = s.replace(
-  `  const [selectedYearId, setSelectedYearId] = useState(() => typeof window !== "undefined" && window.location.hash.replace("#", "") === "year-2026" ? "year-2026" : "year-2025");`,
-  `  const [selectedYearId, setSelectedYearId] = useState(() => getInitialRouteState().yearId || "year-2025");`
+  /  const \[activeView, setActiveView\] = useState\([^;]*\);\n\s*const \[selectedExamId, setSelectedExamId\] = useState\([^;]*\);(?:\n\s*const \[selectedYearId, setSelectedYearId\] = useState\([^;]*\);)?/,
+  `  const [activeView, setActiveView] = useState(() => getInitialRouteState().view);
+  const [selectedExamId, setSelectedExamId] = useState(() => getInitialRouteState().examId);
+  const [selectedYearId, setSelectedYearId] = useState(() => getInitialRouteState().yearId || "year-2025");`
 );
+if (!s.includes("const [selectedYearId, setSelectedYearId]")) {
+  s = s.replace(
+    /  const \[selectedExamId, setSelectedExamId\] = useState\([^;]*\);/,
+    `  const [selectedExamId, setSelectedExamId] = useState(() => getInitialRouteState().examId);
+  const [selectedYearId, setSelectedYearId] = useState(() => getInitialRouteState().yearId || "year-2025");`
+  );
+}
+collapseDuplicateState("selectedYearId");
 
 // Make the home 2025 year card clickable by passing the real yearCards prop into PremiumHomeView.
 s = s.replace(
