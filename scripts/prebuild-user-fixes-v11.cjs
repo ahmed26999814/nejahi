@@ -58,6 +58,26 @@ collapseDuplicateState("analyticsLoadingSources");
 collapseDuplicateState("publishedExams");
 collapseDuplicateState("selectedYearId");
 
+// Strong route parser: refresh on #year-2025 stays on the 2025 competitions page.
+replaceFunction("getInitialRouteState", `function getInitialRouteState() {
+  if (typeof window === "undefined") return { view: "home", examId: "", yearId: "year-2025" };
+  const hash = window.location.hash.replace("#", "").trim();
+  const savedExamId = localStorage.getItem("mauriresults-selected-exam") || "";
+  const yearHash = hash.match(/^year-(20\\d{2})$/)?.[0];
+  const knownExam = EXAM_CARDS.find((exam) => exam.id === hash && exam.available);
+
+  if (hash === "year" || yearHash) return { view: "year", examId: "", yearId: yearHash || "year-2025" };
+  if (knownExam || hash.startsWith("upload-")) return { view: "exam", examId: hash, yearId: hash.includes("2026") ? "year-2026" : "year-2025" };
+  if (["analytics", "toppers", "contact"].includes(hash)) return { view: hash, examId: savedExamId, yearId: "year-2025" };
+  return { view: "home", examId: savedExamId, yearId: "year-2025" };
+}`);
+
+// Make selectedYearId initialize from the hash route, not always 2025/2026 ad hoc.
+s = s.replace(
+  `  const [selectedYearId, setSelectedYearId] = useState(() => typeof window !== "undefined" && window.location.hash.replace("#", "") === "year-2026" ? "year-2026" : "year-2025");`,
+  `  const [selectedYearId, setSelectedYearId] = useState(() => getInitialRouteState().yearId || "year-2025");`
+);
+
 // Make the home 2025 year card clickable by passing the real yearCards prop into PremiumHomeView.
 s = s.replace(
   `function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text }) {`,
@@ -84,9 +104,48 @@ replaceFunction("openYear", `function openYear(year) {
     setMatches([]);
     setError("");
     setMessage("");
-    window.history.pushState({ view: "year" }, "", \`#\${yearId}\`);
+    window.history.pushState({ view: "year", yearId }, "", \`#\${yearId}\`);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }`);
+
+// Hash-sync effect fixes refresh and direct links for #year-2025, #year-2026, #analytics, etc.
+if (!s.includes("MauriResults Route Sync v12")) {
+  s = s.replace(
+    `  function setTheme(nextTheme) {`,
+    `  useEffect(() => {
+    function syncRouteFromHash() {
+      const route = getInitialRouteState();
+      if (route.yearId) setSelectedYearId(route.yearId);
+      if (route.view === "year") {
+        setSelectedExamId("");
+        setActiveView("year");
+        setResultPageOpen(false);
+        setSelectedStudent(null);
+      } else if (route.view === "exam") {
+        setSelectedExamId(route.examId);
+        setActiveView("exam");
+        setResultPageOpen(false);
+        setSelectedStudent(null);
+      } else if (["analytics", "toppers", "contact", "home"].includes(route.view)) {
+        setActiveView(route.view);
+        if (route.examId) setSelectedExamId(route.examId);
+        setResultPageOpen(false);
+        setSelectedStudent(null);
+      }
+    }
+    syncRouteFromHash();
+    window.addEventListener("hashchange", syncRouteFromHash);
+    window.addEventListener("popstate", syncRouteFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncRouteFromHash);
+      window.removeEventListener("popstate", syncRouteFromHash);
+    };
+  }, []); // MauriResults Route Sync v12
+
+  function setTheme(nextTheme) {`
+  );
+}
 
 // Separate 2026 uploaded exams from 2025. Never let "نتائج باكالوريا 2026" appear inside the 2025 page.
 if (!s.includes("function getExamCardYear(exam)")) {
