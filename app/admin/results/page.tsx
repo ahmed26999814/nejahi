@@ -12,8 +12,8 @@ const SOURCES = [
   { value: "custom", label: "مسابقة جديدة / جدول مخصص", table: "" },
 ];
 
-const CLIENT_CHUNK_SIZE = 400;
-const MAX_ROWS = 120_000;
+const CLIENT_CHUNK_SIZE = 1500;
+const MAX_ROWS = 250_000;
 
 type UploadResult = {
   ok?: boolean;
@@ -35,6 +35,7 @@ type UploadResult = {
   hint?: string;
   warning?: boolean;
   progress?: string;
+  progressPercent?: number;
   published?: boolean;
   publishError?: string;
 };
@@ -83,7 +84,12 @@ function inferColumns(rows: Record<string, unknown>[]) {
   return Array.from(new Set(rows.flatMap((row) => Object.keys(row || {})).map(cleanColumnName).filter(Boolean)));
 }
 
+async function yieldToBrowser() {
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
+}
+
 async function parseXlsxFile(file: File, requestedSheetName?: string): Promise<ParsedXlsx> {
+  await yieldToBrowser();
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: "array", cellDates: true, dense: false });
   const sheetName = requestedSheetName && workbook.SheetNames.includes(requestedSheetName)
@@ -94,6 +100,8 @@ async function parseXlsxFile(file: File, requestedSheetName?: string): Promise<P
 
   const sheet = workbook.Sheets[sheetName];
   const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null, raw: false });
+  await yieldToBrowser();
+
   const rows = rawRows
     .map(normalizeRow)
     .filter((row) => Object.values(row).some((value) => value !== null && value !== ""));
@@ -117,19 +125,45 @@ async function readJsonOrText(response: Response) {
   }
 }
 
+function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+  return (
+    <label className="grid gap-1 text-sm font-black">
+      <span>{label}</span>
+      {children}
+      {hint && <span className="text-xs font-bold leading-5 text-slate-500">{hint}</span>}
+    </label>
+  );
+}
+
+function StepCard({ number, title, children }: { number: string; title: string; children: React.ReactNode }) {
+  return (
+    <section className="grid gap-3 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <span className="grid h-9 w-9 place-items-center rounded-2xl bg-emerald-600 text-sm font-black text-white">{number}</span>
+        <h2 className="text-base font-black text-slate-950">{title}</h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export default function ResultsUploadAdminPage() {
   const [secret, setSecret] = useState("");
   const [source, setSource] = useState("custom");
   const [customTable, setCustomTable] = useState("");
   const [sheetName, setSheetName] = useState("");
+  const [searchMode, setSearchMode] = useState("simple");
   const [numberColumn, setNumberColumn] = useState("");
   const [nameColumn, setNameColumn] = useState("");
   const [scoreColumn, setScoreColumn] = useState("");
   const [decisionColumn, setDecisionColumn] = useState("");
   const [trackColumn, setTrackColumn] = useState("");
   const [wilayaColumn, setWilayaColumn] = useState("");
+  const [moughataaColumn, setMoughataaColumn] = useState("");
   const [schoolColumn, setSchoolColumn] = useState("");
   const [centreColumn, setCentreColumn] = useState("");
+  const [birthPlaceColumn, setBirthPlaceColumn] = useState("");
+  const [birthDateColumn, setBirthDateColumn] = useState("");
   const [speedSetup, setSpeedSetup] = useState(true);
   const [publishToSite, setPublishToSite] = useState(true);
   const [publicTitle, setPublicTitle] = useState("نتائج باكالوريا 2026");
@@ -138,6 +172,7 @@ export default function ResultsUploadAdminPage() {
   const [dryRun, setDryRun] = useState(true);
   const [createTable, setCreateTable] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState("جاهز");
   const [result, setResult] = useState<UploadResult | null>(null);
 
   useEffect(() => {
@@ -148,10 +183,22 @@ export default function ResultsUploadAdminPage() {
   const normalizedCustomTable = normalizeTableName(customTable);
   const targetTable = source === "custom" ? normalizedCustomTable : selectedSource?.table || "";
   const isCustom = source === "custom";
+  const isConcoursMode = searchMode === "concours";
+  const uploadModeNote = isConcoursMode
+    ? "سيُحفظ هذا الرفع ككونكور: الولاية → المقاطعة → المركز → رقم المترشح."
+    : "بحث سريع بالرقم أو الاسم، مناسب للباك والبريفيه وباقي النتائج العادية.";
 
   function saveSecret(value: string) {
     setSecret(value);
     localStorage.setItem("mauriresults-admin-secret", value);
+  }
+
+  function inputClass() {
+    return "rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-emerald-500";
+  }
+
+  function smallInputClass() {
+    return "rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500";
   }
 
   function setSuggestedColumns(columns: string[] = []) {
@@ -161,10 +208,13 @@ export default function ResultsUploadAdminPage() {
     if (!nameColumn) setNameColumn(findColumn([/nom_ar/i, /^nom/i, /name/i, /اسم/i]));
     if (!scoreColumn) setScoreColumn(findColumn([/moy_bac/i, /moy/i, /mod/i, /mg/i, /total/i, /score/i, /معدل/i, /مجموع/i]));
     if (!decisionColumn) setDecisionColumn(findColumn([/decision/i, /kr/i, /قرار/i]));
-    if (!trackColumn) setTrackColumn(findColumn([/^serie$/i, /serie_ar/i, /ts/i, /شعبة/i]));
+    if (!trackColumn) setTrackColumn(findColumn([/^serie$/i, /serie_ar/i, /ts/i, /type/i, /شعبة/i]));
     if (!wilayaColumn) setWilayaColumn(findColumn([/wilaya_ar/i, /wilaya/i, /^wl$/i, /ولاية/i]));
-    if (!schoolColumn) setSchoolColumn(findColumn([/etablissement_ar/i, /ecole/i, /^ms$/i, /مدرسة/i]));
+    if (!moughataaColumn) setMoughataaColumn(findColumn([/moughataa_ar/i, /moughataa/i, /مقاطعة/i]));
+    if (!schoolColumn) setSchoolColumn(findColumn([/etablissement_ar/i, /ecole/i, /^ms$/i, /مدرسة/i, /مؤسسة/i]));
     if (!centreColumn) setCentreColumn(findColumn([/centre examen ar/i, /centre/i, /مركز/i]));
+    if (!birthPlaceColumn) setBirthPlaceColumn(findColumn([/lieu/i, /lieun/i, /مكان/i]));
+    if (!birthDateColumn) setBirthDateColumn(findColumn([/date/i, /datn/i, /annee/i, /تاريخ/i, /ميلاد/i]));
   }
 
   async function publishExam(totalRows: number) {
@@ -180,14 +230,18 @@ export default function ResultsUploadAdminPage() {
         titleFr: publicTitle.trim() || `Résultats ${targetTable}`,
         year: publicYear.trim() || "2026",
         totalRows,
+        searchMode,
         numberColumn: numberColumn.trim(),
         nameColumn: nameColumn.trim(),
         scoreColumn: scoreColumn.trim(),
         decisionColumn: decisionColumn.trim(),
         trackColumn: trackColumn.trim(),
         wilayaColumn: wilayaColumn.trim(),
+        moughataaColumn: moughataaColumn.trim(),
         schoolColumn: schoolColumn.trim(),
         centreColumn: centreColumn.trim(),
+        birthPlaceColumn: birthPlaceColumn.trim(),
+        birthDateColumn: birthDateColumn.trim(),
       }),
     });
     const data = await readJsonOrText(response) as UploadResult;
@@ -205,6 +259,8 @@ export default function ResultsUploadAdminPage() {
 
     setLoading(true);
     try {
+      setPhase("قراءة ملف Excel داخل الهاتف");
+      setResult({ ok: true, progress: "جاري قراءة الملف. في الملفات الكبيرة قد يأخذ هذا بعض الوقت." });
       const parsed = await parseXlsxFile(file, sheetName.trim());
       const rows = parsed.rows;
       const columns = parsed.columns;
@@ -214,6 +270,7 @@ export default function ResultsUploadAdminPage() {
       if (rows.length > MAX_ROWS) return setResult({ ok: false, error: `الملف كبير جدًا. الحد الأقصى ${MAX_ROWS.toLocaleString("ar-MR")} صف.` });
 
       if (dryRun) {
+        setPhase("معاينة جاهزة");
         setResult({
           ok: true,
           dryRun: true,
@@ -238,7 +295,9 @@ export default function ResultsUploadAdminPage() {
       for (let index = 0; index < chunks.length; index += 1) {
         const isFirstChunk = index === 0;
         const isLastChunk = index === chunks.length - 1;
-        setResult({ ok: true, table: targetTable, fileName: file.name, sheetName: parsed.sheetName, totalRows: rows.length, inserted, columns, progress: `جاري رفع الدفعة ${index + 1} من ${chunks.length}` });
+        const progressPercent = Math.max(1, Math.round((inserted / rows.length) * 100));
+        setPhase(`رفع الدفعة ${index + 1} / ${chunks.length}`);
+        setResult({ ok: true, table: targetTable, fileName: file.name, sheetName: parsed.sheetName, totalRows: rows.length, inserted, columns, progressPercent, progress: `تم رفع ${inserted.toLocaleString("ar-MR")} من ${rows.length.toLocaleString("ar-MR")} صف` });
 
         const response = await fetch("/api/admin/results-upload", {
           method: "POST",
@@ -253,6 +312,9 @@ export default function ResultsUploadAdminPage() {
             numberColumn: numberColumn.trim(),
             nameColumn: nameColumn.trim(),
             scoreColumn: scoreColumn.trim(),
+            wilayaColumn: wilayaColumn.trim(),
+            moughataaColumn: moughataaColumn.trim(),
+            centreColumn: centreColumn.trim(),
             isLastChunk,
             chunkIndex: index + 1,
             totalChunks: chunks.length,
@@ -270,11 +332,13 @@ export default function ResultsUploadAdminPage() {
         inserted += Number(data.inserted || chunks[index].length);
         tableCreated = tableCreated || Boolean(data.tableCreated);
         lastResponse = data;
+        if (index % 3 === 0) await yieldToBrowser();
       }
 
       let published = false;
       let publishError = "";
       if (publishToSite) {
+        setPhase("نشر زر المسابقة في الموقع");
         try {
           await publishExam(rows.length);
           published = true;
@@ -283,6 +347,7 @@ export default function ResultsUploadAdminPage() {
         }
       }
 
+      setPhase("اكتمل");
       setResult({
         ok: true,
         dryRun: false,
@@ -301,10 +366,11 @@ export default function ResultsUploadAdminPage() {
         warning: lastResponse.warning || Boolean(publishError),
         published,
         publishError,
+        progressPercent: 100,
         message: published
-          ? "تم رفع النتائج ونشر زرها في الموقع. افتح الموقع وحدث الصفحة."
+          ? "تم رفع النتائج وتجهيز السرعة ونشر زرها في الموقع."
           : publishError
-            ? "تم رفع النتائج لكن نشرها في الموقع فشل. شغّل SQL published_exams ثم أعد المحاولة."
+            ? "تم رفع النتائج وتجهيز السرعة لكن نشرها في الموقع فشل. تأكد من SQL published_exams ثم أعد المحاولة."
             : "تم نشر النتائج على دفعات وتجهيز السرعة بنجاح.",
       });
     } catch (error) {
@@ -316,53 +382,68 @@ export default function ResultsUploadAdminPage() {
 
   return (
     <main dir="rtl" className="min-h-screen bg-slate-950 px-4 py-5 text-white">
-      <section className="mx-auto grid max-w-2xl gap-4">
+      <section className="mx-auto grid max-w-3xl gap-4">
         <header className="rounded-[28px] border border-white/10 bg-white/10 p-5 shadow-2xl shadow-black/30">
           <p className="text-xs font-black text-emerald-300">MauriResults Admin</p>
           <h1 className="mt-1 text-2xl font-black">نشر نتائج XLSX من الهاتف</h1>
-          <p className="mt-2 text-sm font-bold leading-6 text-slate-300">ارفع ملف Excel، راجع المعاينة، ثم انشر النتائج لتظهر في الموقع مباشرة.</p>
+          <p className="mt-2 text-sm font-bold leading-6 text-slate-300">الواجهة منظمة للسرعة: معاينة أولًا، رفع على دفعات كبيرة، ثم فهارس تلقائية حتى لا يحدث لاغ وقت الضغط.</p>
+          <div className="mt-4 grid gap-2 text-xs font-black text-emerald-100 sm:grid-cols-3">
+            <span className="rounded-2xl bg-black/20 p-3">دفعة الرفع: {CLIENT_CHUNK_SIZE.toLocaleString("ar-MR")} صف</span>
+            <span className="rounded-2xl bg-black/20 p-3">الحد الأقصى: {MAX_ROWS.toLocaleString("ar-MR")} صف</span>
+            <span className="rounded-2xl bg-black/20 p-3">الحالة: {phase}</span>
+          </div>
         </header>
 
-        <form onSubmit={submitUpload} className="grid gap-3 rounded-[28px] border border-white/10 bg-white p-4 text-slate-950 shadow-2xl">
-          <label className="grid gap-1 text-sm font-black">ADMIN_SECRET<input value={secret} onChange={(event) => saveSecret(event.target.value)} placeholder="أدخل سر الأدمن" type="password" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-emerald-500" /></label>
-
-          <label className="grid gap-1 text-sm font-black">المسابقة<select value={source} onChange={(event) => { setSource(event.target.value); if (event.target.value === "custom") setCreateTable(true); }} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-emerald-500">{SOURCES.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
-
-          {isCustom && <label className="grid gap-1 text-sm font-black">اسم جدول Supabase للمسابقة الجديدة<input value={customTable} onChange={(event) => setCustomTable(event.target.value)} placeholder="مثال: bac_2026_results" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-base outline-none focus:border-emerald-500" dir="ltr" /><span className="text-xs font-bold text-slate-500">يمكنك كتابة شرطات، وسيحوّلها النظام تلقائيًا إلى underscores.</span>{customTable && normalizedCustomTable !== customTable.trim() && <span className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700" dir="ltr">سيستخدم: {normalizedCustomTable}</span>}</label>}
-
-          <label className="grid gap-1 text-sm font-black">اسم الورقة داخل Excel اختياري<input value={sheetName} onChange={(event) => setSheetName(event.target.value)} placeholder="اتركه فارغًا لاستخدام أول ورقة" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-emerald-500" /></label>
-          <label className="grid gap-1 text-sm font-black">ملف النتائج XLSX<input accept=".xlsx,.xls" onChange={(event) => setFile(event.target.files?.[0] || null)} type="file" className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm file:ml-3 file:rounded-xl file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:font-black file:text-white" /></label>
-
-          {isCustom && <label className="flex items-center justify-between gap-3 rounded-2xl bg-emerald-50 p-4 text-sm font-black text-emerald-950"><span>إنشاء الجدول تلقائيًا عند النشر<span className="block text-xs font-bold text-emerald-700">مفيد عند صدور مسابقة جديدة وملف XLSX فقط.</span></span><input checked={createTable} onChange={(event) => setCreateTable(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>}
-
-          <section className="grid gap-3 rounded-2xl bg-slate-50 p-4">
-            <label className="flex items-center justify-between gap-3 text-sm font-black"><span>تجهيز السرعة تلقائيًا<span className="block text-xs font-bold text-slate-500">ينشئ فهارس و View للترتيب حتى تظهر النتائج بسرعة.</span></span><input checked={speedSetup} onChange={(event) => setSpeedSetup(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <label className="grid gap-1 text-xs font-black">عمود رقم المترشح<input value={numberColumn} onChange={(event) => setNumberColumn(event.target.value)} placeholder="Num_Bac" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
-              <label className="grid gap-1 text-xs font-black">عمود الاسم<input value={nameColumn} onChange={(event) => setNameColumn(event.target.value)} placeholder="NOM_AR" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
-              <label className="grid gap-1 text-xs font-black">عمود المعدل/المجموع<input value={scoreColumn} onChange={(event) => setScoreColumn(event.target.value)} placeholder="Moy_Bac" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
-              <label className="grid gap-1 text-xs font-black">عمود القرار<input value={decisionColumn} onChange={(event) => setDecisionColumn(event.target.value)} placeholder="Decision" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
-              <label className="grid gap-1 text-xs font-black">عمود الشعبة<input value={trackColumn} onChange={(event) => setTrackColumn(event.target.value)} placeholder="SERIE" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
-              <label className="grid gap-1 text-xs font-black">عمود الولاية<input value={wilayaColumn} onChange={(event) => setWilayaColumn(event.target.value)} placeholder="Wilaya_AR" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
-              <label className="grid gap-1 text-xs font-black">عمود المؤسسة<input value={schoolColumn} onChange={(event) => setSchoolColumn(event.target.value)} placeholder="Etablissement_AR" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
-              <label className="grid gap-1 text-xs font-black">عمود المركز<input value={centreColumn} onChange={(event) => setCentreColumn(event.target.value)} placeholder="Centre Examen AR" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
+        <form onSubmit={submitUpload} className="grid gap-4 text-slate-950">
+          <StepCard number="1" title="الدخول والملف">
+            <Field label="ADMIN_SECRET"><input value={secret} onChange={(event) => saveSecret(event.target.value)} placeholder="أدخل سر الأدمن" type="password" className={inputClass()} /></Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="المسابقة"><select value={source} onChange={(event) => { setSource(event.target.value); if (event.target.value === "custom") setCreateTable(true); }} className={inputClass()}>{SOURCES.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></Field>
+              <Field label="اسم الورقة داخل Excel" hint="اتركه فارغًا لاستخدام أول ورقة."><input value={sheetName} onChange={(event) => setSheetName(event.target.value)} placeholder="اختياري" className={inputClass()} /></Field>
             </div>
-          </section>
+            {isCustom && <Field label="اسم جدول Supabase للمسابقة الجديدة" hint="مثال: bac_2026_results أو concours_2026_results"><input value={customTable} onChange={(event) => setCustomTable(event.target.value)} placeholder="bac_2026_results" className={`${inputClass()} text-left`} dir="ltr" />{customTable && normalizedCustomTable !== customTable.trim() && <span className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700" dir="ltr">سيستخدم: {normalizedCustomTable}</span>}</Field>}
+            <Field label="ملف النتائج XLSX"><input accept=".xlsx,.xls" onChange={(event) => setFile(event.target.files?.[0] || null)} type="file" className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm file:ml-3 file:rounded-xl file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:font-black file:text-white" /></Field>
+          </StepCard>
 
-          <section className="grid gap-3 rounded-2xl bg-emerald-50 p-4 text-emerald-950">
-            <label className="flex items-center justify-between gap-3 text-sm font-black"><span>إظهار النتائج في الموقع مباشرة<span className="block text-xs font-bold text-emerald-700">بعد اكتمال الرفع سيظهر زر المسابقة في صفحة اختيار النتائج.</span></span><input checked={publishToSite} onChange={(event) => setPublishToSite(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>
-            <label className="grid gap-1 text-xs font-black">اسم الزر في الموقع<input value={publicTitle} onChange={(event) => setPublicTitle(event.target.value)} placeholder="نتائج باكالوريا 2026" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 outline-none focus:border-emerald-500" /></label>
-            <label className="grid gap-1 text-xs font-black">السنة<input value={publicYear} onChange={(event) => setPublicYear(event.target.value)} placeholder="2026" className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" /></label>
-          </section>
+          <StepCard number="2" title="طريقة البحث والسرعة">
+            <Field label="طريقة البحث" hint={uploadModeNote}>
+              <select value={searchMode} onChange={(event) => setSearchMode(event.target.value)} className={inputClass()}>
+                <option value="simple">عادي: رقم أو اسم</option>
+                <option value="concours">كونكور: ولاية → مقاطعة → مركز → رقم</option>
+              </select>
+            </Field>
+            {isCustom && <label className="flex items-center justify-between gap-3 rounded-2xl bg-emerald-50 p-4 text-sm font-black text-emerald-950"><span>إنشاء الجدول تلقائيًا عند النشر<span className="block text-xs font-bold text-emerald-700">مفيد عند صدور مسابقة جديدة وملف XLSX فقط.</span></span><input checked={createTable} onChange={(event) => setCreateTable(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>}
+            <label className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-black"><span>تجهيز السرعة تلقائيًا<span className="block text-xs font-bold text-slate-500">ينشئ Indexes و Ranked View بعد آخر دفعة.</span></span><input checked={speedSetup} onChange={(event) => setSpeedSetup(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Field label="عمود رقم المترشح"><input value={numberColumn} onChange={(event) => setNumberColumn(event.target.value)} placeholder="Num_Bac" className={smallInputClass()} dir="ltr" /></Field>
+              <Field label="عمود الاسم"><input value={nameColumn} onChange={(event) => setNameColumn(event.target.value)} placeholder="NOM_AR" className={smallInputClass()} dir="ltr" /></Field>
+              <Field label="عمود المعدل/المجموع"><input value={scoreColumn} onChange={(event) => setScoreColumn(event.target.value)} placeholder="Moy_Bac" className={smallInputClass()} dir="ltr" /></Field>
+              <Field label="عمود القرار"><input value={decisionColumn} onChange={(event) => setDecisionColumn(event.target.value)} placeholder="Decision" className={smallInputClass()} dir="ltr" /></Field>
+              <Field label="عمود الشعبة"><input value={trackColumn} onChange={(event) => setTrackColumn(event.target.value)} placeholder="SERIE" className={smallInputClass()} dir="ltr" /></Field>
+              <Field label="عمود الولاية"><input value={wilayaColumn} onChange={(event) => setWilayaColumn(event.target.value)} placeholder="Wilaya_AR" className={smallInputClass()} dir="ltr" /></Field>
+              {isConcoursMode && <Field label="عمود المقاطعة"><input value={moughataaColumn} onChange={(event) => setMoughataaColumn(event.target.value)} placeholder="Moughataa_AR" className={smallInputClass()} dir="ltr" /></Field>}
+              <Field label="عمود المؤسسة"><input value={schoolColumn} onChange={(event) => setSchoolColumn(event.target.value)} placeholder="Etablissement_AR" className={smallInputClass()} dir="ltr" /></Field>
+              <Field label="عمود المركز"><input value={centreColumn} onChange={(event) => setCentreColumn(event.target.value)} placeholder="Centre Examen AR" className={smallInputClass()} dir="ltr" /></Field>
+              <Field label="مكان الميلاد"><input value={birthPlaceColumn} onChange={(event) => setBirthPlaceColumn(event.target.value)} placeholder="Lieun_AR" className={smallInputClass()} dir="ltr" /></Field>
+              <Field label="تاريخ/سنة الميلاد"><input value={birthDateColumn} onChange={(event) => setBirthDateColumn(event.target.value)} placeholder="Date Naiss" className={smallInputClass()} dir="ltr" /></Field>
+            </div>
+          </StepCard>
 
-          <label className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-black"><span>وضع المعاينة فقط<span className="block text-xs font-bold text-slate-500">أبقِه مفعّلًا أول مرة حتى تتأكد من الأعمدة وعدد الصفوف.</span></span><input checked={dryRun} onChange={(event) => setDryRun(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>
-
-          <div className="rounded-2xl bg-slate-100 p-3 text-xs font-bold text-slate-600">الهدف الحالي: <span dir="ltr" className="font-black text-slate-950">{targetTable || "غير محدد"}</span>{isCustom && createTable && <span className="mt-1 block text-emerald-700">سيحاول النظام إنشاء هذا الجدول عند النشر.</span>}{speedSetup && <span className="mt-1 block text-emerald-700">سيتم تجهيز فهارس السرعة و Ranked View بعد رفع النتائج.</span>}{publishToSite && <span className="mt-1 block text-emerald-700">سيتم نشر زر المسابقة في الموقع تلقائيًا.</span>}<span className="mt-1 block text-slate-500">الملف يُقرأ داخل المتصفح ثم تُرسل الصفوف على دفعات صغيرة حتى تعمل من الهاتف.</span></div>
-
-          <button disabled={loading} type="submit" className="rounded-2xl bg-emerald-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-emerald-600/25 disabled:opacity-60">{loading ? "جاري المعالجة..." : dryRun ? "معاينة الملف" : "نشر النتائج الآن"}</button>
+          <StepCard number="3" title="النشر في الموقع">
+            <section className="grid gap-3 rounded-2xl bg-emerald-50 p-4 text-emerald-950">
+              <label className="flex items-center justify-between gap-3 text-sm font-black"><span>إظهار النتائج في الموقع مباشرة<span className="block text-xs font-bold text-emerald-700">بعد اكتمال الرفع سيظهر زر المسابقة في سنة 2026 أو السنة التي تختارها.</span></span><input checked={publishToSite} onChange={(event) => setPublishToSite(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>
+              <div className="grid gap-2 sm:grid-cols-[1fr_.35fr]">
+                <Field label="اسم الزر في الموقع"><input value={publicTitle} onChange={(event) => setPublicTitle(event.target.value)} placeholder="نتائج باكالوريا 2026" className={inputClass()} /></Field>
+                <Field label="السنة"><input value={publicYear} onChange={(event) => setPublicYear(event.target.value)} placeholder="2026" className={`${inputClass()} text-left`} dir="ltr" /></Field>
+              </div>
+            </section>
+            <label className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-black"><span>وضع المعاينة فقط<span className="block text-xs font-bold text-slate-500">أبقِه مفعّلًا أول مرة حتى تتأكد من الأعمدة وعدد الصفوف.</span></span><input checked={dryRun} onChange={(event) => setDryRun(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>
+            <div className="rounded-2xl bg-slate-100 p-3 text-xs font-bold text-slate-600">الهدف الحالي: <span dir="ltr" className="font-black text-slate-950">{targetTable || "غير محدد"}</span>{isCustom && createTable && <span className="mt-1 block text-emerald-700">سيتم إنشاء الجدول تلقائيًا.</span>}{speedSetup && <span className="mt-1 block text-emerald-700">سيتم تجهيز فهارس السرعة بعد الرفع.</span>}{publishToSite && <span className="mt-1 block text-emerald-700">سيتم نشر زر المسابقة تلقائيًا.</span>}</div>
+            <button disabled={loading} type="submit" className="rounded-2xl bg-emerald-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-emerald-600/25 disabled:opacity-60">{loading ? "جاري المعالجة..." : dryRun ? "معاينة الملف" : "نشر النتائج الآن"}</button>
+          </StepCard>
         </form>
 
-        {result && <section className={`rounded-[28px] border p-4 shadow-2xl ${result.ok ? "border-emerald-300/30 bg-emerald-950/70" : "border-red-300/30 bg-red-950/70"}`}><h2 className="text-lg font-black">{result.ok ? "تمت العملية" : "حدث خطأ"}</h2>{result.progress && <p className="mt-2 rounded-2xl bg-black/20 p-3 text-sm font-bold text-emerald-100">{result.progress}</p>}{result.error && <p className="mt-2 rounded-2xl bg-black/20 p-3 text-sm font-bold text-red-100">{result.error}</p>}{result.speedError && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">تحذير السرعة: {result.speedError}</p>}{result.publishError && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">تحذير النشر في الموقع: {result.publishError}</p>}{result.hint && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">{result.hint}</p>}{result.message && <p className="mt-2 text-sm font-bold text-slate-200">{result.message}</p>}<div className="mt-3 grid gap-2 text-sm font-bold text-slate-200">{result.table && <p>الجدول: <span dir="ltr" className="font-black text-white">{result.table}</span></p>}{result.fileName && <p>الملف: {result.fileName}</p>}{result.sheetName && <p>الورقة: {result.sheetName}</p>}{typeof result.totalRows === "number" && <p>عدد الصفوف: {result.totalRows.toLocaleString("ar-MR")}</p>}{typeof result.inserted === "number" && <p>تم نشر: {result.inserted.toLocaleString("ar-MR")} صف</p>}{result.tableCreated && <p>تم إنشاء الجدول تلقائيًا.</p>}{result.speedSetup && <p>تم تجهيز السرعة أو محاولة تجهيزها.</p>}{result.published && <p>تم إظهار زر المسابقة في الموقع.</p>}{result.columns?.length ? <p>الأعمدة: <span className="text-xs">{result.columns.join("، ")}</span></p> : null}</div>{result.previewRows?.length ? <div className="mt-4 overflow-x-auto rounded-2xl bg-black/20 p-3" dir="ltr"><pre className="text-xs leading-6 text-slate-100">{JSON.stringify(result.previewRows, null, 2)}</pre></div> : null}</section>}
+        {result && <section className={`rounded-[28px] border p-4 shadow-2xl ${result.ok ? "border-emerald-300/30 bg-emerald-950/70" : "border-red-300/30 bg-red-950/70"}`}><h2 className="text-lg font-black">{result.ok ? "تمت العملية" : "حدث خطأ"}</h2>{typeof result.progressPercent === "number" && <div className="mt-3 h-3 overflow-hidden rounded-full bg-black/30"><div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${Math.min(100, Math.max(0, result.progressPercent))}%` }} /></div>}{result.progress && <p className="mt-2 rounded-2xl bg-black/20 p-3 text-sm font-bold text-emerald-100">{result.progress}</p>}{result.error && <p className="mt-2 rounded-2xl bg-black/20 p-3 text-sm font-bold text-red-100">{result.error}</p>}{result.speedError && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">تحذير السرعة: {result.speedError}</p>}{result.publishError && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">تحذير النشر في الموقع: {result.publishError}</p>}{result.hint && <p className="mt-2 rounded-2xl bg-yellow-400/10 p-3 text-sm font-bold text-yellow-100">{result.hint}</p>}{result.message && <p className="mt-2 text-sm font-bold text-slate-200">{result.message}</p>}<div className="mt-3 grid gap-2 text-sm font-bold text-slate-200">{result.table && <p>الجدول: <span dir="ltr" className="font-black text-white">{result.table}</span></p>}{result.fileName && <p>الملف: {result.fileName}</p>}{result.sheetName && <p>الورقة: {result.sheetName}</p>}{typeof result.totalRows === "number" && <p>عدد الصفوف: {result.totalRows.toLocaleString("ar-MR")}</p>}{typeof result.inserted === "number" && <p>تم نشر: {result.inserted.toLocaleString("ar-MR")} صف</p>}{result.tableCreated && <p>تم إنشاء الجدول تلقائيًا.</p>}{result.speedSetup && <p>تم تجهيز السرعة أو محاولة تجهيزها.</p>}{result.published && <p>تم إظهار زر المسابقة في الموقع.</p>}{result.columns?.length ? <p>الأعمدة: <span className="text-xs">{result.columns.join("، ")}</span></p> : null}</div>{result.previewRows?.length ? <div className="mt-4 overflow-x-auto rounded-2xl bg-black/20 p-3" dir="ltr"><pre className="text-xs leading-6 text-slate-100">{JSON.stringify(result.previewRows, null, 2)}</pre></div> : null}</section>}
       </section>
     </main>
   );
