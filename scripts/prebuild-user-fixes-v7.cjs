@@ -35,6 +35,10 @@ function replaceFunction(name, next) {
   s = s.slice(0, bounds.start) + next + s.slice(bounds.end);
 }
 
+function replaceOnce(search, replacement) {
+  if (s.includes(search)) s = s.replace(search, replacement);
+}
+
 const routeHelpers = `
 function getInitialRouteState() {
   if (typeof window === "undefined") return { view: "home", examId: "" };
@@ -42,10 +46,84 @@ function getInitialRouteState() {
   const savedExamId = localStorage.getItem("mauriresults-selected-exam") || "bac-2025";
   const knownExam = EXAM_CARDS.find((exam) => exam.id === hash && exam.available);
 
-  if (knownExam) return { view: "exam", examId: knownExam.id };
+  if (knownExam || hash.startsWith("upload-")) return { view: "exam", examId: hash || savedExamId };
   if (hash === "year" || hash === "year-2025" || hash === "year-2026") return { view: "year", examId: savedExamId };
   if (["analytics", "toppers", "contact"].includes(hash)) return { view: hash, examId: savedExamId };
   return { view: "home", examId: savedExamId };
+}
+`;
+
+const publishedHelpers = `
+function buildPublishedExamCards(rows = []) {
+  return rows
+    .filter((row) => row?.table_name && row?.source_key && row?.number_column && row?.name_column && row?.score_column)
+    .map((row) => ({
+      id: "upload-" + row.table_name,
+      title: { ar: row.title_ar || row.table_name, fr: row.title_fr || row.title_ar || row.table_name },
+      description: { ar: row.description_ar || "نتائج منشورة من لوحة الأدمن.", fr: row.description_fr || "Résultats publiés depuis l'administration." },
+      tone: row.tone || "green",
+      available: true,
+      source: row.source_key,
+      icon: <GraduationIcon />,
+      tableName: row.table_name,
+      uploadColumns: {
+        number: row.number_column,
+        name: row.name_column,
+        score: row.score_column,
+        decision: row.decision_column,
+        track: row.track_column,
+        wilaya: row.wilaya_column,
+        school: row.school_column,
+        centre: row.centre_column,
+        birthPlace: row.birth_place_column,
+        birthDate: row.birth_date_column,
+      },
+      sessionType: row.title_ar || row.table_name,
+      year: row.year || "2026",
+    }));
+}
+
+async function fetchPublishedExams() {
+  try {
+    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" } });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return buildPublishedExamCards(data.exams || []);
+  } catch (error) {
+    console.warn("[MauriResults Published Exams]", error);
+    return [];
+  }
+}
+
+function prepareUploadedStudents(rows, exam) {
+  const columns = exam?.uploadColumns || {};
+  const normalized = rows
+    .map((row, index) => {
+      const track = cleanText(getColumn(row, columns.track) || exam?.sessionType || "نتائج");
+      return {
+        id: String(getColumn(row, columns.number) ?? "").trim(),
+        name: cleanText(getColumn(row, columns.name) || "اسم غير متوفر"),
+        track,
+        ts: track,
+        MOD: getColumn(row, columns.score),
+        rankFromDb: Number(getColumn(row, "rank", "Rank", "RANK")) || null,
+        kr: cleanText(getColumn(row, columns.decision) || ""),
+        wl: cleanText(getColumn(row, columns.wilaya) || ""),
+        moughataa: "",
+        ms: cleanText(getColumn(row, columns.school) || ""),
+        centre: cleanText(getColumn(row, columns.centre) || ""),
+        birthPlace: cleanText(getColumn(row, columns.birthPlace) || ""),
+        birthDate: cleanText(getColumn(row, columns.birthDate) || ""),
+        sessionType: exam?.sessionType || exam?.title?.ar || "نتائج منشورة",
+        source: exam?.source || "upload",
+        originalIndex: index,
+      };
+    })
+    .filter((student) => student.id);
+
+  const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+  sorted.forEach((student, index) => { student.rank = student.rankFromDb || index + 1; });
+  return [...new Map(sorted.map((student) => [student.id, student])).values()];
 }
 `;
 
@@ -56,6 +134,11 @@ function prepareRowsForSource(source, rows) {
   if (source === "bac_session") return prepareBacSessionStudents(rows);
   if (source === "excellence_1as") return prepareExcellenceStudents(rows);
   return prepareStudents(rows);
+}
+
+function prepareRowsForExam(exam, rows) {
+  if (exam?.source?.startsWith("upload:")) return prepareUploadedStudents(rows, exam);
+  return prepareRowsForSource(exam?.source, rows);
 }
 
 function sourceRowId(source, row) {
@@ -80,8 +163,36 @@ function preserveSourceRanks(source, rows, students) {
 if (!s.includes("function getInitialRouteState()")) {
   s = s.replace("\nexport default function HomePage() {", `${routeHelpers}\nexport default function HomePage() {`);
 }
+if (!s.includes("function buildPublishedExamCards(rows = [])")) {
+  s = s.replace("\nexport default function HomePage() {", `${publishedHelpers}\nexport default function HomePage() {`);
+}
 if (!s.includes("function prepareRowsForSource(source, rows)")) {
   s = s.replace("\nexport default function HomePage() {", `${rankingHelpers}\nexport default function HomePage() {`);
+}
+
+// Dynamic public exam state.
+replaceOnce(
+  `  const [analyticsViews, setAnalyticsViews] = useState({});
+  const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});`,
+  `  const [analyticsViews, setAnalyticsViews] = useState({});
+  const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});
+  const [publishedExams, setPublishedExams] = useState([]);`
+);
+replaceOnce(
+  `  const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);`,
+  `  const examCards = useMemo(() => [...EXAM_CARDS, ...publishedExams], [publishedExams]);
+  const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);`
+);
+if (!s.includes("fetchPublishedExams().then")) {
+  replaceOnce(
+    `  useEffect(() => {
+    let ignore = false;
+    fetchSiteContent().then((content) => {`,
+    `  useEffect(() => {
+    let ignore = false;
+    fetchPublishedExams().then((exams) => { if (!ignore) setPublishedExams(exams); });
+    fetchSiteContent().then((content) => {`
+  );
 }
 
 // Keep the same page after refresh instead of always returning to home.
@@ -117,16 +228,14 @@ replaceFunction("searchResults", `async function searchResults(query, exam) {
    if (!response.ok) throw new Error(await response.text());
    const data = await response.json();
    const rows = data.rows || [];
-   return preserveSourceRanks(exam.source, rows, prepareRowsForSource(exam.source, rows));
+   return preserveSourceRanks(exam.source, rows, prepareRowsForExam(exam, rows));
  }`);
 
 // المرحلة الأولى: لا تحميل مسبق لجداول النتائج داخل المتصفح.
-// الصفحة الرئيسية وصفحة اختيار المسابقة لا تحمل bac_results أو brevet أو غيرها.
 s = s.replace(`  const searchPool = useMemo(() => {
      return activeStudents;
    }, [activeStudents]);`, `  const searchPool = useMemo(() => [], []);`);
 
-// لا تبحث داخل آلاف الطلاب المحملين في الذاكرة عند فتح نتيجة واحدة.
 s = s.replace(`  function showStudent(student) {
      const known = activeStudents.find((item) => item.id === student.id);
      setMatches([]);
@@ -142,13 +251,11 @@ s = s.replace(`  function showStudent(student) {
      window.setTimeout(() => {
        setSelectedStudent(student);`);
 
-// Never preload every row when opening the exam page. Search is request-only.
 s = s.replace(`    if (view === "exam" && selectedExam) {
        await loadExamData(selectedExam);
      }
  `, "");
 
-// لا تعتمد الاقتراحات على قاعدة بيانات محملة في المتصفح.
 s = s.replace(`  const suggestions = useMemo(() => {
      const value = cleanText(query).toLowerCase();
      if (!selectedExam?.available || selectedExam.source === "concours" || value.length < 2 || resultPageOpen || matches.length) return [];
@@ -157,7 +264,6 @@ s = s.replace(`  const suggestions = useMemo(() => {
        .slice(0, 5);
    }, [matches.length, query, resultPageOpen, searchPool, selectedExam]);`, `  const suggestions = useMemo(() => [], []);`);
 
-// Keep search request-only and keep the rank returned by /api/search.
 s = s.replace(`      const rankingPool = selectedExam?.source === "bac" ? await loadExamData(selectedExam) : searchPool;
        const rows = await searchResults(value, selectedExam);
        const found = rows.map((student) => {
@@ -166,15 +272,12 @@ s = s.replace(`      const rankingPool = selectedExam?.source === "bac" ? await 
        }).filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);`, `      const rows = await searchResults(value, selectedExam);
        const found = rows.filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);`);
 
-// فتح التصنيف يتم عبر /api/ranking مباشرة، لا عبر تحميل جدول المسابقة كاملًا.
 replaceFunction("openRanking", `async function openRanking(field, value, label) {
-    if (!value || value === "غير متوفرة" || !selectedExam?.source) return;
+    if (!value || value === "غير متوفرة" || !selectedExam?.source || selectedExam.source.startsWith("upload:")) return;
     setExamLoading(true);
     try {
       const params = new URLSearchParams({ source: selectedExam.source, field, value });
-      const response = await fetch(\`/api/ranking?\${params.toString()}\`, {
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetch(\`/api/ranking?\${params.toString()}\`, { headers: { Accept: "application/json" } });
       if (!response.ok) throw new Error(await response.text());
       const data = await response.json();
       const rows = prepareRowsForSource(selectedExam.source, data.rows || []);
@@ -197,43 +300,33 @@ replaceFunction("openRanking", `async function openRanking(field, value, label) 
     }
   }`);
 
-// أعد بطاقة القرار مرة واحدة داخل تفاصيل النتيجة، مع بقاء الشارة العليا كما هي.
+// Use dynamic examCards for year page and selectors.
+s = s.replace(
+  `{activeView === "year" && <YearPage lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}`,
+  `{activeView === "year" && <YearPage examCards={examCards} lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}`
+);
+s = s.replace(`const exam = EXAM_CARDS.find((item) => item.id === examId);`, `const exam = examCards.find((item) => item.id === examId);`);
+s = s.replace(`function YearPage({ lang, onSelectExam, selectedExamId, text }) {`, `function YearPage({ examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {`);
+s = s.replace(`<CompetitionCards lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />`, `<CompetitionCards examCards={examCards} lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />`);
+s = s.replace(`function CompetitionCards({ lang, onSelectExam, selectedExamId, text }) {`, `function CompetitionCards({ examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {`);
+s = s.replace(`{EXAM_CARDS.map((exam) => (`, `{examCards.map((exam) => (`);
+
+// بطاقة القرار مرة واحدة.
 if (!s.includes('key="decision"')) {
-  s = s.replace(
-    `[text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],`,
-    `[text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],\n      [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
-  );
-  s = s.replace(
-    `[text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],`,
-    `[text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],\n        [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
-  );
-  s = s.replace(
-    `[text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],`,
-    `[text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],\n          [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
-  );
-  s = s.replace(
-    `[text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],`,
-    `[text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],\n            [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
-  );
-  s = s.replace(
-    `[text.exam || "المسابقة", student.sessionType || "البكالوريا 2025", <BookIcon key="exam" />],`,
-    `[text.exam || "المسابقة", student.sessionType || "البكالوريا 2025", <BookIcon key="exam" />],\n      [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`
-  );
+  s = s.replace(`[text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],`, `[text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],\n      [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`);
+  s = s.replace(`[text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],`, `[text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],\n        [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`);
+  s = s.replace(`[text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],`, `[text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],\n          [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`);
+  s = s.replace(`[text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],`, `[text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],\n            [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`);
+  s = s.replace(`[text.exam || "المسابقة", student.sessionType || "البكالوريا 2025", <BookIcon key="exam" />],`, `[text.exam || "المسابقة", student.sessionType || "البكالوريا 2025", <BookIcon key="exam" />],\n      [text.decision || "القرار", status.label, <InfoIcon key="decision" />],`);
 }
 
-// أغلق 2026 حتى لا تظهر نتائج تجريبية أو ملفات مرفوعة بالخطأ.
+// أغلق زر السنة 2026 القديم فقط؛ النتائج المنشورة ستظهر كبطاقات مستقلة داخل صفحة الاختيار.
 s = s.replace(/\n\s*\{ id: "bac-2026",[\s\S]*?source: "bac26", icon: <GraduationIcon \/> \},/g, "");
 s = s.replace(/\n\s*bac26: "bac26",/g, "");
-s = s.replace(
-  /\{ id: "year-2026", title: \{ ar: "[^"]+", fr: "[^"]+" \}, description: \{ ar: "[^"]+", fr: "[^"]+" \}, available: true, tone: "rose", icon: <AwardIcon \/> \}/g,
-  `{ id: "year-2026", title: { ar: "نتائج مسابقات 2026", fr: "Résultats des concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج الرسمية.", fr: "Ouverture prochaine." }, available: false, tone: "rose", icon: <AwardIcon /> }`
-);
+s = s.replace(/\{ id: "year-2026", title: \{ ar: "[^"]+", fr: "[^"]+" \}, description: \{ ar: "[^"]+", fr: "[^"]+" \}, available: true, tone: "rose", icon: <AwardIcon \/> \}/g, `{ id: "year-2026", title: { ar: "نتائج مسابقات 2026", fr: "Résultats des concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج الرسمية.", fr: "Ouverture prochaine." }, available: false, tone: "rose", icon: <AwardIcon /> }`);
 
-// Show result immediately after search; no artificial 520ms delay.
 s = s.replace(/\},\s*120\);/g, "}, 20);");
 s = s.replace(/\},\s*520\);/g, "}, 20);");
-
-// Make sure the user-facing loading wording is clear.
 s = s.replace(/جاري تحضير بطاقة النتيجة/g, "جاري تحضير النتيجة");
 s = s.replace(/جاري فتح بطاقة النتيجة/g, "جاري عرض النتيجة");
 s = s.replace(/جاري عرض بطاقة النتيجة/g, "جاري عرض النتيجة");
