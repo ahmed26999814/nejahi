@@ -6,7 +6,7 @@ const REQUEST_TIMEOUT_MS = 10_000;
 const NUMBER_RESULT_LIMIT = "1";
 const NAME_RESULT_LIMIT = "20";
 
-const SEARCH_CONFIG: Record<string, {
+type SearchConfig = {
   table: string;
   fallbackTable?: string;
   select: string;
@@ -14,7 +14,9 @@ const SEARCH_CONFIG: Record<string, {
   numberColumns: string[];
   nameColumns: string[];
   order?: string;
-}> = {
+};
+
+const SEARCH_CONFIG: Record<string, SearchConfig> = {
   bac: {
     table: "bac_ranked_results",
     fallbackTable: "bac_results",
@@ -61,6 +63,10 @@ const SEARCH_CONFIG: Record<string, {
     order: "rank.asc",
   },
 };
+
+function isSafeIdentifier(value: string) {
+  return /^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(String(value || ""));
+}
 
 function escapePostgrestValue(value: string) {
   return value.replaceAll("\\", "\\\\").replaceAll(",", "\\,").replaceAll(")", "\\)").trim();
@@ -110,7 +116,49 @@ async function supabaseSearch(table: string, params: URLSearchParams) {
   }
 }
 
-function buildParams(config: (typeof SEARCH_CONFIG)[string], query: string, useFallback = false) {
+async function fetchPublishedExam(source: string): Promise<SearchConfig | null> {
+  if (!source.startsWith("upload:")) return null;
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+
+  const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+  url.searchParams.set("select", "*");
+  url.searchParams.set("source_key", `eq.${escapePostgrestValue(source)}`);
+  url.searchParams.set("is_active", "eq.true");
+  url.searchParams.set("limit", "1");
+
+  const response = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      Accept: "application/json",
+      Prefer: "count=none",
+    },
+  });
+
+  if (!response.ok) return null;
+  const rows = await response.json();
+  const exam = rows?.[0];
+  if (!exam || !isSafeIdentifier(exam.table_name)) return null;
+
+  const numberColumn = String(exam.number_column || "").trim();
+  const nameColumn = String(exam.name_column || "").trim();
+  if (!numberColumn || !nameColumn) return null;
+
+  const rankedView = String(exam.ranked_view || `${exam.table_name.replace(/_results$/, "")}_ranked_results`).trim();
+  const useRanked = isSafeIdentifier(rankedView);
+
+  return {
+    table: useRanked ? rankedView : exam.table_name,
+    fallbackTable: exam.table_name,
+    select: "*",
+    fallbackSelect: "*",
+    numberColumns: [numberColumn],
+    nameColumns: [nameColumn],
+    order: useRanked ? "rank.asc" : undefined,
+  };
+}
+
+function buildParams(config: SearchConfig, query: string, useFallback = false) {
   const numeric = isNumberSearch(query);
   const params = new URLSearchParams({
     select: useFallback ? (config.fallbackSelect || config.select) : config.select,
@@ -134,8 +182,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const source = String(searchParams.get("source") || "").trim();
   const query = String(searchParams.get("q") || "").trim();
-  const config = SEARCH_CONFIG[source];
   const numeric = isNumberSearch(query);
+  const config = SEARCH_CONFIG[source] || await fetchPublishedExam(source);
 
   if (!config) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400 });
   if (query.length < 2) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400 });
