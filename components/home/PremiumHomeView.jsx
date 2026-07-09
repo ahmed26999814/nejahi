@@ -45,6 +45,7 @@ function openYearFallback(yearId) {
   if (typeof window === "undefined") return;
   window.history.pushState({ view: "year" }, "", `#${yearId}`);
   window.dispatchEvent(new PopStateEvent("popstate", { state: { view: "year" } }));
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
 }
 
 function YearChoiceCards({ lang = "ar", onSelectYear }) {
@@ -62,17 +63,20 @@ function YearChoiceCards({ lang = "ar", onSelectYear }) {
           ? "border-emerald-200/80 from-emerald-950/90 via-emerald-800/70 to-emerald-500/20 text-emerald-50"
           : "border-amber-200/70 from-slate-900/90 via-amber-900/35 to-amber-400/20 text-amber-50";
         return (
-          <button
+          <a
             key={yearId}
-            type="button"
-            disabled={!available}
-            onClick={() => {
-              if (!available) return;
+            href={available ? `#${yearId}` : undefined}
+            aria-disabled={!available}
+            onClick={(event) => {
+              if (!available) {
+                event.preventDefault();
+                return;
+              }
               const payload = { ...year, id: yearId, available: true };
               if (typeof onSelectYear === "function") onSelectYear(payload);
-              else openYearFallback(yearId);
+              window.setTimeout(() => openYearFallback(yearId), 0);
             }}
-            className={`group relative min-h-[132px] overflow-hidden rounded-[28px] border bg-gradient-to-br p-4 text-start shadow-premium transition duration-300 active:scale-[.99] hover:-translate-y-0.5 ${tone} ${available ? "" : "opacity-80"}`}
+            className={`group relative block min-h-[132px] overflow-hidden rounded-[28px] border bg-gradient-to-br p-4 text-start shadow-premium transition duration-300 active:scale-[.99] hover:-translate-y-0.5 ${tone} ${available ? "" : "pointer-events-none opacity-80"}`}
           >
             <span className="absolute -left-12 -top-12 h-28 w-28 rounded-full bg-white/10 transition group-hover:scale-125" />
             <span className="absolute bottom-3 left-3 h-14 w-14 rounded-full border border-white/10" />
@@ -84,7 +88,7 @@ function YearChoiceCards({ lang = "ar", onSelectYear }) {
               </span>
               <span className={`rounded-full px-3 py-1 text-[11px] font-black shadow-sm ${available ? "bg-white text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{available ? "فتح" : "قريبًا"}</span>
             </span>
-          </button>
+          </a>
         );
       })}
     </section>
