@@ -20,6 +20,7 @@ const PAGE_SIZE = 1000;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const BAC_TABLE = "bac_results";
+const BAC_RANKED_VIEW = "bac_ranked_results";
 const BAC_SESSION_TABLE = "bac_session2_results";
 const CONCOURS_TABLE = "concours_results";
 const CONCOURS_VIEW = "concours_results_view";
@@ -99,7 +100,7 @@ const UI_TEXT = {
     open: "البحث مفتوح",
     heroTitle: "نتائج المسابقات الوطنية في موريتانيا",
     heroDesc: "اختر المسابقة ثم ابحث عن النتيجة الرسمية بسرعة.",
-    officialResult: "بطاقة النتيجة الرسمية",
+    officialResult: "النتيجة الرسمية",
     verification: "رقم التحقق",
     examPageDesc: "صفحة منظمة للبحث وعرض النتائج الخاصة بهذه المسابقة.",
     yearPageTitle: "مسابقات 2025",
@@ -144,9 +145,9 @@ const UI_TEXT = {
     searchResults: "نتائج البحث",
     chooseCandidate: "اختر المترشح",
     number: "رقم",
-    preparingResult: "جاري تحضير بطاقة النتيجة",
+    preparingResult: "جاري تحضير النتيجة",
     moments: "لحظات قليلة...",
-    openingResult: "جاري فتح بطاقة النتيجة",
+    openingResult: "جاري عرض النتيجة",
     preparingOfficial: "نحضّر لك صفحة النتيجة الرسمية...",
     trackTopThree: "ثلاثة أوائل من كل شعبة",
     noTrackData: "لا توجد بيانات كافية لهذه الشعبة.",
@@ -781,7 +782,7 @@ function prepareStudents(rows) {
 
   const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
   sorted.forEach((student, index) => {
-    student.rank = index + 1;
+    student.rank = student.rankFromDb || index + 1;
   });
 
   return [...new Map(sorted.map((student) => [student.id, student])).values()];
@@ -1044,6 +1045,28 @@ async function fetchConcoursFilteredResults(field, value) {
   return students;
 }
 
+async function fetchFastRankingResults(source, field, value) {
+  if (!source || !field || !value) return [];
+  if (source === "concours") return fetchConcoursFilteredResults(field, value);
+  const config = {
+    bac: { table: BAC_TABLE, columns: { wl: "WL", moughataa: "MD", ms: "MS", track: "TS" }, prepare: prepareStudents },
+    brevet: { table: BREVET_TABLE, columns: { wl: "WILAYA", ms: "Ecole", centre: "Centre" }, prepare: prepareBrevetStudents },
+    bac_session: { table: BAC_SESSION_TABLE, columns: { wl: "Wilaya_AR", ms: "Etablissement_AR", centre: "Centre Examen_AR", track: "SERIE" }, prepare: prepareBacSessionStudents },
+    excellence_1as: { table: EXCELLENCE_1AS_TABLE, columns: { wl: "Wilaya_AR", centre: "CENTRE_AR" }, prepare: prepareExcellenceStudents },
+  }[source];
+  const column = config?.columns?.[field];
+  if (!config || !column) return [];
+  const rows = [];
+  let from = 0;
+  while (true) {
+    const batch = await supabaseRequest({ select: "*", [column]: "eq." + escapePostgrestValue(value), limit: PAGE_SIZE, offset: from }, config.table);
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return config.prepare(rows).sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+}
+
 async function searchConcoursByLocation({ wilaya, wilayaValues = [], moughataa, centre, number }) {
   const numbers = concoursNumberSearchValues(number);
   const params = {
@@ -1081,78 +1104,15 @@ async function fetchExcellenceResults() {
 }
 
 async function searchResults(query, exam) {
-  if (!exam?.source || !TABLE_BY_SOURCE[exam.source]) {
-    throw new Error("Missing selected exam.");
-  }
-
-  const value = escapePostgrestValue(query);
-  const isNumeroSearch = /^[0-9A-Za-z-]+$/.test(query);
-  console.log("[MauriResults Search]", {
-    examId: exam.id,
-    source: exam.source,
-    table: TABLE_BY_SOURCE[exam.source],
-    query: cleanText(query),
-  });
-
-  if (exam?.source === "brevet") {
-    const numbers = numberSearchValues(query, 5);
-    const rows = await supabaseRequest({
-      select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS",
-      or: isNumeroSearch ? `(${numbers.map((number) => `Num_Bepc.eq.${number}`).join(",")},NOM.ilike.*${value}*)` : "",
-      NOM: isNumeroSearch ? "" : `ilike.*${value}*`,
-      limit: 20,
-    }, BREVET_TABLE);
-    return prepareBrevetStudents(rows);
-  }
-
-  if (exam?.source === "concours") {
-    const numbers = concoursNumberSearchValues(query);
-    const params = {
-      select: "*",
-      or: isNumeroSearch ? `(${numbers.map((number) => `NODOSS.eq.${number}`).join(",")},${numbers.map((number) => `Numéro_C1AS.eq.${number}`).join(",")})` : `(NOM_AR.ilike.*${value}*)`,
-      limit: 20,
-    };
-    let rows;
-    try {
-      rows = await supabaseRequest({ ...params, order: "total_num.desc.nullslast" }, CONCOURS_VIEW);
-    } catch (error) {
-      if (!isMissingConcoursView(error)) throw error;
-      rows = await supabaseRequest(params, CONCOURS_TABLE);
-    }
-    const students = prepareConcoursStudents(rows);
-    logConcoursRows("search", rows, students);
-    return students;
-  }
-
-  if (exam?.source === "bac_session") {
-    const numbers = numberSearchValues(query, 5);
-    const rows = await supabaseRequest({
-      select: "*",
-      or: isNumeroSearch ? `(${numbers.map((number) => `NODOSS.eq.${number}`).join(",")},NOM_AR.ilike.*${value}*,NOM_FR.ilike.*${value}*)` : `(NOM_AR.ilike.*${value}*,NOM_FR.ilike.*${value}*)`,
-      limit: 20,
-    }, BAC_SESSION_TABLE);
-    return prepareBacSessionStudents(rows);
-  }
-
-  if (exam?.source === "excellence_1as") {
-    const numbers = numberSearchValues(query, 5);
-    const rows = await supabaseRequest({
-      select: "*",
-      or: isNumeroSearch ? `(${numbers.map((number) => `Num_Excellence_1AS.eq.${number}`).join(",")},Nom.ilike.*${value}*)` : `(Nom.ilike.*${value}*)`,
-      limit: 20,
-    }, EXCELLENCE_1AS_TABLE);
-    return prepareExcellenceStudents(rows);
-  }
-
-  const numbers = numberSearchValues(query, 5);
-  const rows = await supabaseRequest({
-    select: "Numero,NOM,TS,MOD,KR,WL,MS,MD",
-    or: isNumeroSearch ? `(${numbers.map((number) => `Numero.eq.${number}`).join(",")},NOM.ilike.*${value}*)` : "",
-    NOM: isNumeroSearch ? "" : `ilike.*${value}*`,
-    limit: 20,
-  }, BAC_TABLE);
-  return prepareStudents(rows);
-}
+   if (!exam?.source) throw new Error("Missing selected exam.");
+   const response = await fetch(`/api/search?source=${encodeURIComponent(exam.source)}&q=${encodeURIComponent(query.trim())}`, {
+     headers: { Accept: "application/json" },
+   });
+   if (!response.ok) throw new Error(await response.text());
+   const data = await response.json();
+   const rows = data.rows || [];
+   return preserveSourceRanks(exam.source, rows, prepareRowsForExam(exam, rows));
+ }
 
 function calculateStats(students) {
   const total = students.length;
@@ -1207,6 +1167,121 @@ function groupStudentsByTrack(students) {
     .sort((a, b) => a.track.localeCompare(b.track, "ar"));
 }
 
+function getInitialRouteState() {
+  if (typeof window === "undefined") return { view: "home", examId: "" };
+  const hash = window.location.hash.replace("#", "").trim();
+  const savedExamId = localStorage.getItem("mauriresults-selected-exam") || "bac-2025";
+  const knownExam = EXAM_CARDS.find((exam) => exam.id === hash && exam.available);
+
+  if (knownExam || hash.startsWith("upload-")) return { view: "exam", examId: hash || savedExamId };
+  if (hash === "year" || hash === "year-2025" || hash === "year-2026") return { view: "year", examId: savedExamId };
+  if (["analytics", "toppers", "contact"].includes(hash)) return { view: hash, examId: savedExamId };
+  return { view: "home", examId: savedExamId };
+}
+
+function buildPublishedExamCards(rows = []) {
+  return rows
+    .filter((row) => row?.table_name && row?.source_key && row?.number_column && row?.name_column && row?.score_column)
+    .map((row) => ({
+      id: "upload-" + row.table_name,
+      title: { ar: row.title_ar || row.table_name, fr: row.title_fr || row.title_ar || row.table_name },
+      description: { ar: row.description_ar || "نتائج منشورة من لوحة الأدمن.", fr: row.description_fr || "Résultats publiés depuis l'administration." },
+      tone: row.tone || "green",
+      available: true,
+      source: row.source_key,
+      icon: <GraduationIcon />,
+      tableName: row.table_name,
+      uploadColumns: {
+        number: row.number_column,
+        name: row.name_column,
+        score: row.score_column,
+        decision: row.decision_column,
+        track: row.track_column,
+        wilaya: row.wilaya_column,
+        school: row.school_column,
+        centre: row.centre_column,
+        birthPlace: row.birth_place_column,
+        birthDate: row.birth_date_column,
+      },
+      sessionType: row.title_ar || row.table_name,
+      year: row.year || "2026",
+    }));
+}
+
+async function fetchPublishedExams() {
+  try {
+    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" } });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return buildPublishedExamCards(data.exams || []);
+  } catch (error) {
+    console.warn("[MauriResults Published Exams]", error);
+    return [];
+  }
+}
+
+function prepareUploadedStudents(rows, exam) {
+  const columns = exam?.uploadColumns || {};
+  const normalized = rows
+    .map((row, index) => {
+      const track = cleanText(getColumn(row, columns.track) || exam?.sessionType || "نتائج");
+      return {
+        id: String(getColumn(row, columns.number) ?? "").trim(),
+        name: cleanText(getColumn(row, columns.name) || "اسم غير متوفر"),
+        track,
+        ts: track,
+        MOD: getColumn(row, columns.score),
+        rankFromDb: Number(getColumn(row, "rank", "Rank", "RANK")) || null,
+        kr: cleanText(getColumn(row, columns.decision) || ""),
+        wl: cleanText(getColumn(row, columns.wilaya) || ""),
+        moughataa: "",
+        ms: cleanText(getColumn(row, columns.school) || ""),
+        centre: cleanText(getColumn(row, columns.centre) || ""),
+        birthPlace: cleanText(getColumn(row, columns.birthPlace) || ""),
+        birthDate: cleanText(getColumn(row, columns.birthDate) || ""),
+        sessionType: exam?.sessionType || exam?.title?.ar || "نتائج منشورة",
+        source: exam?.source || "upload",
+        originalIndex: index,
+      };
+    })
+    .filter((student) => student.id);
+
+  const sorted = [...normalized].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
+  sorted.forEach((student, index) => { student.rank = student.rankFromDb || index + 1; });
+  return [...new Map(sorted.map((student) => [student.id, student])).values()];
+}
+
+function prepareRowsForSource(source, rows) {
+  if (source === "brevet") return prepareBrevetStudents(rows);
+  if (source === "concours") return prepareConcoursStudents(rows);
+  if (source === "bac_session") return prepareBacSessionStudents(rows);
+  if (source === "excellence_1as") return prepareExcellenceStudents(rows);
+  return prepareStudents(rows);
+}
+
+function prepareRowsForExam(exam, rows) {
+  if (exam?.source?.startsWith("upload:")) return prepareUploadedStudents(rows, exam);
+  return prepareRowsForSource(exam?.source, rows);
+}
+
+function sourceRowId(source, row) {
+  if (source === "brevet") return String(getColumn(row, "Num_Bepc", "num_bepc", "NUM_BEPC") ?? "").trim();
+  if (source === "concours") return String(getColumn(row, "Numéro_C1AS", "Numero_C1AS") ?? "").trim();
+  if (source === "bac_session") return String(getColumn(row, "NODOSS") ?? "").trim();
+  if (source === "excellence_1as") return String(getColumn(row, "Num_Excellence_1AS") ?? "").trim();
+  return String(getColumn(row, "Numero", "numero", "NUMERO") ?? "").trim();
+}
+
+function preserveSourceRanks(source, rows, students) {
+  const rankById = new Map(
+    rows
+      .map((row) => [sourceRowId(source, row), Number(getColumn(row, "rank"))])
+      .filter(([id, rank]) => id && Number.isFinite(rank) && rank > 0)
+  );
+  if (!rankById.size) return students;
+  return students.map((student) => rankById.has(student.id) ? { ...student, rank: rankById.get(student.id) } : student);
+}
+
 export default function HomePage() {
   const [students, setStudents] = useState([]);
   const [brevetStudents, setBrevetStudents] = useState([]);
@@ -1231,17 +1306,30 @@ export default function HomePage() {
   const [siteContent, setSiteContent] = useState({});
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
-  const [analyticsViews, setAnalyticsViews] = useState({});
+  const [rankingRows, setRankingRows] = useState([]);const [analyticsViews, setAnalyticsViews] = useState({});
   const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});
+  const [publishedExams, setPublishedExams] = useState([]);
 
-  const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);
+  const examCards = useMemo(() => [...EXAM_CARDS, ...publishedExams], [publishedExams]);
+  const yearCards = useMemo(() => YEAR_CARDS.map((year) => {
+    if (year.id !== "year-2026") return year;
+    const has2026 = publishedExams.some((exam) => String(exam.year || "") === "2026");
+    return has2026 ? {
+      ...year,
+      available: true,
+      title: { ar: "نتائج المسابقات 2026", fr: "Résultats des concours 2026" },
+      description: { ar: "نتائج 2026 المنشورة من لوحة الأدمن.", fr: "Résultats 2026 publiés depuis l'administration." },
+    } : year;
+  }), [publishedExams]);
+  const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);
 
   useEffect(() => {
     const saved = localStorage.getItem("mauriresults-theme");
     const savedLang = localStorage.getItem("mauriresults-lang");
     setTheme(saved || "light");
     setLang(savedLang || "ar");
-    window.history.replaceState({ view: "home" }, "", window.location.pathname);
+    const initialRoute = getInitialRouteState();
+    window.history.replaceState({ view: initialRoute.view }, "", window.location.hash ? window.location.pathname + window.location.hash : window.location.pathname);
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -1406,7 +1494,7 @@ export default function HomePage() {
       setActiveView("result");
       window.history.pushState({ view: "result" }, "", "#result");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 520);
+    }, 20);
   }
 
   async function handleSubmit(event) {
@@ -1539,11 +1627,12 @@ export default function HomePage() {
 
   function openYear(year) {
     if (!year.available) return;
+    setSelectedYearId(year.id || "year-2025");
     setActiveView("year");
     setMatches([]);
     setError("");
     setMessage("");
-    window.history.pushState({ view: "year" }, "", "#year-2025");
+    window.history.pushState({ view: "year" }, "", `#${year.id || "year-2025"}`);
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
@@ -1568,7 +1657,7 @@ export default function HomePage() {
   }
 
   async function selectExamForSection(examId) {
-    const exam = EXAM_CARDS.find((item) => item.id === examId);
+    const exam = examCards.find((item) => item.id === examId);
     if (!exam?.available) return;
     setSelectedExamId(exam.id);
     setSelectedTopperTrack("");
@@ -1581,25 +1670,32 @@ export default function HomePage() {
     loadAnalyticsSource(exam.source);
   }
 
-  async function openRanking(field, value, label) {
-    if (!value || value === "غير متوفرة") return;
-    if (selectedExam?.source === "concours") {
-      setExamLoading(true);
-      try {
-        const rows = await fetchConcoursFilteredResults(field, value);
-        setConcoursStudents(rows);
-      } catch (error) {
-        setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
-      } finally {
-        setExamLoading(false);
-      }
-    } else {
-      await loadExamData(selectedExam);
+    async function openRanking(field, value, label) {
+    if (!value || value === "غير متوفرة" || !selectedExam?.source || selectedExam.source.startsWith("upload:")) return;
+    setExamLoading(true);
+    try {
+      const params = new URLSearchParams({ source: selectedExam.source, field, value });
+      const response = await fetch(`/api/ranking?${params.toString()}`, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(await response.text());
+      const data = await response.json();
+      const rows = prepareRowsForSource(selectedExam.source, data.rows || []);
+
+      if (selectedExam.source === "bac") setStudents(rows);
+      else if (selectedExam.source === "brevet") setBrevetStudents(rows);
+      else if (selectedExam.source === "bac_session") setBacSessionStudents(rows);
+      else if (selectedExam.source === "concours") setConcoursStudents(rows);
+      else if (selectedExam.source === "excellence_1as") setExcellenceStudents(rows);
+
+      setRankingTarget({ field, value, label });
+      setActiveView("ranking");
+      window.history.pushState({ view: "ranking" }, "", "#ranking");
+      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+    } catch (error) {
+      console.error("[MauriResults Ranking Error]", error);
+      setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
+    } finally {
+      setExamLoading(false);
     }
-    setRankingTarget({ field, value, label });
-    setActiveView("ranking");
-    window.history.pushState({ view: "ranking" }, "", "#ranking");
-    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
   return (
@@ -1633,10 +1729,11 @@ export default function HomePage() {
         />
       )}
 
-      {activeView === "year" && <YearPage lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
+      {activeView === "year" && <YearPage currentYearId={selectedYearId} examCards={examCards} lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
       {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
-      {activeView === "toppers" && <ToppersPage groups={topperGroups} lang={lang} loading={selectedSourceLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
-      {activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} components={{ PageHero, ExamSelector, StatsStrip, AnalyticsModeSelector, StatsTable, EmptyChoice, ChartIcon }} lang={lang} loading={selectedSourceLoading} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}
+      {activeView === "toppers" && <ToppersPage examCards={examCards} groups={topperGroups} lang={lang} loading={selectedSourceLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
+      {activeView === "contact" && <ContactPage text={text} />}
+      {activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} components={{ PageHero, ExamSelector, StatsStrip, AnalyticsModeSelector, StatsTable, EmptyChoice, ChartIcon }} examCards={examCards} lang={lang} loading={selectedSourceLoading} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}
       {activeView === "ranking" && rankingTarget && <RankingPage lang={lang} onSelect={selectStudent} rankingTarget={rankingTarget} students={rankingStudents} text={text} />}
       {activeView === "result" && selectedStudent && <ResultExperience content={siteContent} lang={lang} onOpenRanking={openRanking} resultBanner={imageAsset(siteContent, "result_card_image")} student={selectedStudent} onClose={() => openView("home")} onShare={shareResult} text={text} />}
 
@@ -1651,7 +1748,27 @@ export default function HomePage() {
   );
 }
 
-function HomeView({ homepageBanner, lang, onSelectYear, stats, text }) {
+
+function ContactPage({ text }) {
+  return (
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+      <PageHero eyebrow="MauriResults" title="اتصل بنا" description="اختر طريقة التواصل المناسبة، وسنكون سعداء باستقبال ملاحظاتك حول النتائج." icon={<InfoIcon />} />
+      <section className="grid gap-3 md:grid-cols-2">
+        <a className="group relative overflow-hidden rounded-[30px] border border-emerald-200 bg-emerald-50 p-5 text-start shadow-premium transition hover:-translate-y-1 dark:border-emerald-300/20 dark:bg-emerald-300/10" href="https://wa.me/22232965875" target="_blank" rel="noopener">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-emerald-600 text-2xl text-white shadow-soft">💬</span>
+          <strong className="mt-4 block text-xl font-black text-emerald-800 dark:text-emerald-200">تواصل عبر واتساب</strong>
+          <small className="mt-2 block text-sm font-bold text-emerald-700/80 dark:text-emerald-100/80">32965875</small>
+        </a>
+        <a className="group relative overflow-hidden rounded-[30px] border border-blue-200 bg-blue-50 p-5 text-start shadow-premium transition hover:-translate-y-1 dark:border-blue-300/20 dark:bg-blue-300/10" href="https://www.facebook.com/profile.php?id=61591701182537" target="_blank" rel="noopener">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-blue-600 text-2xl text-white shadow-soft">f</span>
+          <strong className="mt-4 block text-xl font-black text-blue-800 dark:text-blue-200">صفحتنا على فيسبوك</strong>
+          <small className="mt-2 block text-sm font-bold text-blue-700/80 dark:text-blue-100/80">تابع آخر أخبار المنصة والتحديثات</small>
+        </a>
+      </section>
+    </section>
+  );
+}
+function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text }) {
   return (
     <PremiumHomeView
       homepageBanner={homepageBanner}
@@ -1659,7 +1776,7 @@ function HomeView({ homepageBanner, lang, onSelectYear, stats, text }) {
       onSelectYear={onSelectYear}
       stats={stats}
       text={text}
-      yearCards={YEAR_CARDS}
+      yearCards={typeof yearCards !== "undefined" ? yearCards : YEAR_CARDS}
     />
   );
 }
@@ -1709,19 +1826,23 @@ function SiteBanner({ asset }) {
   );
 }
 
-function YearPage({ lang, onSelectExam, selectedExamId, text }) {
+function YearPage({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.chooseExam} title={text.yearPageTitle} description={text.yearPageDesc} icon={<GraduationIcon />} />
-      <CompetitionCards lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
+      <CompetitionCards currentYearId={currentYearId} examCards={examCards} lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
     </section>
   );
 }
 
-function CompetitionCards({ lang, onSelectExam, selectedExamId, text }) {
+function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
+  const visibleExamCards = examCards.filter((exam) => {
+    const year = String(exam.year || "2025");
+    return currentYearId === "year-2026" ? year === "2026" : year !== "2026";
+  });
   return (
     <section className="grid grid-cols-2 gap-3">
-      {EXAM_CARDS.map((exam) => (
+      {visibleExamCards.map((exam) => (
         <button
           className={`exam-card exam-card-${exam.tone} ${selectedExamId === exam.id ? "is-selected" : ""} ${exam.available ? "" : "is-locked"}`}
           key={exam.id}
@@ -1910,7 +2031,7 @@ function TrackGroupsPreview({ groups, onSelect, text }) {
   );
 }
 
-function ExamSelector({ lang, onSelectExam, selectedExamId, text }) {
+function ExamSelector({ examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
   return (
     <section className="section-toolbar animate-slide-up">
       <Select.Root onValueChange={onSelectExam} value={selectedExamId || undefined}>
@@ -1926,7 +2047,7 @@ function ExamSelector({ lang, onSelectExam, selectedExamId, text }) {
         <Select.Portal>
           <Select.Content className="select-content" position="popper" sideOffset={6}>
             <Select.Viewport className="p-1">
-              {EXAM_CARDS.filter((exam) => exam.available).map((exam) => (
+              {examCards.filter((exam) => exam.available).map((exam) => (
                 <Select.Item className="select-item" value={exam.id} key={exam.id}>
                   <Select.ItemText>{exam.title[lang]}</Select.ItemText>
                 </Select.Item>
@@ -1956,11 +2077,11 @@ function TrackSelector({ onSelectTrack, selectedTrack, text, trackOptions }) {
   );
 }
 
-function ToppersPage({ groups, lang, loading, onSelect, onSelectExam, onSelectTrack, selectedExam, selectedExamId, selectedTrack, showTrackGroups, showTrackSelector, text, trackOptions }) {
+function ToppersPage({ examCards = EXAM_CARDS, groups, lang, loading, onSelect, onSelectExam, onSelectTrack, selectedExam, selectedExamId, selectedTrack, showTrackGroups, showTrackSelector, text, trackOptions }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.toppers} title={text.toppersTitle} icon={<AwardIcon />} />
-      <ExamSelector lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
+      <ExamSelector examCards={examCards} lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
       {showTrackSelector && <TrackSelector onSelectTrack={onSelectTrack} selectedTrack={selectedTrack} text={text} trackOptions={trackOptions} />}
       {selectedExam ? <ToppersSection loading={loading} onSelect={onSelect} groups={groups} showTrackGroups={showTrackGroups} text={text} /> : null}
     </section>
@@ -2045,25 +2166,6 @@ function StatsRow({ isConcours, row, text }) {
   );
 }
 
-) {
-  const heroBackground = contentValue(content, "hero_background");
-  const logo = contentValue(content, "logo", "/logo.png");
-
-  return (
-    <section className="compact-hero hero-logo-panel animate-slide-up">
-      {heroBackground && <img className="hero-background-image" src={heroBackground} alt="" loading="lazy" />}
-      <div className="hero-logo-glow">
-        <LogoMark className="h-28 w-28 rounded-[30px] md:h-36 md:w-36" src={logo} />
-      </div>
-      <div className="grid gap-2 text-center">
-        <p className="mx-auto w-fit rounded-full border border-mauri-green/15 bg-mauri-green/10 px-3 py-1 text-xs font-black text-mauri-green dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300">{text.platformSubtitle}</p>
-        <h1 className="text-3xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-5xl">{text.heroTitle}</h1>
-        <p className="mx-auto max-w-xl text-sm font-bold leading-7 text-slate-600 dark:text-slate-300">{text.heroDesc}</p>
-      </div>
-    </section>
-  );
-}
-
 function StatsStrip({ loading, stats, text = UI_TEXT.ar }) {
   const cards = stats.isConcours
     ? [
@@ -2129,6 +2231,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
     ? [
       [text.id, student.id, <HashIcon key="hash" />],
       [text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],
+      [text.decision || "القرار", status.label, <InfoIcon key="decision" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -2139,6 +2242,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
       ? [
         [text.id, student.id, <HashIcon key="hash" />],
         [text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],
+        [text.decision || "القرار", status.label, <InfoIcon key="decision" />],
         [text.track, student.track, <BookIcon key="track" />],
         [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
         [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
@@ -2150,6 +2254,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
         ? [
           [text.id, student.id, <HashIcon key="hash" />],
           [text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],
+          [text.decision || "القرار", status.label, <InfoIcon key="decision" />],
           [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
           [text.center, student.centre || text.unavailable, <MapIcon key="center" />, () => onOpenRanking?.("centre", student.centre, text.center)],
           [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -2162,6 +2267,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
           ? [
             [text.id, student.id, <HashIcon key="hash" />],
             [text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],
+            [text.decision || "القرار", status.label, <InfoIcon key="decision" />],
             [text.nationalId, student.matricule || text.unavailable, <HashIcon key="matricule" />],
             [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
             [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -2173,12 +2279,12 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
           ]
     : [
       [text.id, student.id, <HashIcon key="hash" />],
-      [text.exam || "المسابقة", student.sessionType || "البكالوريا 2025", <BookIcon key="exam" />],
+      [text.exam || "المسابقة", "باكالوريا 2025", <BookIcon key="exam" />],
       [text.track, student.track, <BookIcon key="book" />],
       [text.rank, student.rank ? `#${student.rank}` : text.unavailable, <AwardIcon key="award" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
-      [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />],
+      [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />, () => onOpenRanking?.("moughataa", student.moughataa, text.moughataa)],
     ];
 
   useEffect(() => {
@@ -2232,32 +2338,18 @@ function ResultExperience({ content, onOpenRanking, onShare, resultBanner, stude
   const status = isConcours ? getConcoursStatus(getAverage(student), text) : getStatusDisplay(getOfficialStatus(student.kr), text);
 
   return (
-    <section className="app-shell result-official-page py-4 md:py-8" aria-label={text?.officialResult || "بطاقة النتيجة الرسمية"}>
+    <section className="app-shell result-official-page py-4 md:py-8" aria-label={text?.officialResult || "النتيجة الرسمية"}>
       <div className="result-page-shell">
         <header className="official-result-header">
           <div className="flex min-w-0 items-center gap-3">
-            <LogoMark className="h-12 w-12 rounded-[18px]" src={contentValue(content, "logo", "/logo.png")} />
+            <LogoMark className="h-16 w-16 rounded-[22px]" src={contentValue(content, "logo", "/logo.png")} />
             <div className="min-w-0">
               <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">MauriResults</p>
-              <h1 className="line-clamp-1 text-xl font-black text-slate-950 dark:text-white md:text-3xl">{text?.officialResult || "بطاقة النتيجة الرسمية"}</h1>
+              <h1 className="text-balance text-3xl font-black leading-tight text-slate-950 dark:text-white md:text-4xl">{text?.officialResult || "النتيجة الرسمية"}</h1>
               <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{text?.verification || "رقم التحقق"}: {verificationCode}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <StatusBadge status={status.className} label={status.label} />
-          </div>
+          </div>
         </header>
-        <ResultOfficialSummary
-          average={getAverage(student).toFixed(2)}
-          code={verificationCode}
-          exam={student.sessionType || (isConcours ? "كونكور 2025" : student.source === "brevet" ? "أبريفه 2025" : student.source === "excellence_1as" ? "الامتياز الأولى إعدادية 2025" : "البكالوريا 2025")}
-          maxScore={isConcours ? 200 : undefined}
-          name={student.name}
-          number={student.id}
-          status={status.className}
-          statusLabel={status.label}
-          text={text}
-        />
         <ResultCard onOpenRanking={onOpenRanking} resultBanner={resultBanner} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
       </div>
     </section>
@@ -2267,10 +2359,13 @@ function ResultExperience({ content, onOpenRanking, onShare, resultBanner, stude
 function InfoTile({ icon, label, onClick, value }) {
   const Component = onClick ? "button" : "div";
   return (
-    <Component className={`info-tile ${onClick ? "info-tile-clickable" : ""}`} onClick={onClick} type={onClick ? "button" : undefined}>
-      <span className="grid h-8 w-8 place-items-center rounded-[12px] bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">{icon}</span>
+    <Component className={`info-tile ${onClick ? "info-tile-clickable border-mauri-green/30 bg-mauri-green/5 ring-1 ring-mauri-green/15 dark:border-emerald-300/20 dark:bg-emerald-300/10" : ""}`} onClick={onClick} type={onClick ? "button" : undefined}>
+      <span className={`grid h-8 w-8 place-items-center rounded-[12px] ${onClick ? "bg-mauri-green text-white" : "bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300"}`}>{icon}</span>
       <div className="min-w-0">
-        <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{label}</span>
+        <span className="flex items-center gap-1 text-[11px] font-black text-slate-500 dark:text-slate-400">
+          {label}
+          {onClick && <em className="not-italic text-[10px] text-mauri-green dark:text-emerald-300">اضغط</em>}
+        </span>
         <strong className="block overflow-wrap-anywhere text-sm font-black text-slate-950 dark:text-white">{value}</strong>
       </div>
     </Component>
