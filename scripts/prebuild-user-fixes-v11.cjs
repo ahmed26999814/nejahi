@@ -93,14 +93,21 @@ if (!s.includes("function getExamCardYear(exam)")) {
   s = s.replace(
     `function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {`,
     `function getExamCardYear(exam) {
-  const fromYear = String(exam?.year || "").match(/20\\d{2}/)?.[0];
-  if (fromYear) return fromYear;
-  const searchText = [exam?.id, exam?.title?.ar, exam?.title?.fr, exam?.sessionType, exam?.tableName].filter(Boolean).join(" ");
-  return String(searchText).match(/20\\d{2}/)?.[0] || "2025";
+  const searchText = [exam?.id, exam?.title?.ar, exam?.title?.fr, exam?.sessionType, exam?.tableName, exam?.source].filter(Boolean).join(" ");
+  const fromText = String(searchText).match(/20\\d{2}/)?.[0];
+  if (fromText) return fromText;
+  return String(exam?.year || "").match(/20\\d{2}/)?.[0] || "2025";
 }
 
 function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {`
   );
+} else {
+  replaceFunction("getExamCardYear", `function getExamCardYear(exam) {
+  const searchText = [exam?.id, exam?.title?.ar, exam?.title?.fr, exam?.sessionType, exam?.tableName, exam?.source].filter(Boolean).join(" ");
+  const fromText = String(searchText).match(/20\\d{2}/)?.[0];
+  if (fromText) return fromText;
+  return String(exam?.year || "").match(/20\\d{2}/)?.[0] || "2025";
+}`);
 }
 s = s.replace(
   `  const visibleExamCards = examCards.filter((exam) => {
