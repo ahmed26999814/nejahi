@@ -57,6 +57,15 @@ replaceOnce(
   const views = ANALYTICS_VIEW_NAMES[source];`
 );
 
+// Uploaded exams can show common analytics tabs.
+replaceOnce(
+  `  if (source === "bac_session") return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }];
+  return [];`,
+  `  if (source === "bac_session") return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }];
+  if (String(source || "").startsWith("upload:")) return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }, { id: "school", label: text.bySchools }];
+  return [];`
+);
+
 // Remember which year page is open and enable 2026 when published exams exist.
 replaceOnce(
   `  const [selectedExamId, setSelectedExamId] = useState(() => getInitialRouteState().examId);`,
@@ -80,20 +89,27 @@ replaceOnce(
   const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);`
 );
 
+// Uploaded exams with a track column should behave like BAC for toppers grouping.
+s = s.replace(
+  `  const showTrackGroups = examHasTrackGroups(selectedExam?.source);
+  const showTopperTrackSelector = selectedExam?.source === "bac";`,
+  `  const showTrackGroups = selectedExam?.source?.startsWith("upload:") ? !!selectedExam?.uploadColumns?.track : examHasTrackGroups(selectedExam?.source);
+  const showTopperTrackSelector = selectedExam?.source === "bac" || (selectedExam?.source?.startsWith("upload:") && !!selectedExam?.uploadColumns?.track);`
+);
+
 replaceOnce(
   `function HomeView({ homepageBanner, lang, onSelectYear, stats, text }) {`,
   `function HomeView({ homepageBanner, lang, onSelectYear, stats, text, yearCards = YEAR_CARDS }) {`
 );
 replaceOnce(`      yearCards={YEAR_CARDS}`, `      yearCards={yearCards}`);
 replaceOnce(
-  `          text={text}
-        />`,
-  `          text={text}
+  `          stats={homeStats}
+          suggestions={suggestions}`, 
+  `          stats={homeStats}
           yearCards={yearCards}
-        />`
+          suggestions={suggestions}`
 );
 
-// Open the correct year hash instead of always year-2025.
 replaceFunction("openYear", `function openYear(year) {
     if (!year.available) return;
     setSelectedYearId(year.id || "year-2025");
@@ -105,7 +121,6 @@ replaceFunction("openYear", `function openYear(year) {
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }`);
 
-// Keep exam selection tied to its year.
 replaceOnce(
   `    setSelectedExamId(exam.id);
     setSelectedTopperTrack("");`,
@@ -147,18 +162,14 @@ s = s.replace(
   `{activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} components={{ PageHero, ExamSelector, StatsStrip, AnalyticsModeSelector, StatsTable, EmptyChoice, ChartIcon }} examCards={examCards} lang={lang} loading={selectedSourceLoading} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}`
 );
 
-// ToppersPage and AnalyticsPage pass examCards to ExamSelector.
+s = s.replace(
+  `function ToppersPage({ groups, lang, loading, onSelect, onSelectExam, onSelectTrack, selectedExam, selectedExamId, selectedTrack, showTrackGroups, showTrackSelector, text, trackOptions }) {`,
+  `function ToppersPage({ examCards = EXAM_CARDS, groups, lang, loading, onSelect, onSelectExam, onSelectTrack, selectedExam, selectedExamId, selectedTrack, showTrackGroups, showTrackSelector, text, trackOptions }) {`
+);
 s = s.replace(
   `<ExamSelector lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />`,
   `<ExamSelector examCards={examCards} lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />`
 );
-s = s.replace(
-  `export default function AnalyticsPage(props) {`,
-  `export default function AnalyticsPage(props) {`
-);
-
-// Use dynamic cards when selecting from analytics/toppers.
-s = s.replace(`const exam = examCards.find((item) => item.id === examId);`, `const exam = examCards.find((item) => item.id === examId);`);
 
 fs.writeFileSync(p, s, "utf8");
 console.log("Applied MauriResults year-separated published exams and analytics v10");
