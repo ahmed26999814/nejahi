@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const revalidate = 300;
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
@@ -29,15 +32,15 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const source = String(searchParams.get("source") || "").trim();
   if (!source.startsWith("upload:")) {
-    return NextResponse.json({ error: "Invalid source" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid source" }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
 
   const result = await getDashboard(source);
   if ("error" in result) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
+    return NextResponse.json({ error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
   }
 
   return NextResponse.json(result.data, {
-    headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
+    headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800" },
   });
 }
