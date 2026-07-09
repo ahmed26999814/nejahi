@@ -47,7 +47,7 @@ begin
   end if;
 
   if coalesce(p_name_column, '') <> '' then
-    execute format('create index if not exists %I on public.%I using gin (lower(%I::text) gin_trgm_ops)',
+    execute format('create index if not exists %I on public.%I using gin (%I gin_trgm_ops)',
       'idx_' || p_table_name || '_name_trgm', p_table_name, p_name_column);
   end if;
 
