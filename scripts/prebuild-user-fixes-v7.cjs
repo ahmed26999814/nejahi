@@ -35,6 +35,20 @@ function replaceFunction(name, next) {
   s = s.slice(0, bounds.start) + next + s.slice(bounds.end);
 }
 
+const routeHelpers = `
+function getInitialRouteState() {
+  if (typeof window === "undefined") return { view: "home", examId: "" };
+  const hash = window.location.hash.replace("#", "").trim();
+  const savedExamId = localStorage.getItem("mauriresults-selected-exam") || "bac-2025";
+  const knownExam = EXAM_CARDS.find((exam) => exam.id === hash && exam.available);
+
+  if (knownExam) return { view: "exam", examId: knownExam.id };
+  if (hash === "year" || hash === "year-2025" || hash === "year-2026") return { view: "year", examId: savedExamId };
+  if (["analytics", "toppers", "contact"].includes(hash)) return { view: hash, examId: savedExamId };
+  return { view: "home", examId: savedExamId };
+}
+`;
+
 const rankingHelpers = `
 function prepareRowsForSource(source, rows) {
   if (source === "brevet") return prepareBrevetStudents(rows);
@@ -63,8 +77,36 @@ function preserveSourceRanks(source, rows, students) {
 }
 `;
 
+if (!s.includes("function getInitialRouteState()")) {
+  s = s.replace("\nexport default function HomePage() {", `${routeHelpers}\nexport default function HomePage() {`);
+}
 if (!s.includes("function prepareRowsForSource(source, rows)")) {
   s = s.replace("\nexport default function HomePage() {", `${rankingHelpers}\nexport default function HomePage() {`);
+}
+
+// Keep the same page after refresh instead of always returning to home.
+s = s.replace(
+  `  const [activeView, setActiveView] = useState("home");
+  const [selectedExamId, setSelectedExamId] = useState("");`,
+  `  const [activeView, setActiveView] = useState(() => getInitialRouteState().view);
+  const [selectedExamId, setSelectedExamId] = useState(() => getInitialRouteState().examId);`
+);
+s = s.replace(
+  `    window.history.replaceState({ view: "home" }, "", window.location.pathname);`,
+  `    const initialRoute = getInitialRouteState();
+    window.history.replaceState({ view: initialRoute.view }, "", window.location.hash ? \`${window.location.pathname}${window.location.hash}\` : window.location.pathname);`
+);
+if (!s.includes('localStorage.setItem("mauriresults-selected-exam", selectedExamId)')) {
+  s = s.replace(
+    `  useEffect(() => {
+    const favicon = contentValue(siteContent, "favicon");`,
+    `  useEffect(() => {
+    if (selectedExamId) localStorage.setItem("mauriresults-selected-exam", selectedExamId);
+  }, [selectedExamId]);
+
+  useEffect(() => {
+    const favicon = contentValue(siteContent, "favicon");`
+  );
 }
 
 replaceFunction("searchResults", `async function searchResults(query, exam) {
