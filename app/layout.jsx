@@ -6,18 +6,25 @@ export const metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: "MauriResults",
   title: {
-    default: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
+    default: "MauriResults | نتائج البكالوريا والكونكور وأبريفه في موريتانيا",
     template: "%s | MauriResults",
   },
-  description: "منصة موريتانية حديثة وسريعة لعرض نتائج البكالوريا وأبريفه والكونكور ومسابقات الامتياز.",
+  description: "ابحث بسرعة عن نتائج البكالوريا، الكونكور، أبريفه، والامتياز في موريتانيا عبر منصة MauriResults المهيأة للهاتف والضغط العالي.",
   keywords: [
     "نتائج موريتانيا",
-    "نتائج البكالوريا موريتانيا",
+    "نتائج باكالوريا موريتانيا",
+    "نتائج البكالوريا موريتانيا 2026",
+    "نتائج كونكور موريتانيا",
+    "نتائج الكونكور 2026",
     "نتائج أبريفه موريتانيا",
-    "نتائج الكونكور موريتانيا",
+    "نتائج البريفيه موريتانيا",
+    "نتائج المسابقات الوطنية في موريتانيا",
     "MauriResults",
     "Résultats Mauritanie",
+    "Résultats Bac Mauritanie",
+    "Résultats Concours Mauritanie",
     "Bac Mauritanie",
+    "Concours Mauritanie",
   ],
   authors: [{ name: "Ahmed abdellahi mady" }],
   creator: "Ahmed abdellahi mady",
@@ -25,6 +32,21 @@ export const metadata = {
   manifest: "/manifest.webmanifest",
   alternates: {
     canonical: siteUrl,
+    languages: {
+      "ar-MR": siteUrl,
+      "fr-MR": siteUrl,
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
   },
   openGraph: {
     type: "website",
@@ -32,20 +54,20 @@ export const metadata = {
     url: siteUrl,
     siteName: "MauriResults",
     title: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
-    description: "ابحث عن نتيجتك الرسمية بسرعة عبر منصة حديثة ومهيأة للهاتف.",
+    description: "منصة سريعة للبحث عن نتائج البكالوريا والكونكور وأبريفه في موريتانيا.",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 1200,
-        alt: "MauriResults",
+        alt: "MauriResults - نتائج موريتانيا",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
-    description: "منصة نتائج وطنية سريعة وحديثة.",
+    title: "MauriResults | نتائج البكالوريا والكونكور في موريتانيا",
+    description: "بحث سريع عن نتائج المسابقات الوطنية في موريتانيا.",
     images: ["/logo.png"],
   },
   appleWebApp: {
@@ -78,6 +100,11 @@ export default function RootLayout({ children }) {
     creator: {
       "@type": "Person",
       name: "Ahmed abdellahi mady",
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
     },
   };
 
