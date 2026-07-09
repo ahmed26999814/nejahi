@@ -4,6 +4,21 @@ import PremiumHero from "../hero/Hero";
 import BackToTopButton from "../ui/BackToTopButton";
 import { contentValue } from "../common/content";
 
+const HOME_YEAR_CARDS = [
+  {
+    id: "year-2025",
+    title: { ar: "نتائج المسابقات 2025", fr: "Résultats des concours 2025" },
+    description: { ar: "كل نتائج 2025 المتوفرة الآن في مكان واحد.", fr: "Tous les résultats 2025 disponibles au même endroit." },
+    available: true,
+  },
+  {
+    id: "year-2026",
+    title: { ar: "نتائج المسابقات 2026", fr: "Résultats des concours 2026" },
+    description: { ar: "سيتم فتحها عند توفر النتائج الرسمية.", fr: "Ouverture à la publication des résultats officiels." },
+    available: false,
+  },
+];
+
 function PremiumSiteBanner({ asset }) {
   if (!asset?.is_active || !asset?.image_url) return null;
 
@@ -15,21 +30,32 @@ function PremiumSiteBanner({ asset }) {
 }
 
 function normalizeYearTitle(title, yearId) {
-  const fallback = `نتائج المسابقات ${yearId || ""}`.trim();
+  const fallback = `نتائج المسابقات ${String(yearId || "").replace("year-", "")}`.trim();
   return String(title || fallback).replace("نتائج مسابقات", "نتائج المسابقات").replace("نتائج المسابقات الوطنية", "نتائج المسابقات");
 }
 
-function YearChoiceCards({ lang = "ar", onSelectYear, yearCards = [] }) {
-  const cards = yearCards.length ? yearCards : [
-    { id: "2025", title: { ar: "نتائج المسابقات 2025", fr: "Résultats 2025" }, description: { ar: "كل النتائج المتوفرة الآن في مكان واحد.", fr: "Tous les résultats disponibles" }, available: true },
-    { id: "2026", title: { ar: "نتائج المسابقات 2026", fr: "Résultats 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Bientôt" }, available: false },
-  ];
+function normalizeHomeYearId(year) {
+  const rawId = String(year?.id || "year-2025").trim();
+  if (rawId.startsWith("year-")) return rawId;
+  const matchedYear = rawId.match(/20\d{2}/)?.[0] || "2025";
+  return `year-${matchedYear}`;
+}
+
+function openYearFallback(yearId) {
+  if (typeof window === "undefined") return;
+  window.history.pushState({ view: "year" }, "", `#${yearId}`);
+  window.dispatchEvent(new PopStateEvent("popstate", { state: { view: "year" } }));
+}
+
+function YearChoiceCards({ lang = "ar", onSelectYear }) {
+  const cards = HOME_YEAR_CARDS;
 
   return (
     <section className="grid gap-3 md:grid-cols-2">
       {cards.map((year, index) => {
-        const rawTitle = year.title?.[lang] || year.title?.ar || `نتائج المسابقات ${year.id}`;
-        const title = normalizeYearTitle(rawTitle, year.id);
+        const yearId = normalizeHomeYearId(year);
+        const rawTitle = year.title?.[lang] || year.title?.ar || `نتائج المسابقات ${yearId}`;
+        const title = normalizeYearTitle(rawTitle, yearId);
         const description = year.description?.[lang] || year.description?.ar || "كل النتائج المتوفرة الآن في مكان واحد.";
         const available = year.available !== false;
         const tone = index === 0
@@ -37,10 +63,15 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards = [] }) {
           : "border-amber-200/70 from-slate-900/90 via-amber-900/35 to-amber-400/20 text-amber-50";
         return (
           <button
-            key={year.id || title}
+            key={yearId}
             type="button"
             disabled={!available}
-            onClick={() => available && onSelectYear?.(year)}
+            onClick={() => {
+              if (!available) return;
+              const payload = { ...year, id: yearId, available: true };
+              if (typeof onSelectYear === "function") onSelectYear(payload);
+              else openYearFallback(yearId);
+            }}
             className={`group relative min-h-[132px] overflow-hidden rounded-[28px] border bg-gradient-to-br p-4 text-start shadow-premium transition duration-300 active:scale-[.99] hover:-translate-y-0.5 ${tone} ${available ? "" : "opacity-80"}`}
           >
             <span className="absolute -left-12 -top-12 h-28 w-28 rounded-full bg-white/10 transition group-hover:scale-125" />
@@ -60,13 +91,13 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards = [] }) {
   );
 }
 
-export default function PremiumHomeView({ content = {}, homepageBanner, lang = "ar", onSelectYear, text, yearCards = [] }) {
+export default function PremiumHomeView({ content = {}, homepageBanner, lang = "ar", onSelectYear, text }) {
   const logo = contentValue(content, "logo", "/logo.png");
 
   return (
     <section className="app-shell grid gap-6 py-4 md:gap-8 md:py-8">
       <PremiumHero eyebrow="MauriResults" title={text.heroTitle} description={text.heroDesc} logo={logo} />
-      <YearChoiceCards lang={lang} onSelectYear={onSelectYear} yearCards={yearCards} />
+      <YearChoiceCards lang={lang} onSelectYear={onSelectYear} />
       <PremiumSiteBanner asset={homepageBanner} />
       <BackToTopButton />
     </section>
