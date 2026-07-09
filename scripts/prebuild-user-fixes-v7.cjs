@@ -179,6 +179,14 @@ if (!s.includes('key="decision"')) {
   );
 }
 
+// أغلق 2026 حتى لا تظهر نتائج تجريبية أو ملفات مرفوعة بالخطأ.
+s = s.replace(/\n\s*\{ id: "bac-2026",[\s\S]*?source: "bac26", icon: <GraduationIcon \/> \},/g, "");
+s = s.replace(/\n\s*bac26: "bac26",/g, "");
+s = s.replace(
+  /\{ id: "year-2026", title: \{ ar: "[^"]+", fr: "[^"]+" \}, description: \{ ar: "[^"]+", fr: "[^"]+" \}, available: true, tone: "rose", icon: <AwardIcon \/> \}/g,
+  `{ id: "year-2026", title: { ar: "نتائج مسابقات 2026", fr: "Résultats des concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج الرسمية.", fr: "Ouverture prochaine." }, available: false, tone: "rose", icon: <AwardIcon /> }`
+);
+
 // Show result immediately after search; no artificial 520ms delay.
 s = s.replace(/\},\s*120\);/g, "}, 20);");
 s = s.replace(/\},\s*520\);/g, "}, 20);");
