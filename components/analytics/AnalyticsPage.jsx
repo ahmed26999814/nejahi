@@ -23,6 +23,7 @@ export default function AnalyticsPage(props) {
   const analyticsMode = props.analyticsMode;
   const analyticsOptions = props.analyticsOptions;
   const components = props.components || {};
+  const examCards = props.examCards;
   const lang = props.lang;
   const loading = props.loading;
   const onSelectAnalyticsMode = props.onSelectAnalyticsMode;
@@ -57,7 +58,7 @@ export default function AnalyticsPage(props) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       {PageHero && <PageHero eyebrow={text.analytics} title={text.analyticsTitle} icon={chartIcon} />}
-      {ExamSelector && <ExamSelector lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />}
+      {ExamSelector && <ExamSelector examCards={examCards} lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />}
       {selectedExam ? (
         <>
           {StatsStrip && <StatsStrip loading={loading} stats={stats} text={text} />}
