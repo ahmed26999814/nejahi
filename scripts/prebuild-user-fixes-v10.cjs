@@ -39,6 +39,16 @@ function replaceFunction(name, body) {
   s = s.slice(0, b.start) + body + s.slice(b.end);
 }
 
+function dedupeExactLine(line) {
+  let seen = false;
+  s = s.split("\n").filter((currentLine) => {
+    if (currentLine !== line) return true;
+    if (seen) return false;
+    seen = true;
+    return true;
+  }).join("\n");
+}
+
 // Published exams analytics: make uploaded results appear in الإحصائيات and الأوائل.
 replaceOnce(
   `async function fetchAnalyticsViewSet(source) {
@@ -177,6 +187,12 @@ if (!s.includes("const yearCards = useMemo")) {
 } else {
   s = s.replace(/yearCards=\{yearCards\}/g, `yearCards={typeof yearCards !== "undefined" ? yearCards : YEAR_CARDS}`);
 }
+
+// Some older prebuild layers can inject state lines twice. Keep only the first exact declaration.
+dedupeExactLine(`  const [rankingRows, setRankingRows] = useState([]);`);
+dedupeExactLine(`  const [publishedExams, setPublishedExams] = useState([]);`);
+dedupeExactLine(`  const [analyticsViews, setAnalyticsViews] = useState({});`);
+dedupeExactLine(`  const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});`);
 
 fs.writeFileSync(p, s, "utf8");
 console.log("Applied MauriResults year-separated published exams and analytics v10");
