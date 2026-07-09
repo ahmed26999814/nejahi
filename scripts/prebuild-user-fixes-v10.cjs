@@ -89,25 +89,6 @@ replaceOnce(
   const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);`
 );
 
-// Absolute safety: if HomeView references yearCards, make sure HomePage declares it.
-if (s.includes("yearCards={yearCards}") && !s.includes("const yearCards = useMemo")) {
-  const yearCardsBlock = `  const yearCards = useMemo(() => YEAR_CARDS.map((year) => {
-    if (year.id !== "year-2026") return year;
-    const has2026 = (publishedExams || []).some((exam) => String(exam.year || "") === "2026");
-    return has2026 ? {
-      ...year,
-      available: true,
-      title: { ar: "نتائج المسابقات 2026", fr: "Résultats des concours 2026" },
-      description: { ar: "نتائج 2026 المنشورة من لوحة الأدمن.", fr: "Résultats 2026 publiés depuis l'administration." },
-    } : year;
-  }), [publishedExams]);`;
-  if (s.includes(`  const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);`)) {
-    s = s.replace(`  const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);`, `${yearCardsBlock}\n  const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);`);
-  } else if (s.includes(`  const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);`)) {
-    s = s.replace(`  const selectedExam = useMemo(() => EXAM_CARDS.find((exam) => exam.id === selectedExamId), [selectedExamId]);`, `  const examCards = useMemo(() => [...EXAM_CARDS, ...(publishedExams || [])], [publishedExams]);\n${yearCardsBlock}\n  const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);`);
-  }
-}
-
 // Uploaded exams with a track column should behave like BAC for toppers grouping.
 s = s.replace(
   `  const showTrackGroups = examHasTrackGroups(selectedExam?.source);
@@ -189,6 +170,13 @@ s = s.replace(
   `<ExamSelector lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />`,
   `<ExamSelector examCards={examCards} lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />`
 );
+
+// Final build safety: never leave a bare yearCards reference if the declaration was not injected.
+if (!s.includes("const yearCards = useMemo")) {
+  s = s.replace(/yearCards=\{yearCards\}/g, `yearCards={YEAR_CARDS}`);
+} else {
+  s = s.replace(/yearCards=\{yearCards\}/g, `yearCards={typeof yearCards !== "undefined" ? yearCards : YEAR_CARDS}`);
+}
 
 fs.writeFileSync(p, s, "utf8");
 console.log("Applied MauriResults year-separated published exams and analytics v10");
