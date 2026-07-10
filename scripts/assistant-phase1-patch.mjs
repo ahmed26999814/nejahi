@@ -1,7 +1,7 @@
 import fs from "node:fs";
 
 const path = "components/home/HomeApplication.jsx";
-let source = fs.readFileSync(path, "utf8").replace(/^\uFEFF/, "");
+let source = fs.readFileSync(path, "utf8").replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
 
 const replacements = [
   {
