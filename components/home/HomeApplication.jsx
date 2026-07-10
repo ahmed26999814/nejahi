@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import PremiumHomeView from "./PremiumHomeView";
 import AnalyticsPage from "../analytics/AnalyticsPage";
@@ -13,7 +13,7 @@ import DecisionStrip from "../results/DecisionStrip";
 import { useHashRoute, writeHashRoute } from "../../hooks/useHashRoute";
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaFacebookF, FaTelegram, FaWhatsapp } from "react-icons/fa6";
 import * as Select from "@radix-ui/react-select";
 import { Toaster, toast } from "sonner";
@@ -373,22 +373,29 @@ function getAverage(student) {
   return parseAverage(student.MOD);
 }
 
+function isConcoursStudent(student) {
+  return student?.source === "concours" || student?.searchMode === "concours";
+}
+
 function formatScore(student, text = UI_TEXT.ar) {
   const score = getAverage(student);
-  return student.source === "concours" ? `${score.toFixed(2)} / 200` : score.toFixed(2);
+  return isConcoursStudent(student) ? `${score.toFixed(2)} / 200` : score.toFixed(2);
 }
 
 function getResultUrl(student) {
   if (typeof window === "undefined") return "https://mauri-results.vercel.app";
   const url = new URL(window.location.href);
-  url.hash = `result-${encodeURIComponent(student?.source || "exam")}-${encodeURIComponent(student?.id || "")}`;
+  url.searchParams.set("source", cleanText(student?.source));
+  url.searchParams.set("candidate", cleanText(student?.id));
+  url.hash = "result";
   return url.toString();
 }
 
 function getResultShareText(student, text = UI_TEXT.ar) {
-  const scoreLabel = student.source === "concours" ? text.totalScore : text.averageLabel;
-  const trackLine = examHasTrackGroups(student.source) ? `\n${text.track}: ${student.track}` : "";
-  return `${text.result} ${student.name}\n${text.id}: ${student.id}${trackLine}\n${scoreLabel}: ${formatScore(student, text)}\n${text.rank}: ${student.rank || text.unavailable}\nMauriResults`;
+  const scoreLabel = isConcoursStudent(student) ? text.totalScore : text.averageLabel;
+  const trackLine = cleanText(student.track) ? `\n${text.track}: ${student.track}` : "";
+  const rankLine = Number(student.rank) > 0 ? `\n${text.rank}: ${student.rank}` : "";
+  return `${text.result} ${student.name}\n${text.id}: ${student.id}${trackLine}\n${scoreLabel}: ${formatScore(student, text)}${rankLine}\nMauriResults`;
 }
 
 function isMissingSupabaseEnv(error) {
@@ -659,17 +666,23 @@ function normalizeViewStats(row, source) {
 function normalizeTopStudent(row, source, index = 0) {
   const id = String(row.numero ?? row.id ?? row.NODOSS ?? row.Numero ?? "").trim();
   const score = numberValue(row.average_score ?? row.total_score ?? row.MOD ?? row.Mgex ?? row["Moy Bac_Session"] ?? row.Moyenne_Bepc);
+  const uploaded = String(source || "").startsWith("upload:");
+  const searchMode = cleanText(row.searchMode ?? row.search_mode ?? (row.isConcours ? "concours" : ""));
   const student = {
     id,
     name: cleanText(row.name ?? row.NOM ?? row.NOM_AR ?? row.Nom ?? "اسم غير متوفر"),
-    track: cleanText(row.track ?? row.serie ?? row.SERIE ?? row.TYPE ?? (source === "concours" ? "كونكور" : "غير محددة")),
+    track: cleanText(row.track ?? row.serie ?? row.SERIE ?? row.TYPE ?? (uploaded ? "" : source === "concours" ? "كونكور" : "غير محددة")),
     MOD: score,
-    kr: cleanText(row.decision ?? row.Decision ?? ""),
-    wl: cleanText(row.wilaya ?? row.WILAYA ?? row.Wilaya_AR ?? row.WL ?? ""),
+    kr: cleanText(row.kr ?? row.decision ?? row.Decision ?? ""),
+    wl: cleanText(row.wl ?? row.wilaya ?? row.WILAYA ?? row.Wilaya_AR ?? row.WL ?? ""),
     moughataa: cleanText(row.moughataa ?? row.MOUGHATAA_AR ?? row.MD ?? ""),
-    ms: cleanText(row.school ?? row.Ecole ?? row.Ecole_AR ?? row.Etablissement_AR ?? row.MS ?? ""),
-    centre: cleanText(row.center ?? row.Centre ?? row.CENTRE_AR ?? row["Centre Examen_AR"] ?? ""),
-    totalScore: source === "concours" ? score : undefined,
+    ms: cleanText(row.ms ?? row.school ?? row.Ecole ?? row.Ecole_AR ?? row.Etablissement_AR ?? row.MS ?? ""),
+    centre: cleanText(row.centre ?? row.center ?? row.Centre ?? row.CENTRE_AR ?? row["Centre Examen_AR"] ?? ""),
+    birthPlace: cleanText(row.birthPlace ?? row.birth_place ?? ""),
+    birthDate: cleanText(row.birthDate ?? row.birth_date ?? ""),
+    sessionType: cleanText(row.sessionType ?? row.session_type ?? ""),
+    searchMode,
+    totalScore: source === "concours" || searchMode === "concours" ? score : undefined,
     source,
     rank: Number(row.rank) > 0 ? Number(row.rank) : index + 1,
     originalIndex: index,
@@ -712,16 +725,17 @@ function analyticsModeOptions(source, text = UI_TEXT.ar) {
 
 async function fetchAnalyticsViewSet(source) {
   if (String(source || "").startsWith("upload:")) {
-    const response = await fetch(`/api/published-exam-analytics?source=${encodeURIComponent(source)}`, { headers: { Accept: "application/json" } });
+    const response = await fetch(`/api/published-exam-analytics?source=${encodeURIComponent(source)}`, { headers: { Accept: "application/json" }, cache: "no-store" });
     if (!response.ok) throw new Error(await response.text());
     const data = await response.json();
+    const isConcours = Boolean(data?.stats?.isConcours);
     return {
       stats: normalizeViewStats(data.stats, source),
-      regionStats: normalizeStatsRows(data.regionStats, { labelKey: "wilaya" }),
-      schoolStats: normalizeStatsRows(data.schoolStats, { labelKey: "school" }),
-      trackStats: normalizeStatsRows(data.trackStats, { labelKey: "track" }),
-      moughataaStats: normalizeStatsRows(data.moughataaStats, { labelKey: "moughataa" }),
-      topStudents: (data.topStudents || []).map((row, index) => normalizeTopStudent(row, source, index)).filter(Boolean),
+      regionStats: normalizeStatsRows(data.regionStats, { labelKey: "wilaya", isConcours }),
+      schoolStats: normalizeStatsRows(data.schoolStats, { labelKey: "school", isConcours }),
+      trackStats: normalizeStatsRows(data.trackStats, { labelKey: "track", isConcours }),
+      moughataaStats: normalizeStatsRows(data.moughataaStats, { labelKey: "moughataa", isConcours }),
+      topStudents: (data.topStudents || []).map((row, index) => normalizeTopStudent({ ...row, isConcours }, source, index)).filter(Boolean),
     };
   }
   const views = ANALYTICS_VIEW_NAMES[source];
@@ -1133,7 +1147,7 @@ async function searchResults(query, exam) {
 function calculateStats(students) {
   const total = students.length;
   const averages = students.map((student) => parseAverage(student.MOD));
-  const isConcours = students.some((student) => student.source === "concours");
+  const isConcours = students.some(isConcoursStudent);
   const passed = isConcours ? 0 : students.filter((student) => getOfficialStatus(student.kr).className === "admis").length;
   const failed = isConcours ? 0 : students.filter((student) => getOfficialStatus(student.kr).className === "ajourne").length;
   const highest = total ? Math.max(...averages) : 0;
@@ -1143,7 +1157,7 @@ function calculateStats(students) {
 
 function summarizeStudents(students, field) {
   const groups = new Map();
-  const isConcours = students.some((student) => student.source === "concours");
+  const isConcours = students.some(isConcoursStudent);
 
   students.forEach((student) => {
     const key = cleanText(student[field]) || "غير محدد";
@@ -1220,7 +1234,7 @@ function getExamYear(exam) {
 
 async function fetchPublishedExams() {
   try {
-    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" } });
+    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" }, cache: "no-store" });
     if (!response.ok) return [];
     const data = await response.json();
     return buildPublishedExamCards(data.exams || []);
@@ -1234,7 +1248,7 @@ function prepareUploadedStudents(rows, exam) {
   const columns = exam?.uploadColumns || {};
   const normalized = rows
     .map((row, index) => {
-      const track = cleanText(getColumn(row, columns.track) || exam?.sessionType || "نتائج");
+      const track = columns.track ? cleanText(getColumn(row, columns.track)) : "";
       return {
         id: String(getColumn(row, columns.number) ?? "").trim(),
         name: cleanText(getColumn(row, columns.name) || "اسم غير متوفر"),
@@ -1304,7 +1318,7 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resultLoading, setResultLoading] = useState(false);
-  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardLoading] = useState(false);
   const [examLoading, setExamLoading] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [resultPageOpen, setResultPageOpen] = useState(false);
@@ -1318,16 +1332,30 @@ export default function HomePage() {
   const [siteContent, setSiteContent] = useState({});
   const [lang, setLang] = useState("ar");
   const [rankingTarget, setRankingTarget] = useState(null);
-  const [rankingRows, setRankingRows] = useState([]);const [analyticsViews, setAnalyticsViews] = useState({});
+  const [rankingRows, setRankingRows] = useState([]);
+  const [analyticsViews, setAnalyticsViews] = useState({});
   const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});
   const [publishedExams, setPublishedExams] = useState([]);
+  const sharedResultRequestRef = useRef("");
 
   const examCards = useMemo(() => [...EXAM_CARDS, ...publishedExams], [publishedExams]);
-  const yearCards = useMemo(() => YEAR_CARDS.map((year) => {
-    const yearValue = year.id.replace("year-", "");
-    const available = examCards.some((exam) => exam.available && getExamYear(exam) === yearValue);
-    return { ...year, available };
-  }), [examCards]);
+  const yearCards = useMemo(() => {
+    const baseByYear = new Map(YEAR_CARDS.map((year) => [year.id.replace("year-", ""), year]));
+    const years = [...new Set(["2025", "2026", ...examCards.map(getExamYear)])]
+      .filter((year) => /^20\d{2}$/.test(year))
+      .sort((a, b) => Number(a) - Number(b));
+    return years.map((yearValue) => {
+      const base = baseByYear.get(yearValue) || {
+        id: `year-${yearValue}`,
+        title: { ar: `نتائج مسابقات ${yearValue}`, fr: `Résultats des concours ${yearValue}` },
+        description: { ar: `النتائج المنشورة لسنة ${yearValue}.`, fr: `Résultats publiés pour ${yearValue}.` },
+        tone: "green",
+        icon: <GraduationIcon />,
+      };
+      const available = examCards.some((exam) => exam.available && getExamYear(exam) === yearValue);
+      return { ...base, id: `year-${yearValue}`, available };
+    });
+  }, [examCards]);
   const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);
 
   useEffect(() => {
@@ -1424,6 +1452,52 @@ export default function HomePage() {
     }
   });
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const source = cleanText(params.get("source"));
+    const candidate = cleanText(params.get("candidate"));
+    if (!source || !candidate) return undefined;
+
+    const exam = examCards.find((item) => item.available && item.source === source);
+    if (!exam) return undefined;
+    const requestKey = `${source}:${candidate}`;
+    if (sharedResultRequestRef.current === requestKey) return undefined;
+    sharedResultRequestRef.current = requestKey;
+
+    let cancelled = false;
+    setSelectedExamId(exam.id);
+    setSelectedYearId(`year-${getExamYear(exam)}`);
+    localStorage.setItem("mauriresults-selected-exam", exam.id);
+    setActiveView("result");
+    setResultLoading(true);
+    setError("");
+
+    searchResults(candidate, exam)
+      .then((rows) => {
+        if (cancelled) return;
+        const student = rows[0];
+        if (!student) {
+          setActiveView("exam");
+          setError(UI_TEXT[lang]?.notFound || UI_TEXT.ar.notFound);
+          return;
+        }
+        setSelectedStudent(student);
+        setResultPageOpen(true);
+        sessionStorage.setItem("mauriresults-selected-result", JSON.stringify(student));
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("[MauriResults Shared Result Error]", error);
+        setActiveView("exam");
+        setError(UI_TEXT[lang]?.connectionError || UI_TEXT.ar.connectionError);
+      })
+      .finally(() => {
+        if (!cancelled) setResultLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [examCards, lang]);
+
   function setTheme(nextTheme) {
     setThemeState(nextTheme);
     document.documentElement.dataset.theme = nextTheme;
@@ -1445,7 +1519,9 @@ export default function HomePage() {
         ? concoursStudents
         : selectedExam?.source === "excellence_1as"
           ? excellenceStudents
-          : students;
+          : String(selectedExam?.source || "").startsWith("upload:")
+            ? []
+            : students;
   const text = UI_TEXT[lang];
   const homeStats = useMemo(() => analyticsViews.bac?.stats || calculateStats(students), [analyticsViews.bac?.stats, students]);
   const rankingStudents = useMemo(() => {
@@ -1459,7 +1535,9 @@ export default function HomePage() {
   const searchPool = useMemo(() => {
     return activeStudents;
   }, [activeStudents]);
-  const showTrackGroups = examHasTrackGroups(selectedExam?.source);
+  const showTrackGroups = String(selectedExam?.source || "").startsWith("upload:")
+    ? Boolean(selectedExam?.uploadColumns?.track)
+    : examHasTrackGroups(selectedExam?.source);
   const showTopperTrackSelector = selectedExam?.source === "bac";
   const topperTrackOptions = useMemo(() => {
     if (!showTopperTrackSelector) return [];
@@ -1469,7 +1547,13 @@ export default function HomePage() {
   const selectedSourceViewsReady = selectedExam?.source ? !!analyticsViews[selectedExam.source] : viewsReady;
   const selectedSourceLoading = selectedExam?.source ? !!analyticsLoadingSources[selectedExam.source] && !selectedSourceViewsReady : !viewsReady;
   const viewStats = analyticsViews[selectedExam?.source] || {};
-  const analyticsOptions = useMemo(() => analyticsModeOptions(selectedExam?.source, text), [selectedExam?.source, text]);
+  const analyticsOptions = useMemo(() => {
+    const options = analyticsModeOptions(selectedExam?.source, text);
+    if (!String(selectedExam?.source || "").startsWith("upload:")) return options;
+    const columns = selectedExam?.uploadColumns || {};
+    const enabled = { region: columns.wilaya, track: columns.track, school: columns.school, moughataa: columns.moughataa };
+    return options.filter((option) => Boolean(enabled[option.id]));
+  }, [selectedExam, text]);
   const activeAnalyticsMode = analyticsOptions.some((option) => option.id === analyticsMode) ? analyticsMode : analyticsOptions[0]?.id || "";
   const activeStats = useMemo(() => viewStats.stats || calculateStats(searchPool), [viewStats, searchPool]);
   const activeRegionStats = useMemo(() => viewStats.regionStats || summarizeStudents(searchPool, "wl"), [viewStats, searchPool]);
@@ -1510,7 +1594,7 @@ export default function HomePage() {
   }, [viewStats, searchPool, selectedTopperTrack, showTopperTrackSelector, showTrackGroups, text]);
 
   function showStudent(student) {
-    const known = activeStudents.find((item) => item.id === student.id);
+    const known = activeStudents.find((item) => item.id === student.id && item.source === student.source);
     setMatches([]);
     setSelectedStudent(null);
     setResultPageOpen(false);
@@ -1649,19 +1733,24 @@ export default function HomePage() {
     if (view !== "result") setResultPageOpen(false);
     writeHashRoute(view === "home" ? "" : view, { view });
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-    if (view === "exam" && selectedExam) {
-      await loadExamData(selectedExam);
-    }
+    // Search, rankings, toppers and analytics are server-driven. Avoid downloading
+    // entire result tables into the browser when navigating between views.
   }
 
   function openYear(year) {
     if (!year.available) return;
-    setSelectedYearId(year.id || "year-2025");
+    const nextYearId = year.id || "year-2025";
+    const nextYear = nextYearId.replace("year-", "");
+    setSelectedYearId(nextYearId);
+    if (selectedExam && getExamYear(selectedExam) !== nextYear) {
+      setSelectedExamId("");
+      localStorage.removeItem("mauriresults-selected-exam");
+    }
     setActiveView("year");
     setMatches([]);
     setError("");
     setMessage("");
-    writeHashRoute(year.id || "year-2025", { view: "year", yearId: year.id || "year-2025" });
+    writeHashRoute(nextYearId, { view: "year", yearId: nextYearId });
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
@@ -1672,8 +1761,11 @@ export default function HomePage() {
       table: TABLE_BY_SOURCE[exam.source],
     });
     setSelectedExamId(exam.id);
+    setSelectedYearId(`year-${getExamYear(exam)}`);
     localStorage.setItem("mauriresults-selected-exam", exam.id);
     setSelectedTopperTrack("");
+    setRankingRows([]);
+    setRankingTarget(null);
     setMatches([]);
     setSelectedStudent(null);
     setResultPageOpen(false);
@@ -1690,7 +1782,11 @@ export default function HomePage() {
     const exam = examCards.find((item) => item.id === examId);
     if (!exam?.available) return;
     setSelectedExamId(exam.id);
+    setSelectedYearId(`year-${getExamYear(exam)}`);
+    localStorage.setItem("mauriresults-selected-exam", exam.id);
     setSelectedTopperTrack("");
+    setRankingRows([]);
+    setRankingTarget(null);
     setMatches([]);
     setSelectedStudent(null);
     setResultPageOpen(false);
@@ -1700,8 +1796,8 @@ export default function HomePage() {
     loadAnalyticsSource(exam.source);
   }
 
-    async function openRanking(field, value, label) {
-    if (!value || value === "غير متوفرة" || !selectedExam?.source) return;
+  async function openRanking(field, value, label) {
+    if (!cleanText(value) || value === "غير متوفرة" || value === "غير متوفر" || !selectedExam?.source) return;
     setExamLoading(true);
     try {
       const params = new URLSearchParams({ source: selectedExam.source, field, value });
@@ -1749,6 +1845,7 @@ export default function HomePage() {
           content={siteContent}
           homepageBanner={imageAsset(siteContent, "home_banner_image")}
           onSelectYear={openYear}
+          yearCards={yearCards}
           onSelectExam={openExam}
           onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }}
           onSelect={selectStudent}
@@ -1801,7 +1898,7 @@ function ContactPage({ text }) {
     </section>
   );
 }
-function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text }) {
+function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text, yearCards }) {
   return (
     <PremiumHomeView
       homepageBanner={homepageBanner}
@@ -1871,9 +1968,12 @@ function YearPage({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, o
 
 function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
   const currentYear = currentYearId.replace("year-", "") || "2025";
-  const visibleExamCards = examCards.filter((exam) => getExamYear(exam) === currentYear);
+  const visibleExamCards = examCards.filter((exam) => exam.available && getExamYear(exam) === currentYear);
+  if (!visibleExamCards.length) {
+    return <section className="empty-state animate-slide-up"><div><h2>{text.noData}</h2><p>{lang === "fr" ? "Aucun résultat actif n’est publié pour cette année." : "لا توجد نتائج منشورة ومفعلة لهذه السنة حتى الآن."}</p></div></section>;
+  }
   return (
-    <section className="grid grid-cols-2 gap-3">
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {visibleExamCards.map((exam) => (
         <button
           className={`exam-card exam-card-${exam.tone} ${selectedExamId === exam.id ? "is-selected" : ""} ${exam.available ? "" : "is-locked"}`}
@@ -1895,17 +1995,20 @@ function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS,
 }
 
 function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, onPickSuggestion, onSelect, query, searchPool, setQuery, suggestions, text }) {
+  const uploadedConcours = String(exam?.source || "").startsWith("upload:") && exam?.searchMode === "concours";
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
       <section className="scroll-mt-20" id="resultArea">
         {exam.source === "concours" ? (
           <ConcoursSearchPanel onSelect={onSelect} text={text} />
+        ) : uploadedConcours ? (
+          <UploadedConcoursSearchPanel exam={exam} onSelect={onSelect} text={text} />
         ) : (
           <SearchPanel error={error} examTitle={exam.title[lang]} handleSubmit={handleSubmit} loading={loading} message={message} onPickSuggestion={onPickSuggestion} query={query} setQuery={setQuery} suggestions={suggestions} text={text} />
         )}
         {loading && <ResultLoadingCard text={text} />}
-        {exam.source !== "concours" && !loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
+        {exam.source !== "concours" && !uploadedConcours && !loading && matches.length > 0 && <MatchesList matches={matches} onSelect={onSelect} text={text} />}
       </section>
     </section>
   );
@@ -2009,6 +2112,65 @@ function ConcoursSearchPanel({ onSelect, text }) {
   );
 }
 
+function UploadedConcoursSearchPanel({ exam, onSelect, text }) {
+  const [wilaya, setWilaya] = useState("");
+  const [moughataa, setMoughataa] = useState("");
+  const [centre, setCentre] = useState("");
+  const [number, setNumber] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [localError, setLocalError] = useState("");
+
+  async function submit(event) {
+    event.preventDefault();
+    setLocalError("");
+    if (![wilaya, moughataa, centre, number].every((value) => cleanText(value))) {
+      setLocalError(text.enterQuery);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const params = new URLSearchParams({ source: exam.source, wilaya: wilaya.trim(), moughataa: moughataa.trim(), centre: centre.trim(), number: number.trim() });
+      const response = await fetch(`/api/uploaded-concours-search?${params.toString()}`, { headers: { Accept: "application/json" }, cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      const students = prepareRowsForExam(exam, data.rows || []);
+      if (!students.length) {
+        setLocalError(text.notFound);
+        return;
+      }
+      onSelect(students[0]);
+    } catch (error) {
+      console.error("[MauriResults Uploaded Concours Search Error]", error);
+      setLocalError(text.connectionError);
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  const fields = [
+    { label: text.chooseWilaya || "الولاية", value: wilaya, setValue: setWilaya },
+    { label: text.chooseMoughataa || "المقاطعة", value: moughataa, setValue: setMoughataa },
+    { label: text.chooseCentre || "المركز", value: centre, setValue: setCentre },
+    { label: text.candidateNumber || text.number || "رقم المترشح", value: number, setValue: setNumber, inputMode: "numeric" },
+  ];
+
+  return (
+    <form className="search-card animate-slide-up" onSubmit={submit}>
+      {fields.map((field) => (
+        <label className="grid gap-1" key={field.label}>
+          <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{field.label}</span>
+          <input className="search-input pr-4" disabled={searching} inputMode={field.inputMode} onChange={(event) => field.setValue(event.target.value)} placeholder={field.label} value={field.value} />
+        </label>
+      ))}
+      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={searching} type="submit">
+        {searching ? text.searching : text.searchButton}
+      </button>
+      {localError && <p className="col-span-full text-center text-xs font-black text-red-600 dark:text-red-300 md:text-start">{localError}</p>}
+    </form>
+  );
+}
+
 function SelectField({ disabled, label, onChange, options, value }) {
   return (
     <label className="grid gap-1">
@@ -2048,7 +2210,7 @@ function TrackGroupsPreview({ groups, onSelect, text }) {
           <div className="grid gap-2">
             {group.students.slice(0, 12).map((student, index) => (
               <button className="ranking-row" key={student.id} onClick={() => onSelect(student)} type="button">
-                <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-sm font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">#{index + 1}</span>
+                <span className="grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green/10 text-sm font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">#{student.rank || index + 1}</span>
                 <span className="min-w-0 text-start">
                   <strong className="line-clamp-1 block text-sm font-black text-slate-950 dark:text-white">{student.name}</strong>
                   <small className="line-clamp-1 text-xs font-bold text-slate-500 dark:text-slate-400">{student.id} - {student.ms || text.unavailable}</small>
@@ -2251,8 +2413,12 @@ function CountUp({ decimals = 0, value }) {
 
 function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_TEXT.ar, verificationCode }) {
   const average = parseAverage(student.MOD);
-  const isConcours = student.source === "concours" || student.searchMode === "concours";
-  const status = isConcours ? getConcoursStatus(average, text) : getStatusDisplay(getOfficialStatus(student.kr), text);
+  const isConcours = isConcoursStudent(student);
+  const officialStatus = getStatusDisplay(getOfficialStatus(student.kr), text);
+  const inferredStatus = average >= 10
+    ? { label: text.statusLabels?.admis || "ناجح", icon: <CheckIcon />, className: "admis" }
+    : { label: text.statusLabels?.ajourne || "راسب", icon: <XIcon />, className: "ajourne" };
+  const status = isConcours ? getConcoursStatus(average, text) : officialStatus.className === "unknown" && !cleanText(student.kr) ? inferredStatus : officialStatus;
   const isPassed = status.className === "admis";
   const isFailed = status.className === "ajourne";
   const tone = isFailed ? "calm" : getAverageTone(average);
@@ -2328,6 +2494,19 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
       [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />, () => onOpenRanking?.("moughataa", student.moughataa, text.moughataa)],
     ];
 
+  const visibleDetails = details.filter(([, value]) => {
+    const normalized = cleanText(value);
+    if (!normalized) return false;
+    const unavailableValues = new Set([
+      cleanText(text.unavailable),
+      "غير متوفر",
+      "غير متوفرة",
+      "Non disponible",
+      "Unavailable",
+    ].filter(Boolean));
+    return !unavailableValues.has(normalized);
+  });
+
   useEffect(() => {
     if (!isPassed) return undefined;
     playSuccessTone();
@@ -2353,7 +2532,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        {details.map(([label, value, icon, onClick]) => (
+        {visibleDetails.map(([label, value, icon, onClick]) => (
           <InfoTile icon={icon} label={label} onClick={onClick} value={value} key={label} />
         ))}
       </div>
@@ -2376,8 +2555,6 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
 
 function ResultExperience({ content, onOpenRanking, onShare, resultBanner, student, text }) {
   const verificationCode = `MR-${student.id}-${String(student.rank || Math.round(getAverage(student) * 100)).padStart(4, "0")}`;
-  const isConcours = student.source === "concours";
-  const status = isConcours ? getConcoursStatus(getAverage(student), text) : getStatusDisplay(getOfficialStatus(student.kr), text);
 
   return (
     <section className="app-shell result-official-page py-4 md:py-8" aria-label={text?.officialResult || "النتيجة الرسمية"}>
@@ -2390,7 +2567,7 @@ function ResultExperience({ content, onOpenRanking, onShare, resultBanner, stude
               <h1 className="text-balance text-3xl font-black leading-tight text-slate-950 dark:text-white md:text-4xl">{text?.officialResult || "النتيجة الرسمية"}</h1>
               <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{text?.verification || "رقم التحقق"}: {verificationCode}</p>
             </div>
-          </div>
+          </div>
         </header>
         <ResultCard onOpenRanking={onOpenRanking} resultBanner={resultBanner} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
       </div>
