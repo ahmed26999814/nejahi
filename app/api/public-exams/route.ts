@@ -25,7 +25,26 @@ async function fetchPublishedExams() {
 
   const text = await response.text();
   if (!response.ok) return { rows: [], error: text, status: response.status } as const;
-  return { rows: text ? JSON.parse(text) : [], status: 200 } as const;
+  const rows = text ? JSON.parse(text) : [];
+  const existingRows = await Promise.all(rows.map(async (exam: Record<string, unknown>) => {
+    const tableName = String(exam.table_name || "").trim();
+    if (!/^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(tableName)) return null;
+    const tableUrl = new URL(`${SUPABASE_URL}/rest/v1/${tableName}`);
+    tableUrl.searchParams.set("select", "*");
+    tableUrl.searchParams.set("limit", "1");
+    const tableResponse = await fetch(tableUrl, {
+      cache: "no-store",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Accept: "application/json",
+        Prefer: "count=none",
+      },
+    });
+    return tableResponse.ok ? exam : null;
+  }));
+
+  return { rows: existingRows.filter(Boolean), status: 200 } as const;
 }
 
 export async function GET() {
@@ -36,6 +55,6 @@ export async function GET() {
 
   return NextResponse.json(
     { exams: result.rows },
-    { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=600" } }
+    { headers: { "Cache-Control": "no-store" } }
   );
 }
