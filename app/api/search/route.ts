@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const REQUEST_TIMEOUT_MS = 10_000;
-const NUMBER_RESULT_LIMIT = "1";
+const NUMBER_RESULT_LIMIT = "5";
 const NAME_RESULT_LIMIT = "20";
 
 type SearchConfig = {
@@ -68,6 +71,16 @@ function isSafeIdentifier(value: string) {
   return /^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(String(value || ""));
 }
 
+function quoteSelectColumn(value: unknown) {
+  const column = String(value || "").trim();
+  return column ? `"${column.replaceAll('"', '""')}"` : "";
+}
+
+function filterColumn(value: string) {
+  const column = String(value || "").trim();
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(column) ? column : `"${column.replaceAll('"', '""')}"`;
+}
+
 function escapePostgrestValue(value: string) {
   return value.replaceAll("\\", "\\\\").replaceAll(",", "\\,").replaceAll(")", "\\)").trim();
 }
@@ -97,6 +110,7 @@ async function supabaseSearch(table: string, params: URLSearchParams) {
   try {
     const response = await fetch(url, {
       signal: controller.signal,
+      cache: "no-store",
       headers: {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
@@ -117,16 +131,16 @@ async function supabaseSearch(table: string, params: URLSearchParams) {
 }
 
 async function fetchPublishedExam(source: string): Promise<SearchConfig | null> {
-  if (!source.startsWith("upload:")) return null;
-  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  if (!source.startsWith("upload:") || !SUPABASE_URL || !SUPABASE_KEY) return null;
 
   const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
-  url.searchParams.set("select", "*");
+  url.searchParams.set("select", "table_name,ranked_view,number_column,name_column,score_column,decision_column,track_column,wilaya_column,moughataa_column,school_column,centre_column,birth_place_column,birth_date_column");
   url.searchParams.set("source_key", `eq.${escapePostgrestValue(source)}`);
   url.searchParams.set("is_active", "eq.true");
   url.searchParams.set("limit", "1");
 
   const response = await fetch(url, {
+    cache: "no-store",
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${SUPABASE_KEY}`,
@@ -146,17 +160,16 @@ async function fetchPublishedExam(source: string): Promise<SearchConfig | null> 
 
   const rankedView = String(exam.ranked_view || `${exam.table_name.replace(/_results$/, "")}_ranked_results`).trim();
   const useRanked = isSafeIdentifier(rankedView);
-
   const columns = [numberColumn, nameColumn, exam.score_column, exam.decision_column, exam.track_column, exam.wilaya_column, exam.moughataa_column, exam.school_column, exam.centre_column, exam.birth_place_column, exam.birth_date_column]
     .map((column) => String(column || "").trim())
     .filter(Boolean);
-  const select = [...new Set(columns)].map((column) => `"${column.replaceAll('"', '""')}"`).join(",");
+  const baseSelect = [...new Set(columns)].map(quoteSelectColumn).filter(Boolean).join(",");
 
   return {
     table: useRanked ? rankedView : exam.table_name,
-    fallbackTable: exam.table_name,
-    select,
-    fallbackSelect: select,
+    fallbackTable: useRanked ? exam.table_name : undefined,
+    select: useRanked ? `${baseSelect},rank` : baseSelect,
+    fallbackSelect: baseSelect,
     numberColumns: [numberColumn],
     nameColumns: [nameColumn],
     order: useRanked ? "rank.asc" : undefined,
@@ -172,11 +185,11 @@ function buildParams(config: SearchConfig, query: string, useFallback = false) {
 
   if (numeric) {
     const values = numberSearchValues(query);
-    const clauses = config.numberColumns.flatMap((column) => values.map((value) => `${column}.eq.${value}`));
+    const clauses = config.numberColumns.flatMap((column) => values.map((value) => `${filterColumn(column)}.eq.${value}`));
     params.set("or", `(${clauses.join(",")})`);
   } else {
     const value = escapePostgrestValue(query);
-    params.set("or", `(${config.nameColumns.map((column) => `${column}.ilike.*${value}*`).join(",")})`);
+    params.set("or", `(${config.nameColumns.map((column) => `${filterColumn(column)}.ilike.*${value}*`).join(",")})`);
   }
 
   if (config.order && !useFallback) params.set("order", config.order);
@@ -194,21 +207,16 @@ export async function GET(request: Request) {
   if (query.length < 2) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400 });
 
   let result = await supabaseSearch(config.table, buildParams(config, query));
-
   if ("error" in result && config.fallbackTable) {
     result = await supabaseSearch(config.fallbackTable, buildParams(config, query, true));
   }
 
   if ("error" in result) {
-    return NextResponse.json({ rows: [], error: result.error }, { status: result.status });
+    return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
   }
 
   return NextResponse.json(
     { rows: result.rows },
-    {
-      headers: {
-        "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store",
-      },
-    }
+    { headers: { "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store" } }
   );
 }
