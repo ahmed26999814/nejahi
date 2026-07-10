@@ -20,6 +20,18 @@ const HOME_YEAR_CARDS = [
   },
 ];
 
+const HOW_IT_WORKS = [
+  { number: "01", icon: "📅", title: "اختر السنة", description: "ابدأ بسنة المسابقة، ولن تظهر لك إلا النتائج المنشورة والمفعلة." },
+  { number: "02", icon: "🔎", title: "اختر المسابقة وابحث", description: "استخدم رقم المترشح أو الاسم، أو مسار الولاية والمقاطعة والمركز للكونكور." },
+  { number: "03", icon: "🏆", title: "اعرض وشارك النتيجة", description: "اطّلع على القرار والرتبة والتفاصيل، ثم شارك رابط النتيجة أو اطبعها." },
+];
+
+const FAQ_ITEMS = [
+  { question: "متى تُفتح نتائج سنة جديدة؟", answer: "تُفتح السنة تلقائيًا فور نشر نتيجة مفعلة من لوحة الإدارة، وتظل مغلقة قبل ذلك." },
+  { question: "لماذا لا يظهر بعض الحقول في بطاقة النتيجة؟", answer: "تعرض البطاقة فقط الحقول الموجودة والمربوطة فعليًا في ملف النتائج، حتى تبقى واضحة ودقيقة." },
+  { question: "هل يمكن البحث من الهاتف؟", answer: "نعم. الواجهة مهيأة للهاتف، والبحث والنتائج والإحصائيات تعمل بتصميم متجاوب." },
+];
+
 function PremiumSiteBanner({ asset }) {
   if (!asset?.is_active || !asset?.image_url) return null;
 
@@ -111,9 +123,9 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards, activeYears }) 
                 onSelectYear(payload);
               }
             }}
-            className={`group relative block min-h-[132px] overflow-hidden rounded-[28px] border bg-gradient-to-br p-4 text-start shadow-premium transition duration-300 active:scale-[.99] hover:-translate-y-0.5 ${tone} ${available ? "" : "pointer-events-none opacity-80"}`}
+            className={`group relative block min-h-[150px] overflow-hidden rounded-[30px] border bg-gradient-to-br p-5 text-start shadow-premium transition duration-300 active:scale-[.99] hover:-translate-y-1 ${tone} ${available ? "" : "pointer-events-none opacity-80"}`}
           >
-            <span className="absolute -left-12 -top-12 h-28 w-28 rounded-full bg-white/10 transition group-hover:scale-125" />
+            <span className="absolute -left-12 -top-12 h-28 w-28 rounded-full bg-white/10 transition duration-500 group-hover:scale-150" />
             <span className="absolute bottom-3 left-3 h-14 w-14 rounded-full border border-white/10" />
             <span className="relative z-10 grid h-full grid-cols-[1fr_auto] items-start gap-3">
               <span className="min-w-0">
@@ -130,7 +142,74 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards, activeYears }) 
   );
 }
 
-export default function PremiumHomeView({ content = {}, homepageBanner, lang = "ar", onSelectYear, text, yearCards }) {
+function FeaturedStats({ stats = {} }) {
+  const cards = [
+    { icon: "👥", label: "عدد المترشحين", value: Number(stats.total || 0).toLocaleString("ar-MR") },
+    { icon: "✅", label: "الناجحون", value: Number(stats.passed || 0).toLocaleString("ar-MR") },
+    { icon: "⭐", label: "أعلى معدل", value: Number(stats.highest || 0).toFixed(2) },
+  ];
+
+  return (
+    <section className="grid gap-3 sm:grid-cols-3" aria-label="إحصائيات مميزة">
+      {cards.map((card) => (
+        <article className="group rounded-[26px] border border-white/70 bg-white/[.82] p-4 shadow-soft backdrop-blur-xl transition hover:-translate-y-1 hover:shadow-premium dark:border-white/10 dark:bg-white/[.07]" key={card.label}>
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-mauri-green/10 text-xl transition group-hover:scale-110 dark:bg-emerald-300/10">{card.icon}</span>
+            <div>
+              <strong className="block text-xl font-black text-slate-950 dark:text-white">{card.value}</strong>
+              <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{card.label}</span>
+            </div>
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function HowItWorks() {
+  return (
+    <section className="grid gap-4">
+      <header className="text-center">
+        <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">طريقة الاستخدام</p>
+        <h2 className="mt-1 text-2xl font-black text-slate-950 dark:text-white md:text-3xl">من البحث إلى النتيجة في ثلاث خطوات</h2>
+      </header>
+      <div className="grid gap-3 md:grid-cols-3">
+        {HOW_IT_WORKS.map((step) => (
+          <article className="relative overflow-hidden rounded-[28px] border border-white/70 bg-white/[.80] p-5 shadow-soft backdrop-blur-xl transition hover:-translate-y-1 hover:shadow-premium dark:border-white/10 dark:bg-white/[.07]" key={step.number}>
+            <span className="absolute left-4 top-3 text-4xl font-black text-mauri-green/[.08] dark:text-white/[.05]">{step.number}</span>
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-mauri-green/10 text-2xl dark:bg-emerald-300/10">{step.icon}</span>
+            <h3 className="mt-4 text-lg font-black text-slate-950 dark:text-white">{step.title}</h3>
+            <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-300">{step.description}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FAQSection() {
+  return (
+    <section className="grid gap-4">
+      <header className="text-center">
+        <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">الأسئلة الشائعة</p>
+        <h2 className="mt-1 text-2xl font-black text-slate-950 dark:text-white md:text-3xl">إجابات سريعة وواضحة</h2>
+      </header>
+      <div className="mx-auto grid w-full max-w-3xl gap-2">
+        {FAQ_ITEMS.map((item) => (
+          <details className="group rounded-[22px] border border-white/70 bg-white/[.82] p-4 shadow-soft backdrop-blur-xl open:shadow-premium dark:border-white/10 dark:bg-white/[.07]" key={item.question}>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-black text-slate-950 dark:text-white">
+              {item.question}
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-mauri-green/10 text-mauri-green transition group-open:rotate-45 dark:bg-emerald-300/10 dark:text-emerald-300">+</span>
+            </summary>
+            <p className="mt-3 border-t border-mauri-border/60 pt-3 text-sm font-bold leading-7 text-slate-500 dark:border-white/10 dark:text-slate-300">{item.answer}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export default function PremiumHomeView({ content = {}, homepageBanner, lang = "ar", onSelectYear, stats = {}, text, yearCards }) {
   const logo = contentValue(content, "logo", "/logo.png");
   const [activeYears, setActiveYears] = useState(["2025"]);
 
@@ -165,10 +244,22 @@ export default function PremiumHomeView({ content = {}, homepageBanner, lang = "
   }, [yearCards]);
 
   return (
-    <section className="app-shell grid gap-6 py-4 md:gap-8 md:py-8">
+    <section className="app-shell grid gap-7 py-4 md:gap-10 md:py-8">
       <PremiumHero eyebrow="MauriResults" title={text.heroTitle} description={text.heroDesc} logo={logo} />
-      <YearChoiceCards lang={lang} onSelectYear={onSelectYear} yearCards={yearCards} activeYears={activeYears} />
+      <FeaturedStats stats={stats} />
+      <section className="scroll-mt-24 grid gap-3" id="years">
+        <header className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">النتائج المتاحة</p>
+            <h2 className="mt-1 text-2xl font-black text-slate-950 dark:text-white">اختر سنة المسابقة</h2>
+          </div>
+          <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-[11px] font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">تحديث تلقائي</span>
+        </header>
+        <YearChoiceCards lang={lang} onSelectYear={onSelectYear} yearCards={yearCards} activeYears={activeYears} />
+      </section>
       <PremiumSiteBanner asset={homepageBanner} />
+      <HowItWorks />
+      <FAQSection />
       <BackToTopButton />
     </section>
   );
