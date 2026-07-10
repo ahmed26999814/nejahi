@@ -18,7 +18,8 @@ export function parseHashRoute(hash, exams = []) {
 
 export function writeHashRoute(hash, state = {}, { replace = false } = {}) {
   const cleanHash = String(hash || "").replace(/^#/, "");
-  const url = cleanHash ? `${window.location.pathname}#${cleanHash}` : window.location.pathname;
+  const base = `${window.location.pathname}${window.location.search}`;
+  const url = cleanHash ? `${base}#${cleanHash}` : base;
   window.history[replace ? "replaceState" : "pushState"]({ ...state, hash: cleanHash }, "", url);
 }
 
