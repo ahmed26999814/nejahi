@@ -1,10 +1,10 @@
 {
   "name": "mauriresults",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/prebuild-user-fixes-v14.cjs",
+    "prebuild": "node scripts/prebuild-user-fixes-v15.cjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
