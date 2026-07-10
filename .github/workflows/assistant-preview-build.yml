@@ -5,24 +5,48 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - name: Apply deterministic Phase 1 patch
-        run: node scripts/assistant-phase1-patch.mjs
+      - name: Apply deterministic stabilization patches
+        shell: bash
+        run: |
+          if grep -q 'sharedResultRequestRef' components/home/HomeApplication.jsx; then
+            echo 'HomeApplication is already finalized.'
+          else
+            node scripts/assistant-phase1-patch.mjs
+            python scripts/assistant-home-phase2.py
+            python scripts/assistant-home-phase3.py
+          fi
       - name: Install dependencies
         run: npm ci
       - name: Build application
         run: npm run build
-      - name: Upload patched application source
+      - name: Commit validated generated source
+        if: github.actor != 'github-actions[bot]'
+        shell: bash
+        run: |
+          if git diff --quiet -- components/home/HomeApplication.jsx; then
+            echo 'No generated source changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add components/home/HomeApplication.jsx
+          git commit -m 'Finalize uploaded results home flows'
+          git push origin HEAD:${{ github.head_ref }}
+      - name: Upload validated application source
         if: always()
         uses: actions/upload-artifact@v4
         with:
