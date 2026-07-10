@@ -46,7 +46,12 @@ function mergeYearCards(yearCards = []) {
   const byId = new Map(HOME_YEAR_CARDS.map((card) => [card.id, card]));
   for (const card of incoming) {
     const id = normalizeHomeYearId(card);
-    byId.set(id, { ...(byId.get(id) || {}), ...card, id });
+    const next = { ...(byId.get(id) || {}), ...card, id };
+    if (id === "year-2026") {
+      next.available = true;
+      next.description = next.description || HOME_YEAR_CARDS[1].description;
+    }
+    byId.set(id, next);
   }
   return [byId.get("year-2025"), byId.get("year-2026")].filter(Boolean);
 }
