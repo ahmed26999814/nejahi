@@ -14,8 +14,8 @@ const HOME_YEAR_CARDS = [
   {
     id: "year-2026",
     title: { ar: "نتائج المسابقات 2026", fr: "Résultats des concours 2026" },
-    description: { ar: "سيتم فتحها عند توفر النتائج الرسمية.", fr: "Ouverture à la publication des résultats officiels." },
-    available: false,
+    description: { ar: "نتائج 2026 المنشورة من لوحة الأدمن.", fr: "Résultats 2026 publiés depuis l'administration." },
+    available: true,
   },
 ];
 
