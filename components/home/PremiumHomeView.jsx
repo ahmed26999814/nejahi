@@ -135,11 +135,6 @@ export default function PremiumHomeView({ content = {}, homepageBanner, lang = "
   const [activeYears, setActiveYears] = useState(["2025"]);
 
   useEffect(() => {
-    if (Array.isArray(yearCards) && yearCards.length) {
-      setActiveYears(yearCards.filter((year) => year?.available).map((year) => normalizeHomeYearId(year).replace("year-", "")));
-      return undefined;
-    }
-
     const controller = new AbortController();
     fetch("/api/public-exams", {
       headers: { Accept: "application/json" },
@@ -152,10 +147,18 @@ export default function PremiumHomeView({ content = {}, homepageBanner, lang = "
           .filter((exam) => exam?.is_active !== false)
           .map((exam) => String(exam?.year || "").trim())
           .filter((year) => /^20\d{2}$/.test(year));
-        setActiveYears(["2025", ...new Set(years)]);
+        const propYears = (Array.isArray(yearCards) ? yearCards : [])
+          .filter((year) => year?.available)
+          .map((year) => normalizeHomeYearId(year).replace("year-", ""));
+        setActiveYears(["2025", ...new Set([...years, ...propYears])]);
       })
       .catch((error) => {
-        if (error?.name !== "AbortError") setActiveYears(["2025"]);
+        if (error?.name !== "AbortError") {
+          const propYears = (Array.isArray(yearCards) ? yearCards : [])
+            .filter((year) => year?.available)
+            .map((year) => normalizeHomeYearId(year).replace("year-", ""));
+          setActiveYears(["2025", ...new Set(propYears)]);
+        }
       });
 
     return () => controller.abort();
