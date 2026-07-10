@@ -1,15 +1,35 @@
 import HeroBackground from "./HeroBackground";
 import LogoMark from "../common/LogoMark";
 
+const TRUST_BADGES = [
+  { icon: "✓", label: "نتائج رسمية" },
+  { icon: "⚡", label: "بحث سريع" },
+  { icon: "📱", label: "متوافق مع الهاتف" },
+];
+
 export default function Hero({ title, description, eyebrow = "MauriResults", logo = "/logo.png" }) {
   return (
-    <section className="relative isolate overflow-hidden rounded-[34px] border border-white/70 bg-white/[.78] p-5 text-center shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75 md:p-8" dir="rtl">
+    <section className="relative isolate overflow-hidden rounded-[36px] border border-white/70 bg-white/[.80] px-5 py-7 text-center shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75 md:px-8 md:py-10" dir="rtl">
       <HeroBackground />
-      <div className="relative z-10 mx-auto grid max-w-3xl justify-items-center gap-4">
-        <LogoMark className="h-24 w-24 rounded-[28px] md:h-32 md:w-32" src={logo} />
-        <span className="w-fit rounded-full border border-mauri-green/15 bg-mauri-green/10 px-3 py-1 text-xs font-black text-mauri-green dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300">{eyebrow}</span>
-        <h1 className="text-3xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-5xl">{title}</h1>
-        {description && <p className="max-w-xl text-sm font-bold leading-7 text-slate-600 dark:text-slate-300">{description}</p>}
+      <div className="relative z-10 mx-auto grid max-w-4xl justify-items-center gap-4">
+        <LogoMark className="h-24 w-24 rounded-[28px] ring-8 ring-white/50 dark:ring-white/5 md:h-32 md:w-32" src={logo} />
+        <span className="w-fit rounded-full border border-mauri-green/15 bg-mauri-green/10 px-3.5 py-1.5 text-xs font-black tracking-wide text-mauri-green dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300">{eyebrow}</span>
+        <h1 className="max-w-3xl text-balance text-3xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-5xl lg:text-6xl">{title}</h1>
+        {description && <p className="max-w-2xl text-sm font-bold leading-7 text-slate-600 dark:text-slate-300 md:text-base">{description}</p>}
+
+        <div className="mt-1 flex w-full max-w-md flex-col gap-2 sm:flex-row sm:justify-center">
+          <a className="tap-button inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.24)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.30)]" href="#years">اختر سنة النتائج</a>
+          <a className="tap-button inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-mauri-green/20 bg-white/80 px-5 text-sm font-black text-mauri-green shadow-soft backdrop-blur transition hover:-translate-y-0.5 hover:border-mauri-green/40 hover:bg-white dark:border-white/10 dark:bg-white/10 dark:text-emerald-200" href="#analytics">عرض الإحصائيات</a>
+        </div>
+
+        <div className="mt-2 flex flex-wrap justify-center gap-2" aria-label="مميزات المنصة">
+          {TRUST_BADGES.map((badge) => (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/75 px-3 py-1.5 text-[11px] font-black text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/10 dark:text-slate-200" key={badge.label}>
+              <span className="text-mauri-green dark:text-mauri-gold" aria-hidden="true">{badge.icon}</span>
+              {badge.label}
+            </span>
+          ))}
+        </div>
       </div>
     </section>
   );
