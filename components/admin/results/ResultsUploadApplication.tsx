@@ -221,7 +221,6 @@ export default function ResultsUploadAdminPage() {
     setDecisionColumn(mapping.decision); setTrackColumn(mapping.track); setWilayaColumn(mapping.wilaya);
     setMoughataaColumn(mapping.moughataa); setSchoolColumn(mapping.school); setCentreColumn(mapping.centre);
     setBirthPlaceColumn(mapping.birthPlace); setBirthDateColumn(mapping.birthDate);
-    if (mapping.wilaya && mapping.moughataa && mapping.centre) setSearchMode("concours");
   }
 
   async function handleFileSelection(nextFile: File | null) {
@@ -237,7 +236,6 @@ export default function ResultsUploadAdminPage() {
       setSuggestedColumns(parsed.columns);
       const detectedYear = [publicTitle, nextFile.name, parsed.sheetName].join(" ").match(/20\d{2}/)?.[0];
       if (detectedYear) setPublicYear(detectedYear);
-      if (/wilaya|moughataa|centre|ولاية|مقاطعة|مركز/i.test(parsed.columns.join(" "))) setSearchMode("concours");
       setPhase("تم اكتشاف الأعمدة");
     } catch (error) {
       setResult({ ok: false, error: `تعذر تحليل الملف: ${String(error)}` });
@@ -431,7 +429,12 @@ export default function ResultsUploadAdminPage() {
           <StepCard number="1" title="الدخول والملف">
             <Field label="ADMIN_SECRET"><input value={secret} onChange={(event) => saveSecret(event.target.value)} placeholder="أدخل سر الأدمن" type="password" className={inputClass()} /></Field>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="المسابقة"><select value={source} onChange={(event) => { setSource(event.target.value); if (event.target.value === "custom") setCreateTable(true); }} className={inputClass()}>{SOURCES.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></Field>
+              <Field label="المسابقة"><select value={source} onChange={(event) => {
+                const nextSource = event.target.value;
+                setSource(nextSource);
+                if (nextSource === "custom") setCreateTable(true);
+                setSearchMode(nextSource === "concours" ? "concours" : "simple");
+              }} className={inputClass()}>{SOURCES.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></Field>
               <Field label="اسم الورقة داخل Excel" hint="اتركه فارغًا لاستخدام أول ورقة."><input value={sheetName} onChange={(event) => setSheetName(event.target.value)} placeholder="اختياري" className={inputClass()} /></Field>
             </div>
             {isCustom && <Field label="اسم جدول Supabase للمسابقة الجديدة" hint="مثال: bac_2026_results أو concours_2026_results"><input value={customTable} onChange={(event) => setCustomTable(event.target.value)} placeholder="bac_2026_results" className={`${inputClass()} text-left`} dir="ltr" />{customTable && normalizedCustomTable !== customTable.trim() && <span className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700" dir="ltr">سيستخدم: {normalizedCustomTable}</span>}</Field>}

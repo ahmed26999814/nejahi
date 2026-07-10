@@ -723,19 +723,23 @@ function analyticsModeOptions(source, text = UI_TEXT.ar) {
   return [];
 }
 
-async function fetchAnalyticsViewSet(source) {
+async function fetchAnalyticsViewSet(source, publishedSearchMode = "") {
   if (String(source || "").startsWith("upload:")) {
     const response = await fetch(`/api/published-exam-analytics?source=${encodeURIComponent(source)}`, { headers: { Accept: "application/json" }, cache: "no-store" });
     if (!response.ok) throw new Error(await response.text());
     const data = await response.json();
-    const isConcours = Boolean(data?.stats?.isConcours);
+    // The published exam configuration is authoritative. Older uploads could be
+    // mislabeled as concours merely because a BAC sheet contained location columns.
+    const isConcours = publishedSearchMode
+      ? publishedSearchMode === "concours"
+      : Boolean(data?.stats?.isConcours);
     return {
       stats: normalizeViewStats(data.stats, source),
       regionStats: normalizeStatsRows(data.regionStats, { labelKey: "wilaya", isConcours }),
       schoolStats: normalizeStatsRows(data.schoolStats, { labelKey: "school", isConcours }),
       trackStats: normalizeStatsRows(data.trackStats, { labelKey: "track", isConcours }),
       moughataaStats: normalizeStatsRows(data.moughataaStats, { labelKey: "moughataa", isConcours }),
-      topStudents: (data.topStudents || []).map((row, index) => normalizeTopStudent({ ...row, isConcours }, source, index)).filter(Boolean),
+      topStudents: (data.topStudents || []).map((row, index) => normalizeTopStudent({ ...row, isConcours, searchMode: isConcours ? "concours" : "simple" }, source, index)).filter(Boolean),
     };
   }
   const views = ANALYTICS_VIEW_NAMES[source];
@@ -1200,14 +1204,21 @@ function groupStudentsByTrack(students) {
 function buildPublishedExamCards(rows = []) {
   return rows
     .filter((row) => row?.table_name && row?.source_key && row?.number_column && row?.name_column && row?.score_column)
-    .map((row) => ({
+    .map((row) => {
+      const examIdentity = cleanText(`${row.table_name} ${row.title_ar} ${row.title_fr} ${row.score_column}`).toLowerCase();
+      const isClearlyBac = /(^|[^a-z])(bac|baccalaureat|baccalauréat)([^a-z]|$)|باكالوريا/.test(examIdentity)
+        || /moy[_ ]?bac/.test(examIdentity);
+      // Repair legacy BAC uploads that were saved as concours by the old
+      // location-column auto-detection. Future uploads preserve the admin choice.
+      const searchMode = isClearlyBac ? "simple" : (row.search_mode || "simple");
+      return ({
       id: "upload-" + row.table_name,
       title: { ar: row.title_ar || row.table_name, fr: row.title_fr || row.title_ar || row.table_name },
       description: { ar: row.description_ar || "نتائج منشورة من لوحة الأدمن.", fr: row.description_fr || "Résultats publiés depuis l'administration." },
       tone: row.tone || "green",
       available: true,
       source: row.source_key,
-      searchMode: row.search_mode || "simple",
+      searchMode,
       icon: <GraduationIcon />,
       tableName: row.table_name,
       uploadColumns: {
@@ -1225,7 +1236,8 @@ function buildPublishedExamCards(rows = []) {
       },
       sessionType: row.title_ar || row.table_name,
       year: row.year || "2026",
-    }));
+      });
+    });
 }
 
 function getExamYear(exam) {
@@ -1392,7 +1404,8 @@ export default function HomePage() {
 
     setAnalyticsLoadingSources((current) => ({ ...current, [source]: true }));
     try {
-      const data = await fetchAnalyticsViewSet(source);
+      const publishedSearchMode = examCards.find((exam) => exam.source === source)?.searchMode || "";
+      const data = await fetchAnalyticsViewSet(source, publishedSearchMode);
       if (!data) return;
       setAnalyticsViews((current) => current[source] ? current : { ...current, [source]: data });
     } catch (error) {
@@ -2893,7 +2906,6 @@ function ChevronDownIcon() { return <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
 function SilverMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 12a2 2 0 0 1 4 0c0 2-4 2-4 4h4" /></svg>; }
 function BronzeMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 11h4l-2 2a2 2 0 1 1-2 2" /></svg>; }
-
 
 
 
