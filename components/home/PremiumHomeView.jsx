@@ -41,8 +41,18 @@ function normalizeHomeYearId(year) {
   return `year-${matchedYear}`;
 }
 
-function YearChoiceCards({ lang = "ar", onSelectYear }) {
-  const cards = HOME_YEAR_CARDS;
+function mergeYearCards(yearCards = []) {
+  const incoming = Array.isArray(yearCards) && yearCards.length ? yearCards : HOME_YEAR_CARDS;
+  const byId = new Map(HOME_YEAR_CARDS.map((card) => [card.id, card]));
+  for (const card of incoming) {
+    const id = normalizeHomeYearId(card);
+    byId.set(id, { ...(byId.get(id) || {}), ...card, id });
+  }
+  return [byId.get("year-2025"), byId.get("year-2026")].filter(Boolean);
+}
+
+function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }) {
+  const cards = mergeYearCards(yearCards);
 
   return (
     <section className="grid gap-3 md:grid-cols-2">
@@ -90,13 +100,13 @@ function YearChoiceCards({ lang = "ar", onSelectYear }) {
   );
 }
 
-export default function PremiumHomeView({ content = {}, homepageBanner, lang = "ar", onSelectYear, text }) {
+export default function PremiumHomeView({ content = {}, homepageBanner, lang = "ar", onSelectYear, text, yearCards }) {
   const logo = contentValue(content, "logo", "/logo.png");
 
   return (
     <section className="app-shell grid gap-6 py-4 md:gap-8 md:py-8">
       <PremiumHero eyebrow="MauriResults" title={text.heroTitle} description={text.heroDesc} logo={logo} />
-      <YearChoiceCards lang={lang} onSelectYear={onSelectYear} />
+      <YearChoiceCards lang={lang} onSelectYear={onSelectYear} yearCards={yearCards} />
       <PremiumSiteBanner asset={homepageBanner} />
       <BackToTopButton />
     </section>
