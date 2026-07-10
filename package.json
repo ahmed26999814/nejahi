@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/prebuild-user-fixes-v16.cjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
