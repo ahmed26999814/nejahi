@@ -16,7 +16,17 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - name: Apply deterministic Phase 1 patch
+        run: node scripts/assistant-phase1-patch.mjs
       - name: Install dependencies
         run: npm ci
       - name: Build application
         run: npm run build
+      - name: Upload patched application source
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assistant-patched-home
+          path: components/home/HomeApplication.jsx
+          if-no-files-found: error
+          retention-days: 1
