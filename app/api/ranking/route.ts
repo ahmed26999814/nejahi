@@ -18,6 +18,35 @@ type RankingConfig = {
   fallbackOrder?: string;
 };
 
+function isSafeIdentifier(value: string) {
+  return /^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(value);
+}
+
+function quotedColumns(values: unknown[]) {
+  return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))]
+    .map((column) => `"${column.replaceAll('"', '""')}"`).join(",");
+}
+
+async function getUploadedConfig(source: string): Promise<RankingConfig | null> {
+  if (!source.startsWith("upload:") || !SUPABASE_URL || !SUPABASE_KEY) return null;
+  const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+  url.searchParams.set("select", "table_name,ranked_view,number_column,name_column,score_column,decision_column,track_column,wilaya_column,moughataa_column,school_column,centre_column,birth_place_column,birth_date_column");
+  url.searchParams.set("source_key", `eq.${escapePostgrestValue(source)}`);
+  url.searchParams.set("is_active", "eq.true");
+  url.searchParams.set("limit", "1");
+  const response = await fetch(url, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" } });
+  if (!response.ok) return null;
+  const exam = (await response.json())?.[0];
+  if (!exam || !isSafeIdentifier(exam.table_name) || !isSafeIdentifier(exam.ranked_view)) return null;
+  const select = quotedColumns([exam.number_column, exam.name_column, exam.score_column, exam.decision_column, exam.track_column, exam.wilaya_column, exam.moughataa_column, exam.school_column, exam.centre_column, exam.birth_place_column, exam.birth_date_column]) + ",rank";
+  return {
+    table: exam.ranked_view,
+    select,
+    columns: { wl: exam.wilaya_column, moughataa: exam.moughataa_column, ms: exam.school_column, centre: exam.centre_column, track: exam.track_column },
+    order: "rank.asc",
+  };
+}
+
 const CONFIGS: Record<Source, RankingConfig> = {
   bac: {
     table: "bac_ranked_results",
@@ -117,10 +146,10 @@ function buildParams(config: RankingConfig, column: string, value: string, useFa
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const source = String(searchParams.get("source") || "").trim() as Source;
+  const source = String(searchParams.get("source") || "").trim();
   const field = String(searchParams.get("field") || "").trim() as Field;
   const value = String(searchParams.get("value") || "").trim();
-  const config = CONFIGS[source];
+  const config = CONFIGS[source as Source] || await getUploadedConfig(source);
   const column = config?.columns[field];
 
   if (!config || !column) return NextResponse.json({ rows: [], error: "Invalid ranking target" }, { status: 400 });

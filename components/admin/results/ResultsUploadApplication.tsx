@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
+import { detectColumnMappings } from "../../../lib/columnMapping";
 
 const SOURCES = [
   { value: "bac", label: "الباكالوريا", table: "bac_results" },
@@ -215,18 +216,12 @@ export default function ResultsUploadAdminPage() {
 
   function setSuggestedColumns(columns: string[] = []) {
     if (!columns.length) return;
-    const findColumn = (patterns: RegExp[]) => columns.find((column) => patterns.some((pattern) => pattern.test(column))) || "";
-    if (!numberColumn) setNumberColumn(findColumn([/num_bac/i, /numero/i, /num/i, /nodos/i, /doss/i, /رقم/i]));
-    if (!nameColumn) setNameColumn(findColumn([/nom_ar/i, /^nom/i, /name/i, /اسم/i]));
-    if (!scoreColumn) setScoreColumn(findColumn([/moy_bac/i, /moy/i, /mod/i, /mg/i, /total/i, /score/i, /معدل/i, /مجموع/i]));
-    if (!decisionColumn) setDecisionColumn(findColumn([/decision/i, /kr/i, /قرار/i]));
-    if (!trackColumn) setTrackColumn(findColumn([/^serie$/i, /serie_ar/i, /ts/i, /type/i, /شعبة/i]));
-    if (!wilayaColumn) setWilayaColumn(findColumn([/wilaya_ar/i, /wilaya/i, /^wl$/i, /ولاية/i]));
-    if (!moughataaColumn) setMoughataaColumn(findColumn([/moughataa_ar/i, /moughataa/i, /مقاطعة/i]));
-    if (!schoolColumn) setSchoolColumn(findColumn([/etablissement_ar/i, /ecole/i, /^ms$/i, /مدرسة/i, /مؤسسة/i]));
-    if (!centreColumn) setCentreColumn(findColumn([/centre examen ar/i, /centre/i, /مركز/i]));
-    if (!birthPlaceColumn) setBirthPlaceColumn(findColumn([/lieu/i, /lieun/i, /مكان/i]));
-    if (!birthDateColumn) setBirthDateColumn(findColumn([/date/i, /datn/i, /annee/i, /تاريخ/i, /ميلاد/i]));
+    const mapping = detectColumnMappings(columns);
+    setNumberColumn(mapping.number); setNameColumn(mapping.name); setScoreColumn(mapping.score);
+    setDecisionColumn(mapping.decision); setTrackColumn(mapping.track); setWilayaColumn(mapping.wilaya);
+    setMoughataaColumn(mapping.moughataa); setSchoolColumn(mapping.school); setCentreColumn(mapping.centre);
+    setBirthPlaceColumn(mapping.birthPlace); setBirthDateColumn(mapping.birthDate);
+    if (mapping.wilaya && mapping.moughataa && mapping.centre) setSearchMode("concours");
   }
 
   async function handleFileSelection(nextFile: File | null) {
@@ -360,6 +355,10 @@ export default function ResultsUploadAdminPage() {
         const data = await readJsonOrText(response) as UploadResult;
         if (!response.ok || data.ok === false) {
           setResult({ ok: false, table: targetTable, fileName: file.name, sheetName: parsed.sheetName, inserted, columns, error: data.error || `HTTP ${response.status}`, hint: data.hint });
+          return;
+        }
+        if (isLastChunk && data.speedError) {
+          setResult({ ok: false, table: targetTable, fileName: file.name, sheetName: parsed.sheetName, inserted, columns, error: data.speedError, hint: "تم رفع الصفوف، لكن لن يتم نشر المسابقة حتى ينجح إنشاء الفهارس وRanked View." });
           return;
         }
 

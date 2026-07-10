@@ -424,7 +424,7 @@ function getConcoursStatus(total, text = UI_TEXT.ar) {
 }
 
 function examHasTrackGroups(source) {
-  return source === "bac" || source === "bac_session";
+  return source === "bac" || source === "bac_session" || String(source || "").startsWith("upload:");
 }
 
 async function fireSuccessConfetti() {
@@ -645,7 +645,7 @@ function normalizeStatsRows(rows, options = {}) {
 }
 
 function normalizeViewStats(row, source) {
-  const isConcours = source === "concours";
+  const isConcours = source === "concours" || Boolean(row?.isConcours);
   return {
     total: numberValue(row?.total_students ?? row?.total),
     passed: isConcours ? 0 : numberValue(row?.passed),
@@ -671,7 +671,7 @@ function normalizeTopStudent(row, source, index = 0) {
     centre: cleanText(row.center ?? row.Centre ?? row.CENTRE_AR ?? row["Centre Examen_AR"] ?? ""),
     totalScore: source === "concours" ? score : undefined,
     source,
-    rank: index + 1,
+    rank: Number(row.rank) > 0 ? Number(row.rank) : index + 1,
     originalIndex: index,
   };
   return student.id ? student : null;
@@ -706,10 +706,24 @@ function analyticsModeOptions(source, text = UI_TEXT.ar) {
   if (source === "concours") return [{ id: "region", label: text.byRegions }, { id: "moughataa", label: moughataas }];
   if (source === "excellence_1as") return [{ id: "region", label: text.byRegions }];
   if (source === "bac_session") return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }];
+  if (String(source || "").startsWith("upload:")) return [{ id: "region", label: text.byRegions }, { id: "track", label: text.byTracks }, { id: "school", label: text.bySchools }, { id: "moughataa", label: moughataas }];
   return [];
 }
 
 async function fetchAnalyticsViewSet(source) {
+  if (String(source || "").startsWith("upload:")) {
+    const response = await fetch(`/api/published-exam-analytics?source=${encodeURIComponent(source)}`, { headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error(await response.text());
+    const data = await response.json();
+    return {
+      stats: normalizeViewStats(data.stats, source),
+      regionStats: normalizeStatsRows(data.regionStats, { labelKey: "wilaya" }),
+      schoolStats: normalizeStatsRows(data.schoolStats, { labelKey: "school" }),
+      trackStats: normalizeStatsRows(data.trackStats, { labelKey: "track" }),
+      moughataaStats: normalizeStatsRows(data.moughataaStats, { labelKey: "moughataa" }),
+      topStudents: (data.topStudents || []).map((row, index) => normalizeTopStudent(row, source, index)).filter(Boolean),
+    };
+  }
   const views = ANALYTICS_VIEW_NAMES[source];
   if (!views) return null;
 
@@ -1179,6 +1193,7 @@ function buildPublishedExamCards(rows = []) {
       tone: row.tone || "green",
       available: true,
       source: row.source_key,
+      searchMode: row.search_mode || "simple",
       icon: <GraduationIcon />,
       tableName: row.table_name,
       uploadColumns: {
@@ -1188,6 +1203,7 @@ function buildPublishedExamCards(rows = []) {
         decision: row.decision_column,
         track: row.track_column,
         wilaya: row.wilaya_column,
+        moughataa: row.moughataa_column,
         school: row.school_column,
         centre: row.centre_column,
         birthPlace: row.birth_place_column,
@@ -1228,13 +1244,14 @@ function prepareUploadedStudents(rows, exam) {
         rankFromDb: Number(getColumn(row, "rank", "Rank", "RANK")) || null,
         kr: cleanText(getColumn(row, columns.decision) || ""),
         wl: cleanText(getColumn(row, columns.wilaya) || ""),
-        moughataa: "",
+        moughataa: cleanText(getColumn(row, columns.moughataa) || ""),
         ms: cleanText(getColumn(row, columns.school) || ""),
         centre: cleanText(getColumn(row, columns.centre) || ""),
         birthPlace: cleanText(getColumn(row, columns.birthPlace) || ""),
         birthDate: cleanText(getColumn(row, columns.birthDate) || ""),
         sessionType: exam?.sessionType || exam?.title?.ar || "نتائج منشورة",
         source: exam?.source || "upload",
+        searchMode: exam?.searchMode || "simple",
         originalIndex: index,
       };
     })
@@ -1433,11 +1450,12 @@ export default function HomePage() {
   const homeStats = useMemo(() => analyticsViews.bac?.stats || calculateStats(students), [analyticsViews.bac?.stats, students]);
   const rankingStudents = useMemo(() => {
     if (!rankingTarget) return [];
+    if (rankingRows.length) return rankingRows;
     const target = normalizeComparable(rankingTarget.value);
     return activeStudents
       .filter((student) => normalizeComparable(student[rankingTarget.field]) === target)
       .sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
-  }, [activeStudents, rankingTarget]);
+  }, [activeStudents, rankingRows, rankingTarget]);
   const searchPool = useMemo(() => {
     return activeStudents;
   }, [activeStudents]);
@@ -1683,14 +1701,15 @@ export default function HomePage() {
   }
 
     async function openRanking(field, value, label) {
-    if (!value || value === "غير متوفرة" || !selectedExam?.source || selectedExam.source.startsWith("upload:")) return;
+    if (!value || value === "غير متوفرة" || !selectedExam?.source) return;
     setExamLoading(true);
     try {
       const params = new URLSearchParams({ source: selectedExam.source, field, value });
       const response = await fetch(`/api/ranking?${params.toString()}`, { headers: { Accept: "application/json" } });
       if (!response.ok) throw new Error(await response.text());
       const data = await response.json();
-      const rows = prepareRowsForSource(selectedExam.source, data.rows || []);
+      const rows = prepareRowsForExam(selectedExam, data.rows || []);
+      setRankingRows(rows);
 
       if (selectedExam.source === "bac") setStudents(rows);
       else if (selectedExam.source === "brevet") setBrevetStudents(rows);
@@ -2232,7 +2251,7 @@ function CountUp({ decimals = 0, value }) {
 
 function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_TEXT.ar, verificationCode }) {
   const average = parseAverage(student.MOD);
-  const isConcours = student.source === "concours";
+  const isConcours = student.source === "concours" || student.searchMode === "concours";
   const status = isConcours ? getConcoursStatus(average, text) : getStatusDisplay(getOfficialStatus(student.kr), text);
   const isPassed = status.className === "admis";
   const isFailed = status.className === "ajourne";
@@ -2240,7 +2259,20 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
   const resultUrl = getResultUrl(student);
   const encodedUrl = encodeURIComponent(resultUrl);
   const encodedText = encodeURIComponent(getResultShareText(student, text));
-  const details = student.source === "brevet"
+  const details = String(student.source || "").startsWith("upload:")
+    ? [
+      [text.id, student.id, <HashIcon key="hash" />],
+      [text.exam || "المسابقة", student.sessionType || text.unavailable, <BookIcon key="exam" />],
+      [text.rank, student.rank ? `#${student.rank}` : text.unavailable, <AwardIcon key="rank" />],
+      [text.track, student.track || text.unavailable, <BookIcon key="track" />],
+      [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
+      [text.center, student.centre || text.unavailable, <MapIcon key="center" />, () => onOpenRanking?.("centre", student.centre, text.center)],
+      [text.region, student.wl || text.unavailable, <MapIcon key="region" />, () => onOpenRanking?.("wl", student.wl, text.region)],
+      [text.moughataa, student.moughataa || text.unavailable, <MapIcon key="moughataa" />, () => onOpenRanking?.("moughataa", student.moughataa, text.moughataa)],
+      [text.birthPlace, student.birthPlace || text.unavailable, <UserIcon key="birth-place" />],
+      [text.birthDate, student.birthDate || text.unavailable, <BookIcon key="birth-date" />],
+    ]
+    : student.source === "brevet"
     ? [
       [text.id, student.id, <HashIcon key="hash" />],
       [text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],

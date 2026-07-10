@@ -40,6 +40,41 @@ function rankedViewName(tableName: string) {
   return tableName.replace(/_results$/, "") + "_ranked_results";
 }
 
+async function validatePreparedExam(row: Record<string, unknown>, expectedRows: number) {
+  const tableName = String(row.table_name);
+  const rankedView = String(row.ranked_view);
+  const mappedColumns = [row.number_column, row.name_column, row.score_column, row.decision_column, row.track_column, row.wilaya_column, row.moughataa_column, row.school_column, row.centre_column, row.birth_place_column, row.birth_date_column]
+    .map((value) => String(value || "").trim()).filter(Boolean);
+  const select = [...new Set(mappedColumns)].map((column) => `"${column.replaceAll('"', '""')}"`).join(",");
+
+  const tableUrl = new URL(`${SUPABASE_URL}/rest/v1/${tableName}`);
+  tableUrl.searchParams.set("select", select);
+  tableUrl.searchParams.set("limit", "1");
+  const tableResponse = await fetch(tableUrl, { headers: { apikey: SUPABASE_KEY!, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=exact", Range: "0-0" }, cache: "no-store" });
+  if (!tableResponse.ok) return { ok: false, error: `Mapped-column validation failed: ${(await tableResponse.text()).slice(0, 600)}` };
+  const actualRows = Number(tableResponse.headers.get("content-range")?.split("/")[1]);
+  if (!Number.isFinite(actualRows) || actualRows !== expectedRows) return { ok: false, error: `Row-count validation failed. Expected ${expectedRows}, found ${Number.isFinite(actualRows) ? actualRows : "unknown"}.` };
+
+  const rankUrl = new URL(`${SUPABASE_URL}/rest/v1/${rankedView}`);
+  rankUrl.searchParams.set("select", `rank,"${String(row.score_column).replaceAll('"', '""')}"`);
+  rankUrl.searchParams.set("order", "rank.asc");
+  rankUrl.searchParams.set("limit", "1");
+  const rankResponse = await fetch(rankUrl, { headers: { apikey: SUPABASE_KEY!, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" }, cache: "no-store" });
+  if (!rankResponse.ok) return { ok: false, error: `Ranked-view validation failed: ${(await rankResponse.text()).slice(0, 600)}` };
+  const rankedRows = await rankResponse.json();
+  if (expectedRows > 0 && (!rankedRows?.length || Number(rankedRows[0]?.rank) !== 1)) return { ok: false, error: "Ranked-view validation failed: the first ranked row must have rank 1." };
+  return { ok: true, actualRows };
+}
+
+async function validateDashboard(sourceKey: string) {
+  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/get_published_exam_dashboard`);
+  const response = await fetch(url, { method: "POST", headers: { apikey: SUPABASE_KEY!, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ p_source_key: sourceKey, p_include_inactive: true }), cache: "no-store" });
+  if (!response.ok) return { ok: false, error: `Analytics validation failed: ${(await response.text()).slice(0, 600)}` };
+  const dashboard = await response.json();
+  if (!dashboard?.stats || !Array.isArray(dashboard?.topStudents)) return { ok: false, error: "Analytics validation failed: incomplete dashboard payload." };
+  return { ok: true, dashboard };
+}
+
 export async function POST(request: Request) {
   if (!isAdmin(request)) return json(401, { ok: false, error: "Unauthorized admin publish" });
   if (!SUPABASE_URL || !SUPABASE_KEY) return json(500, { ok: false, error: "Missing Supabase service role environment variables" });
@@ -87,8 +122,13 @@ export async function POST(request: Request) {
     birth_date_column: safeColumn(body.birthDateColumn),
     ranked_view: rankedViewName(tableName),
     total_rows: Number(body.totalRows || 0) || 0,
-    is_active: true,
+    is_active: false,
   };
+
+  const expectedRows = Number(body.totalRows || 0);
+  if (!Number.isInteger(expectedRows) || expectedRows <= 0) return json(400, { ok: false, error: "A positive totalRows value is required" });
+  const prepared = await validatePreparedExam(row, expectedRows);
+  if (!prepared.ok) return json(422, { ok: false, error: prepared.error, published: false });
 
   const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
   url.searchParams.set("on_conflict", "table_name");
@@ -110,5 +150,14 @@ export async function POST(request: Request) {
     return json(response.status, { ok: false, error: text.replace(/\s+/g, " ").slice(0, 700) });
   }
 
-  return json(200, { ok: true, exam: text ? JSON.parse(text)?.[0] : row });
+  const analytics = await validateDashboard(String(row.source_key));
+  if (!analytics.ok) return json(422, { ok: false, error: analytics.error, published: false, hint: "Run the uploaded dashboard validation migration, then publish again. The exam remains inactive." });
+
+  const activateUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+  activateUrl.searchParams.set("table_name", `eq.${tableName}`);
+  const activateResponse = await fetch(activateUrl, { method: "PATCH", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Accept: "application/json", Prefer: "return=representation" }, body: JSON.stringify({ is_active: true }), cache: "no-store" });
+  const activateText = await activateResponse.text();
+  if (!activateResponse.ok) return json(activateResponse.status, { ok: false, error: `Activation failed: ${activateText.slice(0, 600)}`, published: false });
+
+  return json(200, { ok: true, exam: activateText ? JSON.parse(activateText)?.[0] : { ...row, is_active: true }, validation: { rows: prepared.actualRows, analytics: true, rankedView: row.ranked_view } });
 }
