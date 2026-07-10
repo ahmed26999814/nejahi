@@ -9,7 +9,7 @@ async function fetchPublishedExams() {
   }
 
   const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
-  url.searchParams.set("select", "*");
+  url.searchParams.set("select", "source_key,table_name,title_ar,title_fr,description_ar,description_fr,year,tone,search_mode,number_column,name_column,score_column,decision_column,track_column,wilaya_column,moughataa_column,school_column,centre_column,birth_place_column,birth_date_column,ranked_view,total_rows,created_at");
   url.searchParams.set("is_active", "eq.true");
   url.searchParams.set("order", "created_at.desc");
   url.searchParams.set("limit", "30");

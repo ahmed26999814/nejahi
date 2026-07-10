@@ -147,11 +147,16 @@ async function fetchPublishedExam(source: string): Promise<SearchConfig | null> 
   const rankedView = String(exam.ranked_view || `${exam.table_name.replace(/_results$/, "")}_ranked_results`).trim();
   const useRanked = isSafeIdentifier(rankedView);
 
+  const columns = [numberColumn, nameColumn, exam.score_column, exam.decision_column, exam.track_column, exam.wilaya_column, exam.moughataa_column, exam.school_column, exam.centre_column, exam.birth_place_column, exam.birth_date_column]
+    .map((column) => String(column || "").trim())
+    .filter(Boolean);
+  const select = [...new Set(columns)].map((column) => `"${column.replaceAll('"', '""')}"`).join(",");
+
   return {
     table: useRanked ? rankedView : exam.table_name,
     fallbackTable: exam.table_name,
-    select: "*",
-    fallbackSelect: "*",
+    select,
+    fallbackSelect: select,
     numberColumns: [numberColumn],
     nameColumns: [nameColumn],
     order: useRanked ? "rank.asc" : undefined,

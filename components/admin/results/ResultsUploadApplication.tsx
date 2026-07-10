@@ -147,6 +147,16 @@ function StepCard({ number, title, children }: { number: string; title: string; 
   );
 }
 
+function ColumnField({ columns, label, value, onChange, placeholder }: { columns: string[]; label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
+  return <Field label={label}>{columns.length ? (
+    <select value={value} onChange={(event) => onChange(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr">
+      <option value="">— غير محدد —</option>
+      {value && !columns.includes(value) && <option value={value}>{value}</option>}
+      {columns.map((column) => <option value={column} key={column}>{column}</option>)}
+    </select>
+  ) : <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left outline-none focus:border-emerald-500" dir="ltr" />}</Field>;
+}
+
 export default function ResultsUploadAdminPage() {
   const [secret, setSecret] = useState("");
   const [source, setSource] = useState("custom");
@@ -174,6 +184,8 @@ export default function ResultsUploadAdminPage() {
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState("جاهز");
   const [result, setResult] = useState<UploadResult | null>(null);
+  const [detectedColumns, setDetectedColumns] = useState<string[]>([]);
+  const [previewRows, setPreviewRows] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
     setSecret(localStorage.getItem("mauriresults-admin-secret") || "");
@@ -215,6 +227,26 @@ export default function ResultsUploadAdminPage() {
     if (!centreColumn) setCentreColumn(findColumn([/centre examen ar/i, /centre/i, /مركز/i]));
     if (!birthPlaceColumn) setBirthPlaceColumn(findColumn([/lieu/i, /lieun/i, /مكان/i]));
     if (!birthDateColumn) setBirthDateColumn(findColumn([/date/i, /datn/i, /annee/i, /تاريخ/i, /ميلاد/i]));
+  }
+
+  async function handleFileSelection(nextFile: File | null) {
+    setFile(nextFile);
+    setDetectedColumns([]);
+    setPreviewRows([]);
+    if (!nextFile) return;
+    setPhase("قراءة رؤوس الأعمدة");
+    try {
+      const parsed = await parseXlsxFile(nextFile, sheetName.trim());
+      setDetectedColumns(parsed.columns);
+      setPreviewRows(parsed.rows.slice(0, 5));
+      setSuggestedColumns(parsed.columns);
+      const detectedYear = [publicTitle, nextFile.name, parsed.sheetName].join(" ").match(/20\d{2}/)?.[0];
+      if (detectedYear) setPublicYear(detectedYear);
+      if (/wilaya|moughataa|centre|ولاية|مقاطعة|مركز/i.test(parsed.columns.join(" "))) setSearchMode("concours");
+      setPhase("تم اكتشاف الأعمدة");
+    } catch (error) {
+      setResult({ ok: false, error: `تعذر تحليل الملف: ${String(error)}` });
+    }
   }
 
   async function publishExam(totalRows: number) {
@@ -264,6 +296,8 @@ export default function ResultsUploadAdminPage() {
       const parsed = await parseXlsxFile(file, sheetName.trim());
       const rows = parsed.rows;
       const columns = parsed.columns;
+      setDetectedColumns(columns);
+      setPreviewRows(rows.slice(0, 5));
       setSuggestedColumns(columns);
 
       if (!rows.length) return setResult({ ok: false, error: "لم يتم العثور على صفوف داخل ملف Excel." });
@@ -402,7 +436,8 @@ export default function ResultsUploadAdminPage() {
               <Field label="اسم الورقة داخل Excel" hint="اتركه فارغًا لاستخدام أول ورقة."><input value={sheetName} onChange={(event) => setSheetName(event.target.value)} placeholder="اختياري" className={inputClass()} /></Field>
             </div>
             {isCustom && <Field label="اسم جدول Supabase للمسابقة الجديدة" hint="مثال: bac_2026_results أو concours_2026_results"><input value={customTable} onChange={(event) => setCustomTable(event.target.value)} placeholder="bac_2026_results" className={`${inputClass()} text-left`} dir="ltr" />{customTable && normalizedCustomTable !== customTable.trim() && <span className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700" dir="ltr">سيستخدم: {normalizedCustomTable}</span>}</Field>}
-            <Field label="ملف النتائج XLSX"><input accept=".xlsx,.xls" onChange={(event) => setFile(event.target.files?.[0] || null)} type="file" className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm file:ml-3 file:rounded-xl file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:font-black file:text-white" /></Field>
+            <Field label="ملف النتائج XLSX"><input accept=".xlsx,.xls" onChange={(event) => void handleFileSelection(event.target.files?.[0] || null)} type="file" className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm file:ml-3 file:rounded-xl file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:font-black file:text-white" /></Field>
+            {detectedColumns.length > 0 && <div className="rounded-2xl bg-emerald-50 p-3 text-xs font-bold text-emerald-800">تم اكتشاف {detectedColumns.length} عمودًا: <span dir="ltr">{detectedColumns.join("، ")}</span></div>}
           </StepCard>
 
           <StepCard number="2" title="طريقة البحث والسرعة">
@@ -415,18 +450,20 @@ export default function ResultsUploadAdminPage() {
             {isCustom && <label className="flex items-center justify-between gap-3 rounded-2xl bg-emerald-50 p-4 text-sm font-black text-emerald-950"><span>إنشاء الجدول تلقائيًا عند النشر<span className="block text-xs font-bold text-emerald-700">مفيد عند صدور مسابقة جديدة وملف XLSX فقط.</span></span><input checked={createTable} onChange={(event) => setCreateTable(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>}
             <label className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-black"><span>تجهيز السرعة تلقائيًا<span className="block text-xs font-bold text-slate-500">ينشئ Indexes و Ranked View بعد آخر دفعة.</span></span><input checked={speedSetup} onChange={(event) => setSpeedSetup(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>
             <div className="grid gap-2 sm:grid-cols-3">
-              <Field label="عمود رقم المترشح"><input value={numberColumn} onChange={(event) => setNumberColumn(event.target.value)} placeholder="Num_Bac" className={smallInputClass()} dir="ltr" /></Field>
-              <Field label="عمود الاسم"><input value={nameColumn} onChange={(event) => setNameColumn(event.target.value)} placeholder="NOM_AR" className={smallInputClass()} dir="ltr" /></Field>
-              <Field label="عمود المعدل/المجموع"><input value={scoreColumn} onChange={(event) => setScoreColumn(event.target.value)} placeholder="Moy_Bac" className={smallInputClass()} dir="ltr" /></Field>
-              <Field label="عمود القرار"><input value={decisionColumn} onChange={(event) => setDecisionColumn(event.target.value)} placeholder="Decision" className={smallInputClass()} dir="ltr" /></Field>
-              <Field label="عمود الشعبة"><input value={trackColumn} onChange={(event) => setTrackColumn(event.target.value)} placeholder="SERIE" className={smallInputClass()} dir="ltr" /></Field>
-              <Field label="عمود الولاية"><input value={wilayaColumn} onChange={(event) => setWilayaColumn(event.target.value)} placeholder="Wilaya_AR" className={smallInputClass()} dir="ltr" /></Field>
-              {isConcoursMode && <Field label="عمود المقاطعة"><input value={moughataaColumn} onChange={(event) => setMoughataaColumn(event.target.value)} placeholder="Moughataa_AR" className={smallInputClass()} dir="ltr" /></Field>}
-              <Field label="عمود المؤسسة"><input value={schoolColumn} onChange={(event) => setSchoolColumn(event.target.value)} placeholder="Etablissement_AR" className={smallInputClass()} dir="ltr" /></Field>
-              <Field label="عمود المركز"><input value={centreColumn} onChange={(event) => setCentreColumn(event.target.value)} placeholder="Centre Examen AR" className={smallInputClass()} dir="ltr" /></Field>
-              <Field label="مكان الميلاد"><input value={birthPlaceColumn} onChange={(event) => setBirthPlaceColumn(event.target.value)} placeholder="Lieun_AR" className={smallInputClass()} dir="ltr" /></Field>
-              <Field label="تاريخ/سنة الميلاد"><input value={birthDateColumn} onChange={(event) => setBirthDateColumn(event.target.value)} placeholder="Date Naiss" className={smallInputClass()} dir="ltr" /></Field>
+              <ColumnField columns={detectedColumns} label="عمود رقم المترشح *" value={numberColumn} onChange={setNumberColumn} placeholder="Num_Bac" />
+              <ColumnField columns={detectedColumns} label="عمود الاسم *" value={nameColumn} onChange={setNameColumn} placeholder="NOM_AR" />
+              <ColumnField columns={detectedColumns} label="عمود المعدل/المجموع *" value={scoreColumn} onChange={setScoreColumn} placeholder="Moy_Bac" />
+              <ColumnField columns={detectedColumns} label="عمود القرار" value={decisionColumn} onChange={setDecisionColumn} placeholder="Decision" />
+              <ColumnField columns={detectedColumns} label="عمود الشعبة" value={trackColumn} onChange={setTrackColumn} placeholder="SERIE" />
+              <ColumnField columns={detectedColumns} label="عمود الولاية" value={wilayaColumn} onChange={setWilayaColumn} placeholder="Wilaya_AR" />
+              {isConcoursMode && <ColumnField columns={detectedColumns} label="عمود المقاطعة" value={moughataaColumn} onChange={setMoughataaColumn} placeholder="Moughataa_AR" />}
+              <ColumnField columns={detectedColumns} label="عمود المؤسسة" value={schoolColumn} onChange={setSchoolColumn} placeholder="Etablissement_AR" />
+              <ColumnField columns={detectedColumns} label="عمود المركز" value={centreColumn} onChange={setCentreColumn} placeholder="Centre Examen AR" />
+              <ColumnField columns={detectedColumns} label="مكان الميلاد" value={birthPlaceColumn} onChange={setBirthPlaceColumn} placeholder="Lieun_AR" />
+              <ColumnField columns={detectedColumns} label="تاريخ/سنة الميلاد" value={birthDateColumn} onChange={setBirthDateColumn} placeholder="Date Naiss" />
             </div>
+            {detectedColumns.length > 0 && (!numberColumn || !nameColumn || !scoreColumn) && <p className="rounded-2xl bg-red-50 p-3 text-sm font-black text-red-700">يجب تحديد أعمدة رقم المترشح والاسم والمعدل قبل النشر.</p>}
+            {previewRows.length > 0 && <div className="max-h-64 overflow-auto rounded-2xl bg-slate-950 p-3 text-xs text-slate-100" dir="ltr"><pre>{JSON.stringify(previewRows, null, 2)}</pre></div>}
           </StepCard>
 
           <StepCard number="3" title="النشر في الموقع">
@@ -439,7 +476,7 @@ export default function ResultsUploadAdminPage() {
             </section>
             <label className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-black"><span>وضع المعاينة فقط<span className="block text-xs font-bold text-slate-500">أبقِه مفعّلًا أول مرة حتى تتأكد من الأعمدة وعدد الصفوف.</span></span><input checked={dryRun} onChange={(event) => setDryRun(event.target.checked)} type="checkbox" className="h-6 w-6" /></label>
             <div className="rounded-2xl bg-slate-100 p-3 text-xs font-bold text-slate-600">الهدف الحالي: <span dir="ltr" className="font-black text-slate-950">{targetTable || "غير محدد"}</span>{isCustom && createTable && <span className="mt-1 block text-emerald-700">سيتم إنشاء الجدول تلقائيًا.</span>}{speedSetup && <span className="mt-1 block text-emerald-700">سيتم تجهيز فهارس السرعة بعد الرفع.</span>}{publishToSite && <span className="mt-1 block text-emerald-700">سيتم نشر زر المسابقة تلقائيًا.</span>}</div>
-            <button disabled={loading} type="submit" className="rounded-2xl bg-emerald-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-emerald-600/25 disabled:opacity-60">{loading ? "جاري المعالجة..." : dryRun ? "معاينة الملف" : "نشر النتائج الآن"}</button>
+            <button disabled={loading || (!dryRun && (!numberColumn || !nameColumn || !scoreColumn))} type="submit" className="rounded-2xl bg-emerald-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-emerald-600/25 disabled:opacity-60">{loading ? "جاري المعالجة..." : dryRun ? "معاينة الملف" : "نشر النتائج الآن"}</button>
           </StepCard>
         </form>
 

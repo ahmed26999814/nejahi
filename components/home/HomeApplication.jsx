@@ -9,6 +9,8 @@ import { CandidateProfileCard, ResultDetailsGrid, StatusBadge } from "../results
 import ResultOfficialSummary from "../results/ResultOfficialSummary";
 import Footer from "../layout/Footer";
 import Header from "../layout/PremiumHeader";
+import DecisionStrip from "../results/DecisionStrip";
+import { useHashRoute, writeHashRoute } from "../../hooks/useHashRoute";
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
@@ -1167,18 +1169,6 @@ function groupStudentsByTrack(students) {
     .sort((a, b) => a.track.localeCompare(b.track, "ar"));
 }
 
-function getInitialRouteState() {
-  if (typeof window === "undefined") return { view: "home", examId: "" };
-  const hash = window.location.hash.replace("#", "").trim();
-  const savedExamId = localStorage.getItem("mauriresults-selected-exam") || "bac-2025";
-  const knownExam = EXAM_CARDS.find((exam) => exam.id === hash && exam.available);
-
-  if (knownExam || hash.startsWith("upload-")) return { view: "exam", examId: hash || savedExamId };
-  if (hash === "year" || hash === "year-2025" || hash === "year-2026") return { view: "year", examId: savedExamId };
-  if (["analytics", "toppers", "contact"].includes(hash)) return { view: hash, examId: savedExamId };
-  return { view: "home", examId: savedExamId };
-}
-
 function buildPublishedExamCards(rows = []) {
   return rows
     .filter((row) => row?.table_name && row?.source_key && row?.number_column && row?.name_column && row?.score_column)
@@ -1206,6 +1196,10 @@ function buildPublishedExamCards(rows = []) {
       sessionType: row.title_ar || row.table_name,
       year: row.year || "2026",
     }));
+}
+
+function getExamYear(exam) {
+  return String(exam?.year || exam?.id?.match(/20\d{2}/)?.[0] || "2025");
 }
 
 async function fetchPublishedExams() {
@@ -1301,6 +1295,7 @@ export default function HomePage() {
   const [theme, setThemeState] = useState("light");
   const [activeView, setActiveView] = useState("home");
   const [selectedExamId, setSelectedExamId] = useState("");
+  const [selectedYearId, setSelectedYearId] = useState("year-2025");
   const [selectedTopperTrack, setSelectedTopperTrack] = useState("");
   const [analyticsMode, setAnalyticsMode] = useState("");
   const [siteContent, setSiteContent] = useState({});
@@ -1312,15 +1307,10 @@ export default function HomePage() {
 
   const examCards = useMemo(() => [...EXAM_CARDS, ...publishedExams], [publishedExams]);
   const yearCards = useMemo(() => YEAR_CARDS.map((year) => {
-    if (year.id !== "year-2026") return year;
-    const has2026 = publishedExams.some((exam) => String(exam.year || "") === "2026");
-    return has2026 ? {
-      ...year,
-      available: true,
-      title: { ar: "نتائج المسابقات 2026", fr: "Résultats des concours 2026" },
-      description: { ar: "نتائج 2026 المنشورة من لوحة الأدمن.", fr: "Résultats 2026 publiés depuis l'administration." },
-    } : year;
-  }), [publishedExams]);
+    const yearValue = year.id.replace("year-", "");
+    const available = examCards.some((exam) => exam.available && getExamYear(exam) === yearValue);
+    return { ...year, available };
+  }), [examCards]);
   const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);
 
   useEffect(() => {
@@ -1328,9 +1318,6 @@ export default function HomePage() {
     const savedLang = localStorage.getItem("mauriresults-lang");
     setTheme(saved || "light");
     setLang(savedLang || "ar");
-    const initialRoute = getInitialRouteState();
-    window.history.replaceState({ view: initialRoute.view }, "", window.location.hash ? window.location.pathname + window.location.hash : window.location.pathname);
-
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
@@ -1344,6 +1331,14 @@ export default function HomePage() {
     return () => {
       ignore = true;
     };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchPublishedExams().then((exams) => {
+      if (!ignore) setPublishedExams(exams);
+    });
+    return () => { ignore = true; };
   }, []);
 
 
@@ -1382,20 +1377,35 @@ export default function HomePage() {
     link.href = favicon;
   }, [siteContent]);
 
-  useEffect(() => {
-    function handlePopState(event) {
-      const view = event.state?.view || "home";
-      setActiveView(view);
-      if (view !== "result") {
-        setResultPageOpen(false);
-        setSelectedStudent(null);
-      }
-      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  useHashRoute(examCards, (route) => {
+    const savedExamId = localStorage.getItem("mauriresults-selected-exam") || "";
+    setActiveView(route.view);
+    if (route.yearId) setSelectedYearId(route.yearId);
+    const nextExamId = route.examId || savedExamId;
+    if (nextExamId && examCards.some((exam) => exam.id === nextExamId)) {
+      setSelectedExamId(nextExamId);
+      localStorage.setItem("mauriresults-selected-exam", nextExamId);
     }
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+    if (route.view === "result") {
+      try {
+        const savedStudent = JSON.parse(sessionStorage.getItem("mauriresults-selected-result") || "null");
+        if (savedStudent) {
+          setSelectedStudent(savedStudent);
+          setResultPageOpen(true);
+        }
+      } catch {}
+    }
+    if (route.view === "ranking") {
+      try {
+        const savedRanking = JSON.parse(sessionStorage.getItem("mauriresults-ranking-target") || "null");
+        if (savedRanking) setRankingTarget(savedRanking);
+      } catch {}
+    }
+    if (route.view !== "result") {
+      setResultPageOpen(false);
+      setSelectedStudent(null);
+    }
+  });
 
   function setTheme(nextTheme) {
     setThemeState(nextTheme);
@@ -1489,10 +1499,11 @@ export default function HomePage() {
     setResultLoading(true);
     window.setTimeout(() => {
       setSelectedStudent(known || student);
+      sessionStorage.setItem("mauriresults-selected-result", JSON.stringify(known || student));
       setResultLoading(false);
       setResultPageOpen(true);
       setActiveView("result");
-      window.history.pushState({ view: "result" }, "", "#result");
+      writeHashRoute("result", { view: "result", examId: selectedExamId });
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, 20);
   }
@@ -1509,7 +1520,7 @@ export default function HomePage() {
     if (!selectedExam?.source) {
       setActiveView("year");
       setError(text.chooseExamFirst);
-      window.history.pushState({ view: "year" }, "", "#year-2025");
+      writeHashRoute(selectedYearId, { view: "year", yearId: selectedYearId });
       window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
       return;
     }
@@ -1612,13 +1623,13 @@ export default function HomePage() {
   async function openView(view) {
     if (view === "exam" && !selectedExamId) {
       setActiveView("year");
-      window.history.pushState({ view: "year" }, "", "#year-2025");
+      writeHashRoute(selectedYearId, { view: "year", yearId: selectedYearId });
       window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
       return;
     }
     setActiveView(view);
     if (view !== "result") setResultPageOpen(false);
-    window.history.pushState({ view }, "", view === "home" ? window.location.pathname : `#${view}`);
+    writeHashRoute(view === "home" ? "" : view, { view });
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
     if (view === "exam" && selectedExam) {
       await loadExamData(selectedExam);
@@ -1632,7 +1643,7 @@ export default function HomePage() {
     setMatches([]);
     setError("");
     setMessage("");
-    window.history.pushState({ view: "year" }, "", `#${year.id || "year-2025"}`);
+    writeHashRoute(year.id || "year-2025", { view: "year", yearId: year.id || "year-2025" });
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
@@ -1643,6 +1654,7 @@ export default function HomePage() {
       table: TABLE_BY_SOURCE[exam.source],
     });
     setSelectedExamId(exam.id);
+    localStorage.setItem("mauriresults-selected-exam", exam.id);
     setSelectedTopperTrack("");
     setMatches([]);
     setSelectedStudent(null);
@@ -1651,7 +1663,7 @@ export default function HomePage() {
     setMessage("");
     setActiveView("exam");
     loadAnalyticsSource(exam.source);
-    window.history.pushState({ view: "exam" }, "", `#${exam.id}`);
+    writeHashRoute(exam.id, { view: "exam", examId: exam.id, yearId: `year-${exam.year || "2025"}` });
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
 
   }
@@ -1686,9 +1698,11 @@ export default function HomePage() {
       else if (selectedExam.source === "concours") setConcoursStudents(rows);
       else if (selectedExam.source === "excellence_1as") setExcellenceStudents(rows);
 
-      setRankingTarget({ field, value, label });
+      const nextRankingTarget = { field, value, label };
+      setRankingTarget(nextRankingTarget);
+      sessionStorage.setItem("mauriresults-ranking-target", JSON.stringify(nextRankingTarget));
       setActiveView("ranking");
-      window.history.pushState({ view: "ranking" }, "", "#ranking");
+      writeHashRoute("ranking", { view: "ranking", examId: selectedExamId });
       window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
     } catch (error) {
       console.error("[MauriResults Ranking Error]", error);
@@ -1827,19 +1841,18 @@ function SiteBanner({ asset }) {
 }
 
 function YearPage({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
+  const year = currentYearId.replace("year-", "") || "2025";
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
-      <PageHero eyebrow={text.chooseExam} title={text.yearPageTitle} description={text.yearPageDesc} icon={<GraduationIcon />} />
+      <PageHero eyebrow={text.chooseExam} title={lang === "fr" ? `Résultats des concours ${year}` : `نتائج مسابقات ${year}`} description={text.yearPageDesc} icon={<GraduationIcon />} />
       <CompetitionCards currentYearId={currentYearId} examCards={examCards} lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
     </section>
   );
 }
 
 function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
-  const visibleExamCards = examCards.filter((exam) => {
-    const year = String(exam.year || "2025");
-    return currentYearId === "year-2026" ? year === "2026" : year !== "2026";
-  });
+  const currentYear = currentYearId.replace("year-", "") || "2025";
+  const visibleExamCards = examCards.filter((exam) => getExamYear(exam) === currentYear);
   return (
     <section className="grid grid-cols-2 gap-3">
       {visibleExamCards.map((exam) => (
@@ -2231,7 +2244,6 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
     ? [
       [text.id, student.id, <HashIcon key="hash" />],
       [text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],
-      [text.decision || "القرار", status.label, <InfoIcon key="decision" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -2242,7 +2254,6 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
       ? [
         [text.id, student.id, <HashIcon key="hash" />],
         [text.exam || "المسابقة", student.sessionType || "البكالوريا الدورة التكميلية 2025", <BookIcon key="exam" />],
-        [text.decision || "القرار", status.label, <InfoIcon key="decision" />],
         [text.track, student.track, <BookIcon key="track" />],
         [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
         [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
@@ -2254,7 +2265,6 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
         ? [
           [text.id, student.id, <HashIcon key="hash" />],
           [text.exam || "المسابقة", "كونكور 2025", <BookIcon key="exam" />],
-          [text.decision || "القرار", status.label, <InfoIcon key="decision" />],
           [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
           [text.center, student.centre || text.unavailable, <MapIcon key="center" />, () => onOpenRanking?.("centre", student.centre, text.center)],
           [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -2267,7 +2277,6 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
           ? [
             [text.id, student.id, <HashIcon key="hash" />],
             [text.exam || "المسابقة", "الامتياز الأولى إعدادية 2025", <BookIcon key="exam" />],
-            [text.decision || "القرار", status.label, <InfoIcon key="decision" />],
             [text.nationalId, student.matricule || text.unavailable, <HashIcon key="matricule" />],
             [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
             [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -2306,6 +2315,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
             <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">
               {isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}
             </strong>
+            <DecisionStrip label={text.decision || "القرار"} status={status} />
           </div>
         </div>
       </div>

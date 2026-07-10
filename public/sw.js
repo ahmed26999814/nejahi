@@ -1,4 +1,4 @@
-const CACHE_NAME = "mauriresults-v12";
+const CACHE_NAME = "mauriresults-v13-stable";
 const APP_SHELL = ["/offline.html", "/logo.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -18,7 +18,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
+  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/") || url.pathname.startsWith("/_next/")) return;
 
   if (event.request.mode === "navigate") {
     event.respondWith(
@@ -27,17 +27,5 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      })
-      .catch(async () => {
-        const cached = await caches.match(event.request);
-        if (cached) return cached;
-        return Response.error();
-      })
-  );
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached || Response.error())));
 });
