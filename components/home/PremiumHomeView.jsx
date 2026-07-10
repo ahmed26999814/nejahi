@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import PremiumHero from "../hero/Hero";
 import BackToTopButton from "../ui/BackToTopButton";
 import { contentValue } from "../common/content";
@@ -14,8 +15,8 @@ const HOME_YEAR_CARDS = [
   {
     id: "year-2026",
     title: { ar: "نتائج المسابقات 2026", fr: "Résultats des concours 2026" },
-    description: { ar: "نتائج 2026 المنشورة من لوحة الأدمن.", fr: "Résultats 2026 publiés depuis l'administration." },
-    available: true,
+    description: { ar: "سيتم فتحها عند توفر نتائج منشورة.", fr: "Ouverture dès la publication des résultats." },
+    available: false,
   },
 ];
 
@@ -35,29 +36,53 @@ function normalizeYearTitle(title, yearId) {
 }
 
 function normalizeHomeYearId(year) {
-  const rawId = String(year?.id || "year-2025").trim();
+  const rawId = String(year?.id || year || "year-2025").trim();
   if (rawId.startsWith("year-")) return rawId;
   const matchedYear = rawId.match(/20\d{2}/)?.[0] || "2025";
   return `year-${matchedYear}`;
 }
 
-function mergeYearCards(yearCards = []) {
-  const incoming = Array.isArray(yearCards) && yearCards.length ? yearCards : HOME_YEAR_CARDS;
-  const byId = new Map(HOME_YEAR_CARDS.map((card) => [card.id, card]));
-  for (const card of incoming) {
-    const id = normalizeHomeYearId(card);
-    const next = { ...(byId.get(id) || {}), ...card, id };
-    if (id === "year-2026") {
-      next.available = true;
-      next.description = next.description || HOME_YEAR_CARDS[1].description;
-    }
-    byId.set(id, next);
-  }
-  return [byId.get("year-2025"), byId.get("year-2026")].filter(Boolean);
+function createYearCard(yearValue) {
+  return {
+    id: `year-${yearValue}`,
+    title: { ar: `نتائج المسابقات ${yearValue}`, fr: `Résultats des concours ${yearValue}` },
+    description: { ar: `نتائج ${yearValue} المنشورة والمتاحة للبحث.`, fr: `Résultats ${yearValue} publiés et disponibles.` },
+    available: false,
+  };
 }
 
-function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }) {
-  const cards = mergeYearCards(yearCards);
+function mergeYearCards(yearCards = [], activeYears = []) {
+  const normalizedActiveYears = new Set(activeYears.map((year) => String(year)));
+  normalizedActiveYears.add("2025");
+
+  const byId = new Map(HOME_YEAR_CARDS.map((card) => [card.id, card]));
+  for (const card of Array.isArray(yearCards) ? yearCards : []) {
+    const id = normalizeHomeYearId(card);
+    byId.set(id, { ...(byId.get(id) || createYearCard(id.replace("year-", ""))), ...card, id });
+  }
+
+  for (const yearValue of normalizedActiveYears) {
+    const id = `year-${yearValue}`;
+    if (!byId.has(id)) byId.set(id, createYearCard(yearValue));
+  }
+
+  return [...byId.values()]
+    .map((card) => {
+      const id = normalizeHomeYearId(card);
+      const yearValue = id.replace("year-", "");
+      const propAvailability = Array.isArray(yearCards) && yearCards.length
+        ? yearCards.find((item) => normalizeHomeYearId(item) === id)?.available
+        : undefined;
+      const available = yearValue === "2025"
+        || normalizedActiveYears.has(yearValue)
+        || propAvailability === true;
+      return { ...card, id, available };
+    })
+    .sort((a, b) => Number(a.id.replace("year-", "")) - Number(b.id.replace("year-", "")));
+}
+
+function YearChoiceCards({ lang = "ar", onSelectYear, yearCards, activeYears }) {
+  const cards = useMemo(() => mergeYearCards(yearCards, activeYears), [yearCards, activeYears]);
 
   return (
     <section className="grid gap-3 md:grid-cols-2">
@@ -66,7 +91,7 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }) {
         const rawTitle = year.title?.[lang] || year.title?.ar || `نتائج المسابقات ${yearId}`;
         const title = normalizeYearTitle(rawTitle, yearId);
         const description = year.description?.[lang] || year.description?.ar || "كل النتائج المتوفرة الآن في مكان واحد.";
-        const available = year.available !== false;
+        const available = year.available === true;
         const tone = index === 0
           ? "border-emerald-200/80 from-emerald-950/90 via-emerald-800/70 to-emerald-500/20 text-emerald-50"
           : "border-amber-200/70 from-slate-900/90 via-amber-900/35 to-amber-400/20 text-amber-50";
@@ -92,7 +117,7 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }) {
             <span className="absolute bottom-3 left-3 h-14 w-14 rounded-full border border-white/10" />
             <span className="relative z-10 grid h-full grid-cols-[1fr_auto] items-start gap-3">
               <span className="min-w-0">
-                <span className="mb-3 grid h-11 w-11 place-items-center rounded-2xl bg-white/15 text-xl shadow-soft ring-1 ring-white/10">{index === 0 ? "🎓" : "⏳"}</span>
+                <span className="mb-3 grid h-11 w-11 place-items-center rounded-2xl bg-white/15 text-xl shadow-soft ring-1 ring-white/10">{available ? "🎓" : "⏳"}</span>
                 <strong className="block text-2xl font-black leading-tight text-white md:text-3xl">{title}</strong>
                 <small className="mt-2 block text-xs font-bold leading-5 text-white/75">{description}</small>
               </span>
@@ -107,11 +132,39 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }) {
 
 export default function PremiumHomeView({ content = {}, homepageBanner, lang = "ar", onSelectYear, text, yearCards }) {
   const logo = contentValue(content, "logo", "/logo.png");
+  const [activeYears, setActiveYears] = useState(["2025"]);
+
+  useEffect(() => {
+    if (Array.isArray(yearCards) && yearCards.length) {
+      setActiveYears(yearCards.filter((year) => year?.available).map((year) => normalizeHomeYearId(year).replace("year-", "")));
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetch("/api/public-exams", {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => response.ok ? response.json() : { exams: [] })
+      .then((data) => {
+        const years = (Array.isArray(data?.exams) ? data.exams : [])
+          .filter((exam) => exam?.is_active !== false)
+          .map((exam) => String(exam?.year || "").trim())
+          .filter((year) => /^20\d{2}$/.test(year));
+        setActiveYears(["2025", ...new Set(years)]);
+      })
+      .catch((error) => {
+        if (error?.name !== "AbortError") setActiveYears(["2025"]);
+      });
+
+    return () => controller.abort();
+  }, [yearCards]);
 
   return (
     <section className="app-shell grid gap-6 py-4 md:gap-8 md:py-8">
       <PremiumHero eyebrow="MauriResults" title={text.heroTitle} description={text.heroDesc} logo={logo} />
-      <YearChoiceCards lang={lang} onSelectYear={onSelectYear} yearCards={yearCards} />
+      <YearChoiceCards lang={lang} onSelectYear={onSelectYear} yearCards={yearCards} activeYears={activeYears} />
       <PremiumSiteBanner asset={homepageBanner} />
       <BackToTopButton />
     </section>
