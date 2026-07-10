@@ -36,7 +36,7 @@ function normalizeColumnKey(value: unknown) {
   return String(value || "")
     .normalize("NFKC")
     .toLowerCase()
-    .replace(/[{}\\[\\]()<>«»"'`ـ_\\-.,:;\\s]+/g, "")
+    .replace(/[{}\\[\\]()<>«»"'ـ_\\-.,:;\\s]+/g, "")
     .replace(/[^a-z0-9\\u0600-\\u06ff]/g, "");
 }
 
