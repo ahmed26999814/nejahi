@@ -1,0 +1,222 @@
+/* Mobile-first UI/UX polish for /admin/results */
+
+.admin-results-route {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 85% 0%, rgba(16,185,129,.12), transparent 24rem),
+    linear-gradient(180deg, #07120d 0%, #0b1711 100%);
+}
+
+.admin-results-route > main {
+  padding: .75rem !important;
+  padding-bottom: 7rem !important;
+  background: transparent !important;
+}
+
+.admin-results-route > main > section {
+  max-width: 58rem !important;
+  gap: .75rem !important;
+}
+
+.admin-results-route header {
+  padding: 1rem !important;
+  border-radius: 20px !important;
+  background: rgba(255,255,255,.07) !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.18) !important;
+}
+
+.admin-results-route header h1 {
+  font-size: 1.35rem !important;
+  line-height: 1.35 !important;
+}
+
+.admin-results-route header p {
+  line-height: 1.7 !important;
+}
+
+.admin-results-route header > div {
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  gap: .4rem !important;
+}
+
+.admin-results-route header > div span {
+  min-width: 0;
+  padding: .55rem !important;
+  border-radius: 12px !important;
+  text-align: center;
+  font-size: .62rem !important;
+  line-height: 1.35 !important;
+}
+
+.admin-results-route form {
+  gap: .75rem !important;
+}
+
+.admin-results-route form > section {
+  gap: .8rem !important;
+  padding: .85rem !important;
+  border-radius: 20px !important;
+  border-color: #dde5df !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.08) !important;
+}
+
+.admin-results-route form > section > div:first-child {
+  position: sticky;
+  top: .4rem;
+  z-index: 5;
+  margin: -.2rem -.2rem .1rem;
+  padding: .35rem;
+  border-radius: 14px;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: blur(10px);
+}
+
+.admin-results-route form > section > div:first-child span {
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: 10px !important;
+  font-size: .72rem !important;
+}
+
+.admin-results-route form > section > div:first-child h2 {
+  font-size: .9rem !important;
+}
+
+.admin-results-route label {
+  gap: .38rem !important;
+  font-size: .78rem !important;
+}
+
+.admin-results-route input,
+.admin-results-route select,
+.admin-results-route textarea {
+  width: 100%;
+  min-height: 3rem;
+  border-radius: 13px !important;
+  border-color: #d7e0da !important;
+  background: #f8faf8 !important;
+  padding: .68rem .8rem !important;
+  font-size: .88rem !important;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.admin-results-route input:focus,
+.admin-results-route select:focus,
+.admin-results-route textarea:focus {
+  border-color: #15945e !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 4px rgba(21,148,94,.10) !important;
+}
+
+.admin-results-route input[type="checkbox"] {
+  width: 1.35rem !important;
+  height: 1.35rem !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  accent-color: #15945e;
+}
+
+.admin-results-route input[type="file"] {
+  min-height: 4rem;
+  padding: .55rem !important;
+  border-width: 1.5px !important;
+  border-color: #a8cdb8 !important;
+  background: #f0f8f3 !important;
+}
+
+.admin-results-route input[type="file"]::file-selector-button {
+  border: 0;
+  border-radius: 10px;
+  margin-inline-end: .6rem;
+  padding: .6rem .8rem;
+  background: #167d50;
+  color: white;
+  font-weight: 900;
+}
+
+.admin-results-route form > section:nth-of-type(2) > div.grid.gap-2 {
+  grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  gap: .5rem !important;
+}
+
+.admin-results-route form > section:nth-of-type(2) > div.grid.gap-2 label {
+  min-width: 0;
+  padding: .55rem;
+  border: 1px solid #e2e8e4;
+  border-radius: 13px;
+  background: #fbfcfb;
+}
+
+.admin-results-route form > section:nth-of-type(2) > div.grid.gap-2 label span:first-child {
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.admin-results-route pre {
+  max-height: 18rem;
+  overflow: auto;
+  font-size: .67rem !important;
+  line-height: 1.65 !important;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.admin-results-route button[type="submit"] {
+  position: sticky;
+  bottom: .65rem;
+  z-index: 20;
+  min-height: 3.35rem;
+  border-radius: 15px !important;
+  background: #128252 !important;
+  box-shadow: 0 14px 30px rgba(18,130,82,.28) !important;
+}
+
+.admin-results-route button[type="submit"]:hover {
+  background: #0d6841 !important;
+}
+
+.admin-results-route button[type="submit"]:disabled {
+  box-shadow: none !important;
+}
+
+.admin-results-route form > section label.flex {
+  min-height: 4rem;
+  padding: .75rem !important;
+  border: 1px solid #e1e8e3;
+  border-radius: 14px !important;
+}
+
+.admin-results-route form > section label.flex span.block {
+  margin-top: .15rem;
+  line-height: 1.45;
+}
+
+.admin-results-route main > section > section:last-child {
+  border-radius: 20px !important;
+  padding: .9rem !important;
+}
+
+@media (min-width: 700px) {
+  .admin-results-route > main {
+    padding: 1.5rem !important;
+  }
+
+  .admin-results-route form > section {
+    padding: 1.2rem !important;
+  }
+
+  .admin-results-route form > section:nth-of-type(2) > div.grid.gap-2 {
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  }
+
+  .admin-results-route button[type="submit"] {
+    position: static;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-results-route header > div,
+  .admin-results-route form > section:nth-of-type(2) > div.grid.gap-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
