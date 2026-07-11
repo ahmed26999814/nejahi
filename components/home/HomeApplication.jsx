@@ -2603,14 +2603,14 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
   }, [isPassed, student.id]);
 
   return (
-    <article className={`result-modal result-${tone} animate-slide-up`}>
+    <article className={`result-modal result-${tone} result-reveal`}>
       <div className="result-modal-header">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black text-mauri-green dark:text-mauri-gold">{text.resultCard}</p>
+          <p className="result-eyebrow">{text.resultCard}</p>
           <div className="student-name-panel">
             <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{text.studentName}</span>
-            <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
-            <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">
+            <h2 className="result-student-name">{student.name}</h2>
+            <strong className="result-score">
               {isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}
             </strong>
             <DecisionStrip label={text.decision || "القرار"} status={status} />
@@ -2618,7 +2618,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="result-details-grid">
         {visibleDetails.map(([label, value, icon, onClick]) => (
           <InfoTile icon={icon} label={label} onClick={onClick} value={value} key={label} />
         ))}

@@ -199,12 +199,20 @@ svg {
   .empty-illustration img { @apply h-full w-full object-cover; }
 
   .search-card {
-    @apply grid gap-2 rounded-[26px] border border-white/70 bg-white/[.82] p-3 shadow-premium backdrop-blur-2xl transition focus-within:-translate-y-0.5 focus-within:border-mauri-green/40 focus-within:shadow-glow dark:border-white/10 dark:bg-[#10231a]/[.82] md:grid-cols-[1fr_auto];
+    @apply grid gap-3 rounded-[24px] border border-slate-200/80 bg-white/[.92] p-3 shadow-premium backdrop-blur-2xl transition duration-300 focus-within:-translate-y-0.5 focus-within:border-mauri-green/50 focus-within:shadow-glow dark:border-white/10 dark:bg-[#10231a]/[.92] md:grid-cols-[1fr_auto] md:p-4;
   }
 
   .search-input {
-    @apply h-14 w-full rounded-[18px] border border-mauri-border bg-white px-4 pr-12 text-base font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/50 focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-[#172b22] dark:text-white;
+    @apply h-14 w-full rounded-[17px] border border-slate-300/90 bg-slate-50/60 px-4 pr-12 text-base font-extrabold text-slate-950 outline-none transition duration-200 placeholder:font-bold placeholder:text-slate-400 hover:border-mauri-green/30 hover:bg-white focus:border-mauri-green focus:bg-white focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-[#172b22] dark:text-white;
   }
+
+  .search-submit { @apply relative inline-flex h-14 min-w-28 items-center justify-center gap-2 overflow-hidden rounded-[17px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-6 text-sm font-black text-white shadow-[0_14px_30px_rgba(21,128,61,.22)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(21,128,61,.30)] active:translate-y-0 active:scale-[.97] disabled:cursor-wait disabled:opacity-75; }
+  .search-submit::after { content: ""; @apply pointer-events-none absolute inset-0 opacity-0 transition-opacity; background: linear-gradient(120deg, transparent, rgba(255,255,255,.22), transparent); }
+  .search-submit:hover::after { @apply opacity-100; }
+  .search-spinner { @apply h-4 w-4 shrink-0 rounded-full border-2 border-white/35 border-t-white; animation: spin .7s linear infinite; }
+  .search-feedback { @apply col-span-full rounded-[17px] border px-4 py-3 text-xs font-black leading-6 shadow-soft; animation: slideUp 220ms ease both; }
+  .search-feedback-error { @apply border-red-200 bg-red-50 text-red-800 dark:border-red-300/20 dark:bg-red-300/10 dark:text-red-100; }
+  .search-feedback-success { @apply border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100; }
 
   .search-input:disabled { @apply cursor-not-allowed bg-slate-100 text-slate-400 opacity-70 dark:bg-white/[.05] dark:text-slate-500; }
 
@@ -250,10 +258,15 @@ svg {
   .match-row { @apply grid grid-cols-[1fr_auto] items-center gap-3 rounded-[16px] p-3; }
 
   .result-card { @apply rounded-[24px] border border-white/70 bg-white/[.82] p-4 shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/95 md:p-5; }
-  .result-modal { @apply relative overflow-hidden rounded-[30px] border border-white/70 bg-white/[.95] p-4 shadow-premium backdrop-blur-2xl transition hover:shadow-[0_28px_90px_rgba(15,23,42,.14)] dark:border-white/10 dark:bg-[#10231a]/[.88] md:p-6; animation: zoomIn 460ms cubic-bezier(.2, .8, .2, 1) both; }
+  .result-modal { @apply relative overflow-hidden rounded-[26px] border border-white/70 bg-white/[.96] p-4 shadow-premium backdrop-blur-2xl transition duration-300 hover:shadow-[0_28px_90px_rgba(15,23,42,.14)] dark:border-white/10 dark:bg-[#10231a]/[.94] md:rounded-[30px] md:p-6; animation: zoomIn 380ms cubic-bezier(.2, .8, .2, 1) both; }
   .result-modal::before { content: ""; @apply pointer-events-none absolute inset-x-0 top-0 h-1.5; }
   .result-modal-header { @apply relative z-10 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between; }
-  .student-name-panel { @apply mt-2 rounded-[22px] border border-mauri-green/15 bg-white/[.80] p-3 shadow-soft dark:border-white/10 dark:bg-[#172b22]; }
+  .student-name-panel { @apply mt-2 rounded-[22px] border border-mauri-green/15 bg-gradient-to-br from-white to-emerald-50/50 p-4 shadow-soft dark:border-white/10 dark:from-[#172b22] dark:to-[#10231a] md:p-5; }
+  .result-eyebrow { @apply text-[11px] font-black uppercase tracking-wide text-mauri-green dark:text-mauri-gold; }
+  .result-student-name { @apply mt-1 text-balance text-[1.7rem] font-black leading-[1.25] tracking-tight text-slate-950 dark:text-white md:text-4xl; }
+  .result-score { @apply mt-4 inline-flex rounded-[16px] border border-mauri-green/15 bg-mauri-green/10 px-4 py-2 text-2xl font-black tabular-nums text-mauri-green shadow-sm dark:border-mauri-gold/20 dark:bg-mauri-gold/10 dark:text-mauri-gold md:text-3xl; }
+  .result-details-grid { @apply mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2; }
+  .result-reveal { animation: resultReveal 420ms cubic-bezier(.2,.8,.2,1) both; }
   .result-page { @apply fixed inset-0 z-[80] grid place-items-center overflow-y-auto px-3 py-4; animation: fadeIn 260ms ease both; }
   .result-page-backdrop { @apply fixed inset-0 bg-slate-950/[.80] backdrop-blur-xl; }
   .result-page-shell { @apply relative z-10 grid w-full max-w-4xl gap-3; animation: zoomIn 420ms cubic-bezier(.2, .8, .2, 1) both; }
@@ -386,6 +399,8 @@ svg {
 @keyframes scaleIn { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes zoomIn { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes resultReveal { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes confettiFall { from { opacity: 1; transform: translateY(-1rem) rotate(0deg); } to { opacity: 0; transform: translateY(18rem) rotate(280deg); } }
 @keyframes successPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
 @keyframes stampPop { from { opacity: 0; transform: rotate(-18deg) scale(.42); } 70% { opacity: 1; transform: rotate(-12deg) scale(1.08); } to { opacity: 1; transform: rotate(-12deg) scale(1); } }
@@ -393,3 +408,12 @@ svg {
 @keyframes toastPop { from { opacity: 0; transform: translate(-50%, -10px) scale(.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 @keyframes levelFill { from { width: 0; } }
 @keyframes pulseSoft { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
