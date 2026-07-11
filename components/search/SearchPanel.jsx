@@ -29,7 +29,7 @@ export default function SearchPanel(props) {
       <div className="relative min-w-0 flex-1">
         <label className="relative block">
           <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-mauri-green dark:text-mauri-gold" aria-hidden="true"><SearchIcon /></span>
-          <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} onBlur={() => setTimeout(() => setFocused(false), 140)} onFocus={() => setFocused(true)} placeholder={text?.searchPlaceholder || "أدخل رقم المترشح أو الاسم الكامل"} />
+          <input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} onBlur={() => setTimeout(() => setFocused(false), 140)} onFocus={() => setFocused(true)} placeholder={text?.searchPlaceholder || "أدخل رقم المترشح أو الاسم الكامل"} inputMode={/^\d*$/.test(query) ? "numeric" : "text"} enterKeyHint="search" autoComplete="off" />
         </label>
         {visibleSuggestions && (
           <div className="suggestions-panel">
@@ -45,8 +45,8 @@ export default function SearchPanel(props) {
           </div>
         )}
       </div>
-      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={loading}>{loading ? (text?.searching || "بحث...") : (text?.searchButton || "بحث")}</button>
-      {(error || message) && <p className={`col-span-full text-center text-xs font-black md:text-start ${error ? "text-red-600 dark:text-red-300" : "text-mauri-green dark:text-mauri-gold"}`}>{error || message}</p>}
+      <button className="mobile-sticky-search tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" type="submit" disabled={loading}>{loading ? (text?.searching || "بحث...") : (text?.searchButton || "بحث")}</button>
+      {(error || message) && <div className={`col-span-full rounded-[16px] px-3 py-2 text-xs font-black leading-6 ${error ? "bg-red-50 text-red-700 dark:bg-red-300/10 dark:text-red-200" : "bg-emerald-50 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-200"}`}><p>{error || message}</p>{error && <ul className="mt-1 list-disc ps-5 font-bold"><li>{text?.checkCandidateNumber || "تأكد من كتابة رقم المترشح بصورة صحيحة."}</li><li>{text?.checkExam || "تأكد من اختيار المسابقة الصحيحة."}</li><li>{text?.tryLeadingZeros || "جرّب الرقم بالأصفار الموجودة في بدايته أو بدونها."}</li></ul>}</div>}
     </form>
   );
 }
