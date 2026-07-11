@@ -40,7 +40,7 @@ const nextConfig = {
       {
         source: "/api/public-exams",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=1800" },
+          { key: "Cache-Control", value: "no-store, max-age=0" },
         ],
       },
       {
