@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./result-polish.css";
+import UiEnhancements from "../components/ui/UiEnhancements";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -113,6 +114,7 @@ export default function RootLayout({ children }) {
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className="font-arabic antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <UiEnhancements />
         {children}
       </body>
     </html>
