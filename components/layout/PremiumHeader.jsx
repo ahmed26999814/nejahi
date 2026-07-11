@@ -9,16 +9,21 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
     { label: text.home, view: "home" },
     { label: text.toppers, view: "toppers" },
     { label: text.analytics, view: "analytics" },
+    { label: lang === "ar" ? "حاسبة المعدل" : "Calculateur", href: "/calculator" },
   ];
 
-  function go(view) {
-    onNavigate(view);
+  function go(item) {
+    if (item.href) {
+      window.location.href = item.href;
+      return;
+    }
+    onNavigate(item.view);
   }
 
   return (
     <header className="sticky top-0 z-40 border-b border-mauri-border/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
       <nav className="app-shell relative flex h-14 items-center justify-between gap-3">
-        <button className="flex min-w-0 items-center gap-2.5 text-start" onClick={() => go("home")} type="button">
+        <button className="flex min-w-0 items-center gap-2.5 text-start" onClick={() => go({ view: "home" })} type="button">
           <LogoMark className="h-9 w-9 rounded-[14px]" src={contentValue(content, "logo", "/logo.png")} />
           <span className="min-w-0">
             <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
@@ -28,7 +33,7 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
 
         <div className="hidden items-center gap-2 md:flex">
           {navItems.map((item) => (
-            <button className={`nav-link ${activeView === item.view ? "bg-mauri-green/10 text-mauri-green" : ""}`} onClick={() => go(item.view)} type="button" key={item.view}>{item.label}</button>
+            <button className={`nav-link ${!item.href && activeView === item.view ? "bg-mauri-green/10 text-mauri-green" : ""}`} onClick={() => go(item)} type="button" key={item.href || item.view}>{item.label}</button>
           ))}
         </div>
 
