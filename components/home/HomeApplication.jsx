@@ -2191,7 +2191,7 @@ function ConcoursSearchPanel({ onSelect, text }) {
         <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{text.candidateNumber}</span>
         <input className="search-input pr-4" disabled={busy || !centre} inputMode="numeric" enterKeyHint="search" pattern="[0-9]*" onChange={(event) => setNumber(event.target.value)} placeholder={text.candidateNumber} value={number} />
       </label>
-      <button className="mobile-sticky-search tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={busy} type="submit">
+      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={busy} type="submit">
         {busy ? text.searching : text.searchButton}
       </button>
       {localError && <SearchErrorHelp error={localError} text={text} />}
@@ -2250,7 +2250,7 @@ function UploadedConcoursSearchPanel({ exam, onSelect, text }) {
           <input className="search-input pr-4" disabled={searching || field.disabled} inputMode={field.inputMode} enterKeyHint={field.inputMode === "numeric" ? "search" : "next"} onChange={(event) => field.setValue(event.target.value)} placeholder={field.label} value={field.value} />
         </label>
       ))}
-      <button className="mobile-sticky-search tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={searching} type="submit">
+      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={searching} type="submit">
         {searching ? text.searching : text.searchButton}
       </button>
       {localError && <SearchErrorHelp error={localError} text={text} />}
