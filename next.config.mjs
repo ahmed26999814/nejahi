@@ -4,7 +4,23 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+  },
+  experimental: {
+    optimizePackageImports: [
+      "framer-motion",
+      "lucide-react",
+      "react-icons",
+      "@radix-ui/react-select",
+    ],
+  },
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: "https",
@@ -24,13 +40,19 @@ const nextConfig = {
       {
         source: "/api/public-exams",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=60, stale-while-revalidate=600" },
+          { key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=1800" },
         ],
       },
       {
         source: "/api/search",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=60, stale-while-revalidate=300" },
+          { key: "Cache-Control", value: "public, s-maxage=120, stale-while-revalidate=600" },
+        ],
+      },
+      {
+        source: "/api/site-assets",
+        headers: [
+          { key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=1800" },
         ],
       },
     ];
