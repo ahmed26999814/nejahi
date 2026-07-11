@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./result-polish.css";
+import "./footer-contact-polish.css";
 import UiEnhancements from "../components/ui/UiEnhancements";
 
 const siteUrl = "https://mauri-results.vercel.app";
