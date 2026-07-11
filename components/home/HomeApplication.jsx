@@ -61,7 +61,7 @@ const actionButtonClass = cva("action-button", {
 
 const EXAM_CARDS = [
   { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },
-  { id: "brevet-2025", title: { ar: "نتائج أبريفه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية الرسمية.", fr: "Résultats officiels du BEPC." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
+  { id: "brevet-2025", title: { ar: "نتائج البريفيه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية الرسمية.", fr: "Résultats officiels du BEPC." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
   { id: "concours-2025", title: { ar: "كونكور 2025", fr: "Concours 2025" }, description: { ar: "بحث خاص بالولاية والمقاطعة والمركز ورقم المترشح.", fr: "Recherche par région, département, centre et numéro." }, tone: "gold", available: true, source: "concours", icon: <SchoolIcon /> },
   { id: "excellence-1as-2025", title: { ar: "الامتياز الأولى إعدادية 2025", fr: "Excellence 1AS 2025" }, description: { ar: "نتائج مسابقة الامتياز الأولى إعدادية.", fr: "Résultats du concours Excellence 1AS." }, tone: "teal", available: true, source: "excellence_1as", icon: <AwardIcon /> },
   { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "نتائج الدورة التكميلية الرسمية.", fr: "Résultats officiels de la session complémentaire." }, tone: "amber", available: true, source: "bac_session", icon: <AlertIcon /> },
@@ -199,6 +199,14 @@ const UI_TEXT = {
     notFound: "لم يتم العثور على نتيجة بهذا الرقم أو الاسم.",
     sessionNotFound: "لم يتم العثور على مترشح مؤهل للدورة بهذا الرقم أو الاسم.",
     connectionError: "حدث خطأ أثناء الاتصال بالخدمة.",
+    checkCandidateNumber: "تأكد من كتابة رقم المترشح بصورة صحيحة.",
+    checkExam: "تأكد من اختيار المسابقة الصحيحة.",
+    tryLeadingZeros: "جرّب الرقم بالأصفار الموجودة في بدايته أو بدونها.",
+    searchSteps: "خطوات البحث",
+    moreDetails: "عرض بقية التفاصيل",
+    hideDetails: "إخفاء التفاصيل",
+    backToYears: "الرجوع إلى السنوات",
+    backToExams: "الرجوع إلى المسابقات",
     copiedShare: "تم نسخ النتيجة للمشاركة.",
     result: "نتيجة",
     examResultTitle: "MauriResults - نتيجة الامتحان",
@@ -310,6 +318,14 @@ const UI_TEXT = {
     notFound: "Aucun résultat trouvé avec ce numéro ou ce nom.",
     sessionNotFound: "Aucun candidat admissible à la session avec ce numéro ou ce nom.",
     connectionError: "Erreur lors de la connexion à la base de données.",
+    checkCandidateNumber: "Vérifiez le numéro du candidat.",
+    checkExam: "Vérifiez le concours sélectionné.",
+    tryLeadingZeros: "Essayez le numéro avec ou sans les zéros initiaux.",
+    searchSteps: "Étapes de recherche",
+    moreDetails: "Afficher les autres détails",
+    hideDetails: "Masquer les détails",
+    backToYears: "Retour aux années",
+    backToExams: "Retour aux concours",
     copiedShare: "Le résultat a été copié pour le partage.",
     result: "Résultat",
     examResultTitle: "MauriResults - Résultat de l'examen",
@@ -1373,8 +1389,10 @@ export default function HomePage() {
   useEffect(() => {
     const saved = localStorage.getItem("mauriresults-theme");
     const savedLang = localStorage.getItem("mauriresults-lang");
+    const savedYearId = localStorage.getItem("mauriresults-selected-year");
     setTheme(saved || "light");
     setLang(savedLang || "ar");
+    if (savedYearId && /^year-20\d{2}$/.test(savedYearId)) setSelectedYearId(savedYearId);
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
@@ -1736,6 +1754,17 @@ export default function HomePage() {
   }
 
   async function openView(view) {
+    if (view === "search") {
+      if (selectedExamId) {
+        setActiveView("exam");
+        writeHashRoute(selectedExamId, { view: "exam", examId: selectedExamId, yearId: selectedYearId });
+      } else {
+        setActiveView("year");
+        writeHashRoute(selectedYearId, { view: "year", yearId: selectedYearId });
+      }
+      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+      return;
+    }
     if (view === "exam" && !selectedExamId) {
       setActiveView("year");
       writeHashRoute(selectedYearId, { view: "year", yearId: selectedYearId });
@@ -1755,6 +1784,7 @@ export default function HomePage() {
     const nextYearId = year.id || "year-2025";
     const nextYear = nextYearId.replace("year-", "");
     setSelectedYearId(nextYearId);
+    localStorage.setItem("mauriresults-selected-year", nextYearId);
     if (selectedExam && getExamYear(selectedExam) !== nextYear) {
       setSelectedExamId("");
       localStorage.removeItem("mauriresults-selected-exam");
@@ -1775,6 +1805,7 @@ export default function HomePage() {
     });
     setSelectedExamId(exam.id);
     setSelectedYearId(`year-${getExamYear(exam)}`);
+    localStorage.setItem("mauriresults-selected-year", `year-${getExamYear(exam)}`);
     localStorage.setItem("mauriresults-selected-exam", exam.id);
     setSelectedTopperTrack("");
     setRankingRows([]);
@@ -1796,6 +1827,7 @@ export default function HomePage() {
     if (!exam?.available) return;
     setSelectedExamId(exam.id);
     setSelectedYearId(`year-${getExamYear(exam)}`);
+    localStorage.setItem("mauriresults-selected-year", `year-${getExamYear(exam)}`);
     localStorage.setItem("mauriresults-selected-exam", exam.id);
     setSelectedTopperTrack("");
     setRankingRows([]);
@@ -1872,8 +1904,8 @@ export default function HomePage() {
         />
       )}
 
-      {activeView === "year" && <YearPage currentYearId={selectedYearId} examCards={examCards} lang={lang} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
-      {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
+      {activeView === "year" && <YearPage currentYearId={selectedYearId} examCards={examCards} lang={lang} onBack={() => openView("home")} onSelectExam={openExam} selectedExamId={selectedExamId} text={text} />}
+      {activeView === "exam" && selectedExam && <ExamPage error={error} exam={selectedExam} handleSubmit={handleSubmit} lang={lang} loading={loading || examLoading} matches={matches} message={message} onBack={() => openYear({ id: selectedYearId, available: true })} onPickSuggestion={(student) => { setQuery(student.id); showStudent(student); }} onSelect={selectStudent} query={query} searchPool={searchPool} setQuery={setQuery} suggestions={suggestions} text={text} />}
       {activeView === "toppers" && <ToppersPage examCards={examCards} groups={topperGroups} lang={lang} loading={selectedSourceLoading} onSelect={selectStudent} onSelectExam={selectExamForSection} onSelectTrack={setSelectedTopperTrack} selectedExam={selectedExam} selectedExamId={selectedExamId} selectedTrack={selectedTopperTrack} showTrackGroups={showTrackGroups} showTrackSelector={showTopperTrackSelector} text={text} trackOptions={topperTrackOptions} />}
       {activeView === "contact" && <ContactPage text={text} />}
       {activeView === "analytics" && <AnalyticsPage analyticsMode={activeAnalyticsMode} analyticsOptions={analyticsOptions} components={{ PageHero, ExamSelector, StatsStrip, AnalyticsModeSelector, StatsTable, EmptyChoice, ChartIcon }} examCards={examCards} lang={lang} loading={selectedSourceLoading} onSelectAnalyticsMode={setAnalyticsMode} onSelectExam={selectExamForSection} rows={selectedAnalyticsRows} selectedExam={selectedExam} selectedExamId={selectedExamId} stats={activeStats} tableIcon={selectedAnalyticsIcon} tableTitle={selectedAnalyticsTitle} text={text} />}
@@ -1969,10 +2001,19 @@ function SiteBanner({ asset }) {
   );
 }
 
-function YearPage({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
+function MobileBackButton({ label, onClick }) {
+  return (
+    <button className="inline-flex min-h-12 w-fit items-center gap-2 rounded-full border border-mauri-green/20 bg-white/85 px-4 text-xs font-black text-mauri-green shadow-soft backdrop-blur-xl transition active:scale-95 dark:border-emerald-300/20 dark:bg-white/10 dark:text-emerald-300" onClick={onClick} type="button">
+      <span aria-hidden="true">→</span>{label}
+    </button>
+  );
+}
+
+function YearPage({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onBack, onSelectExam, selectedExamId, text }) {
   const year = currentYearId.replace("year-", "") || "2025";
   return (
-    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8 animate-slide-up">
+      <MobileBackButton label={text.backToYears} onClick={onBack} />
       <PageHero eyebrow={text.chooseExam} title={lang === "fr" ? `Résultats des concours ${year}` : `نتائج مسابقات ${year}`} description={text.yearPageDesc} icon={<GraduationIcon />} />
       <CompetitionCards currentYearId={currentYearId} examCards={examCards} lang={lang} onSelectExam={onSelectExam} selectedExamId={selectedExamId} text={text} />
     </section>
@@ -1986,7 +2027,7 @@ function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS,
     return <section className="empty-state animate-slide-up"><div><h2>{text.noData}</h2><p>{lang === "fr" ? "Aucun résultat actif n’est publié pour cette année." : "لا توجد نتائج منشورة ومفعلة لهذه السنة حتى الآن."}</p></div></section>;
   }
   return (
-    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <section className="grid grid-cols-2 gap-2.5 md:gap-3">
       {visibleExamCards.map((exam) => (
         <button
           className={`exam-card exam-card-${exam.tone} ${selectedExamId === exam.id ? "is-selected" : ""} ${exam.available ? "" : "is-locked"}`}
@@ -2007,10 +2048,11 @@ function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS,
   );
 }
 
-function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, onPickSuggestion, onSelect, query, searchPool, setQuery, suggestions, text }) {
+function ExamPage({ error, exam, handleSubmit, lang, loading, matches, message, onBack, onPickSuggestion, onSelect, query, searchPool, setQuery, suggestions, text }) {
   const uploadedConcours = String(exam?.source || "").startsWith("upload:") && exam?.searchMode === "concours";
   return (
-    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
+    <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8 animate-slide-up">
+      <MobileBackButton label={text.backToExams} onClick={onBack} />
       <PageHero eyebrow={text.search} title={exam.title[lang]} description={text.examPageDesc} icon={exam.icon} />
       <section className="scroll-mt-20" id="resultArea">
         {exam.source === "concours" ? (
@@ -2040,6 +2082,19 @@ function RankingPage({ onSelect, rankingTarget, students, text }) {
 
 function uniqueSorted(values) {
   return [...new Set(values.map(cleanText).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
+}
+
+function SearchErrorHelp({ error, text }) {
+  return (
+    <div className="col-span-full rounded-[16px] bg-red-50 px-3 py-2 text-xs font-black leading-6 text-red-700 dark:bg-red-300/10 dark:text-red-200">
+      <p>{error}</p>
+      <ul className="mt-1 list-disc ps-5 font-bold">
+        <li>{text.checkCandidateNumber}</li>
+        <li>{text.checkExam}</li>
+        <li>{text.tryLeadingZeros}</li>
+      </ul>
+    </div>
+  );
 }
 
 function ConcoursSearchPanel({ onSelect, text }) {
@@ -2107,20 +2162,32 @@ function ConcoursSearchPanel({ onSelect, text }) {
   }
 
   const busy = loading || searching;
+  const steps = [
+    { label: text.region, complete: Boolean(wilaya) },
+    { label: text.moughataa, complete: Boolean(moughataa) },
+    { label: text.center, complete: Boolean(centre) },
+    { label: text.candidateNumber, complete: Boolean(number.trim()) },
+  ];
 
   return (
     <form className="search-card animate-slide-up" onSubmit={submit}>
+      <div className="col-span-full grid gap-2 rounded-[18px] border border-mauri-green/15 bg-mauri-green/5 p-3 dark:border-emerald-300/15 dark:bg-emerald-300/5">
+        <strong className="text-xs font-black text-mauri-green dark:text-mauri-gold">{text.searchSteps}</strong>
+        <ol className="grid grid-cols-4 gap-1" aria-label={text.searchSteps}>
+          {steps.map((step, index) => <li className={`grid min-w-0 justify-items-center gap-1 text-center text-[9px] font-black ${step.complete ? "text-mauri-green dark:text-emerald-300" : "text-slate-400"}`} key={step.label}><span className={`grid h-7 w-7 place-items-center rounded-full border ${step.complete ? "border-mauri-green bg-mauri-green text-white" : "border-slate-200 bg-white dark:border-white/10 dark:bg-white/5"}`}>{step.complete ? "✓" : index + 1}</span><span className="line-clamp-1">{step.label}</span></li>)}
+        </ol>
+      </div>
       <SelectField disabled={busy} label={text.chooseWilaya} onChange={(value) => { setWilaya(value); setMoughataa(""); setCentre(""); }} options={wilayas} value={wilaya} />
       <SelectField disabled={busy || !wilaya} label={text.chooseMoughataa} onChange={(value) => { setMoughataa(value); setCentre(""); }} options={moughataas} value={moughataa} />
       <SelectField disabled={busy || !moughataa} label={text.chooseCentre} onChange={setCentre} options={centres} value={centre} />
       <label className="grid gap-1">
         <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{text.candidateNumber}</span>
-        <input className="search-input pr-4" disabled={busy || !centre} onChange={(event) => setNumber(event.target.value)} placeholder={text.candidateNumber} value={number} />
+        <input className="search-input pr-4" disabled={busy || !centre} inputMode="numeric" enterKeyHint="search" pattern="[0-9]*" onChange={(event) => setNumber(event.target.value)} placeholder={text.candidateNumber} value={number} />
       </label>
-      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={busy} type="submit">
+      <button className="mobile-sticky-search tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={busy} type="submit">
         {busy ? text.searching : text.searchButton}
       </button>
-      {localError && <p className="col-span-full text-center text-xs font-black text-red-600 dark:text-red-300 md:text-start">{localError}</p>}
+      {localError && <SearchErrorHelp error={localError} text={text} />}
     </form>
   );
 }
@@ -2162,24 +2229,30 @@ function UploadedConcoursSearchPanel({ exam, onSelect, text }) {
   }
 
   const fields = [
-    { label: text.chooseWilaya || "الولاية", value: wilaya, setValue: setWilaya },
-    { label: text.chooseMoughataa || "المقاطعة", value: moughataa, setValue: setMoughataa },
-    { label: text.chooseCentre || "المركز", value: centre, setValue: setCentre },
-    { label: text.candidateNumber || text.number || "رقم المترشح", value: number, setValue: setNumber, inputMode: "numeric" },
+    { label: text.chooseWilaya || "الولاية", value: wilaya, setValue: (value) => { setWilaya(value); setMoughataa(""); setCentre(""); setNumber(""); } },
+    { label: text.chooseMoughataa || "المقاطعة", value: moughataa, setValue: (value) => { setMoughataa(value); setCentre(""); setNumber(""); }, disabled: !wilaya },
+    { label: text.chooseCentre || "المركز", value: centre, setValue: (value) => { setCentre(value); setNumber(""); }, disabled: !moughataa },
+    { label: text.candidateNumber || text.number || "رقم المترشح", value: number, setValue: setNumber, inputMode: "numeric", disabled: !centre },
   ];
 
   return (
     <form className="search-card animate-slide-up" onSubmit={submit}>
+      <div className="col-span-full grid gap-2 rounded-[18px] border border-mauri-green/15 bg-mauri-green/5 p-3 dark:border-emerald-300/15 dark:bg-emerald-300/5">
+        <strong className="text-xs font-black text-mauri-green dark:text-mauri-gold">{text.searchSteps}</strong>
+        <ol className="grid grid-cols-4 gap-1" aria-label={text.searchSteps}>
+          {fields.map((field, index) => <li className={`grid min-w-0 justify-items-center gap-1 text-center text-[9px] font-black ${field.value ? "text-mauri-green dark:text-emerald-300" : "text-slate-400"}`} key={field.label}><span className={`grid h-7 w-7 place-items-center rounded-full border ${field.value ? "border-mauri-green bg-mauri-green text-white" : "border-slate-200 bg-white dark:border-white/10 dark:bg-white/5"}`}>{field.value ? "✓" : index + 1}</span><span className="line-clamp-1">{field.label}</span></li>)}
+        </ol>
+      </div>
       {fields.map((field) => (
         <label className="grid gap-1" key={field.label}>
           <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{field.label}</span>
-          <input className="search-input pr-4" disabled={searching} inputMode={field.inputMode} onChange={(event) => field.setValue(event.target.value)} placeholder={field.label} value={field.value} />
+          <input className="search-input pr-4" disabled={searching || field.disabled} inputMode={field.inputMode} enterKeyHint={field.inputMode === "numeric" ? "search" : "next"} onChange={(event) => field.setValue(event.target.value)} placeholder={field.label} value={field.value} />
         </label>
       ))}
-      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={searching} type="submit">
+      <button className="mobile-sticky-search tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={searching} type="submit">
         {searching ? text.searching : text.searchButton}
       </button>
-      {localError && <p className="col-span-full text-center text-xs font-black text-red-600 dark:text-red-300 md:text-start">{localError}</p>}
+      {localError && <SearchErrorHelp error={localError} text={text} />}
     </form>
   );
 }
@@ -2425,6 +2498,7 @@ function CountUp({ decimals = 0, value }) {
 }
 
 function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_TEXT.ar, verificationCode }) {
+  const [showDetails, setShowDetails] = useState(false);
   const average = parseAverage(student.MOD);
   const isConcours = isConcoursStudent(student);
   const officialStatus = getStatusDisplay(getOfficialStatus(student.kr), text);
@@ -2454,7 +2528,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
     : student.source === "brevet"
     ? [
       [text.id, student.id, <HashIcon key="hash" />],
-      [text.exam || "المسابقة", "أبريفه 2025", <BookIcon key="exam" />],
+      [text.exam || "المسابقة", "البريفيه 2025", <BookIcon key="exam" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],
@@ -2519,6 +2593,8 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
     ].filter(Boolean));
     return !unavailableValues.has(normalized);
   });
+  const summaryDetails = visibleDetails.filter(([label]) => label !== text.rank).slice(0, 3);
+  const extraDetails = visibleDetails.filter((item) => !summaryDetails.includes(item) && item[0] !== text.rank);
 
   useEffect(() => {
     if (!isPassed) return undefined;
@@ -2536,27 +2612,30 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
           <div className="student-name-panel">
             <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{text.studentName}</span>
             <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
-            <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">
-              {isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}
-            </strong>
+            <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+              <div className="rounded-[18px] bg-mauri-green/10 px-4 py-2 dark:bg-mauri-gold/10"><span className="block text-[10px] font-black text-slate-500 dark:text-slate-300">{isConcours ? text.totalScore : text.averageLabel}</span><strong className="text-2xl font-black text-mauri-green dark:text-mauri-gold">{isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}</strong></div>
+              {student.rank ? <div className="grid min-w-20 content-center justify-items-center rounded-[18px] border border-mauri-gold/30 bg-mauri-gold/10 px-3 py-2"><span className="text-[10px] font-black text-slate-500 dark:text-slate-300">{text.rank}</span><strong className="text-xl font-black text-yellow-700 dark:text-yellow-300">#{student.rank}</strong></div> : null}
+            </div>
             <DecisionStrip label={text.decision || "القرار"} status={status} />
           </div>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        {visibleDetails.map(([label, value, icon, onClick]) => (
+        {summaryDetails.map(([label, value, icon, onClick]) => (
           <InfoTile icon={icon} label={label} onClick={onClick} value={value} key={label} />
         ))}
       </div>
+      {extraDetails.length > 0 && <button className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-mauri-green/20 bg-mauri-green/5 px-4 text-xs font-black text-mauri-green transition active:scale-[.98] dark:border-emerald-300/20 dark:bg-emerald-300/5 dark:text-emerald-300" onClick={() => setShowDetails((current) => !current)} type="button" aria-expanded={showDetails}>{showDetails ? text.hideDetails : text.moreDetails}<span aria-hidden="true">{showDetails ? "↑" : "↓"}</span></button>}
+      {showDetails && <div className="mt-3 grid grid-cols-2 gap-2 animate-slide-up">{extraDetails.map(([label, value, icon, onClick]) => <InfoTile icon={icon} label={label} onClick={onClick} value={value} key={label} />)}</div>}
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-2">
         <ActionButton icon={<ShareIcon />} label={text.share} onClick={() => onShare(student)} />
         <ActionButton icon={<DownloadIcon />} label="PDF" onClick={() => window.print()} variant="light" />
-        <ActionButton icon={<PrinterIcon />} label={text.print} onClick={() => window.print()} variant="light" />
       </div>
       <SiteBanner asset={resultBanner} />
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <ActionButton icon={<PrinterIcon />} label={text.print} onClick={() => window.print()} variant="light" />
         <ActionButton icon={<HashIcon />} label={text.copyLink} onClick={() => { navigator.clipboard?.writeText(resultUrl); toast.success(text.copiedShare); }} variant="light" />
         <ActionButton icon={<FaWhatsapp />} label={text.whatsapp} onClick={() => window.open(`https://wa.me/?text=${encodedText}%0A${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
         <ActionButton icon={<FaFacebookF />} label={text.facebook} onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
@@ -2906,7 +2985,3 @@ function ChevronDownIcon() { return <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6
 function GoldMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M12 11v4" /><path d="M10 13h4" /></svg>; }
 function SilverMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 12a2 2 0 0 1 4 0c0 2-4 2-4 4h4" /></svg>; }
 function BronzeMedalIcon() { return <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="5" /><path d="m8 2 4 6 4-6" /><path d="M10 11h4l-2 2a2 2 0 1 1-2 2" /></svg>; }
-
-
-
-
