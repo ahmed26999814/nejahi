@@ -1,13 +1,13 @@
 "use client";
 
-import { AwardIcon, ChartIcon, HomeIcon, MessageIcon } from "../common/icons";
+import { AwardIcon, ChartIcon, HomeIcon, SearchIcon } from "../common/icons";
 
 export default function BottomNav({ activeView, onNavigate, text }) {
   const items = [
     { label: text.home, view: "home", icon: <HomeIcon /> },
+    { label: text.search, view: "search", icon: <SearchIcon /> },
     { label: text.toppers, view: "toppers", icon: <AwardIcon /> },
     { label: text.analytics, view: "analytics", icon: <ChartIcon /> },
-    { label: "اتصل بنا", view: "contact", icon: <MessageIcon /> },
   ];
 
   return (
@@ -15,7 +15,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
       <div className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[24px] border border-white/70 bg-white/[.92] p-1.5 shadow-[0_-14px_40px_rgba(15,23,42,.10)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.92]">
         {items.map((item) => (
           <button
-            className={`grid justify-items-center gap-1 rounded-[18px] px-2 py-1.5 text-[10px] font-black transition hover:-translate-y-0.5 active:scale-95 ${activeView === item.view ? "bg-mauri-green text-white shadow-soft" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
+            className={`grid min-h-12 justify-items-center content-center gap-1 rounded-[18px] px-2 py-1.5 text-[10px] font-black transition hover:-translate-y-0.5 active:scale-95 ${(item.view === "search" ? activeView === "exam" : activeView === item.view) ? "bg-mauri-green text-white shadow-soft" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
             onClick={() => onNavigate(item.view)}
             type="button"
             key={item.label}
