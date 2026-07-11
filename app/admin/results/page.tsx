@@ -1,10 +1,10 @@
 import "./admin-results.css";
-import ResultsUploadApplication from "../../../components/admin/results/ResultsUploadApplication";
+import FastResultsUploadApplication from "../../../components/admin/results/FastResultsUploadApplication";
 
 export default function ResultsUploadPage() {
   return (
     <div className="admin-results-route">
-      <ResultsUploadApplication />
+      <FastResultsUploadApplication />
     </div>
   );
 }
