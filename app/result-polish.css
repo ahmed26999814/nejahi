@@ -1,0 +1,425 @@
+/* MauriResults result-page polish
+   Keeps the homepage structure unchanged while making the result experience
+   denser, calmer and more natural on mobile. */
+
+:root {
+  --mr-forest: #14633f;
+  --mr-forest-dark: #0f4f34;
+  --mr-forest-soft: #eaf3ed;
+  --mr-sand: #f5f1e8;
+  --mr-paper: #fffdf8;
+  --mr-ink: #17211b;
+  --mr-muted: #68736c;
+  --mr-border: #dce4de;
+  --mr-success: #18734a;
+  --mr-danger: #a83d3d;
+  --mr-warning: #9a681e;
+}
+
+/* A quieter, less synthetic site palette. */
+.app-background {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(20, 99, 63, .08), transparent 24rem),
+    linear-gradient(180deg, #fbfaf6 0%, #f4f7f3 100%) !important;
+  animation: none !important;
+}
+
+.app-background::before {
+  opacity: .16 !important;
+  background-size: 56px 56px !important;
+}
+
+.app-background::after {
+  opacity: .035 !important;
+}
+
+.dark .app-background {
+  background: linear-gradient(180deg, #0d1712 0%, #101d16 100%) !important;
+}
+
+/* Buttons use one confident green instead of an AI-looking multi-stop gradient. */
+.search-submit,
+.developer-button,
+.admin-login button,
+.admin-upload {
+  background: var(--mr-forest) !important;
+  box-shadow: 0 10px 24px rgba(20, 99, 63, .18) !important;
+}
+
+.search-submit:hover,
+.developer-button:hover,
+.admin-login button:hover,
+.admin-upload:hover {
+  background: var(--mr-forest-dark) !important;
+  box-shadow: 0 13px 28px rgba(20, 99, 63, .22) !important;
+}
+
+/* Make all interface icons feel like one family. */
+svg {
+  stroke-width: 1.85;
+}
+
+.info-tile > span:first-child,
+.exam-card-icon,
+.page-hero > span:first-child,
+.stat-chip > span:first-child {
+  border: 1px solid rgba(20, 99, 63, .12);
+  background: var(--mr-forest-soft) !important;
+  color: var(--mr-forest) !important;
+  box-shadow: none !important;
+}
+
+.dark .info-tile > span:first-child,
+.dark .exam-card-icon,
+.dark .page-hero > span:first-child,
+.dark .stat-chip > span:first-child {
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .07) !important;
+  color: #a7d7bc !important;
+}
+
+/* Result page: compact official header and one coherent card. */
+.result-official-page {
+  padding-top: .55rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.result-page-shell {
+  max-width: 760px !important;
+  gap: .65rem !important;
+}
+
+.official-result-header {
+  padding: .75rem 1rem !important;
+  border-radius: 20px !important;
+  background: rgba(255, 253, 248, .96) !important;
+  border-color: var(--mr-border) !important;
+  box-shadow: 0 8px 28px rgba(35, 50, 40, .07) !important;
+}
+
+.official-result-header .h-16.w-16 {
+  width: 2.8rem !important;
+  height: 2.8rem !important;
+  border-radius: 14px !important;
+}
+
+.official-result-header h1 {
+  font-size: 1.15rem !important;
+  line-height: 1.35 !important;
+}
+
+.official-result-header p:last-child {
+  margin-top: .1rem !important;
+  font-size: .68rem !important;
+}
+
+.result-modal {
+  padding: .85rem !important;
+  border-radius: 22px !important;
+  border-color: var(--mr-border) !important;
+  background: var(--mr-paper) !important;
+  box-shadow: 0 14px 42px rgba(35, 50, 40, .11) !important;
+  backdrop-filter: none !important;
+}
+
+.dark .result-modal,
+.dark .official-result-header {
+  background: #122019 !important;
+  border-color: rgba(255, 255, 255, .09) !important;
+}
+
+.result-modal::before {
+  height: 3px !important;
+  background: var(--mr-forest) !important;
+}
+
+.result-eyebrow {
+  color: var(--mr-muted) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.student-name-panel {
+  margin-top: .35rem !important;
+  padding: .85rem !important;
+  border-radius: 18px !important;
+  border-color: var(--mr-border) !important;
+  background: #f8faf7 !important;
+  box-shadow: none !important;
+}
+
+.dark .student-name-panel {
+  background: #17271f !important;
+  border-color: rgba(255, 255, 255, .08) !important;
+}
+
+.result-student-name {
+  margin-top: .2rem !important;
+  font-size: clamp(1.35rem, 6vw, 2.25rem) !important;
+  line-height: 1.2 !important;
+  color: var(--mr-ink) !important;
+}
+
+.dark .result-student-name {
+  color: #f8fbf9 !important;
+}
+
+.result-score {
+  margin-top: .65rem !important;
+  padding: .45rem .8rem !important;
+  border-radius: 12px !important;
+  border-color: rgba(20, 99, 63, .18) !important;
+  background: #ffffff !important;
+  color: var(--mr-forest) !important;
+  font-size: 1.45rem !important;
+  box-shadow: none !important;
+}
+
+.dark .result-score {
+  background: rgba(255, 255, 255, .06) !important;
+  color: #b8ddc7 !important;
+}
+
+/* The decision becomes an unmistakable full-width outcome strip. */
+.student-name-panel .status-badge,
+.student-name-panel .official-status-stamp {
+  width: 100% !important;
+  min-height: 3.2rem !important;
+  margin-top: .7rem !important;
+  justify-content: center !important;
+  border-radius: 14px !important;
+  border-width: 1px !important;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  animation: decisionEnter .42s cubic-bezier(.2,.8,.2,1) both !important;
+}
+
+.student-name-panel .status-badge svg,
+.student-name-panel .official-status-stamp svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+.status-badge.admis,
+.official-status-stamp.admis {
+  color: #0d5a37 !important;
+  background: #e9f4ed !important;
+  border-color: #b9d8c5 !important;
+}
+
+.status-badge.ajourne,
+.official-status-stamp.ajourne {
+  color: #8b3030 !important;
+  background: #fbefed !important;
+  border-color: #e7c3bf !important;
+}
+
+.status-badge.sessionnaire,
+.official-status-stamp.sessionnaire {
+  color: #7e561d !important;
+  background: #fbf4e7 !important;
+  border-color: #e7d2ac !important;
+}
+
+.status-badge.absent,
+.status-badge.unknown,
+.official-status-stamp.absent,
+.official-status-stamp.unknown {
+  color: #56615a !important;
+  background: #f0f2f0 !important;
+  border-color: #d7ddd8 !important;
+}
+
+/* Two compact columns keep almost all details visible in one mobile viewport. */
+.result-details-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .45rem !important;
+  margin-top: .65rem !important;
+}
+
+.info-tile {
+  min-height: 3.65rem !important;
+  padding: .55rem !important;
+  gap: .45rem !important;
+  border-radius: 13px !important;
+  border-color: var(--mr-border) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.dark .info-tile {
+  background: rgba(255, 255, 255, .045) !important;
+  border-color: rgba(255, 255, 255, .075) !important;
+}
+
+.info-tile > span:first-child {
+  width: 1.9rem !important;
+  height: 1.9rem !important;
+  border-radius: 9px !important;
+}
+
+.info-tile > span:first-child svg {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.info-tile span.text-\[11px\] {
+  font-size: .62rem !important;
+  line-height: 1.1 !important;
+  color: var(--mr-muted) !important;
+}
+
+.info-tile strong {
+  margin-top: .12rem !important;
+  font-size: .76rem !important;
+  line-height: 1.25 !important;
+}
+
+.info-tile em {
+  display: none !important;
+}
+
+/* Keep only Share and PDF. Hide Print and the secondary social/link row. */
+.result-modal > .mt-4.grid.grid-cols-3.gap-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .55rem !important;
+  margin-top: .7rem !important;
+}
+
+.result-modal > .mt-4.grid.grid-cols-3.gap-2 > :nth-child(3) {
+  display: none !important;
+}
+
+.result-modal > .mt-4.grid.grid-cols-2.gap-2.sm\:grid-cols-4 {
+  display: none !important;
+}
+
+.action-button {
+  min-height: 2.8rem !important;
+  border-radius: 13px !important;
+  font-size: .78rem !important;
+  box-shadow: none !important;
+  transition: transform .18s ease, background-color .18s ease, border-color .18s ease !important;
+}
+
+.action-button:first-child {
+  background: var(--mr-forest) !important;
+  color: #fff !important;
+}
+
+.action-button:first-child:hover {
+  background: var(--mr-forest-dark) !important;
+}
+
+.action-button:nth-child(2) {
+  border: 1px solid var(--mr-border) !important;
+  background: #fff !important;
+  color: var(--mr-ink) !important;
+}
+
+.dark .action-button:nth-child(2) {
+  background: rgba(255, 255, 255, .06) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, .1) !important;
+}
+
+.result-modal .site-banner {
+  margin-top: .7rem !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+
+/* Small, purposeful motion instead of constant floating/glowing. */
+.result-reveal {
+  animation: resultCardEnter .42s cubic-bezier(.2,.8,.2,1) both !important;
+}
+
+.result-modal:hover,
+.info-tile:hover {
+  transform: none !important;
+}
+
+@keyframes resultCardEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes decisionEnter {
+  from { opacity: 0; transform: scale(.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 480px) {
+  .app-shell {
+    width: calc(100% - .7rem) !important;
+  }
+
+  .result-official-page {
+    min-height: calc(100vh - 4.5rem) !important;
+  }
+
+  .official-result-header {
+    padding: .6rem .7rem !important;
+  }
+
+  .official-result-header > div {
+    gap: .55rem !important;
+  }
+
+  .official-result-header .h-16.w-16 {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+  }
+
+  .official-result-header h1 {
+    font-size: 1rem !important;
+  }
+
+  .result-modal {
+    padding: .65rem !important;
+    border-radius: 18px !important;
+  }
+
+  .student-name-panel {
+    padding: .7rem !important;
+    border-radius: 15px !important;
+  }
+
+  .result-student-name {
+    font-size: 1.28rem !important;
+  }
+
+  .result-score {
+    font-size: 1.25rem !important;
+  }
+
+  .result-details-grid {
+    gap: .35rem !important;
+  }
+
+  .info-tile {
+    min-height: 3.25rem !important;
+    padding: .45rem !important;
+  }
+
+  .info-tile strong {
+    font-size: .7rem !important;
+  }
+}
+
+@media (max-width: 350px) {
+  .result-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-reveal,
+  .student-name-panel .status-badge,
+  .student-name-panel .official-status-stamp {
+    animation: none !important;
+  }
+}
