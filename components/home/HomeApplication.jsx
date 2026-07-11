@@ -39,6 +39,7 @@ const TABLE_BY_SOURCE = {
 };
 
 const ANALYTICS_VIEW_LIMIT = 20;
+const BAC_TRACK_PRIORITY = ["SN", "M", "LO", "LM"];
 const ANALYTICS_VIEW_NAMES = {
   bac: { stats: "bac_stats", regionStats: "bac_region_stats", schoolStats: "bac_school_stats", trackStats: "bac_track_stats", topStudents: "bac_top_students" },
   brevet: { stats: "brevet_stats", regionStats: "brevet_region_stats", schoolStats: "brevet_school_stats", topStudents: "brevet_top_students" },
@@ -1201,6 +1202,20 @@ function summarizeStudents(students, field) {
     .slice(0, ANALYTICS_VIEW_LIMIT);
 }
 
+function sortBacTrackStats(rows = []) {
+  const priorityIndex = (label) => {
+    const normalized = cleanText(label).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const index = BAC_TRACK_PRIORITY.indexOf(normalized);
+    return index === -1 ? BAC_TRACK_PRIORITY.length : index;
+  };
+
+  return [...rows].sort((a, b) => {
+    const priorityDifference = priorityIndex(a.label) - priorityIndex(b.label);
+    if (priorityDifference) return priorityDifference;
+    return cleanText(a.label).localeCompare(cleanText(b.label), "fr");
+  });
+}
+
 function groupStudentsByTrack(students) {
   const groups = new Map();
   students.forEach((student) => {
@@ -1589,9 +1604,13 @@ export default function HomePage() {
   const activeStats = useMemo(() => viewStats.stats || calculateStats(searchPool), [viewStats, searchPool]);
   const activeRegionStats = useMemo(() => viewStats.regionStats || summarizeStudents(searchPool, "wl"), [viewStats, searchPool]);
   const activeTrackStats = useMemo(() => {
-    if (viewStats.trackStats?.length) return viewStats.trackStats;
-    return showTrackGroups ? summarizeStudents(searchPool, "track") : [];
-  }, [viewStats, searchPool, showTrackGroups]);
+    const rows = viewStats.trackStats?.length
+      ? viewStats.trackStats
+      : showTrackGroups
+        ? summarizeStudents(searchPool, "track")
+        : [];
+    return selectedExam?.source === "bac" ? sortBacTrackStats(rows) : rows;
+  }, [viewStats, searchPool, selectedExam?.source, showTrackGroups]);
   const activeSchoolStats = useMemo(() => viewStats.schoolStats || summarizeStudents(searchPool, "ms"), [viewStats, searchPool]);
   const activeMoughataaStats = useMemo(() => viewStats.moughataaStats || summarizeStudents(searchPool, "moughataa"), [viewStats, searchPool]);
   const selectedAnalyticsRows = activeAnalyticsMode === "track"
