@@ -3,6 +3,23 @@ import { NextResponse } from "next/server";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+const HIDDEN_DESCRIPTIONS = new Set([
+  "نتائج منشورة من لوحة الأدمن.",
+  "نتائج منشورة من لوحة الأدمن",
+  "Résultats publiés depuis l'administration.",
+  "Résultats publiés depuis l'administration",
+]);
+
+function cleanExam(exam: Record<string, unknown>) {
+  const descriptionAr = String(exam.description_ar || "").trim();
+  const descriptionFr = String(exam.description_fr || "").trim();
+  return {
+    ...exam,
+    description_ar: HIDDEN_DESCRIPTIONS.has(descriptionAr) ? "" : descriptionAr,
+    description_fr: HIDDEN_DESCRIPTIONS.has(descriptionFr) ? "" : descriptionFr,
+  };
+}
+
 async function fetchPublishedExams() {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return { rows: [], error: "Missing Supabase environment variables", status: 500 } as const;
@@ -21,6 +38,7 @@ async function fetchPublishedExams() {
       Accept: "application/json",
       Prefer: "count=none",
     },
+    cache: "no-store",
   });
 
   const text = await response.text();
@@ -41,7 +59,7 @@ async function fetchPublishedExams() {
         Prefer: "count=none",
       },
     });
-    return tableResponse.ok ? exam : null;
+    return tableResponse.ok ? cleanExam(exam) : null;
   }));
 
   return { rows: existingRows.filter(Boolean), status: 200 } as const;
