@@ -17,14 +17,22 @@ export default function Footer({ content = {}, onNavigate, text }) {
         <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-start">
           <FooterInfoPanel content={content} text={text} />
 
-          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <button className="group inline-flex items-center gap-2 rounded-full border border-mauri-green/20 bg-mauri-green/10 px-3.5 py-2 text-xs font-black text-mauri-green shadow-soft transition hover:-translate-y-0.5 hover:bg-mauri-green hover:text-white dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-200" onClick={() => setDeveloperOpen(true)} type="button">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-mauri-green shadow-sm transition group-hover:bg-white/95"><CodeIcon /></span>
-              الإعداد والتطوير
+          <div className="footer-actions">
+            <button className="footer-action-card footer-action-developer" onClick={() => setDeveloperOpen(true)} type="button">
+              <span className="footer-action-icon"><CodeIcon /></span>
+              <span className="min-w-0 text-start">
+                <strong>الإعداد والتطوير</strong>
+                <small>معلومات مطوّر المنصة</small>
+              </span>
+              <span className="footer-action-arrow" aria-hidden="true">←</span>
             </button>
-            <button className="group inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-black text-blue-700 shadow-soft transition hover:-translate-y-0.5 hover:bg-blue-600 hover:text-white dark:border-blue-300/20 dark:bg-blue-300/10 dark:text-blue-200" onClick={() => onNavigate?.("contact")} type="button">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-blue-600 shadow-sm transition group-hover:bg-white/95"><MessageIcon /></span>
-              اتصل بنا
+            <button className="footer-action-card footer-action-contact" onClick={() => onNavigate?.("contact")} type="button">
+              <span className="footer-action-icon"><MessageIcon /></span>
+              <span className="min-w-0 text-start">
+                <strong>اتصل بنا</strong>
+                <small>المساعدة والملاحظات</small>
+              </span>
+              <span className="footer-action-arrow" aria-hidden="true">←</span>
             </button>
           </div>
         </div>
