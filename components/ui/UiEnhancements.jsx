@@ -20,7 +20,7 @@ function replaceBrevetLabel(root = document.body) {
 }
 
 function markAndHideRepeatedPageTitles() {
-  document.querySelectorAll("section.app-shell > .page-hero").forEach((hero) => {
+  document.querySelectorAll("section.app-shell > .page-hero:not(.redundant-section-title)").forEach((hero) => {
     const page = hero.parentElement;
     const title = hero.querySelector("h1")?.textContent?.trim() || "";
     if (page) page.dataset.sectionTitle = title;
@@ -122,12 +122,13 @@ function enhanceBacToppers() {
 
 export default function UiEnhancements() {
   useEffect(() => {
-    let scheduled = false;
+    let frame = 0;
+    let timer = 0;
+
     const apply = () => {
-      if (scheduled) return;
-      scheduled = true;
-      requestAnimationFrame(() => {
-        scheduled = false;
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+      frame = requestAnimationFrame(() => {
         replaceBrevetLabel();
         markAndHideRepeatedPageTitles();
         enhanceContactPage();
@@ -135,10 +136,23 @@ export default function UiEnhancements() {
       });
     };
 
-    apply();
-    const observer = new MutationObserver(apply);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
+    const applyAfterNavigation = () => {
+      apply();
+      timer = window.setTimeout(apply, 120);
+    };
+
+    applyAfterNavigation();
+    window.addEventListener("hashchange", applyAfterNavigation, { passive: true });
+    window.addEventListener("popstate", applyAfterNavigation, { passive: true });
+    document.addEventListener("click", applyAfterNavigation, { passive: true, capture: true });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+      window.removeEventListener("hashchange", applyAfterNavigation);
+      window.removeEventListener("popstate", applyAfterNavigation);
+      document.removeEventListener("click", applyAfterNavigation, true);
+    };
   }, []);
 
   return null;
