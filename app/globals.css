@@ -21,6 +21,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-bottom: 6rem;
 }
 
 body {
@@ -205,8 +206,10 @@ svg {
     @apply h-14 w-full rounded-[18px] border border-mauri-border bg-white px-4 pr-12 text-base font-extrabold text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green/50 focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-[#172b22] dark:text-white;
   }
 
+  .search-input:disabled { @apply cursor-not-allowed bg-slate-100 text-slate-400 opacity-70 dark:bg-white/[.05] dark:text-slate-500; }
+
   .exam-card {
-    @apply relative grid min-h-48 content-start gap-3 overflow-hidden rounded-[28px] border border-white/70 bg-white/[.85] p-4 text-start shadow-soft backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-mauri-green/30 hover:shadow-premium active:scale-[.98] dark:border-white/10 dark:bg-[#10231a]/75 sm:p-5;
+    @apply relative grid min-h-36 content-start gap-2 overflow-hidden rounded-[22px] border border-white/70 bg-white/[.85] p-3 text-start shadow-soft backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-mauri-green/30 hover:shadow-premium active:scale-[.98] dark:border-white/10 dark:bg-[#10231a]/75 sm:min-h-48 sm:gap-3 sm:rounded-[28px] sm:p-5;
     animation: slideUp 520ms cubic-bezier(.2, .8, .2, 1) both;
   }
   .exam-card:hover .exam-card-icon { transform: scale(1.08) rotate(-3deg); }
@@ -221,7 +224,7 @@ svg {
   .exam-card-rose::before, .exam-card-rose .exam-card-icon { @apply bg-rose-500/[.10] text-rose-700 dark:text-rose-300; }
   .exam-card.is-selected { @apply border-mauri-green/40 bg-emerald-50/80 shadow-premium dark:border-emerald-300/25 dark:bg-emerald-300/[.10]; }
   .exam-card.is-locked { @apply cursor-not-allowed opacity-75 hover:translate-y-0 hover:shadow-soft; }
-  .exam-card-icon { @apply h-14 w-14 rounded-[20px] transition-transform duration-300 dark:bg-white/[.10]; }
+  .exam-card-icon { @apply h-10 w-10 rounded-[14px] transition-transform duration-300 dark:bg-white/[.10] sm:h-14 sm:w-14 sm:rounded-[20px]; }
   .soon-badge { @apply absolute left-3 top-3 rounded-full border border-mauri-gold/35 bg-mauri-gold/[.15] px-2.5 py-1 text-[11px] font-black text-yellow-700 shadow-soft dark:text-yellow-200; }
 
   .select-content { @apply z-[80] max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[18px] border border-mauri-border bg-white/[.95] p-1 shadow-premium backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/95; }
@@ -347,6 +350,27 @@ svg {
   .status-badge.absent, .status-badge.unknown { @apply border-slate-400/30 bg-slate-400/10 text-slate-600 dark:text-slate-300; }
   .confetti-layer { @apply pointer-events-none absolute inset-0 overflow-hidden; }
   .confetti-layer span { --x: calc((var(--i) * 37) % 100); @apply absolute top-0 h-2 w-1 rounded-full; left: calc(var(--x) * 1%); background: hsl(calc(var(--i) * 38), 80%, 55%); animation: confettiFall 1.8s ease-out both; animation-delay: calc(var(--i) * 55ms); }
+}
+
+@media (max-width: 767px) {
+  .mobile-sticky-search {
+    position: sticky;
+    bottom: calc(5.2rem + env(safe-area-inset-bottom));
+    z-index: 35;
+    width: 100%;
+    box-shadow: 0 18px 42px rgba(21, 128, 61, .28);
+  }
+
+  .mobile-compact-hero + #years {
+    scroll-margin-top: 4.5rem;
+  }
+
+  button,
+  a,
+  input,
+  [role="combobox"] {
+    touch-action: manipulation;
+  }
 }
 
 .overflow-wrap-anywhere { overflow-wrap: anywhere; }
