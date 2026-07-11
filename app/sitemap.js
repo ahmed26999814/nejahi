@@ -11,6 +11,12 @@ export default function sitemap() {
       priority: 1,
     },
     {
+      url: `${siteUrl}/calculator`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
       url: `${siteUrl}/results/bac-mauritanie`,
       lastModified,
       changeFrequency: "daily",
