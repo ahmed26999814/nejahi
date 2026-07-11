@@ -24,8 +24,8 @@ function PremiumSiteBanner({ asset }) {
   if (!asset?.is_active || !asset?.image_url) return null;
 
   return (
-    <figure className="overflow-hidden rounded-[30px] border border-white/70 bg-white/[.78] shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75">
-      <img className="h-full max-h-[320px] w-full object-cover" src={asset.image_url} alt="" loading="lazy" />
+    <figure className="overflow-hidden rounded-[24px] border border-white/70 bg-white/[.78] shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75 md:rounded-[30px]">
+      <img className="h-full max-h-[320px] w-full object-cover" src={asset.image_url} alt="" loading="lazy" decoding="async" fetchPriority="low" sizes="(max-width: 768px) 96vw, 1040px" />
     </figure>
   );
 }
@@ -76,7 +76,7 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }) {
   const cards = useMemo(() => mergeYearCards(yearCards), [yearCards]);
 
   return (
-    <section className="grid gap-3 md:grid-cols-2">
+    <section className="grid grid-cols-2 gap-2.5 md:gap-3">
       {cards.map((year, index) => {
         const yearId = normalizeHomeYearId(year);
         const rawTitle = year.title?.[lang] || year.title?.ar || `نتائج المسابقات ${yearId}`;
@@ -102,17 +102,17 @@ function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }) {
                 onSelectYear(payload);
               }
             }}
-            className={`group relative block min-h-[150px] overflow-hidden rounded-[30px] border bg-gradient-to-br p-5 text-start shadow-premium transition duration-300 active:scale-[.99] hover:-translate-y-1 ${tone} ${available ? "" : "pointer-events-none opacity-80"}`}
+            className={`group relative block min-h-[132px] overflow-hidden rounded-[22px] border bg-gradient-to-br p-3 text-start shadow-premium transition duration-300 active:scale-[.98] hover:-translate-y-1 md:min-h-[170px] md:rounded-[30px] md:p-5 ${tone} ${available ? "" : "pointer-events-none opacity-80"}`}
           >
             <span className="absolute -left-12 -top-12 h-28 w-28 rounded-full bg-white/10 transition duration-500 group-hover:scale-150" />
             <span className="absolute bottom-3 left-3 h-14 w-14 rounded-full border border-white/10" />
             <span className="relative z-10 grid h-full grid-cols-[1fr_auto] items-start gap-3">
               <span className="min-w-0">
-                <span className="mb-3 grid h-11 w-11 place-items-center rounded-2xl bg-white/15 text-xl shadow-soft ring-1 ring-white/10">{available ? "🎓" : "⏳"}</span>
-                <strong className="block text-2xl font-black leading-tight text-white md:text-3xl">{title}</strong>
-                <small className="mt-2 block text-xs font-bold leading-5 text-white/75">{description}</small>
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-xl bg-white/15 text-lg shadow-soft ring-1 ring-white/10 md:mb-3 md:h-11 md:w-11 md:rounded-2xl md:text-xl">{available ? "🎓" : "⏳"}</span>
+                <strong className="block text-sm font-black leading-tight text-white sm:text-xl md:text-3xl">{title}</strong>
+                <small className="mt-1.5 line-clamp-2 block text-[10px] font-bold leading-4 text-white/75 md:mt-2 md:text-xs md:leading-5">{description}</small>
               </span>
-              <span className={`rounded-full px-3 py-1 text-[11px] font-black shadow-sm ${available ? "bg-white text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{available ? "فتح" : "قريبًا"}</span>
+              <span className={`rounded-full px-2 py-1 text-[9px] font-black shadow-sm md:px-3 md:text-[11px] ${available ? "bg-white text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{available ? "فتح" : "قريبًا"}</span>
             </span>
           </a>
         );
@@ -125,7 +125,7 @@ export default function PremiumHomeView({ content = {}, homepageBanner, lang = "
   const logo = contentValue(content, "logo", "/logo.png");
 
   return (
-    <section className="app-shell grid gap-7 py-4 md:gap-10 md:py-8">
+    <section className="app-shell grid gap-5 py-3 md:gap-10 md:py-8">
       <PremiumHero eyebrow="MauriResults" title={text.heroTitle} description={text.heroDesc} logo={logo} />
       <section className="scroll-mt-24 grid gap-3" id="years">
         <header className="flex items-end justify-between gap-3">
