@@ -2162,21 +2162,9 @@ function ConcoursSearchPanel({ onSelect, text }) {
   }
 
   const busy = loading || searching;
-  const steps = [
-    { label: text.region, complete: Boolean(wilaya) },
-    { label: text.moughataa, complete: Boolean(moughataa) },
-    { label: text.center, complete: Boolean(centre) },
-    { label: text.candidateNumber, complete: Boolean(number.trim()) },
-  ];
 
   return (
     <form className="search-card animate-slide-up" onSubmit={submit}>
-      <div className="col-span-full grid gap-2 rounded-[18px] border border-mauri-green/15 bg-mauri-green/5 p-3 dark:border-emerald-300/15 dark:bg-emerald-300/5">
-        <strong className="text-xs font-black text-mauri-green dark:text-mauri-gold">{text.searchSteps}</strong>
-        <ol className="grid grid-cols-4 gap-1" aria-label={text.searchSteps}>
-          {steps.map((step, index) => <li className={`grid min-w-0 justify-items-center gap-1 text-center text-[9px] font-black ${step.complete ? "text-mauri-green dark:text-emerald-300" : "text-slate-400"}`} key={step.label}><span className={`grid h-7 w-7 place-items-center rounded-full border ${step.complete ? "border-mauri-green bg-mauri-green text-white" : "border-slate-200 bg-white dark:border-white/10 dark:bg-white/5"}`}>{step.complete ? "✓" : index + 1}</span><span className="line-clamp-1">{step.label}</span></li>)}
-        </ol>
-      </div>
       <SelectField disabled={busy} label={text.chooseWilaya} onChange={(value) => { setWilaya(value); setMoughataa(""); setCentre(""); }} options={wilayas} value={wilaya} />
       <SelectField disabled={busy || !wilaya} label={text.chooseMoughataa} onChange={(value) => { setMoughataa(value); setCentre(""); }} options={moughataas} value={moughataa} />
       <SelectField disabled={busy || !moughataa} label={text.chooseCentre} onChange={setCentre} options={centres} value={centre} />
@@ -2237,12 +2225,6 @@ function UploadedConcoursSearchPanel({ exam, onSelect, text }) {
 
   return (
     <form className="search-card animate-slide-up" onSubmit={submit}>
-      <div className="col-span-full grid gap-2 rounded-[18px] border border-mauri-green/15 bg-mauri-green/5 p-3 dark:border-emerald-300/15 dark:bg-emerald-300/5">
-        <strong className="text-xs font-black text-mauri-green dark:text-mauri-gold">{text.searchSteps}</strong>
-        <ol className="grid grid-cols-4 gap-1" aria-label={text.searchSteps}>
-          {fields.map((field, index) => <li className={`grid min-w-0 justify-items-center gap-1 text-center text-[9px] font-black ${field.value ? "text-mauri-green dark:text-emerald-300" : "text-slate-400"}`} key={field.label}><span className={`grid h-7 w-7 place-items-center rounded-full border ${field.value ? "border-mauri-green bg-mauri-green text-white" : "border-slate-200 bg-white dark:border-white/10 dark:bg-white/5"}`}>{field.value ? "✓" : index + 1}</span><span className="line-clamp-1">{field.label}</span></li>)}
-        </ol>
-      </div>
       {fields.map((field) => (
         <label className="grid gap-1" key={field.label}>
           <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{field.label}</span>
@@ -2498,7 +2480,6 @@ function CountUp({ decimals = 0, value }) {
 }
 
 function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_TEXT.ar, verificationCode }) {
-  const [showDetails, setShowDetails] = useState(false);
   const average = parseAverage(student.MOD);
   const isConcours = isConcoursStudent(student);
   const officialStatus = getStatusDisplay(getOfficialStatus(student.kr), text);
@@ -2593,8 +2574,6 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
     ].filter(Boolean));
     return !unavailableValues.has(normalized);
   });
-  const summaryDetails = visibleDetails.filter(([label]) => label !== text.rank).slice(0, 3);
-  const extraDetails = visibleDetails.filter((item) => !summaryDetails.includes(item) && item[0] !== text.rank);
 
   useEffect(() => {
     if (!isPassed) return undefined;
@@ -2612,30 +2591,27 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
           <div className="student-name-panel">
             <span className="text-[11px] font-black text-slate-500 dark:text-slate-400">{text.studentName}</span>
             <h2 className="mt-1 text-balance text-2xl font-black leading-tight text-slate-950 dark:text-white md:text-3xl">{student.name}</h2>
-            <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-              <div className="rounded-[18px] bg-mauri-green/10 px-4 py-2 dark:bg-mauri-gold/10"><span className="block text-[10px] font-black text-slate-500 dark:text-slate-300">{isConcours ? text.totalScore : text.averageLabel}</span><strong className="text-2xl font-black text-mauri-green dark:text-mauri-gold">{isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}</strong></div>
-              {student.rank ? <div className="grid min-w-20 content-center justify-items-center rounded-[18px] border border-mauri-gold/30 bg-mauri-gold/10 px-3 py-2"><span className="text-[10px] font-black text-slate-500 dark:text-slate-300">{text.rank}</span><strong className="text-xl font-black text-yellow-700 dark:text-yellow-300">#{student.rank}</strong></div> : null}
-            </div>
+            <strong className="mt-3 inline-flex rounded-[18px] bg-mauri-green/10 px-4 py-2 text-3xl font-black text-mauri-green dark:bg-mauri-gold/10 dark:text-mauri-gold">
+              {isConcours ? `${average.toFixed(2)} / 200` : average.toFixed(2)}
+            </strong>
             <DecisionStrip label={text.decision || "القرار"} status={status} />
           </div>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        {summaryDetails.map(([label, value, icon, onClick]) => (
+        {visibleDetails.map(([label, value, icon, onClick]) => (
           <InfoTile icon={icon} label={label} onClick={onClick} value={value} key={label} />
         ))}
       </div>
-      {extraDetails.length > 0 && <button className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-mauri-green/20 bg-mauri-green/5 px-4 text-xs font-black text-mauri-green transition active:scale-[.98] dark:border-emerald-300/20 dark:bg-emerald-300/5 dark:text-emerald-300" onClick={() => setShowDetails((current) => !current)} type="button" aria-expanded={showDetails}>{showDetails ? text.hideDetails : text.moreDetails}<span aria-hidden="true">{showDetails ? "↑" : "↓"}</span></button>}
-      {showDetails && <div className="mt-3 grid grid-cols-2 gap-2 animate-slide-up">{extraDetails.map(([label, value, icon, onClick]) => <InfoTile icon={icon} label={label} onClick={onClick} value={value} key={label} />)}</div>}
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-4 grid grid-cols-3 gap-2">
         <ActionButton icon={<ShareIcon />} label={text.share} onClick={() => onShare(student)} />
         <ActionButton icon={<DownloadIcon />} label="PDF" onClick={() => window.print()} variant="light" />
+        <ActionButton icon={<PrinterIcon />} label={text.print} onClick={() => window.print()} variant="light" />
       </div>
       <SiteBanner asset={resultBanner} />
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <ActionButton icon={<PrinterIcon />} label={text.print} onClick={() => window.print()} variant="light" />
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <ActionButton icon={<HashIcon />} label={text.copyLink} onClick={() => { navigator.clipboard?.writeText(resultUrl); toast.success(text.copiedShare); }} variant="light" />
         <ActionButton icon={<FaWhatsapp />} label={text.whatsapp} onClick={() => window.open(`https://wa.me/?text=${encodedText}%0A${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
         <ActionButton icon={<FaFacebookF />} label={text.facebook} onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, "_blank", "noopener,noreferrer")} variant="light" />
