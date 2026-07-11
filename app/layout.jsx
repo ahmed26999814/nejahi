@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./result-polish.css";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
