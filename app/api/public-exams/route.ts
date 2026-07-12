@@ -5,10 +5,6 @@ export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-// Keep uploaded-card descriptions visually empty without triggering the old
-// frontend fallback sentence.
-const EMPTY_PUBLIC_DESCRIPTION = "\u200B";
 const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=3600";
 
 function isAdminPlaceholder(value: unknown) {
@@ -25,15 +21,65 @@ function yearNumber(value: unknown) {
   return matched ? Number(matched) : 0;
 }
 
+function examKind(exam: Record<string, unknown>) {
+  const identity = `${exam.table_name || ""} ${exam.title_ar || ""} ${exam.title_fr || ""}`.toLowerCase();
+  if (/concours|c1as|كونكور|دخول السنة الأولى/.test(identity)) return "concours";
+  if (/bepc|brevet|بريف|أبريفه|ابريفه/.test(identity)) return "brevet";
+  if (/excellence|امتياز/.test(identity)) return "excellence";
+  if (/session|complémentaire|complementaire|تكميلية|sc/.test(identity)) return "session";
+  if (/bac|baccalaureat|baccalauréat|باكالوريا/.test(identity)) return "bac";
+  return "results";
+}
+
+function generatedDescription(exam: Record<string, unknown>, language: "ar" | "fr") {
+  const year = String(exam.year || yearNumber(exam.title_ar) || yearNumber(exam.title_fr) || "").trim();
+  const suffixAr = year ? ` لسنة ${year}` : "";
+  const suffixFr = year ? ` ${year}` : "";
+
+  const descriptions = {
+    ar: {
+      concours: `ابحث بالولاية والمقاطعة والمركز ورقم المترشح${suffixAr}.`,
+      brevet: `نتائج شهادة ختم الدروس الإعدادية الرسمية${suffixAr}.`,
+      excellence: `نتائج مسابقة الامتياز الرسمية${suffixAr}.`,
+      session: `نتائج الدورة التكميلية للباكالوريا${suffixAr}.`,
+      bac: `النتائج الرسمية للباكالوريا${suffixAr}.`,
+      results: `النتائج الرسمية المتاحة للبحث${suffixAr}.`,
+    },
+    fr: {
+      concours: `Recherche par région, département, centre et numéro${suffixFr}.`,
+      brevet: `Résultats officiels du BEPC${suffixFr}.`,
+      excellence: `Résultats officiels du concours d’excellence${suffixFr}.`,
+      session: `Résultats de la session complémentaire du Bac${suffixFr}.`,
+      bac: `Résultats officiels du baccalauréat${suffixFr}.`,
+      results: `Résultats officiels disponibles${suffixFr}.`,
+    },
+  };
+
+  return descriptions[language][examKind(exam)];
+}
+
+function generatedTone(exam: Record<string, unknown>) {
+  const kind = examKind(exam);
+  if (kind === "concours") return "gold";
+  if (kind === "brevet") return "blue";
+  if (kind === "excellence") return "teal";
+  if (kind === "session") return "amber";
+  if (kind === "bac") return "green";
+  return "purple";
+}
+
 function cleanExam(exam: Record<string, unknown>) {
   const descriptionAr = String(exam.description_ar || "").trim();
   const descriptionFr = String(exam.description_fr || "").trim();
   const uploaded = String(exam.source_key || "").startsWith("upload:");
+  const shouldGenerateAr = !descriptionAr || isAdminPlaceholder(descriptionAr) || descriptionAr === "\u200B";
+  const shouldGenerateFr = !descriptionFr || isAdminPlaceholder(descriptionFr) || descriptionFr === "\u200B";
 
   return {
     ...exam,
-    description_ar: uploaded || isAdminPlaceholder(descriptionAr) ? EMPTY_PUBLIC_DESCRIPTION : descriptionAr,
-    description_fr: uploaded || isAdminPlaceholder(descriptionFr) ? EMPTY_PUBLIC_DESCRIPTION : descriptionFr,
+    description_ar: uploaded && shouldGenerateAr ? generatedDescription(exam, "ar") : descriptionAr,
+    description_fr: uploaded && shouldGenerateFr ? generatedDescription(exam, "fr") : descriptionFr,
+    tone: String(exam.tone || "").trim() && exam.tone !== "green" ? exam.tone : generatedTone(exam),
   };
 }
 
