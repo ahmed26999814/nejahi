@@ -59,7 +59,7 @@ function CalculatorIcon() {
   );
 }
 
-function getDecision(track, average) {
+function getDecision(track, average, selected, scores) {
   if (track === "BREVET") {
     if (average >= 8.5) {
       return {
@@ -82,24 +82,45 @@ function getDecision(track, average) {
     };
   }
 
-  if (average >= 10) {
+  if (average < 8) {
     return {
-      tone: "success",
-      label: "ناجح",
-      detail: "معدلك يساوي أو يتجاوز 10 من 20.",
+      tone: "danger",
+      label: "غير ناجح",
+      detail: "معدلك أقل من 8.00 من 20.",
     };
   }
-  if (average >= 8) {
+
+  if (average <= 9) {
     return {
       tone: "warning",
       label: "دورة تكميلية",
-      detail: "معدلك بين 8.00 و9.99 من 20، لذلك أنت في الدورة التكميلية.",
+      detail: "معدلك بين 8.00 و9.00 من 20، لذلك أنت في الدورة التكميلية.",
     };
   }
+
+  const highestCoefficient = Math.max(...selected.subjects.map(([, coefficient]) => coefficient));
+  const majorSubjects = selected.subjects.filter(([, coefficient]) => coefficient === highestCoefficient);
+  const failedMajorSubjects = majorSubjects
+    .filter(([subject]) => {
+      const raw = scores[subject];
+      if (raw === "" || raw == null) return false;
+      const value = Number(raw);
+      return Number.isFinite(value) && value < 5;
+    })
+    .map(([subject]) => subject);
+
+  if (failedMajorSubjects.length) {
+    return {
+      tone: "warning",
+      label: "دورة تكميلية",
+      detail: `رغم أن معدلك أكبر من 9، حصلت على أقل من 5 في ${failedMajorSubjects.join(" و")}, وهي من المواد ذات أكبر معامل.`,
+    };
+  }
+
   return {
-    tone: "danger",
-    label: "غير ناجح",
-    detail: "معدلك أقل من 8.00 من 20.",
+    tone: "success",
+    label: "ناجح",
+    detail: "معدلك أكبر من 9 ونتيجة المادة ذات أكبر معامل لا تقل عن 5.",
   };
 }
 
@@ -135,7 +156,7 @@ export default function AverageCalculator() {
     };
   }, [scores, selected, skipSport]);
 
-  const decision = getDecision(track, calculation.average);
+  const decision = getDecision(track, calculation.average, selected, scores);
 
   function changeTrack(next) {
     setTrack(next);
