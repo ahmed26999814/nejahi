@@ -9,9 +9,9 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const VISITOR_COOKIE = "mauriresults_visitor_id";
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
-function hashVisitorId(value: string) {
+function hashValue(prefix: string, value: string) {
   const salt = process.env.ADMIN_SECRET || "mauriresults-visitors";
-  return createHash("sha256").update(`${salt}:${value}`).digest("hex");
+  return createHash("sha256").update(`${salt}:${prefix}:${value}`).digest("hex");
 }
 
 export async function POST(request: Request) {
@@ -19,13 +19,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ count: 0, error: "Missing Supabase server variables" }, { status: 500 });
   }
 
+  let body: { sessionId?: string } = {};
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+
+  const sessionId = String(body.sessionId || "").trim();
+  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) {
+    return NextResponse.json({ count: 0, error: "Invalid session identifier" }, { status: 400 });
+  }
+
   const cookieHeader = request.headers.get("cookie") || "";
   const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${VISITOR_COOKIE}=([^;]+)`));
   const existingId = match ? decodeURIComponent(match[1]) : "";
   const visitorId = /^[0-9a-f-]{36}$/i.test(existingId) ? existingId : randomUUID();
-  const visitorHash = hashVisitorId(visitorId);
+  const visitorHash = hashValue("visitor", visitorId);
+  const sessionHash = hashValue("session", `${visitorId}:${sessionId}`);
 
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_site_visitor`, {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_site_visit`, {
     method: "POST",
     cache: "no-store",
     headers: {
@@ -34,7 +47,10 @@ export async function POST(request: Request) {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({ p_visitor_hash: visitorHash }),
+    body: JSON.stringify({
+      p_visitor_hash: visitorHash,
+      p_session_hash: sessionHash,
+    }),
   });
 
   const text = await response.text();
