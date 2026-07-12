@@ -3,20 +3,24 @@ import { NextResponse } from "next/server";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const HIDDEN_DESCRIPTIONS = new Set([
-  "نتائج منشورة من لوحة الأدمن.",
-  "نتائج منشورة من لوحة الأدمن",
-  "Résultats publiés depuis l'administration.",
-  "Résultats publiés depuis l'administration",
-]);
+function isAdminPlaceholder(value: unknown) {
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return false;
+  return (
+    (text.includes("منشورة") && (text.includes("الأدمن") || text.includes("الادمن") || text.includes("admin"))) ||
+    (text.includes("publi") && text.includes("administr"))
+  );
+}
 
 function cleanExam(exam: Record<string, unknown>) {
   const descriptionAr = String(exam.description_ar || "").trim();
   const descriptionFr = String(exam.description_fr || "").trim();
+  const uploaded = String(exam.source_key || "").startsWith("upload:");
+
   return {
     ...exam,
-    description_ar: HIDDEN_DESCRIPTIONS.has(descriptionAr) ? "" : descriptionAr,
-    description_fr: HIDDEN_DESCRIPTIONS.has(descriptionFr) ? "" : descriptionFr,
+    description_ar: uploaded || isAdminPlaceholder(descriptionAr) ? "" : descriptionAr,
+    description_fr: uploaded || isAdminPlaceholder(descriptionFr) ? "" : descriptionFr,
   };
 }
 
