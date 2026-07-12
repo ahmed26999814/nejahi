@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchCandidateFilterData, findCandidateFilterTarget } from "./api";
 import {
-  EMPTY_FILTER_OPTIONS,
   EMPTY_FILTERS,
   getFilterLevels,
   resolveExamSource,
