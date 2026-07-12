@@ -8,11 +8,13 @@ import "./exam-card-polish.css";
 import "./online-counter.css";
 import "./forgot-number.css";
 import "./dashboard-reference.css";
+import "./dashboard-mobile.css";
 import UiEnhancements from "../components/ui/UiEnhancements";
 import AdminPublishedLabelCleaner from "../components/ui/AdminPublishedLabelCleaner";
 import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSelectEnhancer";
 import PublishedExamCardEnhancer from "../components/ui/PublishedExamCardEnhancer";
 import ForgotCandidateNumber from "../components/ui/ForgotCandidateNumber";
+import BacTopperTrackOrder from "../components/ui/BacTopperTrackOrder";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -131,6 +133,7 @@ export default function RootLayout({ children }) {
         <UploadedConcoursSelectEnhancer />
         <PublishedExamCardEnhancer />
         <ForgotCandidateNumber />
+        <BacTopperTrackOrder />
         {children}
         <Analytics />
       </body>
