@@ -40,9 +40,45 @@ function rankedViewName(tableName: string) {
   return tableName.replace(/_results$/, "") + "_ranked_results";
 }
 
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function validateRankedView(row: Record<string, unknown>) {
+  const rankedView = String(row.ranked_view);
+  const rankUrl = new URL(`${SUPABASE_URL}/rest/v1/${rankedView}`);
+  rankUrl.searchParams.set("select", `rank,"${String(row.score_column).replaceAll('"', '""')}"`);
+  rankUrl.searchParams.set("order", "rank.asc");
+  rankUrl.searchParams.set("limit", "1");
+
+  let lastError = "";
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
+    const rankResponse = await fetch(rankUrl, {
+      headers: {
+        apikey: SUPABASE_KEY!,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Accept: "application/json",
+        Prefer: "count=none",
+      },
+      cache: "no-store",
+    });
+
+    if (rankResponse.ok) {
+      const rankedRows = await rankResponse.json();
+      return { ok: true, rankedRows };
+    }
+
+    lastError = (await rankResponse.text()).slice(0, 600);
+    const schemaCacheDelay = rankResponse.status === 404 && /PGRST205|schema cache/i.test(lastError);
+    if (!schemaCacheDelay || attempt === 8) break;
+    await wait(attempt * 500);
+  }
+
+  return { ok: false, error: lastError };
+}
+
 async function validatePreparedExam(row: Record<string, unknown>, expectedRows: number) {
   const tableName = String(row.table_name);
-  const rankedView = String(row.ranked_view);
   const mappedColumns = [row.number_column, row.name_column, row.score_column, row.decision_column, row.track_column, row.wilaya_column, row.moughataa_column, row.school_column, row.centre_column, row.birth_place_column, row.birth_date_column]
     .map((value) => String(value || "").trim()).filter(Boolean);
   const select = [...new Set(mappedColumns)].map((column) => `"${column.replaceAll('"', '""')}"`).join(",");
@@ -55,14 +91,9 @@ async function validatePreparedExam(row: Record<string, unknown>, expectedRows: 
   const actualRows = Number(tableResponse.headers.get("content-range")?.split("/")[1]);
   if (!Number.isFinite(actualRows) || actualRows !== expectedRows) return { ok: false, error: `Row-count validation failed. Expected ${expectedRows}, found ${Number.isFinite(actualRows) ? actualRows : "unknown"}.` };
 
-  const rankUrl = new URL(`${SUPABASE_URL}/rest/v1/${rankedView}`);
-  rankUrl.searchParams.set("select", `rank,"${String(row.score_column).replaceAll('"', '""')}"`);
-  rankUrl.searchParams.set("order", "rank.asc");
-  rankUrl.searchParams.set("limit", "1");
-  const rankResponse = await fetch(rankUrl, { headers: { apikey: SUPABASE_KEY!, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" }, cache: "no-store" });
-  if (!rankResponse.ok) return { ok: false, error: `Ranked-view validation failed: ${(await rankResponse.text()).slice(0, 600)}` };
-  const rankedRows = await rankResponse.json();
-  if (expectedRows > 0 && (!rankedRows?.length || Number(rankedRows[0]?.rank) !== 1)) return { ok: false, error: "Ranked-view validation failed: the first ranked row must have rank 1." };
+  const ranked = await validateRankedView(row);
+  if (!ranked.ok) return { ok: false, error: `Ranked-view validation failed: ${ranked.error}` };
+  if (expectedRows > 0 && (!ranked.rankedRows?.length || Number(ranked.rankedRows[0]?.rank) !== 1)) return { ok: false, error: "Ranked-view validation failed: the first ranked row must have rank 1." };
   return { ok: true, actualRows };
 }
 
