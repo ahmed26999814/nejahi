@@ -1,0 +1,41 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Africa/Nouakchott
+    open-pull-requests-limit: 5
+    versioning-strategy: increase-if-necessary
+    groups:
+      next-react:
+        patterns:
+          - next
+          - react
+          - react-dom
+      frontend-libraries:
+        patterns:
+          - "@radix-ui/*"
+          - framer-motion
+          - lucide-react
+          - react-icons
+          - sonner
+          - qrcode.react
+      build-tooling:
+        patterns:
+          - typescript
+          - tailwindcss
+          - postcss
+          - autoprefixer
+    ignore:
+      - dependency-name: next
+        update-types:
+          - version-update:semver-major
+      - dependency-name: react
+        update-types:
+          - version-update:semver-major
+      - dependency-name: react-dom
+        update-types:
+          - version-update:semver-major
