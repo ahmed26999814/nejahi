@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import FastResultsUploadApplication from "./FastResultsUploadApplication";
 import PublishedResultsManager from "./PublishedResultsManager";
 import SiteControlPanel from "./SiteControlPanel";
@@ -12,7 +12,7 @@ const ACTIONS: Array<{
   title: string;
   description: string;
   badge: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }> = [
   {
     id: "publish",
