@@ -7,6 +7,7 @@ import "./exam-card-polish.css";
 import UiEnhancements from "../components/ui/UiEnhancements";
 import AdminPublishedLabelCleaner from "../components/ui/AdminPublishedLabelCleaner";
 import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSelectEnhancer";
+import PublishedExamCardEnhancer from "../components/ui/PublishedExamCardEnhancer";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -123,6 +124,7 @@ export default function RootLayout({ children }) {
         <UiEnhancements />
         <AdminPublishedLabelCleaner />
         <UploadedConcoursSelectEnhancer />
+        <PublishedExamCardEnhancer />
         {children}
       </body>
     </html>
