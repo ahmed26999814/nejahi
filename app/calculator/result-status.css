@@ -1,0 +1,31 @@
+.calculator-decision-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.2rem;
+  margin-top: .45rem;
+  padding: .4rem .9rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 950;
+}
+
+.calculator-decision-detail {
+  margin-top: .45rem;
+  font-size: .72rem;
+  font-weight: 850;
+  line-height: 1.65;
+}
+
+.calculator-result.success .calculator-decision-label {
+  background: rgba(13, 90, 55, .08);
+}
+
+.calculator-result.warning .calculator-decision-label {
+  background: rgba(128, 86, 18, .08);
+}
+
+.calculator-result.danger .calculator-decision-label {
+  background: rgba(139, 48, 48, .08);
+}
