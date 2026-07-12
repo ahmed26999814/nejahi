@@ -10,6 +10,10 @@ function clean(value: unknown) {
   return String(value || "").replace(/\u0000/g, "").trim();
 }
 
+function unwrapRpcRows(rows: unknown[]) {
+  return (Array.isArray(rows) ? rows : []).map((row: any) => row?.search_uploaded_exam_rows ?? row).filter(Boolean);
+}
+
 export async function GET(request: Request) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return NextResponse.json({ rows: [], error: "Missing Supabase environment variables" }, { status: 500 });
@@ -52,8 +56,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ rows: [], error: text.slice(0, 900) }, { status: response.status, headers: { "Cache-Control": "no-store" } });
   }
 
+  const rows = unwrapRpcRows(text ? JSON.parse(text) : []);
   return NextResponse.json(
-    { rows: text ? JSON.parse(text) : [] },
+    { rows },
     { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400" } }
   );
 }
