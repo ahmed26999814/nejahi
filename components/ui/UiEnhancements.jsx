@@ -4,6 +4,31 @@ import { useEffect } from "react";
 
 const BAC_TRACK_PRIORITY = ["SN", "M", "LO", "LM"];
 
+const CONTROL_DEFAULTS = {
+  ui_show_search: "true",
+  ui_show_toppers: "true",
+  ui_show_analytics: "true",
+  ui_show_calculator: "true",
+  ui_show_contact: "true",
+  ui_show_developer: "true",
+  ui_show_footer: "true",
+  ui_label_search: "البحث",
+  ui_label_toppers: "الأوائل",
+  ui_label_analytics: "الإحصائيات",
+  ui_label_calculator: "حاسبة المعدل",
+  ui_label_contact: "اتصل بنا",
+  ui_label_developer: "الإعداد والتطوير",
+};
+
+const CONTROL_ALIASES = {
+  search: ["البحث", "Search"],
+  toppers: ["الأوائل", "Toppers"],
+  analytics: ["الإحصائيات", "Analytics", "Statistics"],
+  calculator: ["حاسبة المعدل", "الحاسبة", "Calculator"],
+  contact: ["اتصل بنا", "Contact"],
+  developer: ["الإعداد والتطوير", "Developer", "Development"],
+};
+
 function normalizeTrack(value = "") {
   return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
@@ -120,10 +145,100 @@ function enhanceBacToppers() {
   }
 }
 
+function setElementVisible(element, visible) {
+  if (!element) return;
+  if (!visible) {
+    if (!element.dataset.siteControlDisplay) {
+      element.dataset.siteControlDisplay = element.style.display || "__empty__";
+    }
+    element.style.setProperty("display", "none", "important");
+    element.dataset.siteControlHidden = "true";
+    return;
+  }
+
+  if (element.dataset.siteControlHidden === "true") {
+    const previous = element.dataset.siteControlDisplay;
+    if (!previous || previous === "__empty__") element.style.removeProperty("display");
+    else element.style.display = previous;
+    delete element.dataset.siteControlHidden;
+    delete element.dataset.siteControlDisplay;
+  }
+}
+
+function replaceControlLabel(element, aliases, nextLabel) {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+
+  nodes.forEach((node) => {
+    const text = node.nodeValue?.trim();
+    if (!text) return;
+    if (aliases.some((alias) => text === alias)) {
+      node.nodeValue = node.nodeValue.replace(text, nextLabel);
+    }
+  });
+}
+
+function findControlledElements(key) {
+  if (key === "calculator") {
+    return [...document.querySelectorAll('a[href="/calculator"], button')]
+      .filter((element) => element.getAttribute("href") === "/calculator" || CONTROL_ALIASES.calculator.some((alias) => element.textContent?.trim() === alias));
+  }
+
+  if (key === "developer") {
+    const direct = [...document.querySelectorAll(".footer-action-developer")];
+    const fallback = [...document.querySelectorAll("button, a")]
+      .filter((element) => CONTROL_ALIASES.developer.some((alias) => element.textContent?.includes(alias)));
+    return [...new Set([...direct, ...fallback])];
+  }
+
+  if (key === "contact") {
+    const direct = [...document.querySelectorAll(".footer-action-contact")];
+    const fallback = [...document.querySelectorAll("button, a")]
+      .filter((element) => CONTROL_ALIASES.contact.some((alias) => element.textContent?.trim() === alias));
+    return [...new Set([...direct, ...fallback])];
+  }
+
+  return [...document.querySelectorAll("button, a")]
+    .filter((element) => CONTROL_ALIASES[key]?.some((alias) => element.textContent?.trim() === alias));
+}
+
+function applySiteControls(controls) {
+  const keys = ["search", "toppers", "analytics", "calculator", "contact", "developer"];
+
+  keys.forEach((key) => {
+    const visible = controls[`ui_show_${key}`] !== "false";
+    const label = controls[`ui_label_${key}`] || CONTROL_DEFAULTS[`ui_label_${key}`];
+    const aliases = [...new Set([...(CONTROL_ALIASES[key] || []), CONTROL_DEFAULTS[`ui_label_${key}`], label])];
+
+    findControlledElements(key).forEach((element) => {
+      replaceControlLabel(element, aliases, label);
+      setElementVisible(element, visible);
+    });
+  });
+
+  document.querySelectorAll("footer").forEach((footer) => {
+    setElementVisible(footer, controls.ui_show_footer !== "false");
+  });
+
+  document.documentElement.dataset.siteControlsReady = "true";
+}
+
+async function fetchSiteControls() {
+  try {
+    const response = await fetch("/api/site-controls", { cache: "no-store" });
+    const data = await response.json();
+    return { ...CONTROL_DEFAULTS, ...(data.controls || {}) };
+  } catch {
+    return { ...CONTROL_DEFAULTS };
+  }
+}
+
 export default function UiEnhancements() {
   useEffect(() => {
     let frame = 0;
     let timer = 0;
+    let controls = { ...CONTROL_DEFAULTS };
 
     const apply = () => {
       cancelAnimationFrame(frame);
@@ -133,7 +248,13 @@ export default function UiEnhancements() {
         markAndHideRepeatedPageTitles();
         enhanceContactPage();
         enhanceBacToppers();
+        applySiteControls(controls);
       });
+    };
+
+    const refreshControls = async () => {
+      controls = await fetchSiteControls();
+      apply();
     };
 
     const applyAfterNavigation = () => {
@@ -141,10 +262,11 @@ export default function UiEnhancements() {
       timer = window.setTimeout(apply, 120);
     };
 
-    applyAfterNavigation();
+    refreshControls();
     window.addEventListener("hashchange", applyAfterNavigation, { passive: true });
     window.addEventListener("popstate", applyAfterNavigation, { passive: true });
     document.addEventListener("click", applyAfterNavigation, { passive: true, capture: true });
+    window.addEventListener("mauriresults:site-controls-updated", refreshControls);
 
     return () => {
       cancelAnimationFrame(frame);
@@ -152,6 +274,7 @@ export default function UiEnhancements() {
       window.removeEventListener("hashchange", applyAfterNavigation);
       window.removeEventListener("popstate", applyAfterNavigation);
       document.removeEventListener("click", applyAfterNavigation, true);
+      window.removeEventListener("mauriresults:site-controls-updated", refreshControls);
     };
   }, []);
 
