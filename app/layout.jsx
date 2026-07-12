@@ -5,6 +5,7 @@ import "./navigation-topper-fixes.css";
 import "./footer-dark-fix.css";
 import UiEnhancements from "../components/ui/UiEnhancements";
 import AdminPublishedLabelCleaner from "../components/ui/AdminPublishedLabelCleaner";
+import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSelectEnhancer";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -120,6 +121,7 @@ export default function RootLayout({ children }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <UiEnhancements />
         <AdminPublishedLabelCleaner />
+        <UploadedConcoursSelectEnhancer />
         {children}
       </body>
     </html>
