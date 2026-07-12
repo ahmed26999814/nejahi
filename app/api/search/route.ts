@@ -67,20 +67,6 @@ const SEARCH_CONFIG: Record<string, SearchConfig> = {
   },
 };
 
-function isSafeIdentifier(value: string) {
-  return /^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(String(value || ""));
-}
-
-function quoteSelectColumn(value: unknown) {
-  const column = String(value || "").trim();
-  return column ? `"${column.replaceAll('"', '""')}"` : "";
-}
-
-function filterColumn(value: string) {
-  const column = String(value || "").trim();
-  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(column) ? column : `"${column.replaceAll('"', '""')}"`;
-}
-
 function escapePostgrestValue(value: string) {
   return value.replaceAll("\\", "\\\\").replaceAll(",", "\\,").replaceAll(")", "\\)").trim();
 }
@@ -90,7 +76,7 @@ function numberSearchValues(query: string) {
   if (!/^\d+$/.test(value)) return [escapePostgrestValue(value)];
   const numeric = String(Number(value));
   const variants = new Set<string>([value, numeric]);
-  for (let width = 4; width <= 8; width += 1) variants.add(numeric.padStart(width, "0"));
+  for (let width = 3; width <= 8; width += 1) variants.add(numeric.padStart(width, "0"));
   return [...variants].map(escapePostgrestValue);
 }
 
@@ -133,50 +119,32 @@ async function supabaseSearch(table: string, params: URLSearchParams) {
   }
 }
 
-async function fetchPublishedExam(source: string): Promise<SearchConfig | null> {
-  if (!source.startsWith("upload:") || !SUPABASE_URL || !SUPABASE_KEY) return null;
+async function searchUploaded(source: string, query: string) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return { error: "Missing Supabase environment variables", status: 500 } as const;
+  }
 
-  const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
-  url.searchParams.set("select", "table_name,ranked_view,number_column,name_column,score_column,decision_column,track_column,wilaya_column,moughataa_column,school_column,centre_column,birth_place_column,birth_date_column");
-  url.searchParams.set("source_key", `eq.${escapePostgrestValue(source)}`);
-  url.searchParams.set("is_active", "eq.true");
-  url.searchParams.set("limit", "1");
-
-  const response = await fetch(url, {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
+    method: "POST",
     cache: "no-store",
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
       Accept: "application/json",
-      Prefer: "count=none",
     },
+    body: JSON.stringify({
+      p_source_key: source,
+      p_query: query,
+      p_wilaya: null,
+      p_moughataa: null,
+      p_centre: null,
+    }),
   });
 
-  if (!response.ok) return null;
-  const rows = await response.json();
-  const exam = rows?.[0];
-  if (!exam || !isSafeIdentifier(exam.table_name)) return null;
-
-  const numberColumn = String(exam.number_column || "").trim();
-  const nameColumn = String(exam.name_column || "").trim();
-  if (!numberColumn || !nameColumn) return null;
-
-  const rankedView = String(exam.ranked_view || `${exam.table_name.replace(/_results$/, "")}_ranked_results`).trim();
-  const useRanked = isSafeIdentifier(rankedView);
-  const columns = [numberColumn, nameColumn, exam.score_column, exam.decision_column, exam.track_column, exam.wilaya_column, exam.moughataa_column, exam.school_column, exam.centre_column, exam.birth_place_column, exam.birth_date_column]
-    .map((column) => String(column || "").trim())
-    .filter(Boolean);
-  const baseSelect = [...new Set(columns)].map(quoteSelectColumn).filter(Boolean).join(",");
-
-  return {
-    table: useRanked ? rankedView : exam.table_name,
-    fallbackTable: useRanked ? exam.table_name : undefined,
-    select: useRanked ? `${baseSelect},rank` : baseSelect,
-    fallbackSelect: baseSelect,
-    numberColumns: [numberColumn],
-    nameColumns: [nameColumn],
-    order: useRanked ? "rank.asc" : undefined,
-  };
+  const text = await response.text();
+  if (!response.ok) return { error: text, status: response.status } as const;
+  return { rows: text ? JSON.parse(text) : [], status: 200 } as const;
 }
 
 function buildParams(config: SearchConfig, query: string, useFallback = false) {
@@ -188,11 +156,11 @@ function buildParams(config: SearchConfig, query: string, useFallback = false) {
 
   if (numeric) {
     const values = numberSearchValues(query);
-    const clauses = config.numberColumns.flatMap((column) => values.map((value) => `${filterColumn(column)}.eq.${value}`));
+    const clauses = config.numberColumns.flatMap((column) => values.map((value) => `${column}.eq.${value}`));
     params.set("or", `(${clauses.join(",")})`);
   } else {
     const value = escapePostgrestValue(query);
-    params.set("or", `(${config.nameColumns.map((column) => `${filterColumn(column)}.ilike.*${value}*`).join(",")})`);
+    params.set("or", `(${config.nameColumns.map((column) => `${column}.ilike.*${value}*`).join(",")})`);
   }
 
   if (config.order && !useFallback) params.set("order", config.order);
@@ -204,16 +172,26 @@ export async function GET(request: Request) {
   const source = String(searchParams.get("source") || "").trim();
   const query = String(searchParams.get("q") || "").trim();
   const numeric = isNumberSearch(query);
-  const config = SEARCH_CONFIG[source] || await fetchPublishedExam(source);
 
-  if (!config) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400 });
   if (query.length < 1) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400 });
+
+  if (source.startsWith("upload:")) {
+    const result = await searchUploaded(source, query);
+    if ("error" in result) {
+      return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
+    }
+    return NextResponse.json(
+      { rows: result.rows },
+      { headers: { "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store" } }
+    );
+  }
+
+  const config = SEARCH_CONFIG[source];
+  if (!config) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400 });
 
   let result = await supabaseSearch(config.table, buildParams(config, query));
   const shouldFallback = config.fallbackTable && ("error" in result || !(result.rows || []).length);
-  if (shouldFallback) {
-    result = await supabaseSearch(config.fallbackTable!, buildParams(config, query, true));
-  }
+  if (shouldFallback) result = await supabaseSearch(config.fallbackTable!, buildParams(config, query, true));
 
   if ("error" in result) {
     return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
