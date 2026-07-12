@@ -1,0 +1,135 @@
+.exam-card {
+  min-height: 10.8rem;
+  padding: 1rem;
+  border-width: 1px;
+  background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(244,249,246,.86));
+  box-shadow: 0 14px 30px rgba(10, 35, 22, .10);
+  isolation: isolate;
+}
+
+.exam-card::before {
+  height: .32rem !important;
+  opacity: 1;
+}
+
+.exam-card::after {
+  width: 9rem !important;
+  height: 9rem !important;
+  left: -3rem !important;
+  top: -4rem !important;
+  opacity: .72;
+  filter: blur(28px);
+}
+
+.exam-card > span:nth-child(2) {
+  display: grid;
+  align-content: start;
+  min-height: 5.1rem;
+}
+
+.exam-card strong {
+  color: #11271b !important;
+  font-size: .98rem !important;
+  line-height: 1.55 !important;
+}
+
+.exam-card small {
+  display: block !important;
+  min-height: 2.5rem;
+  margin-top: .45rem !important;
+  color: #5d6e63 !important;
+  font-size: .72rem !important;
+  line-height: 1.65 !important;
+}
+
+.exam-card-icon {
+  border: 1px solid currentColor;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.36), 0 8px 18px rgba(15,35,24,.10);
+}
+
+.exam-card-green {
+  border-color: rgba(20,128,75,.30) !important;
+  background: linear-gradient(145deg, rgba(236,253,245,.98), rgba(209,250,229,.78)) !important;
+}
+.exam-card-green::before { background: #16804b !important; }
+.exam-card-green::after { background: rgba(34,197,94,.24) !important; }
+.exam-card-green .exam-card-icon { background: #d9f8e7 !important; color: #0d6b3d !important; }
+
+.exam-card-blue {
+  border-color: rgba(37,99,235,.28) !important;
+  background: linear-gradient(145deg, rgba(239,246,255,.98), rgba(219,234,254,.80)) !important;
+}
+.exam-card-blue::before { background: #2563eb !important; }
+.exam-card-blue::after { background: rgba(59,130,246,.24) !important; }
+.exam-card-blue .exam-card-icon { background: #dbeafe !important; color: #1d4ed8 !important; }
+
+.exam-card-gold {
+  border-color: rgba(180,121,22,.34) !important;
+  background: linear-gradient(145deg, rgba(255,251,235,.98), rgba(254,243,199,.82)) !important;
+}
+.exam-card-gold::before { background: #c18418 !important; }
+.exam-card-gold::after { background: rgba(245,158,11,.27) !important; }
+.exam-card-gold .exam-card-icon { background: #fef0bd !important; color: #9a650e !important; }
+
+.exam-card-teal {
+  border-color: rgba(13,148,136,.30) !important;
+  background: linear-gradient(145deg, rgba(240,253,250,.98), rgba(204,251,241,.78)) !important;
+}
+.exam-card-teal::before { background: #0f8d82 !important; }
+.exam-card-teal::after { background: rgba(20,184,166,.25) !important; }
+.exam-card-teal .exam-card-icon { background: #ccfbf1 !important; color: #0f766e !important; }
+
+.exam-card-amber {
+  border-color: rgba(217,119,6,.32) !important;
+  background: linear-gradient(145deg, rgba(255,247,237,.98), rgba(254,215,170,.78)) !important;
+}
+.exam-card-amber::before { background: #d97706 !important; }
+.exam-card-amber::after { background: rgba(249,115,22,.24) !important; }
+.exam-card-amber .exam-card-icon { background: #ffedd5 !important; color: #c45b08 !important; }
+
+.exam-card-purple {
+  border-color: rgba(124,58,237,.28) !important;
+  background: linear-gradient(145deg, rgba(245,243,255,.98), rgba(237,233,254,.80)) !important;
+}
+.exam-card-purple::before { background: #7c3aed !important; }
+.exam-card-purple::after { background: rgba(139,92,246,.24) !important; }
+.exam-card-purple .exam-card-icon { background: #ede9fe !important; color: #6d28d9 !important; }
+
+.dark .exam-card {
+  background: linear-gradient(145deg, rgba(21,45,32,.96), rgba(9,27,18,.96)) !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,.28);
+}
+
+.dark .exam-card strong { color: #f8fcf9 !important; }
+.dark .exam-card small { color: #bcc9c1 !important; }
+.dark .exam-card-green { border-color: rgba(52,211,153,.34) !important; background: linear-gradient(145deg, rgba(15,74,48,.86), rgba(8,40,27,.95)) !important; }
+.dark .exam-card-blue { border-color: rgba(96,165,250,.34) !important; background: linear-gradient(145deg, rgba(22,58,103,.86), rgba(10,31,58,.95)) !important; }
+.dark .exam-card-gold { border-color: rgba(251,191,36,.40) !important; background: linear-gradient(145deg, rgba(85,58,16,.88), rgba(46,31,9,.96)) !important; }
+.dark .exam-card-teal { border-color: rgba(45,212,191,.34) !important; background: linear-gradient(145deg, rgba(15,74,70,.86), rgba(7,39,37,.96)) !important; }
+.dark .exam-card-amber { border-color: rgba(251,146,60,.36) !important; background: linear-gradient(145deg, rgba(91,48,15,.88), rgba(47,25,8,.96)) !important; }
+.dark .exam-card-purple { border-color: rgba(167,139,250,.34) !important; background: linear-gradient(145deg, rgba(61,39,104,.88), rgba(31,20,56,.96)) !important; }
+
+.dark .exam-card-green .exam-card-icon,
+.dark .exam-card-blue .exam-card-icon,
+.dark .exam-card-gold .exam-card-icon,
+.dark .exam-card-teal .exam-card-icon,
+.dark .exam-card-amber .exam-card-icon,
+.dark .exam-card-purple .exam-card-icon {
+  background: rgba(255,255,255,.10) !important;
+}
+
+@media (max-width: 520px) {
+  .exam-card {
+    min-height: 10rem;
+    padding: .9rem;
+  }
+
+  .exam-card strong {
+    font-size: .92rem !important;
+  }
+
+  .exam-card small {
+    min-height: 2.35rem;
+    font-size: .68rem !important;
+  }
+}
