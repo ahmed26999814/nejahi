@@ -88,30 +88,40 @@ export default function ForgotCandidateNumber() {
   useEffect(() => {
     if (!source || source.includes("concours")) return;
     let cancelled = false;
-    setValues(EMPTY);
+
     setCandidates([]);
     setMessage("");
     setOptions({ track: [], wilaya: [], centre: [], school: [] });
     setAvailable({ track: true, wilaya: true, centre: true, school: true });
 
-    const firstLevel = isBrevet(source) ? "wilaya" : "track";
-    setLoading(firstLevel);
-    requestApi({ mode: "options", source, level: firstLevel })
-      .then((data) => {
+    (async () => {
+      const nextValues = { ...EMPTY };
+      const nextOptions = { track: [], wilaya: [], centre: [], school: [] };
+      const nextAvailable = { track: true, wilaya: true, centre: true, school: true };
+
+      for (const level of levels) {
         if (cancelled) return;
-        const rows = data.options || [];
-        setOptions((current) => ({ ...current, [firstLevel]: rows }));
-        setAvailable((current) => ({ ...current, [firstLevel]: rows.length > 0 }));
-      })
-      .catch(() => {
-        if (!cancelled) setAvailable((current) => ({ ...current, [firstLevel]: false }));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading("");
-      });
+        setLoading(level);
+        try {
+          const data = await requestApi({ mode: "options", source, level, ...cleanFilters(nextValues) });
+          const rows = data.options || [];
+          nextOptions[level] = rows;
+          nextAvailable[level] = rows.length > 0;
+          if (rows.length > 0) nextValues[level] = ALL;
+        } catch {
+          nextAvailable[level] = false;
+        }
+      }
+
+      if (cancelled) return;
+      setValues(nextValues);
+      setOptions(nextOptions);
+      setAvailable(nextAvailable);
+      setLoading("");
+    })();
 
     return () => { cancelled = true; };
-  }, [source]);
+  }, [source, levels]);
 
   if (!source || source.includes("concours") || !target) return null;
 
@@ -151,9 +161,7 @@ export default function ForgotCandidateNumber() {
     const nextValues = { ...values, [level]: value };
     const index = levels.indexOf(level);
 
-    for (const later of levels.slice(index + 1)) {
-      nextValues[later] = "";
-    }
+    for (const later of levels.slice(index + 1)) nextValues[later] = "";
 
     setValues(nextValues);
     setCandidates([]);
@@ -164,14 +172,18 @@ export default function ForgotCandidateNumber() {
       return next;
     });
 
-    const nextLevel = levels[index + 1];
-    if (!nextLevel) {
-      await loadCandidates(nextValues);
-      return;
+    let currentValues = nextValues;
+    for (const nextLevel of levels.slice(index + 1)) {
+      const hasOptions = await loadLevel(nextLevel, currentValues);
+      if (!hasOptions) {
+        await loadCandidates(currentValues);
+        return;
+      }
+      currentValues = { ...currentValues, [nextLevel]: ALL };
+      setValues(currentValues);
     }
 
-    const hasNext = await loadLevel(nextLevel, nextValues);
-    if (!hasNext) await loadCandidates(nextValues);
+    if (index === levels.length - 1) await loadCandidates(currentValues);
   }
 
   const visibleLevels = levels.filter((level) => available[level]);
@@ -179,10 +191,8 @@ export default function ForgotCandidateNumber() {
   const ui = (
     <section className="candidate-filter-box" dir="rtl">
       <div className="candidate-filter-grid">
-        {visibleLevels.map((level, index) => {
+        {visibleLevels.map((level) => {
           const rows = options[level];
-          const previous = visibleLevels[index - 1];
-          const disabled = index > 0 && !values[previous];
           const allLabel = `جميع ${LABELS[level]} (${totalOf(rows)})`;
 
           return (
@@ -191,7 +201,7 @@ export default function ForgotCandidateNumber() {
               className="candidate-filter-select"
               aria-label={LABELS[level]}
               value={values[level]}
-              disabled={disabled || loading === level}
+              disabled={loading === level}
               onChange={(event) => selectLevel(level, event.target.value)}
             >
               <option value="">{loading === level ? "جاري التحميل..." : `اختر ${LABELS[level]}`}</option>
