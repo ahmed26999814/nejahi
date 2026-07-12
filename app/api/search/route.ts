@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const REQUEST_TIMEOUT_MS = 10_000;
-const NUMBER_RESULT_LIMIT = "5";
+const NUMBER_RESULT_LIMIT = "10";
 const NAME_RESULT_LIMIT = "20";
 
 type SearchConfig = {
@@ -85,10 +85,13 @@ function escapePostgrestValue(value: string) {
   return value.replaceAll("\\", "\\\\").replaceAll(",", "\\,").replaceAll(")", "\\)").trim();
 }
 
-function numberSearchValues(query: string, width = 5) {
+function numberSearchValues(query: string) {
   const value = query.trim();
   if (!/^\d+$/.test(value)) return [escapePostgrestValue(value)];
-  return [...new Set([value, value.padStart(width, "0"), String(Number(value))])].map(escapePostgrestValue);
+  const numeric = String(Number(value));
+  const variants = new Set<string>([value, numeric]);
+  for (let width = 4; width <= 8; width += 1) variants.add(numeric.padStart(width, "0"));
+  return [...variants].map(escapePostgrestValue);
 }
 
 function isNumberSearch(query: string) {
@@ -204,11 +207,12 @@ export async function GET(request: Request) {
   const config = SEARCH_CONFIG[source] || await fetchPublishedExam(source);
 
   if (!config) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400 });
-  if (query.length < 2) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400 });
+  if (query.length < 1) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400 });
 
   let result = await supabaseSearch(config.table, buildParams(config, query));
-  if ("error" in result && config.fallbackTable) {
-    result = await supabaseSearch(config.fallbackTable, buildParams(config, query, true));
+  const shouldFallback = config.fallbackTable && ("error" in result || !(result.rows || []).length);
+  if (shouldFallback) {
+    result = await supabaseSearch(config.fallbackTable!, buildParams(config, query, true));
   }
 
   if ("error" in result) {
