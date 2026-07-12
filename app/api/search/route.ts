@@ -20,51 +20,11 @@ type SearchConfig = {
 };
 
 const SEARCH_CONFIG: Record<string, SearchConfig> = {
-  bac: {
-    table: "bac_ranked_results",
-    fallbackTable: "bac_results",
-    select: "Numero,NOM,TS,MOD,KR,WL,MS,MD,rank",
-    fallbackSelect: "Numero,NOM,TS,MOD,KR,WL,MS,MD",
-    numberColumns: ["Numero"],
-    nameColumns: ["NOM"],
-    order: "rank.asc",
-  },
-  brevet: {
-    table: "brevet_ranked_results",
-    fallbackTable: "brevet_results",
-    select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS,rank",
-    fallbackSelect: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS",
-    numberColumns: ["Num_Bepc"],
-    nameColumns: ["NOM"],
-    order: "rank.asc",
-  },
-  concours: {
-    table: "concours_ranked_results",
-    fallbackTable: "concours_results_view",
-    select: 'NODOSS,"Numéro_C1AS",NOM_AR,TYPE,TOTAL,total_num,WILAYA_AR,MOUGHATAA_AR,Ecole_AR,"Centre Examen_AR","LIEU NAISS_AR",ANNEE_NAISS,Noreg,rank',
-    fallbackSelect: 'NODOSS,"Numéro_C1AS",NOM_AR,TYPE,TOTAL,total_num,WILAYA_AR,MOUGHATAA_AR,Ecole_AR,"Centre Examen_AR","LIEU NAISS_AR",ANNEE_NAISS,Noreg',
-    numberColumns: ["NODOSS", "Numéro_C1AS"],
-    nameColumns: ["NOM_AR"],
-    order: "rank.asc",
-  },
-  bac_session: {
-    table: "bac_session2_ranked_results",
-    fallbackTable: "bac_session2_results",
-    select: 'NODOSS,NOM_AR,NOM_FR,SERIE,"Moy Bac_Session",Decision,Wilaya_AR,Wilaya_FR,Etablissement_AR,Etablissement_FR,"Centre Examen_AR","Centre Examen_FR",LIEUNN_AR,LIEUN_FR,DATN,rank',
-    fallbackSelect: 'NODOSS,NOM_AR,NOM_FR,SERIE,"Moy Bac_Session",Decision,Wilaya_AR,Wilaya_FR,Etablissement_AR,Etablissement_FR,"Centre Examen_AR","Centre Examen_FR",LIEUNN_AR,LIEUN_FR,DATN',
-    numberColumns: ["NODOSS"],
-    nameColumns: ["NOM_AR", "NOM_FR"],
-    order: "rank.asc",
-  },
-  excellence_1as: {
-    table: "excellence_1as_ranked_results",
-    fallbackTable: "excellence_1as_results",
-    select: "Num_Excellence_1AS,Nom,SERIE,Mgex,Decision,Wilaya_AR,CENTRE_AR,Lieu,DATEN,Matricule,ARABE,FRANCAIS,CALCUL,rank",
-    fallbackSelect: "Num_Excellence_1AS,Nom,SERIE,Mgex,Decision,Wilaya_AR,CENTRE_AR,Lieu,DATEN,Matricule,ARABE,FRANCAIS,CALCUL",
-    numberColumns: ["Num_Excellence_1AS"],
-    nameColumns: ["Nom"],
-    order: "rank.asc",
-  },
+  bac: { table: "bac_ranked_results", fallbackTable: "bac_results", select: "Numero,NOM,TS,MOD,KR,WL,MS,MD,rank", fallbackSelect: "Numero,NOM,TS,MOD,KR,WL,MS,MD", numberColumns: ["Numero"], nameColumns: ["NOM"], order: "rank.asc" },
+  brevet: { table: "brevet_ranked_results", fallbackTable: "brevet_results", select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS,rank", fallbackSelect: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS", numberColumns: ["Num_Bepc"], nameColumns: ["NOM"], order: "rank.asc" },
+  concours: { table: "concours_ranked_results", fallbackTable: "concours_results_view", select: 'NODOSS,"Numéro_C1AS",NOM_AR,TYPE,TOTAL,total_num,WILAYA_AR,MOUGHATAA_AR,Ecole_AR,"Centre Examen_AR","LIEU NAISS_AR",ANNEE_NAISS,Noreg,rank', fallbackSelect: 'NODOSS,"Numéro_C1AS",NOM_AR,TYPE,TOTAL,total_num,WILAYA_AR,MOUGHATAA_AR,Ecole_AR,"Centre Examen_AR","LIEU NAISS_AR",ANNEE_NAISS,Noreg', numberColumns: ["NODOSS", "Numéro_C1AS"], nameColumns: ["NOM_AR"], order: "rank.asc" },
+  bac_session: { table: "bac_session2_ranked_results", fallbackTable: "bac_session2_results", select: 'NODOSS,NOM_AR,NOM_FR,SERIE,"Moy Bac_Session",Decision,Wilaya_AR,Wilaya_FR,Etablissement_AR,Etablissement_FR,"Centre Examen_AR","Centre Examen_FR",LIEUNN_AR,LIEUN_FR,DATN,rank', fallbackSelect: 'NODOSS,NOM_AR,NOM_FR,SERIE,"Moy Bac_Session",Decision,Wilaya_AR,Wilaya_FR,Etablissement_AR,Etablissement_FR,"Centre Examen_AR","Centre Examen_FR",LIEUNN_AR,LIEUN_FR,DATN', numberColumns: ["NODOSS"], nameColumns: ["NOM_AR", "NOM_FR"], order: "rank.asc" },
+  excellence_1as: { table: "excellence_1as_ranked_results", fallbackTable: "excellence_1as_results", select: "Num_Excellence_1AS,Nom,SERIE,Mgex,Decision,Wilaya_AR,CENTRE_AR,Lieu,DATEN,Matricule,ARABE,FRANCAIS,CALCUL,rank", fallbackSelect: "Num_Excellence_1AS,Nom,SERIE,Mgex,Decision,Wilaya_AR,CENTRE_AR,Lieu,DATEN,Matricule,ARABE,FRANCAIS,CALCUL", numberColumns: ["Num_Excellence_1AS"], nameColumns: ["Nom"], order: "rank.asc" },
 };
 
 function escapePostgrestValue(value: string) {
@@ -84,30 +44,18 @@ function isNumberSearch(query: string) {
   return /^\d+$/.test(query.trim());
 }
 
+function unwrapRpcRows(rows: unknown[]) {
+  return (Array.isArray(rows) ? rows : []).map((row: any) => row?.search_uploaded_exam_rows ?? row).filter(Boolean);
+}
+
 async function supabaseSearch(table: string, params: URLSearchParams) {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return { error: "Missing Supabase environment variables", status: 500 } as const;
-  }
-
+  if (!SUPABASE_URL || !SUPABASE_KEY) return { error: "Missing Supabase environment variables", status: 500 } as const;
   const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
-  params.forEach((value, key) => {
-    if (value) url.searchParams.set(key, value);
-  });
-
+  params.forEach((value, key) => { if (value) url.searchParams.set(key, value); });
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      cache: "no-store",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        Accept: "application/json",
-        Prefer: "count=none",
-      },
-    });
-
+    const response = await fetch(url, { signal: controller.signal, cache: "no-store", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" } });
     const text = await response.text();
     if (!response.ok) return { error: text, status: response.status } as const;
     return { rows: text ? JSON.parse(text) : [], status: 200 } as const;
@@ -120,40 +68,21 @@ async function supabaseSearch(table: string, params: URLSearchParams) {
 }
 
 async function searchUploaded(source: string, query: string) {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return { error: "Missing Supabase environment variables", status: 500 } as const;
-  }
-
+  if (!SUPABASE_URL || !SUPABASE_KEY) return { error: "Missing Supabase environment variables", status: 500 } as const;
   const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
     method: "POST",
     cache: "no-store",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      p_source_key: source,
-      p_query: query,
-      p_wilaya: null,
-      p_moughataa: null,
-      p_centre: null,
-    }),
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ p_source_key: source, p_query: query, p_wilaya: null, p_moughataa: null, p_centre: null }),
   });
-
   const text = await response.text();
   if (!response.ok) return { error: text, status: response.status } as const;
-  return { rows: text ? JSON.parse(text) : [], status: 200 } as const;
+  return { rows: unwrapRpcRows(text ? JSON.parse(text) : []), status: 200 } as const;
 }
 
 function buildParams(config: SearchConfig, query: string, useFallback = false) {
   const numeric = isNumberSearch(query);
-  const params = new URLSearchParams({
-    select: useFallback ? (config.fallbackSelect || config.select) : config.select,
-    limit: numeric ? NUMBER_RESULT_LIMIT : NAME_RESULT_LIMIT,
-  });
-
+  const params = new URLSearchParams({ select: useFallback ? (config.fallbackSelect || config.select) : config.select, limit: numeric ? NUMBER_RESULT_LIMIT : NAME_RESULT_LIMIT });
   if (numeric) {
     const values = numberSearchValues(query);
     const clauses = config.numberColumns.flatMap((column) => values.map((value) => `${column}.eq.${value}`));
@@ -162,7 +91,6 @@ function buildParams(config: SearchConfig, query: string, useFallback = false) {
     const value = escapePostgrestValue(query);
     params.set("or", `(${config.nameColumns.map((column) => `${column}.ilike.*${value}*`).join(",")})`);
   }
-
   if (config.order && !useFallback) params.set("order", config.order);
   return params;
 }
@@ -172,33 +100,19 @@ export async function GET(request: Request) {
   const source = String(searchParams.get("source") || "").trim();
   const query = String(searchParams.get("q") || "").trim();
   const numeric = isNumberSearch(query);
-
   if (query.length < 1) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400 });
 
   if (source.startsWith("upload:")) {
     const result = await searchUploaded(source, query);
-    if ("error" in result) {
-      return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
-    }
-    return NextResponse.json(
-      { rows: result.rows },
-      { headers: { "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store" } }
-    );
+    if ("error" in result) return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ rows: result.rows }, { headers: { "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store" } });
   }
 
   const config = SEARCH_CONFIG[source];
   if (!config) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400 });
-
   let result = await supabaseSearch(config.table, buildParams(config, query));
   const shouldFallback = config.fallbackTable && ("error" in result || !(result.rows || []).length);
   if (shouldFallback) result = await supabaseSearch(config.fallbackTable!, buildParams(config, query, true));
-
-  if ("error" in result) {
-    return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
-  }
-
-  return NextResponse.json(
-    { rows: result.rows },
-    { headers: { "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store" } }
-  );
+  if ("error" in result) return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ rows: result.rows }, { headers: { "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store" } });
 }
