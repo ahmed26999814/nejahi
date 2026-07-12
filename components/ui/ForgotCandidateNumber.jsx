@@ -23,10 +23,8 @@ function resolveSource() {
   const stored = localStorage.getItem("mauriresults-selected-exam") || "";
   const fromStored = sourceFromValue(stored);
   if (fromStored) return fromStored;
-
   const fromHash = sourceFromValue(window.location.hash);
   if (fromHash) return fromHash;
-
   const pageText = document.body?.textContent || "";
   if (/الدورة التكميلية|session complémentaire/i.test(pageText)) return "bac_session";
   if (/نتائج أبريفه|نتائج ابريفه|BEPC|Brevet/i.test(pageText)) return "brevet";
@@ -46,9 +44,7 @@ function findTarget() {
 }
 
 async function requestApi(params) {
-  const response = await fetch(`/api/forgot-number?${new URLSearchParams(params)}`, {
-    cache: "force-cache",
-  });
+  const response = await fetch(`/api/forgot-number?${new URLSearchParams(params)}`, { cache: "force-cache" });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Request failed");
   return data;
@@ -60,7 +56,6 @@ function openCandidate(number) {
   );
   const input = form?.querySelector("input");
   if (!form || !input) return;
-
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, number);
   input.dispatchEvent(new Event("input", { bubbles: true }));
   input.dispatchEvent(new Event("change", { bubbles: true }));
@@ -70,6 +65,16 @@ function openCandidate(number) {
 
 function totalOf(options) {
   return options.reduce((sum, item) => sum + Number(item.total || 0), 0);
+}
+
+function decisionLabel(value) {
+  const text = String(value || "");
+  return /sessionnaire|تكميلية|تكميلي/i.test(text) ? "دورة تكميلية" : "ناجح";
+}
+
+function formatScore(value) {
+  const score = Number(value);
+  return Number.isFinite(score) ? score.toFixed(2) : "—";
 }
 
 export default function ForgotCandidateNumber() {
@@ -92,14 +97,12 @@ export default function ForgotCandidateNumber() {
       setSource(resolveSource());
       setTarget(findTarget());
     };
-
     refresh();
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("hashchange", refresh);
     window.addEventListener("popstate", refresh);
     document.addEventListener("click", refresh, true);
-
     return () => {
       observer.disconnect();
       window.removeEventListener("hashchange", refresh);
@@ -112,18 +115,15 @@ export default function ForgotCandidateNumber() {
     if (!source || source.includes("concours")) return;
     let cancelled = false;
     const firstLevel = levels[0];
-
     setValues(EMPTY);
     setOptions(EMPTY_OPTIONS);
     setVisibleCount(1);
     setCandidates([]);
     setMessage("");
     setLoading(firstLevel);
-
     requestApi({ mode: "options", source, level: firstLevel })
       .then((data) => {
-        if (cancelled) return;
-        setOptions((current) => ({ ...current, [firstLevel]: data.options || [] }));
+        if (!cancelled) setOptions((current) => ({ ...current, [firstLevel]: data.options || [] }));
       })
       .catch(() => {
         if (!cancelled) setMessage("تعذر تحميل خيارات البحث.");
@@ -131,7 +131,6 @@ export default function ForgotCandidateNumber() {
       .finally(() => {
         if (!cancelled) setLoading("");
       });
-
     return () => { cancelled = true; };
   }, [source, levels]);
 
@@ -144,10 +143,10 @@ export default function ForgotCandidateNumber() {
       const data = await requestApi({ source, ...nextValues });
       const rows = data.candidates || [];
       setCandidates(rows);
-      if (!rows.length) setMessage("لا توجد أسماء مطابقة لهذه الاختيارات.");
+      if (!rows.length) setMessage("لا توجد نتائج ناجحة مطابقة لهذه الاختيارات.");
     } catch {
       setCandidates([]);
-      setMessage("تعذر تحميل قائمة المترشحين الآن.");
+      setMessage("تعذر تحميل قائمة الناجحين الآن.");
     } finally {
       setLoading("");
     }
@@ -156,7 +155,6 @@ export default function ForgotCandidateNumber() {
   async function selectLevel(level, value) {
     const index = levels.indexOf(level);
     const nextValues = { ...values, [level]: value };
-
     for (const later of levels.slice(index + 1)) nextValues[later] = "";
     setValues(nextValues);
     setCandidates([]);
@@ -166,30 +164,25 @@ export default function ForgotCandidateNumber() {
       for (const later of levels.slice(index + 1)) next[later] = [];
       return next;
     });
-
     if (!value) {
       setVisibleCount(index + 1);
       return;
     }
-
     const nextLevel = levels[index + 1];
     if (!nextLevel) {
       setVisibleCount(levels.length);
       await loadCandidates(nextValues);
       return;
     }
-
     setLoading(nextLevel);
     try {
       const data = await requestApi({ mode: "options", source, level: nextLevel, ...nextValues });
       const rows = data.options || [];
-
       if (!rows.length) {
         setVisibleCount(index + 1);
         await loadCandidates(nextValues);
         return;
       }
-
       setOptions((current) => ({ ...current, [nextLevel]: rows }));
       setVisibleCount(index + 2);
     } catch {
@@ -201,16 +194,12 @@ export default function ForgotCandidateNumber() {
   }
 
   const visibleLevels = levels.slice(0, visibleCount);
-
   const ui = (
     <section className="candidate-filter-box" dir="rtl">
       <div className={`candidate-filter-grid count-${visibleLevels.length}`}>
         {visibleLevels.map((level) => {
           const rows = options[level] || [];
-          const placeholder = rows.length
-            ? `جميع ${LABELS[level]} (${totalOf(rows)})`
-            : `اختر ${LABELS[level]}`;
-
+          const placeholder = rows.length ? `جميع ${LABELS[level]} (${totalOf(rows)})` : `اختر ${LABELS[level]}`;
           return (
             <select
               key={level}
@@ -221,30 +210,33 @@ export default function ForgotCandidateNumber() {
               onChange={(event) => selectLevel(level, event.target.value)}
             >
               <option value="">{loading === level ? "جاري التحميل..." : placeholder}</option>
-              {rows.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.value} ({item.total})
-                </option>
-              ))}
+              {rows.map((item) => <option key={item.value} value={item.value}>{item.value} ({item.total})</option>)}
             </select>
           );
         })}
       </div>
 
-      {loading === "candidates" && <p className="candidate-filter-status">جاري تحميل المترشحين...</p>}
+      {loading === "candidates" && <p className="candidate-filter-status">جاري تحميل الناجحين...</p>}
       {message && <p className="candidate-filter-status is-error">{message}</p>}
 
       {candidates.length > 0 && (
         <div className="candidate-filter-results">
-          <h3>قائمة المترشحين</h3>
-          {candidates.map((candidate) => (
+          <h3>{isBrevet(source) ? "قائمة الناجحين" : "الناجحون وأصحاب الدورة التكميلية"}</h3>
+          {candidates.map((candidate, index) => (
             <button
               type="button"
               key={`${candidate.candidate_number}-${candidate.candidate_name}`}
               onClick={() => openCandidate(candidate.candidate_number)}
             >
-              <span>{candidate.candidate_name}</span>
-              <strong>{candidate.candidate_number}</strong>
+              <span className="candidate-rank">{index + 1}</span>
+              <span className="candidate-main">
+                <b>{candidate.candidate_name}</b>
+                <small>{candidate.candidate_number}</small>
+              </span>
+              <span className={`candidate-decision ${decisionLabel(candidate.candidate_decision) === "دورة تكميلية" ? "is-session" : "is-success"}`}>
+                {decisionLabel(candidate.candidate_decision)}
+              </span>
+              <strong>{formatScore(candidate.candidate_score)}</strong>
             </button>
           ))}
         </div>
