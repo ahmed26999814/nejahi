@@ -3,6 +3,7 @@ import "./result-polish.css";
 import "./footer-contact-polish.css";
 import "./navigation-topper-fixes.css";
 import "./footer-dark-fix.css";
+import "./exam-card-polish.css";
 import UiEnhancements from "../components/ui/UiEnhancements";
 import AdminPublishedLabelCleaner from "../components/ui/AdminPublishedLabelCleaner";
 import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSelectEnhancer";
