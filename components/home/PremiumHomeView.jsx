@@ -3,6 +3,7 @@
 import PremiumHero from "../hero/Hero";
 import BackToTopButton from "../ui/BackToTopButton";
 import { contentValue } from "../common/content";
+import InstallAppCard from "./InstallAppCard";
 import PremiumSiteBanner from "./PremiumSiteBanner";
 import YearChoiceCards from "./YearChoiceCards";
 
@@ -48,6 +49,7 @@ export default function PremiumHomeView({
       </section>
 
       <PremiumSiteBanner asset={homepageBanner} />
+      <InstallAppCard />
       <BackToTopButton />
     </section>
   );
