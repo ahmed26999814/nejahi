@@ -61,67 +61,27 @@ function CalculatorIcon() {
 
 function getDecision(track, average, selected, scores) {
   if (track === "BREVET") {
-    if (average >= 8.5) {
-      return {
-        tone: "success",
-        label: "ناجح",
-        detail: "معدلك يساوي أو يتجاوز 8.50 من 20.",
-      };
-    }
-    if (average >= 7) {
-      return {
-        tone: "warning",
-        label: "متجاوز غير ناجح",
-        detail: "معدلك بين 7.00 و8.49 من 20.",
-      };
-    }
-    return {
-      tone: "danger",
-      label: "غير ناجح",
-      detail: "معدلك أقل من 7.00 من 20.",
-    };
+    if (average >= 8.5) return { tone: "success", label: "ناجح" };
+    if (average >= 7) return { tone: "warning", label: "متجاوز ولكن غير ناجح" };
+    return { tone: "danger", label: "غير ناجح" };
   }
 
-  if (average < 8) {
-    return {
-      tone: "danger",
-      label: "غير ناجح",
-      detail: "معدلك أقل من 8.00 من 20.",
-    };
-  }
-
-  if (average <= 9) {
-    return {
-      tone: "warning",
-      label: "دورة تكميلية",
-      detail: "معدلك بين 8.00 و9.00 من 20، لذلك أنت في الدورة التكميلية.",
-    };
-  }
+  if (average < 8) return { tone: "danger", label: "غير ناجح" };
+  if (average <= 9) return { tone: "warning", label: "دورة تكميلية" };
 
   const highestCoefficient = Math.max(...selected.subjects.map(([, coefficient]) => coefficient));
-  const majorSubjects = selected.subjects.filter(([, coefficient]) => coefficient === highestCoefficient);
-  const failedMajorSubjects = majorSubjects
-    .filter(([subject]) => {
+  const hasLowMajorSubject = selected.subjects
+    .filter(([, coefficient]) => coefficient === highestCoefficient)
+    .some(([subject]) => {
       const raw = scores[subject];
       if (raw === "" || raw == null) return false;
       const value = Number(raw);
       return Number.isFinite(value) && value < 5;
-    })
-    .map(([subject]) => subject);
+    });
 
-  if (failedMajorSubjects.length) {
-    return {
-      tone: "warning",
-      label: "دورة تكميلية",
-      detail: `رغم أن معدلك أكبر من 9، حصلت على أقل من 5 في ${failedMajorSubjects.join(" و")}, وهي من المواد ذات أكبر معامل.`,
-    };
-  }
-
-  return {
-    tone: "success",
-    label: "ناجح",
-    detail: "معدلك أكبر من 9 ونتيجة المادة ذات أكبر معامل لا تقل عن 5.",
-  };
+  return hasLowMajorSubject
+    ? { tone: "warning", label: "دورة تكميلية" }
+    : { tone: "success", label: "ناجح" };
 }
 
 export default function AverageCalculator() {
@@ -257,14 +217,9 @@ export default function AverageCalculator() {
 
           {showResult && (
             <section className={`calculator-result ${decision.tone}`} aria-live="polite">
-              <span>معدلك المحسوب</span>
+              <span>المعدل</span>
               <strong>{calculation.average.toFixed(2)}</strong>
               <div className="calculator-decision-label">{decision.label}</div>
-              <p className="calculator-decision-detail">{decision.detail}</p>
-              <small>
-                تم الحساب من {calculation.filled} مادة بمعامل إجمالي {calculation.coefficientTotal}.
-                {calculation.filled < calculation.expected ? " المواد الفارغة لم تدخل في الحساب." : ""}
-              </small>
             </section>
           )}
         </section>
