@@ -9,6 +9,7 @@ type ControlKey =
   | "calculator"
   | "contact"
   | "developer"
+  | "visitors"
   | "footer";
 
 type ControlState = {
@@ -23,6 +24,7 @@ const DEFAULTS: Record<ControlKey, ControlState> = {
   calculator: { visible: true, label: "حاسبة المعدل" },
   contact: { visible: true, label: "اتصل بنا" },
   developer: { visible: true, label: "الإعداد والتطوير" },
+  visitors: { visible: true, label: "الزوار" },
   footer: { visible: true, label: "الفوتر" },
 };
 
@@ -33,6 +35,7 @@ const ITEMS: Array<{ key: ControlKey; title: string; description: string; editab
   { key: "calculator", title: "حاسبة المعدل", description: "إظهار أو إخفاء رابط الحاسبة.", editable: true },
   { key: "contact", title: "اتصل بنا", description: "التحكم في زر وصفحة التواصل.", editable: true },
   { key: "developer", title: "الإعداد والتطوير", description: "التحكم في بطاقة معلومات المطور.", editable: true },
+  { key: "visitors", title: "عداد الزوار", description: "إظهار أو إخفاء عدد الزوار الحقيقي في أسفل الموقع.", editable: false },
   { key: "footer", title: "أسفل الموقع", description: "إخفاء الفوتر كاملًا عند الحاجة.", editable: false },
 ];
 
