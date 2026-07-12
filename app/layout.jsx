@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import "./result-polish.css";
 import "./footer-contact-polish.css";
@@ -130,6 +131,7 @@ export default function RootLayout({ children }) {
         <PublishedExamCardEnhancer />
         <ForgotCandidateNumber />
         {children}
+        <Analytics />
       </body>
     </html>
   );
