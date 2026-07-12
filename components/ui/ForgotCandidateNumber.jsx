@@ -3,14 +3,35 @@
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 
-const ALL = "__all__";
 const EMPTY = { track: "", wilaya: "", centre: "", school: "" };
+const EMPTY_OPTIONS = { track: [], wilaya: [], centre: [], school: [] };
 const LABELS = { track: "الشعب", wilaya: "الولايات", centre: "المراكز", school: "المدارس" };
 
-function resolveSource() {
-  const id = localStorage.getItem("mauriresults-selected-exam") || "";
+function sourceFromValue(value) {
+  const id = String(value || "").replace(/^#/, "").trim().toLowerCase();
+  if (!id) return "";
   if (id.startsWith("upload-")) return `upload:${id.slice(7)}`;
-  return ["bac", "brevet", "bac_session"].includes(id) ? id : "";
+  if (id.startsWith("upload:")) return id;
+  if (/concours|c1as|كونكور/.test(id)) return "";
+  if (/bac.*(?:session|sc|supp|compl)|(?:session|sc|supp|compl).*bac|تكمي/.test(id)) return "bac_session";
+  if (/brevet|bepc|ابريف|أبريف|بريف/.test(id)) return "brevet";
+  if (/(^|[-_])bac($|[-_0-9])|baccalaur/.test(id)) return "bac";
+  return "";
+}
+
+function resolveSource() {
+  const stored = localStorage.getItem("mauriresults-selected-exam") || "";
+  const fromStored = sourceFromValue(stored);
+  if (fromStored) return fromStored;
+
+  const fromHash = sourceFromValue(window.location.hash);
+  if (fromHash) return fromHash;
+
+  const pageText = document.body?.textContent || "";
+  if (/الدورة التكميلية|session complémentaire/i.test(pageText)) return "bac_session";
+  if (/نتائج أبريفه|نتائج ابريفه|BEPC|Brevet/i.test(pageText)) return "brevet";
+  if (/نتائج باكالوريا|نتائج البكالوريا|Baccalauréat|Bac 20/i.test(pageText)) return "bac";
+  return "";
 }
 
 function isBrevet(source) {
@@ -24,14 +45,10 @@ function findTarget() {
   return form?.parentElement || null;
 }
 
-function cleanFilters(values) {
-  return Object.fromEntries(
-    Object.entries(values).map(([key, value]) => [key, value === ALL ? "" : value])
-  );
-}
-
 async function requestApi(params) {
-  const response = await fetch(`/api/forgot-number?${new URLSearchParams(params)}`, { cache: "no-store" });
+  const response = await fetch(`/api/forgot-number?${new URLSearchParams(params)}`, {
+    cache: "force-cache",
+  });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Request failed");
   return data;
@@ -59,8 +76,8 @@ export default function ForgotCandidateNumber() {
   const [source, setSource] = useState("");
   const [target, setTarget] = useState(null);
   const [values, setValues] = useState(EMPTY);
-  const [options, setOptions] = useState({ track: [], wilaya: [], centre: [], school: [] });
-  const [available, setAvailable] = useState({ track: true, wilaya: true, centre: true, school: true });
+  const [options, setOptions] = useState(EMPTY_OPTIONS);
+  const [visibleCount, setVisibleCount] = useState(1);
   const [loading, setLoading] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [message, setMessage] = useState("");
@@ -75,12 +92,18 @@ export default function ForgotCandidateNumber() {
       setSource(resolveSource());
       setTarget(findTarget());
     };
+
     refresh();
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("hashchange", refresh);
+    window.addEventListener("popstate", refresh);
     document.addEventListener("click", refresh, true);
+
     return () => {
       observer.disconnect();
+      window.removeEventListener("hashchange", refresh);
+      window.removeEventListener("popstate", refresh);
       document.removeEventListener("click", refresh, true);
     };
   }, []);
@@ -88,64 +111,37 @@ export default function ForgotCandidateNumber() {
   useEffect(() => {
     if (!source || source.includes("concours")) return;
     let cancelled = false;
+    const firstLevel = levels[0];
 
+    setValues(EMPTY);
+    setOptions(EMPTY_OPTIONS);
+    setVisibleCount(1);
     setCandidates([]);
     setMessage("");
-    setOptions({ track: [], wilaya: [], centre: [], school: [] });
-    setAvailable({ track: true, wilaya: true, centre: true, school: true });
+    setLoading(firstLevel);
 
-    (async () => {
-      const nextValues = { ...EMPTY };
-      const nextOptions = { track: [], wilaya: [], centre: [], school: [] };
-      const nextAvailable = { track: true, wilaya: true, centre: true, school: true };
-
-      for (const level of levels) {
+    requestApi({ mode: "options", source, level: firstLevel })
+      .then((data) => {
         if (cancelled) return;
-        setLoading(level);
-        try {
-          const data = await requestApi({ mode: "options", source, level, ...cleanFilters(nextValues) });
-          const rows = data.options || [];
-          nextOptions[level] = rows;
-          nextAvailable[level] = rows.length > 0;
-          if (rows.length > 0) nextValues[level] = ALL;
-        } catch {
-          nextAvailable[level] = false;
-        }
-      }
-
-      if (cancelled) return;
-      setValues(nextValues);
-      setOptions(nextOptions);
-      setAvailable(nextAvailable);
-      setLoading("");
-    })();
+        setOptions((current) => ({ ...current, [firstLevel]: data.options || [] }));
+      })
+      .catch(() => {
+        if (!cancelled) setMessage("تعذر تحميل خيارات البحث.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading("");
+      });
 
     return () => { cancelled = true; };
   }, [source, levels]);
 
   if (!source || source.includes("concours") || !target) return null;
 
-  async function loadLevel(level, nextValues) {
-    setLoading(level);
-    try {
-      const data = await requestApi({ mode: "options", source, level, ...cleanFilters(nextValues) });
-      const rows = data.options || [];
-      setOptions((current) => ({ ...current, [level]: rows }));
-      setAvailable((current) => ({ ...current, [level]: rows.length > 0 }));
-      return rows.length > 0;
-    } catch {
-      setAvailable((current) => ({ ...current, [level]: false }));
-      return false;
-    } finally {
-      setLoading("");
-    }
-  }
-
   async function loadCandidates(nextValues) {
     setLoading("candidates");
     setMessage("");
     try {
-      const data = await requestApi({ source, ...cleanFilters(nextValues) });
+      const data = await requestApi({ source, ...nextValues });
       const rows = data.candidates || [];
       setCandidates(rows);
       if (!rows.length) setMessage("لا توجد أسماء مطابقة لهذه الاختيارات.");
@@ -158,11 +154,10 @@ export default function ForgotCandidateNumber() {
   }
 
   async function selectLevel(level, value) {
-    const nextValues = { ...values, [level]: value };
     const index = levels.indexOf(level);
+    const nextValues = { ...values, [level]: value };
 
     for (const later of levels.slice(index + 1)) nextValues[later] = "";
-
     setValues(nextValues);
     setCandidates([]);
     setMessage("");
@@ -172,28 +167,49 @@ export default function ForgotCandidateNumber() {
       return next;
     });
 
-    let currentValues = nextValues;
-    for (const nextLevel of levels.slice(index + 1)) {
-      const hasOptions = await loadLevel(nextLevel, currentValues);
-      if (!hasOptions) {
-        await loadCandidates(currentValues);
-        return;
-      }
-      currentValues = { ...currentValues, [nextLevel]: ALL };
-      setValues(currentValues);
+    if (!value) {
+      setVisibleCount(index + 1);
+      return;
     }
 
-    if (index === levels.length - 1) await loadCandidates(currentValues);
+    const nextLevel = levels[index + 1];
+    if (!nextLevel) {
+      setVisibleCount(levels.length);
+      await loadCandidates(nextValues);
+      return;
+    }
+
+    setLoading(nextLevel);
+    try {
+      const data = await requestApi({ mode: "options", source, level: nextLevel, ...nextValues });
+      const rows = data.options || [];
+
+      if (!rows.length) {
+        setVisibleCount(index + 1);
+        await loadCandidates(nextValues);
+        return;
+      }
+
+      setOptions((current) => ({ ...current, [nextLevel]: rows }));
+      setVisibleCount(index + 2);
+    } catch {
+      setMessage("تعذر تحميل الخيارات التالية.");
+      setVisibleCount(index + 1);
+    } finally {
+      setLoading("");
+    }
   }
 
-  const visibleLevels = levels.filter((level) => available[level]);
+  const visibleLevels = levels.slice(0, visibleCount);
 
   const ui = (
     <section className="candidate-filter-box" dir="rtl">
-      <div className="candidate-filter-grid">
+      <div className={`candidate-filter-grid count-${visibleLevels.length}`}>
         {visibleLevels.map((level) => {
-          const rows = options[level];
-          const allLabel = `جميع ${LABELS[level]} (${totalOf(rows)})`;
+          const rows = options[level] || [];
+          const placeholder = rows.length
+            ? `جميع ${LABELS[level]} (${totalOf(rows)})`
+            : `اختر ${LABELS[level]}`;
 
           return (
             <select
@@ -201,11 +217,10 @@ export default function ForgotCandidateNumber() {
               className="candidate-filter-select"
               aria-label={LABELS[level]}
               value={values[level]}
-              disabled={loading === level}
+              disabled={loading === level || !rows.length}
               onChange={(event) => selectLevel(level, event.target.value)}
             >
-              <option value="">{loading === level ? "جاري التحميل..." : `اختر ${LABELS[level]}`}</option>
-              {rows.length > 0 && <option value={ALL}>{allLabel}</option>}
+              <option value="">{loading === level ? "جاري التحميل..." : placeholder}</option>
               {rows.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.value} ({item.total})
