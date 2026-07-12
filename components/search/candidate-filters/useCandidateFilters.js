@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchCandidateFilterData, findCandidateFilterTarget } from "./api";
 import {
   EMPTY_FILTERS,
@@ -30,6 +30,7 @@ export function useCandidateFilters() {
   const [loading, setLoading] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [message, setMessage] = useState("");
+  const activeRequestRef = useRef(null);
 
   const levels = useMemo(() => getFilterLevels(source), [source]);
 
@@ -55,7 +56,9 @@ export function useCandidateFilters() {
   useEffect(() => {
     if (!source) return;
 
+    activeRequestRef.current?.abort();
     const controller = new AbortController();
+    activeRequestRef.current = controller;
     const firstLevel = levels[0];
 
     setValues(freshFilters());
@@ -70,6 +73,7 @@ export function useCandidateFilters() {
       controller.signal
     )
       .then((data) => {
+        if (controller.signal.aborted) return;
         setOptions((current) => ({
           ...current,
           [firstLevel]: data.options || [],
@@ -86,23 +90,34 @@ export function useCandidateFilters() {
   }, [source, levels]);
 
   const loadCandidates = useCallback(async (nextValues) => {
+    activeRequestRef.current?.abort();
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
+
     setLoading("candidates");
     setMessage("");
 
     try {
-      const data = await fetchCandidateFilterData({ source, ...nextValues });
+      const data = await fetchCandidateFilterData(
+        { source, ...nextValues },
+        controller.signal
+      );
+      if (controller.signal.aborted) return;
+
       const rows = data.candidates || [];
       setCandidates(rows);
       if (!rows.length) setMessage("لا توجد نتائج ناجحة مطابقة لهذه الاختيارات.");
-    } catch {
+    } catch (error) {
+      if (error.name === "AbortError") return;
       setCandidates([]);
       setMessage("تعذر تحميل قائمة الناجحين الآن.");
     } finally {
-      setLoading("");
+      if (!controller.signal.aborted) setLoading("");
     }
   }, [source]);
 
   const selectLevel = useCallback(async (level, value) => {
+    activeRequestRef.current?.abort();
     const index = levels.indexOf(level);
     const nextValues = { ...values, [level]: value };
 
@@ -119,6 +134,7 @@ export function useCandidateFilters() {
 
     if (!value) {
       setVisibleCount(index + 1);
+      setLoading("");
       return;
     }
 
@@ -129,14 +145,19 @@ export function useCandidateFilters() {
       return;
     }
 
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
     setLoading(nextLevel);
+
     try {
       const data = await fetchCandidateFilterData({
         mode: "options",
         source,
         level: nextLevel,
         ...nextValues,
-      });
+      }, controller.signal);
+
+      if (controller.signal.aborted) return;
       const rows = data.options || [];
 
       if (!rows.length) {
@@ -147,11 +168,12 @@ export function useCandidateFilters() {
 
       setOptions((current) => ({ ...current, [nextLevel]: rows }));
       setVisibleCount(index + 2);
-    } catch {
+    } catch (error) {
+      if (error.name === "AbortError") return;
       setMessage("تعذر تحميل الخيارات التالية.");
       setVisibleCount(index + 1);
     } finally {
-      setLoading("");
+      if (!controller.signal.aborted) setLoading("");
     }
   }, [levels, loadCandidates, source, values]);
 
