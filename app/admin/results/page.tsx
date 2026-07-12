@@ -1,4 +1,5 @@
 import "./admin-results.css";
+import "./site-controls.css";
 import FastResultsUploadApplication from "../../../components/admin/results/FastResultsUploadApplication";
 import SiteControlPanel from "../../../components/admin/results/SiteControlPanel";
 
