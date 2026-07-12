@@ -5,6 +5,8 @@ export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const PAGE_SIZE = 1000;
+const MAX_PAGES = 150;
 
 function clean(value: unknown) {
   return String(value || "").replace(/\u0000/g, "").trim();
@@ -44,6 +46,32 @@ function uniqueSorted(rows: Record<string, unknown>[], column: string) {
     .sort((a, b) => a.localeCompare(b, "ar"));
 }
 
+async function fetchAllOptions(tableName: string, targetColumn: string, filters: Array<[string, string]>) {
+  const rows: Record<string, unknown>[] = [];
+
+  for (let page = 0; page < MAX_PAGES; page += 1) {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/${tableName}`);
+    url.searchParams.set("select", quoteColumn(targetColumn));
+    url.searchParams.set("limit", String(PAGE_SIZE));
+    url.searchParams.set("offset", String(page * PAGE_SIZE));
+    for (const [column, value] of filters) {
+      url.searchParams.set(column, `eq.${escapeValue(value)}`);
+    }
+
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: { apikey: SUPABASE_KEY!, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" },
+    });
+    const text = await response.text();
+    if (!response.ok) throw new Error(text.slice(0, 600));
+    const batch = text ? JSON.parse(text) : [];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+  }
+
+  return rows;
+}
+
 export async function GET(request: Request) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return NextResponse.json({ options: [], error: "Missing Supabase environment variables" }, { status: 500 });
@@ -75,21 +103,17 @@ export async function GET(request: Request) {
   }
 
   const targetColumn = level === "wilaya" ? wilayaColumn : level === "moughataa" ? moughataaColumn : centreColumn;
-  const url = new URL(`${SUPABASE_URL}/rest/v1/${exam.table_name}`);
-  url.searchParams.set("select", quoteColumn(targetColumn));
-  if (level !== "wilaya") url.searchParams.set(wilayaColumn, `eq.${escapeValue(wilaya)}`);
-  if (level === "centre") url.searchParams.set(moughataaColumn, `eq.${escapeValue(moughataa)}`);
-  url.searchParams.set("limit", "5000");
+  const filters: Array<[string, string]> = [];
+  if (level !== "wilaya") filters.push([wilayaColumn, wilaya]);
+  if (level === "centre") filters.push([moughataaColumn, moughataa]);
 
-  const response = await fetch(url, {
-    cache: "no-store",
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" },
-  });
-  const text = await response.text();
-  if (!response.ok) {
-    return NextResponse.json({ options: [], error: text.slice(0, 600) }, { status: response.status, headers: { "Cache-Control": "no-store" } });
+  try {
+    const rows = await fetchAllOptions(exam.table_name, targetColumn, filters);
+    return NextResponse.json(
+      { options: uniqueSorted(rows, targetColumn) },
+      { headers: { "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400" } }
+    );
+  } catch (error) {
+    return NextResponse.json({ options: [], error: String(error) }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }
-
-  const rows = text ? JSON.parse(text) : [];
-  return NextResponse.json({ options: uniqueSorted(rows, targetColumn) }, { headers: { "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600" } });
 }
