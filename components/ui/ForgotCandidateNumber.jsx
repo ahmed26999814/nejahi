@@ -1,25 +1,231 @@
 "use client";
-import { useEffect,useState } from "react";
+
 import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
 
-const empty={track:"",wilaya:"",centre:"",school:""};
-const labels={track:"الشعبة",wilaya:"الولاية",centre:"المركز",school:"المدرسة"};
-function sourceNow(){const id=localStorage.getItem("mauriresults-selected-exam")||"";if(id.startsWith("upload-"))return`upload:${id.slice(7)}`;return["bac","brevet","bac_session"].includes(id)?id:""}
-function isBrevet(s){return s==="brevet"||/bepc|brevet/i.test(s)}
-function targetNow(){const f=[...document.querySelectorAll("form.search-card")].find(x=>[...x.querySelectorAll("input")].filter(i=>!i.hidden).length===1);return f?.parentElement||null}
-async function api(p){const r=await fetch(`/api/forgot-number?${new URLSearchParams(p)}`,{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error||"failed");return d}
-function searchNumber(n){const f=[...document.querySelectorAll("form.search-card")].find(x=>[...x.querySelectorAll("input")].filter(i=>!i.hidden).length===1);const i=f?.querySelector("input");if(!f||!i)return;Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value")?.set?.call(i,n);i.dispatchEvent(new Event("input",{bubbles:true}));i.dispatchEvent(new Event("change",{bubbles:true}));f.requestSubmit()}
+const ALL = "__all__";
+const EMPTY = { track: "", wilaya: "", centre: "", school: "" };
+const LABELS = { track: "الشعب", wilaya: "الولايات", centre: "المراكز", school: "المدارس" };
 
-export default function ForgotCandidateNumber(){
- const[source,setSource]=useState("");const[target,setTarget]=useState(null);const[open,setOpen]=useState(false);
- const[values,setValues]=useState(empty);const[opts,setOpts]=useState({track:[],wilaya:[],centre:[],school:[]});const[available,setAvailable]=useState({track:true,wilaya:true,centre:true,school:true});
- const[busy,setBusy]=useState("");const[name,setName]=useState("");const[rows,setRows]=useState([]);const[msg,setMsg]=useState("");
- useEffect(()=>{const refresh=()=>{setSource(sourceNow());setTarget(targetNow())};refresh();const o=new MutationObserver(refresh);o.observe(document.body,{childList:true,subtree:true});document.addEventListener("click",refresh,true);return()=>{o.disconnect();document.removeEventListener("click",refresh,true)}},[]);
- useEffect(()=>{if(!open||!source)return;let stop=false;(async()=>{for(const level of(isBrevet(source)?["wilaya"]:["track","wilaya"])){setBusy(level);try{const d=await api({mode:"options",source,level});if(stop)return;setOpts(o=>({...o,[level]:d.options||[]}));setAvailable(a=>({...a,[level]:(d.options||[]).length>0}))}catch{if(!stop)setAvailable(a=>({...a,[level]:false}))}}if(!stop)setBusy("")})();return()=>{stop=true}},[open,source]);
- if(!source||source.includes("concours")||!target)return null;
- async function choose(level,value){const next={...values,[level]:value};if(level==="track")Object.assign(next,{wilaya:"",centre:"",school:""});if(level==="wilaya")Object.assign(next,{centre:"",school:""});if(level==="centre")next.school="";setValues(next);setRows([]);setMsg("");const following={track:"wilaya",wilaya:"centre",centre:"school"}[level];if(!following||!value)return;setBusy(following);try{const d=await api({mode:"options",source,level:following,...next});setOpts(o=>({...o,[following]:d.options||[]}));setAvailable(a=>({...a,[following]:(d.options||[]).length>0}))}catch{setAvailable(a=>({...a,[following]:false}))}finally{setBusy("")}}
- async function find(){setBusy("find");setMsg("");try{const d=await api({source,...values,name});setRows(d.candidates||[]);if(!(d.candidates||[]).length)setMsg("لم يتم العثور على مترشحين بهذه الاختيارات.")}catch{setMsg("تعذر إتمام البحث الآن.")}finally{setBusy("")}}
- const levels=isBrevet(source)?["wilaya","centre","school"]:["track","wilaya","centre","school"];
- const ui=<section className="forgot-number-box" dir="rtl"><button type="button" className="forgot-number-toggle" onClick={()=>setOpen(v=>!v)}><span>نسيت رقم المترشح؟</span><strong>ابحث بالتصفية</strong><b>{open?"−":"+"}</b></button>{open&&<div className="forgot-number-panel"><p>اختر المعلومات التي تتذكرها، ثم اختر اسمك.</p><div className="forgot-number-grid">{levels.filter(l=>available[l]).map(level=><label key={level}><span>{labels[level]}</span><select value={values[level]} disabled={busy===level||(level==="centre"&&available.wilaya&&!values.wilaya)||(level==="school"&&available.centre&&!values.centre)} onChange={e=>choose(level,e.target.value)}><option value="">{busy===level?"جاري التحميل...":`اختر ${labels[level]}`}</option>{opts[level].map(x=><option key={x.value} value={x.value}>{x.value} ({x.total})</option>)}</select></label>)}</div><div className="forgot-number-name"><input value={name} onChange={e=>setName(e.target.value)} placeholder="اكتب جزءًا من الاسم"/><button type="button" onClick={find} disabled={busy==="find"}>{busy==="find"?"جاري البحث...":"إظهار المترشحين"}</button></div>{msg&&<p className="forgot-number-message">{msg}</p>}{!!rows.length&&<div className="forgot-number-candidates">{rows.map(r=><button type="button" key={`${r.candidate_number}-${r.candidate_name}`} onClick={()=>searchNumber(r.candidate_number)}><span>{r.candidate_name}</span><strong>{r.candidate_number}</strong></button>)}</div>}</div>}</section>;
- return createPortal(ui,target);
+function resolveSource() {
+  const id = localStorage.getItem("mauriresults-selected-exam") || "";
+  if (id.startsWith("upload-")) return `upload:${id.slice(7)}`;
+  return ["bac", "brevet", "bac_session"].includes(id) ? id : "";
+}
+
+function isBrevet(source) {
+  return source === "brevet" || /bepc|brevet/i.test(source);
+}
+
+function findTarget() {
+  const form = [...document.querySelectorAll("form.search-card")].find((item) =>
+    [...item.querySelectorAll("input")].filter((input) => !input.hidden).length === 1
+  );
+  return form?.parentElement || null;
+}
+
+function cleanFilters(values) {
+  return Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [key, value === ALL ? "" : value])
+  );
+}
+
+async function requestApi(params) {
+  const response = await fetch(`/api/forgot-number?${new URLSearchParams(params)}`, { cache: "no-store" });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+
+function openCandidate(number) {
+  const form = [...document.querySelectorAll("form.search-card")].find((item) =>
+    [...item.querySelectorAll("input")].filter((input) => !input.hidden).length === 1
+  );
+  const input = form?.querySelector("input");
+  if (!form || !input) return;
+
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, number);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+  form.requestSubmit();
+  window.scrollTo({ top: form.getBoundingClientRect().top + window.scrollY - 90, behavior: "smooth" });
+}
+
+function totalOf(options) {
+  return options.reduce((sum, item) => sum + Number(item.total || 0), 0);
+}
+
+export default function ForgotCandidateNumber() {
+  const [source, setSource] = useState("");
+  const [target, setTarget] = useState(null);
+  const [values, setValues] = useState(EMPTY);
+  const [options, setOptions] = useState({ track: [], wilaya: [], centre: [], school: [] });
+  const [available, setAvailable] = useState({ track: true, wilaya: true, centre: true, school: true });
+  const [loading, setLoading] = useState("");
+  const [candidates, setCandidates] = useState([]);
+  const [message, setMessage] = useState("");
+
+  const levels = useMemo(
+    () => (isBrevet(source) ? ["wilaya", "centre", "school"] : ["track", "wilaya", "centre", "school"]),
+    [source]
+  );
+
+  useEffect(() => {
+    const refresh = () => {
+      setSource(resolveSource());
+      setTarget(findTarget());
+    };
+    refresh();
+    const observer = new MutationObserver(refresh);
+    observer.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener("click", refresh, true);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("click", refresh, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!source || source.includes("concours")) return;
+    let cancelled = false;
+    setValues(EMPTY);
+    setCandidates([]);
+    setMessage("");
+    setOptions({ track: [], wilaya: [], centre: [], school: [] });
+    setAvailable({ track: true, wilaya: true, centre: true, school: true });
+
+    const firstLevel = isBrevet(source) ? "wilaya" : "track";
+    setLoading(firstLevel);
+    requestApi({ mode: "options", source, level: firstLevel })
+      .then((data) => {
+        if (cancelled) return;
+        const rows = data.options || [];
+        setOptions((current) => ({ ...current, [firstLevel]: rows }));
+        setAvailable((current) => ({ ...current, [firstLevel]: rows.length > 0 }));
+      })
+      .catch(() => {
+        if (!cancelled) setAvailable((current) => ({ ...current, [firstLevel]: false }));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading("");
+      });
+
+    return () => { cancelled = true; };
+  }, [source]);
+
+  if (!source || source.includes("concours") || !target) return null;
+
+  async function loadLevel(level, nextValues) {
+    setLoading(level);
+    try {
+      const data = await requestApi({ mode: "options", source, level, ...cleanFilters(nextValues) });
+      const rows = data.options || [];
+      setOptions((current) => ({ ...current, [level]: rows }));
+      setAvailable((current) => ({ ...current, [level]: rows.length > 0 }));
+      return rows.length > 0;
+    } catch {
+      setAvailable((current) => ({ ...current, [level]: false }));
+      return false;
+    } finally {
+      setLoading("");
+    }
+  }
+
+  async function loadCandidates(nextValues) {
+    setLoading("candidates");
+    setMessage("");
+    try {
+      const data = await requestApi({ source, ...cleanFilters(nextValues) });
+      const rows = data.candidates || [];
+      setCandidates(rows);
+      if (!rows.length) setMessage("لا توجد أسماء مطابقة لهذه الاختيارات.");
+    } catch {
+      setCandidates([]);
+      setMessage("تعذر تحميل قائمة المترشحين الآن.");
+    } finally {
+      setLoading("");
+    }
+  }
+
+  async function selectLevel(level, value) {
+    const nextValues = { ...values, [level]: value };
+    const index = levels.indexOf(level);
+
+    for (const later of levels.slice(index + 1)) {
+      nextValues[later] = "";
+    }
+
+    setValues(nextValues);
+    setCandidates([]);
+    setMessage("");
+    setOptions((current) => {
+      const next = { ...current };
+      for (const later of levels.slice(index + 1)) next[later] = [];
+      return next;
+    });
+
+    const nextLevel = levels[index + 1];
+    if (!nextLevel) {
+      await loadCandidates(nextValues);
+      return;
+    }
+
+    const hasNext = await loadLevel(nextLevel, nextValues);
+    if (!hasNext) await loadCandidates(nextValues);
+  }
+
+  const visibleLevels = levels.filter((level) => available[level]);
+
+  const ui = (
+    <section className="candidate-filter-box" dir="rtl">
+      <div className="candidate-filter-grid">
+        {visibleLevels.map((level, index) => {
+          const rows = options[level];
+          const previous = visibleLevels[index - 1];
+          const disabled = index > 0 && !values[previous];
+          const allLabel = `جميع ${LABELS[level]} (${totalOf(rows)})`;
+
+          return (
+            <select
+              key={level}
+              className="candidate-filter-select"
+              aria-label={LABELS[level]}
+              value={values[level]}
+              disabled={disabled || loading === level}
+              onChange={(event) => selectLevel(level, event.target.value)}
+            >
+              <option value="">{loading === level ? "جاري التحميل..." : `اختر ${LABELS[level]}`}</option>
+              {rows.length > 0 && <option value={ALL}>{allLabel}</option>}
+              {rows.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.value} ({item.total})
+                </option>
+              ))}
+            </select>
+          );
+        })}
+      </div>
+
+      {loading === "candidates" && <p className="candidate-filter-status">جاري تحميل المترشحين...</p>}
+      {message && <p className="candidate-filter-status is-error">{message}</p>}
+
+      {candidates.length > 0 && (
+        <div className="candidate-filter-results">
+          <h3>قائمة المترشحين</h3>
+          {candidates.map((candidate) => (
+            <button
+              type="button"
+              key={`${candidate.candidate_number}-${candidate.candidate_name}`}
+              onClick={() => openCandidate(candidate.candidate_number)}
+            >
+              <span>{candidate.candidate_name}</span>
+              <strong>{candidate.candidate_number}</strong>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+
+  return createPortal(ui, target);
 }
