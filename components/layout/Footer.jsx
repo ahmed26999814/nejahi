@@ -5,11 +5,13 @@ import { contentValue } from "../common/content";
 import { CodeIcon, MessageIcon } from "../common/icons";
 import DeveloperModal from "./DeveloperModal";
 import VisitorCounter from "./VisitorCounter";
+import OnlineUsersCounter from "./OnlineUsersCounter";
 
 export default function Footer({ content = {}, onNavigate, text }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
   const footerBanner = contentValue(content, "footer_banner");
   const showVisitors = contentValue(content, "ui_show_visitors", "true") !== "false";
+  const showOnline = contentValue(content, "ui_show_online", "true") !== "false";
 
   return (
     <footer id="developer" className="app-shell py-5 md:py-8">
@@ -36,7 +38,12 @@ export default function Footer({ content = {}, onNavigate, text }) {
           </button>
         </div>
 
-        {showVisitors && <VisitorCounter />}
+        {(showVisitors || showOnline) && (
+          <div className="site-live-counters">
+            {showVisitors && <VisitorCounter />}
+            {showOnline && <OnlineUsersCounter />}
+          </div>
+        )}
 
         <div className="mt-4 flex flex-col gap-1.5 border-t border-mauri-border/70 pt-3 text-xs font-bold text-slate-500 dark:border-white/10 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
           <span>{text.rights}</span>
