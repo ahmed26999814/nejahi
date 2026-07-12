@@ -10,6 +10,7 @@ type ControlKey =
   | "contact"
   | "developer"
   | "visitors"
+  | "online"
   | "footer";
 
 type ControlState = {
@@ -24,7 +25,8 @@ const DEFAULTS: Record<ControlKey, ControlState> = {
   calculator: { visible: true, label: "حاسبة المعدل" },
   contact: { visible: true, label: "اتصل بنا" },
   developer: { visible: true, label: "الإعداد والتطوير" },
-  visitors: { visible: true, label: "الزوار" },
+  visitors: { visible: true, label: "الزيارات" },
+  online: { visible: true, label: "النشطون الآن" },
   footer: { visible: true, label: "الفوتر" },
 };
 
@@ -35,7 +37,8 @@ const ITEMS: Array<{ key: ControlKey; title: string; description: string; editab
   { key: "calculator", title: "حاسبة المعدل", description: "إظهار أو إخفاء رابط الحاسبة.", editable: true },
   { key: "contact", title: "اتصل بنا", description: "التحكم في زر وصفحة التواصل.", editable: true },
   { key: "developer", title: "الإعداد والتطوير", description: "التحكم في بطاقة معلومات المطور.", editable: true },
-  { key: "visitors", title: "عداد الزوار", description: "إظهار أو إخفاء عدد الزوار الحقيقي في أسفل الموقع.", editable: false },
+  { key: "visitors", title: "عداد الزيارات", description: "إظهار أو إخفاء إجمالي الزيارات في أسفل الموقع.", editable: false },
+  { key: "online", title: "النشطون الآن", description: "إظهار أو إخفاء عدد المستخدمين الموجودين في الموقع حاليًا.", editable: false },
   { key: "footer", title: "أسفل الموقع", description: "إخفاء الفوتر كاملًا عند الحاجة.", editable: false },
 ];
 
@@ -96,14 +99,12 @@ export default function SiteControlPanel() {
     setStatus("جاري حفظ التعديلات...");
     try {
       const items = ITEMS.flatMap(({ key, title, editable }) => {
-        const values = [
-          {
-            content_key: `ui_show_${key}`,
-            title: `إظهار ${title}`,
-            value: String(controls[key].visible),
-            type: "boolean",
-          },
-        ];
+        const values = [{
+          content_key: `ui_show_${key}`,
+          title: `إظهار ${title}`,
+          value: String(controls[key].visible),
+          type: "boolean",
+        }];
         if (editable) {
           values.push({
             content_key: `ui_label_${key}`,
@@ -117,10 +118,7 @@ export default function SiteControlPanel() {
 
       const response = await fetch("/api/admin/content", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-secret": secret,
-        },
+        headers: { "Content-Type": "application/json", "x-admin-secret": secret },
         body: JSON.stringify({ items }),
       });
       const data = await response.json();
@@ -159,11 +157,7 @@ export default function SiteControlPanel() {
                 <small>{item.description}</small>
               </div>
               <label className="site-control-switch">
-                <input
-                  type="checkbox"
-                  checked={controls[item.key].visible}
-                  onChange={(event) => update(item.key, { visible: event.target.checked })}
-                />
+                <input type="checkbox" checked={controls[item.key].visible} onChange={(event) => update(item.key, { visible: event.target.checked })} />
                 <span aria-hidden="true" />
               </label>
             </div>
@@ -171,11 +165,7 @@ export default function SiteControlPanel() {
             {item.editable && (
               <label className="site-control-label-field">
                 <span>الاسم الظاهر للزوار</span>
-                <input
-                  value={controls[item.key].label}
-                  onChange={(event) => update(item.key, { label: event.target.value })}
-                  maxLength={40}
-                />
+                <input value={controls[item.key].label} onChange={(event) => update(item.key, { label: event.target.value })} maxLength={40} />
               </label>
             )}
 
