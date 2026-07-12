@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// A zero-width space prevents the old frontend fallback text from appearing
+// while keeping the description visually empty in every card and page.
+const EMPTY_PUBLIC_DESCRIPTION = "\u200B";
+
 function isAdminPlaceholder(value: unknown) {
   const text = String(value || "").trim().toLowerCase();
   if (!text) return false;
@@ -19,8 +23,8 @@ function cleanExam(exam: Record<string, unknown>) {
 
   return {
     ...exam,
-    description_ar: uploaded || isAdminPlaceholder(descriptionAr) ? "" : descriptionAr,
-    description_fr: uploaded || isAdminPlaceholder(descriptionFr) ? "" : descriptionFr,
+    description_ar: uploaded || isAdminPlaceholder(descriptionAr) ? EMPTY_PUBLIC_DESCRIPTION : descriptionAr,
+    description_fr: uploaded || isAdminPlaceholder(descriptionFr) ? EMPTY_PUBLIC_DESCRIPTION : descriptionFr,
   };
 }
 
