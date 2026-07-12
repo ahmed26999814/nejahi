@@ -4,6 +4,7 @@ import "./footer-contact-polish.css";
 import "./navigation-topper-fixes.css";
 import "./footer-dark-fix.css";
 import UiEnhancements from "../components/ui/UiEnhancements";
+import AdminPublishedLabelCleaner from "../components/ui/AdminPublishedLabelCleaner";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -118,6 +119,7 @@ export default function RootLayout({ children }) {
       <body className="font-arabic antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <UiEnhancements />
+        <AdminPublishedLabelCleaner />
         {children}
       </body>
     </html>
