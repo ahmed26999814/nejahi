@@ -59,6 +59,50 @@ function CalculatorIcon() {
   );
 }
 
+function getDecision(track, average) {
+  if (track === "BREVET") {
+    if (average >= 8.5) {
+      return {
+        tone: "success",
+        label: "ناجح",
+        detail: "معدلك يساوي أو يتجاوز 8.50 من 20.",
+      };
+    }
+    if (average >= 7) {
+      return {
+        tone: "warning",
+        label: "متجاوز غير ناجح",
+        detail: "معدلك بين 7.00 و8.49 من 20.",
+      };
+    }
+    return {
+      tone: "danger",
+      label: "غير ناجح",
+      detail: "معدلك أقل من 7.00 من 20.",
+    };
+  }
+
+  if (average >= 10) {
+    return {
+      tone: "success",
+      label: "ناجح",
+      detail: "معدلك يساوي أو يتجاوز 10 من 20.",
+    };
+  }
+  if (average >= 8) {
+    return {
+      tone: "warning",
+      label: "دورة تكميلية",
+      detail: "معدلك بين 8.00 و9.99 من 20، لذلك أنت في الدورة التكميلية.",
+    };
+  }
+  return {
+    tone: "danger",
+    label: "غير ناجح",
+    detail: "معدلك أقل من 8.00 من 20.",
+  };
+}
+
 export default function AverageCalculator() {
   const [track, setTrack] = useState("SN");
   const [scores, setScores] = useState({});
@@ -91,6 +135,8 @@ export default function AverageCalculator() {
     };
   }, [scores, selected, skipSport]);
 
+  const decision = getDecision(track, calculation.average);
+
   function changeTrack(next) {
     setTrack(next);
     setScores({});
@@ -109,8 +155,6 @@ export default function AverageCalculator() {
     setShowResult(false);
   }
 
-  const resultTone = calculation.average >= 10 ? "success" : calculation.average >= 8 ? "warning" : "danger";
-
   return (
     <main className="average-calculator-page" dir="rtl">
       <section className="average-calculator-shell">
@@ -119,7 +163,7 @@ export default function AverageCalculator() {
           <div>
             <p>MauriResults</p>
             <h1>حاسبة المعدل</h1>
-            <span>أدخل درجاتك من 20 وسنحسب المعدل حسب معاملات الشعبة.</span>
+            <span>أدخل درجاتك من 20 وسنحسب المعدل والقرار حسب معاملات الشعبة.</span>
           </div>
         </header>
 
@@ -191,9 +235,11 @@ export default function AverageCalculator() {
           </button>
 
           {showResult && (
-            <section className={`calculator-result ${resultTone}`} aria-live="polite">
+            <section className={`calculator-result ${decision.tone}`} aria-live="polite">
               <span>معدلك المحسوب</span>
               <strong>{calculation.average.toFixed(2)}</strong>
+              <div className="calculator-decision-label">{decision.label}</div>
+              <p className="calculator-decision-detail">{decision.detail}</p>
               <small>
                 تم الحساب من {calculation.filled} مادة بمعامل إجمالي {calculation.coefficientTotal}.
                 {calculation.filled < calculation.expected ? " المواد الفارغة لم تدخل في الحساب." : ""}
@@ -202,7 +248,7 @@ export default function AverageCalculator() {
           )}
         </section>
 
-        <p className="calculator-note">هذه الحاسبة مساعدة للتقدير فقط. تأكد من المعاملات المعتمدة رسميًا عند صدور أي تحديث.</p>
+        <p className="calculator-note">هذه الحاسبة مساعدة للتقدير فقط. تأكد من المعاملات والقرارات المعتمدة رسميًا عند صدور أي تحديث.</p>
         <a href="/" className="calculator-home-link">العودة إلى النتائج</a>
       </section>
     </main>
