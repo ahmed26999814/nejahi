@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import FastResultsUploadApplication from "./FastResultsUploadApplication";
 import PublishedResultsManager from "./PublishedResultsManager";
 import SiteControlPanel from "./SiteControlPanel";
@@ -53,15 +53,8 @@ const TITLES: Record<View, string> = {
 export default function AdminResultsDashboard() {
   const [view, setView] = useState<View>("home");
 
-  useEffect(() => {
-    const stored = sessionStorage.getItem("admin-results-view") as View | null;
-    if (stored && ["publish", "manage", "site"].includes(stored)) setView(stored);
-  }, []);
-
   function open(next: View) {
     setView(next);
-    if (next === "home") sessionStorage.removeItem("admin-results-view");
-    else sessionStorage.setItem("admin-results-view", next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -82,12 +75,12 @@ export default function AdminResultsDashboard() {
         {view === "home" ? (
           <section className="admin-task-home">
             <div className="admin-task-intro">
-              <span>ابدأ من هنا</span>
-              <h2>ماذا تريد أن تفعل؟</h2>
-              <p>اختر مهمة واحدة، ولن تظهر بقية الأدوات حتى تبقى الصفحة واضحة وسهلة.</p>
+              <span>اختر المهمة</span>
+              <h2>اختر إحدى البطاقات الثلاث</h2>
+              <p>لن يظهر أي قسم قبل اختيار البطاقة المناسبة.</p>
             </div>
 
-            <div className="admin-task-grid">
+            <div className="admin-task-grid admin-task-grid-three">
               {ACTIONS.map((action, index) => (
                 <button className={`admin-task-card admin-task-card-${action.id}`} onClick={() => open(action.id)} type="button" key={action.id}>
                   <span className="admin-task-number">0{index + 1}</span>
@@ -105,21 +98,13 @@ export default function AdminResultsDashboard() {
         ) : (
           <section className="admin-workspace">
             <div className="admin-workspace-bar">
-              <button type="button" onClick={() => open("home")} className="admin-workspace-back">→ كل الخيارات</button>
+              <button type="button" onClick={() => open("home")} className="admin-workspace-back">→ البطاقات الثلاث</button>
               <div>
                 <span>المهمة الحالية</span>
                 <h2>{TITLES[view]}</h2>
               </div>
               <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="admin-workspace-top">أعلى</button>
             </div>
-
-            <nav className="admin-workspace-tabs" aria-label="مهام الإدارة">
-              {ACTIONS.map((action) => (
-                <button type="button" className={view === action.id ? "is-active" : ""} onClick={() => open(action.id)} key={action.id}>
-                  {action.title}
-                </button>
-              ))}
-            </nav>
 
             <div className="admin-workspace-content">
               {view === "publish" && <FastResultsUploadApplication />}
