@@ -28,18 +28,37 @@ function clean(root = document.body) {
 export default function AdminPublishedLabelCleaner() {
   useEffect(() => {
     let frame = 0;
+    let attempts = 0;
+    let timer = 0;
+
     const schedule = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => clean());
     };
 
-    schedule();
-    const observer = new MutationObserver(schedule);
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    const retry = () => {
+      schedule();
+      attempts += 1;
+      if (attempts < 8) timer = window.setTimeout(retry, 500);
+    };
+
+    const onNavigation = () => {
+      attempts = 0;
+      clearTimeout(timer);
+      retry();
+    };
+
+    retry();
+    window.addEventListener("hashchange", onNavigation, { passive: true });
+    window.addEventListener("popstate", onNavigation, { passive: true });
+    window.addEventListener("mauriresults:exams-updated", onNavigation);
 
     return () => {
       cancelAnimationFrame(frame);
-      observer.disconnect();
+      clearTimeout(timer);
+      window.removeEventListener("hashchange", onNavigation);
+      window.removeEventListener("popstate", onNavigation);
+      window.removeEventListener("mauriresults:exams-updated", onNavigation);
     };
   }, []);
 
