@@ -1,0 +1,62 @@
+"use client";
+import { useEffect,useState } from "react";
+
+const empty={track:"",wilaya:"",centre:"",school:""};
+const labels={track:"الشعبة",wilaya:"الولاية",centre:"المركز",school:"المدرسة"};
+
+function sourceNow(){
+  const id=localStorage.getItem("mauriresults-selected-exam")||"";
+  if(id.startsWith("upload-")) return `upload:${id.slice(7)}`;
+  return ["bac","brevet","bac_session"].includes(id)?id:"";
+}
+function isBrevet(source){return source==="brevet"||/bepc|brevet/i.test(source)}
+async function api(params){
+  const r=await fetch(`/api/forgot-number?${new URLSearchParams(params)}`,{cache:"no-store"});
+  const d=await r.json(); if(!r.ok) throw new Error(d.error||"failed"); return d;
+}
+function setNumber(number){
+  const form=[...document.querySelectorAll("form.search-card")].find(f=>[...f.querySelectorAll("input")].filter(i=>!i.hidden).length===1);
+  const input=form?.querySelector("input"); if(!form||!input)return;
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value")?.set?.call(input,number);
+  input.dispatchEvent(new Event("input",{bubbles:true}));
+  input.dispatchEvent(new Event("change",{bubbles:true}));
+  form.requestSubmit();
+}
+
+export default function ForgotCandidateNumber(){
+  const [source,setSource]=useState(""); const [open,setOpen]=useState(false);
+  const [values,setValues]=useState(empty); const [opts,setOpts]=useState({track:[],wilaya:[],centre:[],school:[]});
+  const [available,setAvailable]=useState({track:true,wilaya:true,centre:true,school:true});
+  const [busy,setBusy]=useState(""); const [name,setName]=useState(""); const [rows,setRows]=useState([]); const [msg,setMsg]=useState("");
+
+  useEffect(()=>{const refresh=()=>setSource(sourceNow());refresh();document.addEventListener("click",refresh,true);return()=>document.removeEventListener("click",refresh,true)},[]);
+  useEffect(()=>{if(!open||!source)return; let stop=false;
+    (async()=>{for(const level of (isBrevet(source)?["wilaya"]:["track","wilaya"])){
+      setBusy(level);try{const d=await api({mode:"options",source,level});if(stop)return;setOpts(o=>({...o,[level]:d.options||[]}));setAvailable(a=>({...a,[level]:(d.options||[]).length>0}))}catch{if(!stop)setAvailable(a=>({...a,[level]:false}))}
+    } if(!stop)setBusy("")})(); return()=>{stop=true};
+  },[open,source]);
+
+  if(!source||source.includes("concours"))return null;
+
+  async function choose(level,value){
+    const next={...values,[level]:value};
+    if(level==="track")Object.assign(next,{wilaya:"",centre:"",school:""});
+    if(level==="wilaya")Object.assign(next,{centre:"",school:""});
+    if(level==="centre")next.school="";
+    setValues(next);setRows([]);setMsg("");
+    const following={track:"wilaya",wilaya:"centre",centre:"school"}[level]; if(!following||!value)return;
+    setBusy(following);try{const d=await api({mode:"options",source,level:following,...next});setOpts(o=>({...o,[following]:d.options||[]}));setAvailable(a=>({...a,[following]:(d.options||[]).length>0}))}catch{setAvailable(a=>({...a,[following]:false}))}finally{setBusy("")}
+  }
+  async function find(){setBusy("find");setMsg("");try{const d=await api({source,...values,name});setRows(d.candidates||[]);if(!(d.candidates||[]).length)setMsg("لم يتم العثور على مترشحين بهذه الاختيارات.")}catch{setMsg("تعذر إتمام البحث الآن.")}finally{setBusy("")}}
+
+  const levels=isBrevet(source)?["wilaya","centre","school"]:["track","wilaya","centre","school"];
+  return <section className="forgot-number-box" dir="rtl">
+    <button type="button" className="forgot-number-toggle" onClick={()=>setOpen(v=>!v)}><span>نسيت رقم المترشح؟</span><strong>ابحث بالتصفية</strong><b>{open?"−":"+"}</b></button>
+    {open&&<div className="forgot-number-panel"><p>اختر المعلومات التي تتذكرها، ثم اختر اسمك.</p>
+      <div className="forgot-number-grid">{levels.filter(l=>available[l]).map(level=><label key={level}><span>{labels[level]}</span><select value={values[level]} disabled={busy===level||(level==="centre"&&available.wilaya&&!values.wilaya)||(level==="school"&&available.centre&&!values.centre)} onChange={e=>choose(level,e.target.value)}><option value="">{busy===level?"جاري التحميل...":`اختر ${labels[level]}`}</option>{opts[level].map(x=><option key={x.value} value={x.value}>{x.value} ({x.total})</option>)}</select></label>)}</div>
+      <div className="forgot-number-name"><input value={name} onChange={e=>setName(e.target.value)} placeholder="اكتب جزءًا من الاسم"/><button type="button" onClick={find} disabled={busy==="find"}>{busy==="find"?"جاري البحث...":"إظهار المترشحين"}</button></div>
+      {msg&&<p className="forgot-number-message">{msg}</p>}
+      {!!rows.length&&<div className="forgot-number-candidates">{rows.map(r=><button type="button" key={`${r.candidate_number}-${r.candidate_name}`} onClick={()=>setNumber(r.candidate_number)}><span>{r.candidate_name}</span><strong>{r.candidate_number}</strong></button>)}</div>}
+    </div>}
+  </section>;
+}
