@@ -30,10 +30,16 @@ export function getFilterLevels(source) {
 }
 
 export function normalizeExamSource(value) {
-  const id = String(value || "").replace(/^#/, "").trim().toLowerCase();
+  const id = decodeURIComponent(String(value || ""))
+    .replace(/^#/, "")
+    .trim()
+    .toLowerCase();
+
   if (!id) return "";
-  if (id.startsWith("upload-")) return `upload:${id.slice(7)}`;
-  if (id.startsWith("upload:")) return id;
+
+  const uploadedMatch = id.match(/upload[:/-]([a-z0-9_]+)/i);
+  if (uploadedMatch?.[1]) return `upload:${uploadedMatch[1]}`;
+
   if (/concours|c1as|كونكور/.test(id)) return "";
   if (/bac.*(?:session|sc|supp|compl)|(?:session|sc|supp|compl).*bac|تكمي/.test(id)) return "bac_session";
   if (/brevet|bepc|ابريف|أبريف|بريف/.test(id)) return "brevet";
@@ -42,12 +48,14 @@ export function normalizeExamSource(value) {
 }
 
 export function resolveExamSource() {
+  // The current route is the source of truth. This prevents an older exam
+  // saved in localStorage from overriding a newly opened uploaded exam.
+  const hashSource = normalizeExamSource(window.location.hash);
+  if (hashSource) return hashSource;
+
   const stored = localStorage.getItem("mauriresults-selected-exam") || "";
   const storedSource = normalizeExamSource(stored);
   if (storedSource) return storedSource;
-
-  const hashSource = normalizeExamSource(window.location.hash);
-  if (hashSource) return hashSource;
 
   const pageText = document.body?.textContent || "";
   if (/الدورة التكميلية|session complémentaire/i.test(pageText)) return "bac_session";
