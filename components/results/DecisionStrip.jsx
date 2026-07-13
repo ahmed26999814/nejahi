@@ -23,33 +23,61 @@ function motivationalPhrase(average) {
   return "كالتك العنز 🐐";
 }
 
-function DecisionStrip({ average, label = "القرار", maxScore, status }) {
+function brevetMotivationalPhrase(average) {
+  if (!Number.isFinite(average) || average < 0 || average > 20) return "";
+  if (average >= 15) return "انت مانك متكايس 😎🔥";
+  if (average >= 13) return "انت حامي انجحت 💪🔥";
+  if (average >= 10) return "نصر انجحت 🎉";
+  if (average >= 8.5) return "عيش حياتك انت انجحت 😅";
+  if (average >= 7) return "اهم شيء بعد اجبرت تجاوز 😄";
+  if (average >= 6) return "بعدنك انجحت 🙂";
+  if (average >= 4) return "عادي تجبروا سنة جاي 🤝";
+  if (average >= 2) return "ألا حاول تكرا دور تنجح تعكب 📚";
+  return "كالتك العنز 🐐";
+}
+
+function isBrevetResult(root, source) {
+  if (String(source || "").trim().toLowerCase() === "brevet") return true;
+  const resultText = String(root?.closest?.(".result-modal")?.textContent || "");
+  return /(?:البريفيه|أبريفه|بريفه|BEPC)/i.test(resultText);
+}
+
+function parseScore(value) {
+  const text = String(value ?? "").trim().replace(",", ".");
+  if (!text) return Number.NaN;
+  const parsed = Number(text);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+function DecisionStrip({ average, label = "القرار", maxScore, source, status }) {
   const tone = TONES[status?.className] || TONES.unknown;
   const rootRef = useRef(null);
   const [phrase, setPhrase] = useState("");
 
   useEffect(() => {
-    if (status?.className === "absent") {
-      setPhrase("");
-      return;
+    let nextPhrase = "";
+
+    if (status?.className !== "absent") {
+      const scoreNode = rootRef.current?.previousElementSibling;
+      const scoreText = String(scoreNode?.textContent || "").trim().replace(",", ".");
+      const explicitAverage = parseScore(average);
+      const matchedAverage = scoreText.match(/\d+(?:\.\d+)?/);
+      const resolvedAverage = Number.isFinite(explicitAverage)
+        ? explicitAverage
+        : matchedAverage
+          ? Number(matchedAverage[0])
+          : Number.NaN;
+      const resolvedMaxScore = Number(maxScore || (/\/\s*200\b/.test(scoreText) ? 200 : 20));
+
+      if (resolvedMaxScore <= 20) {
+        nextPhrase = isBrevetResult(rootRef.current, source)
+          ? brevetMotivationalPhrase(resolvedAverage)
+          : motivationalPhrase(resolvedAverage);
+      }
     }
 
-    const explicitAverage = Number(String(average ?? "").replace(",", "."));
-    if (Number.isFinite(explicitAverage)) {
-      setPhrase(Number(maxScore || 20) <= 20 ? motivationalPhrase(explicitAverage) : "");
-      return;
-    }
-
-    const scoreNode = rootRef.current?.previousElementSibling;
-    const scoreText = String(scoreNode?.textContent || "").trim().replace(",", ".");
-    if (/\/\s*200\b/.test(scoreText)) {
-      setPhrase("");
-      return;
-    }
-
-    const matchedAverage = scoreText.match(/\d+(?:\.\d+)?/);
-    setPhrase(motivationalPhrase(matchedAverage ? Number(matchedAverage[0]) : Number.NaN));
-  }, [average, maxScore, status?.className]);
+    setPhrase((current) => current === nextPhrase ? current : nextPhrase);
+  });
 
   return (
     <div ref={rootRef} className="mt-3 grid w-full gap-2">
