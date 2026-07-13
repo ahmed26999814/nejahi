@@ -53,6 +53,21 @@ function DecisionStrip({ average, label = "القرار", maxScore, source, stat
   const tone = TONES[status?.className] || TONES.unknown;
   const rootRef = useRef(null);
   const [phrase, setPhrase] = useState("");
+  const [showMotivational, setShowMotivational] = useState(true);
+
+  useEffect(() => {
+    const syncVisibility = (event) => {
+      if (typeof event?.detail?.visible === "boolean") {
+        setShowMotivational(event.detail.visible);
+        return;
+      }
+      setShowMotivational(document.documentElement.dataset.showMotivational !== "false");
+    };
+
+    syncVisibility();
+    window.addEventListener("mauriresults:motivational-visibility", syncVisibility);
+    return () => window.removeEventListener("mauriresults:motivational-visibility", syncVisibility);
+  }, []);
 
   useEffect(() => {
     let nextPhrase = "";
@@ -85,7 +100,7 @@ function DecisionStrip({ average, label = "القرار", maxScore, source, stat
         <span className="rounded-full bg-white/60 px-3 py-1 text-xs font-black dark:bg-white/10">{label}</span>
         <strong className="text-xl font-black leading-tight md:text-2xl">{status?.label || "-"}</strong>
       </div>
-      {phrase && (
+      {showMotivational && phrase && (
         <p className="rounded-[18px] border border-mauri-gold/25 bg-mauri-gold/10 px-4 py-2 text-center text-sm font-black leading-6 text-amber-800 shadow-sm dark:border-mauri-gold/20 dark:bg-mauri-gold/10 dark:text-amber-200" aria-label="عبارة تحفيزية حسب المعدل">
           {phrase}
         </p>
