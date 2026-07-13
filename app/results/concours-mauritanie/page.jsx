@@ -3,7 +3,7 @@ import ExamSeoPage from "../../../components/seo/ExamSeoPage";
 const url = "https://mauri-results.vercel.app/results/concours-mauritanie";
 
 export const metadata = {
-  title: "نتائج الكونكور موريتانيا 2026 | MauriResults",
+  title: "نتائج الكونكور موريتانيا 2026",
   description: "الاستعلام عن نتائج الكونكور في موريتانيا 2026 عبر MauriResults حسب الولاية والمقاطعة والمركز ورقم المترشح.",
   alternates: { canonical: url },
   openGraph: {
