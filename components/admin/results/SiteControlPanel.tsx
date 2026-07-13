@@ -9,6 +9,7 @@ type ControlKey =
   | "calculator"
   | "contact"
   | "developer"
+  | "motivational"
   | "visitors"
   | "online"
   | "footer";
@@ -25,6 +26,7 @@ const DEFAULTS: Record<ControlKey, ControlState> = {
   calculator: { visible: true, label: "حاسبة المعدل" },
   contact: { visible: true, label: "اتصل بنا" },
   developer: { visible: true, label: "الإعداد والتطوير" },
+  motivational: { visible: true, label: "العبارات التحفيزية" },
   visitors: { visible: true, label: "الزيارات" },
   online: { visible: true, label: "النشطون الآن" },
   footer: { visible: true, label: "الفوتر" },
@@ -37,6 +39,7 @@ const ITEMS: Array<{ key: ControlKey; title: string; description: string; editab
   { key: "calculator", title: "حاسبة المعدل", description: "إظهار أو إخفاء رابط الحاسبة.", editable: true },
   { key: "contact", title: "اتصل بنا", description: "التحكم في زر وصفحة التواصل.", editable: true },
   { key: "developer", title: "الإعداد والتطوير", description: "التحكم في بطاقة معلومات المطور.", editable: true },
+  { key: "motivational", title: "العبارات التحفيزية", description: "إظهار أو إخفاء العبارة التي تظهر أسفل قرار المترشح حسب معدله.", editable: false },
   { key: "visitors", title: "عداد الزيارات", description: "إظهار أو إخفاء إجمالي الزيارات في أسفل الموقع.", editable: false },
   { key: "online", title: "النشطون الآن", description: "إظهار أو إخفاء عدد المستخدمين الموجودين في الموقع حاليًا.", editable: false },
   { key: "footer", title: "أسفل الموقع", description: "إخفاء الفوتر كاملًا عند الحاجة.", editable: false },
