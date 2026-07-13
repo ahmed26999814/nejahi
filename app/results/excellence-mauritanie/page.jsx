@@ -3,7 +3,7 @@ import ExamSeoPage from "../../../components/seo/ExamSeoPage";
 const url = "https://mauri-results.vercel.app/results/excellence-mauritanie";
 
 export const metadata = {
-  title: "نتائج الامتياز موريتانيا 2026 | MauriResults",
+  title: "نتائج الامتياز موريتانيا 2026",
   description: "الاستعلام عن نتائج مدارس الامتياز في موريتانيا 2026 عبر MauriResults بالاسم أو رقم المترشح بسرعة من الهاتف.",
   alternates: { canonical: url },
   openGraph: {
