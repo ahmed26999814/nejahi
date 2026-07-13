@@ -15,6 +15,7 @@ import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSel
 import PublishedExamCardEnhancer from "../components/ui/PublishedExamCardEnhancer";
 import ForgotCandidateNumber from "../components/ui/ForgotCandidateNumber";
 import BacTopperTrackOrder from "../components/ui/BacTopperTrackOrder";
+import MotivationalVisibility from "../components/ui/MotivationalVisibility";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -129,6 +130,7 @@ export default function RootLayout({ children }) {
       <body className="font-arabic antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <UiEnhancements />
+        <MotivationalVisibility />
         <AdminPublishedLabelCleaner />
         <UploadedConcoursSelectEnhancer />
         <PublishedExamCardEnhancer />
