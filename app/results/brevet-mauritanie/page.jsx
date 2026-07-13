@@ -3,7 +3,7 @@ import ExamSeoPage from "../../../components/seo/ExamSeoPage";
 const url = "https://mauri-results.vercel.app/results/brevet-mauritanie";
 
 export const metadata = {
-  title: "نتائج أبريفه موريتانيا 2026 | MauriResults",
+  title: "نتائج أبريفه موريتانيا 2026",
   description: "الاستعلام عن نتائج أبريفه Brevet في موريتانيا 2026 عبر MauriResults بالاسم أو رقم المترشح بسرعة من الهاتف.",
   alternates: { canonical: url },
   openGraph: {
