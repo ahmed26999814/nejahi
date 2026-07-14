@@ -144,6 +144,13 @@ jobs:
       - name: Publish APK to the website repository
         shell: bash
         run: |
+          cp public/apk/MauriResults.apk /tmp/MauriResults.apk
+          cp public/apk/version.json /tmp/mauriresults-version.json
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p public/apk
+          cp /tmp/MauriResults.apk public/apk/MauriResults.apk
+          cp /tmp/mauriresults-version.json public/apk/version.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f public/apk/MauriResults.apk public/apk/version.json
@@ -152,4 +159,4 @@ jobs:
             exit 0
           fi
           git commit -m "Publish MauriResults Android APK [skip ci]"
-          git push
+          git push origin HEAD:main
