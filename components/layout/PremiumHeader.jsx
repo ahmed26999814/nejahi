@@ -43,10 +43,9 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
                 key={item.key}
                 aria-current={active ? "page" : undefined}
                 data-control-key={item.key}
-                data-control-label
                 data-haptic
               >
-                {item.label}
+                <span data-control-label>{item.label}</span>
               </button>
             );
           })}
