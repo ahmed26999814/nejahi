@@ -1,25 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  isMobileDevice,
+  isNativeAppRuntime,
+  shouldHideInstallPromotion,
+} from "../../lib/runtimeEnvironment";
 
-function isStandaloneMode() {
-  return window.matchMedia?.("(display-mode: standalone)")?.matches
-    || window.navigator.standalone === true;
-}
+const DISMISS_KEY = "mauriresults-install-promo-dismissed-at";
+const DISMISS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function isIosDevice() {
+  if (typeof window === "undefined") return false;
+
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent)
     || (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
 }
 
+function isAndroidDevice() {
+  if (typeof window === "undefined") return false;
+  return /android/i.test(window.navigator.userAgent);
+}
+
 export default function InstallAppCard() {
   const [installPrompt, setInstallPrompt] = useState(null);
-  const [installed, setInstalled] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [showIosHelp, setShowIosHelp] = useState(false);
   const [message, setMessage] = useState("");
+  const [iosDevice, setIosDevice] = useState(false);
+  const [androidDevice, setAndroidDevice] = useState(false);
 
   useEffect(() => {
-    setInstalled(isStandaloneMode());
+    if (shouldHideInstallPromotion()) {
+      setVisible(false);
+      return undefined;
+    }
+
+    const mobile = isMobileDevice();
+    const isIos = isIosDevice();
+    const isAndroid = isAndroidDevice();
+    setIosDevice(isIos);
+    setAndroidDevice(isAndroid);
+
+    if (!mobile || isNativeAppRuntime()) {
+      setVisible(false);
+      return undefined;
+    }
+
+    const dismissedAt = Number(window.localStorage.getItem(DISMISS_KEY) || 0);
+    const dismissedRecently = Number.isFinite(dismissedAt)
+      && dismissedAt > 0
+      && Date.now() - dismissedAt < DISMISS_TTL_MS;
+
+    setVisible(!dismissedRecently);
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -31,9 +64,9 @@ export default function InstallAppCard() {
     };
 
     const handleInstalled = () => {
-      setInstalled(true);
       setInstallPrompt(null);
       setMessage("تم تثبيت MauriResults بنجاح.");
+      setVisible(false);
     };
 
     window.addEventListener("beforeinstallprompt", handleInstallPrompt);
@@ -45,13 +78,25 @@ export default function InstallAppCard() {
     };
   }, []);
 
+  const actionLabel = useMemo(() => {
+    if (installPrompt) return "تثبيت";
+    if (iosDevice) return "طريقة التثبيت";
+    if (androidDevice) return "تحميل التطبيق";
+    return "تثبيت";
+  }, [androidDevice, installPrompt, iosDevice]);
+
+  function dismissPromotion() {
+    window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    setVisible(false);
+  }
+
   async function installApp() {
-    if (installed) {
-      setMessage("التطبيق مثبت بالفعل على هذا الهاتف.");
+    if (shouldHideInstallPromotion()) {
+      setVisible(false);
       return;
     }
 
-    if (isIosDevice()) {
+    if (iosDevice) {
       setShowIosHelp(true);
       return;
     }
@@ -66,49 +111,53 @@ export default function InstallAppCard() {
       return;
     }
 
-    setMessage("افتح قائمة المتصفح ثم اختر: تثبيت التطبيق أو إضافة إلى الشاشة الرئيسية.");
+    if (androidDevice) {
+      window.location.assign("/Apk/");
+      return;
+    }
+
+    setMessage("افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». ");
   }
+
+  if (!visible) return null;
 
   return (
     <>
-      <section className="relative overflow-hidden rounded-[26px] border border-emerald-200/80 bg-gradient-to-br from-white via-emerald-50 to-amber-50 p-4 shadow-premium dark:border-white/10 dark:from-[#10231a] dark:via-[#0b2a1b] dark:to-[#30270b] md:p-6">
-        <span className="absolute -left-12 -top-12 h-32 w-32 rounded-full bg-emerald-400/10" />
-        <div className="relative grid items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
-          <img
-            src="/logo.png"
-            alt="MauriResults"
-            width="64"
-            height="64"
-            loading="lazy"
-            className="h-14 w-14 rounded-2xl bg-white object-contain p-1.5 shadow-soft ring-1 ring-slate-200/70 dark:ring-white/10 sm:h-16 sm:w-16"
-          />
+      <aside className="relative flex items-center gap-3 overflow-hidden rounded-[20px] border border-emerald-200/80 bg-white/90 px-3 py-2.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/90 md:hidden" aria-label="اقتراح تثبيت التطبيق">
+        <span className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-emerald-500/10 to-transparent" aria-hidden="true" />
+        <img
+          src="/logo.png"
+          alt=""
+          width="40"
+          height="40"
+          className="relative h-10 w-10 shrink-0 rounded-xl bg-white object-contain p-1 shadow-sm ring-1 ring-slate-200/70 dark:ring-white/10"
+        />
 
-          <div className="min-w-0">
-            <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300">تجربة أسرع على الهاتف</span>
-            <h2 className="mt-1 text-lg font-black text-slate-950 dark:text-white md:text-xl">حمّل MauriResults كتطبيق</h2>
-            <p className="mt-1 text-xs font-bold leading-5 text-slate-500 dark:text-slate-300">
-              نسخة APK مباشرة للأندرويد، أو تثبيت سريع من المتصفح على Android وiPhone.
-            </p>
-            {message && <p className="mt-2 text-[11px] font-black text-emerald-700 dark:text-emerald-300">{message}</p>}
-          </div>
-
-          <div className="grid min-w-[164px] gap-2">
-            <a
-              href="/Apk/"
-              className="grid min-h-12 place-items-center rounded-2xl bg-emerald-700 px-5 py-3 text-center text-sm font-black text-white shadow-[0_12px_28px_rgba(4,120,72,.22)] transition hover:bg-emerald-800 active:scale-[.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/25"
-            >
-              تحميل APK للأندرويد
-            </a>
-            <button
-              type="button"
-              onClick={installApp}
-              className="min-h-11 rounded-2xl border border-emerald-700/20 bg-white/80 px-4 py-2 text-xs font-black text-emerald-800 transition hover:bg-white active:scale-[.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/20 disabled:cursor-default disabled:opacity-70 dark:border-white/10 dark:bg-white/10 dark:text-emerald-200"
-            >
-              {installed ? "نسخة المتصفح مثبّتة ✓" : "تثبيت من المتصفح"}
-            </button>
-          </div>
+        <div className="relative min-w-0 flex-1">
+          <strong className="block text-sm font-black text-slate-950 dark:text-white">ثبّت MauriResults على هاتفك</strong>
+          <span className="mt-0.5 block text-[11px] font-bold leading-4 text-slate-500 dark:text-slate-300">
+            وصول أسرع للنتائج من الشاشة الرئيسية.
+          </span>
+          {message && <span className="mt-1 block text-[10px] font-black text-emerald-700 dark:text-emerald-300" aria-live="polite">{message}</span>}
         </div>
-      </section>
+
+        <button
+          type="button"
+          onClick={installApp}
+          className="relative min-h-9 shrink-0 rounded-xl bg-emerald-700 px-3 py-2 text-[11px] font-black text-white shadow-sm transition hover:bg-emerald-800 active:scale-[.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/25"
+        >
+          {actionLabel}
+        </button>
+
+        <button
+          type="button"
+          onClick={dismissPromotion}
+          className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg font-bold text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
+          aria-label="إخفاء اقتراح التثبيت"
+        >
+          ×
+        </button>
+      </aside>
 
       {showIosHelp && (
         <div className="fixed inset-0 z-[140] flex items-end justify-center bg-slate-950/60 p-0 sm:items-center sm:p-5" onClick={() => setShowIosHelp(false)}>
