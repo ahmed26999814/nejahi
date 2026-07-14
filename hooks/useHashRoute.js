@@ -16,11 +16,16 @@ export function parseHashRoute(hash, exams = []) {
   return { view: "home", yearId: "year-2025", examId: "" };
 }
 
+function emitRouteChange(detail) {
+  window.dispatchEvent(new CustomEvent("mauriresults:routechange", { detail }));
+}
+
 export function writeHashRoute(hash, state = {}, { replace = false } = {}) {
   const cleanHash = String(hash || "").replace(/^#/, "");
   const base = `${window.location.pathname}${window.location.search}`;
   const url = cleanHash ? `${base}#${cleanHash}` : base;
   window.history[replace ? "replaceState" : "pushState"]({ ...state, hash: cleanHash }, "", url);
+  emitRouteChange({ ...state, hash: cleanHash, source: "write" });
 }
 
 export function useHashRoute(exams, onRoute) {
@@ -28,7 +33,12 @@ export function useHashRoute(exams, onRoute) {
   callbackRef.current = onRoute;
 
   useEffect(() => {
-    const sync = () => callbackRef.current(parseHashRoute(window.location.hash, exams));
+    const sync = (event) => {
+      const route = parseHashRoute(window.location.hash, exams);
+      callbackRef.current(route);
+      if (event) emitRouteChange({ ...route, source: event.type });
+    };
+
     sync();
     window.addEventListener("popstate", sync);
     window.addEventListener("hashchange", sync);
