@@ -196,7 +196,7 @@ function generatedTone(exam: Record<string, unknown>) {
   return "purple";
 }
 
-function cleanExam(exam: Record<string, unknown>) {
+function cleanExam(exam: Record<string, unknown>): Record<string, unknown> {
   const descriptionAr = String(exam.description_ar || "").trim();
   const descriptionFr = String(exam.description_fr || "").trim();
   const uploaded = String(exam.source_key || "").startsWith("upload:");
@@ -250,7 +250,7 @@ async function fetchPublishedExams() {
     return { rows: sortExams(LEGACY_2025_EXAMS.map(cleanExam)), error: text, status: response.status } as const;
   }
 
-  const uploadedRows = (text ? JSON.parse(text) : [])
+  const uploadedRows: Array<Record<string, unknown>> = (text ? JSON.parse(text) : [])
     .filter((exam: Record<string, unknown>) => /^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(String(exam.table_name || "").trim()))
     .map(cleanExam);
 
