@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 
-const BAC_TRACK_PRIORITY = ["SN", "M", "LO", "LM"];
+const CACHE_KEY = "mauriresults-site-controls-v2";
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
-const CONTROL_DEFAULTS = {
+const DEFAULTS = {
   ui_show_search: "true",
   ui_show_toppers: "true",
   ui_show_analytics: "true",
@@ -20,261 +21,98 @@ const CONTROL_DEFAULTS = {
   ui_label_developer: "الإعداد والتطوير",
 };
 
-const CONTROL_ALIASES = {
-  search: ["البحث", "Search"],
-  toppers: ["الأوائل", "Toppers"],
-  analytics: ["الإحصائيات", "Analytics", "Statistics"],
-  calculator: ["حاسبة المعدل", "الحاسبة", "Calculator"],
-  contact: ["اتصل بنا", "Contact"],
-  developer: ["الإعداد والتطوير", "Developer", "Development"],
-};
-
-function normalizeTrack(value = "") {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-}
-
-function replaceBrevetLabel(root = document.body) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach((node) => {
-    if (node.nodeValue?.includes("البريفيه")) {
-      node.nodeValue = node.nodeValue.replaceAll("البريفيه", "أبريفه");
-    }
-  });
-}
-
-function markAndHideRepeatedPageTitles() {
-  document.querySelectorAll("section.app-shell > .page-hero:not(.redundant-section-title)").forEach((hero) => {
-    const page = hero.parentElement;
-    const title = hero.querySelector("h1")?.textContent?.trim() || "";
-    if (page) page.dataset.sectionTitle = title;
-    hero.classList.add("redundant-section-title");
-  });
-}
-
-function enhanceContactPage() {
-  const page = [...document.querySelectorAll("section.app-shell")]
-    .find((section) => section.dataset.sectionTitle === "اتصل بنا" || section.querySelector("[data-contact-about]"));
-  if (!page || page.querySelector("[data-contact-about]")) return;
-
-  const cards = page.querySelector("section.grid.gap-3");
-  if (!cards) return;
-
-  const about = document.createElement("section");
-  about.dataset.contactAbout = "true";
-  about.className = "contact-about-card";
-  about.innerHTML = `
-    <div class="contact-about-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 8h.01"></path></svg>
-    </div>
-    <div>
-      <span class="contact-about-kicker">من نحن</span>
-      <h2>MauriResults</h2>
-      <p>منصة موريتانية مستقلة تساعد الطلاب وأسرهم على الوصول إلى نتائج المسابقات الوطنية بسرعة ووضوح من الهاتف أو الكمبيوتر.</p>
-      <div class="contact-about-points">
-        <span>بحث سريع وبسيط</span>
-        <span>عرض واضح للنتيجة</span>
-        <span>مهيأة للاستخدام على الهاتف</span>
-      </div>
-    </div>
-  `;
-
-  page.insertBefore(about, cards);
-  cards.classList.add("contact-methods-grid");
-  [...cards.querySelectorAll("a")].forEach((card, index) => {
-    card.classList.add("contact-method-card", index === 0 ? "contact-method-whatsapp" : "contact-method-facebook");
-  });
-}
-
-function enhanceBacToppers() {
-  const page = [...document.querySelectorAll("section.app-shell")]
-    .find((section) => section.dataset.sectionTitle === "الأوائل" || section.dataset.sectionTitle === "Toppers");
-  if (!page) return;
-
-  const examTrigger = page.querySelector(".exam-selector-trigger");
-  const selectedExamText = examTrigger?.textContent?.toUpperCase() || "";
-  const isBac = selectedExamText.includes("BAC") || selectedExamText.includes("باكالوريا") || selectedExamText.includes("بكالوريا");
-  const trackRow = page.querySelector(".stream-filter-row");
-
-  page.classList.toggle("bac-toppers-page", isBac);
-  if (!isBac || !trackRow) {
-    page.querySelector("[data-track-prompt]")?.remove();
-    return;
-  }
-
-  const buttons = [...trackRow.querySelectorAll("button.stream-filter-chip")];
-  if (!buttons.length) return;
-
-  const allTracksButton = buttons.find((button) => /كل الشعب|toutes|all/i.test(button.textContent || ""));
-  if (allTracksButton) {
-    allTracksButton.classList.add("all-tracks-hidden");
-    allTracksButton.style.order = "999";
-  }
-
-  buttons.forEach((button) => {
-    if (button === allTracksButton) return;
-    const key = normalizeTrack(button.textContent || "");
-    const priority = BAC_TRACK_PRIORITY.indexOf(key);
-    button.style.order = String(priority === -1 ? 50 : priority);
-  });
-
-  const selectedTrackButton = buttons.find((button) => button !== allTracksButton && button.classList.contains("is-active"));
-  const contentSection = trackRow.nextElementSibling;
-  if (!contentSection) return;
-
-  let prompt = page.querySelector("[data-track-prompt]");
-  if (!selectedTrackButton) {
-    contentSection.classList.add("toppers-awaiting-track");
-    if (!prompt) {
-      prompt = document.createElement("section");
-      prompt.dataset.trackPrompt = "true";
-      prompt.className = "track-choice-prompt";
-      prompt.innerHTML = `
-        <span class="track-choice-icon" aria-hidden="true">1</span>
-        <div>
-          <strong>اختر الشعبة أولًا</strong>
-          <p>اختر SN أو M أو LO أو LM لعرض الأوائل في الشعبة المحددة.</p>
-        </div>
-      `;
-      trackRow.insertAdjacentElement("afterend", prompt);
-    }
-  } else {
-    contentSection.classList.remove("toppers-awaiting-track");
-    prompt?.remove();
-  }
-}
-
-function setElementVisible(element, visible) {
-  if (!element) return;
-  if (!visible) {
-    if (!element.dataset.siteControlDisplay) {
-      element.dataset.siteControlDisplay = element.style.display || "__empty__";
-    }
-    element.style.setProperty("display", "none", "important");
-    element.dataset.siteControlHidden = "true";
-    return;
-  }
-
-  if (element.dataset.siteControlHidden === "true") {
-    const previous = element.dataset.siteControlDisplay;
-    if (!previous || previous === "__empty__") element.style.removeProperty("display");
-    else element.style.display = previous;
-    delete element.dataset.siteControlHidden;
-    delete element.dataset.siteControlDisplay;
-  }
-}
-
-function replaceControlLabel(element, aliases, nextLabel) {
-  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-  const nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-
-  nodes.forEach((node) => {
-    const text = node.nodeValue?.trim();
-    if (!text) return;
-    if (aliases.some((alias) => text === alias)) {
-      node.nodeValue = node.nodeValue.replace(text, nextLabel);
-    }
-  });
-}
-
-function findControlledElements(key) {
-  if (key === "calculator") {
-    return [...document.querySelectorAll('a[href="/calculator"], button')]
-      .filter((element) => element.getAttribute("href") === "/calculator" || CONTROL_ALIASES.calculator.some((alias) => element.textContent?.trim() === alias));
-  }
-
-  if (key === "developer") {
-    const direct = [...document.querySelectorAll(".footer-action-developer")];
-    const fallback = [...document.querySelectorAll("button, a")]
-      .filter((element) => CONTROL_ALIASES.developer.some((alias) => element.textContent?.includes(alias)));
-    return [...new Set([...direct, ...fallback])];
-  }
-
-  if (key === "contact") {
-    const direct = [...document.querySelectorAll(".footer-action-contact")];
-    const fallback = [...document.querySelectorAll("button, a")]
-      .filter((element) => CONTROL_ALIASES.contact.some((alias) => element.textContent?.trim() === alias));
-    return [...new Set([...direct, ...fallback])];
-  }
-
-  return [...document.querySelectorAll("button, a")]
-    .filter((element) => CONTROL_ALIASES[key]?.some((alias) => element.textContent?.trim() === alias));
-}
-
-function applySiteControls(controls) {
-  const keys = ["search", "toppers", "analytics", "calculator", "contact", "developer"];
-
-  keys.forEach((key) => {
-    const visible = controls[`ui_show_${key}`] !== "false";
-    const label = controls[`ui_label_${key}`] || CONTROL_DEFAULTS[`ui_label_${key}`];
-    const aliases = [...new Set([...(CONTROL_ALIASES[key] || []), CONTROL_DEFAULTS[`ui_label_${key}`], label])];
-
-    findControlledElements(key).forEach((element) => {
-      replaceControlLabel(element, aliases, label);
-      setElementVisible(element, visible);
-    });
-  });
-
-  document.querySelectorAll("footer").forEach((footer) => {
-    setElementVisible(footer, controls.ui_show_footer !== "false");
-  });
-
-  document.documentElement.dataset.siteControlsReady = "true";
-}
-
-async function fetchSiteControls() {
+function cachedControls() {
   try {
-    const response = await fetch("/api/site-controls", { cache: "no-store" });
+    const parsed = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
+    if (parsed?.savedAt && Date.now() - parsed.savedAt < CACHE_TTL_MS) {
+      return { ...DEFAULTS, ...(parsed.controls || {}) };
+    }
+  } catch {}
+  return null;
+}
+
+async function loadControls(signal) {
+  const cached = cachedControls();
+  if (cached) return cached;
+  try {
+    const response = await fetch("/api/site-controls", {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal,
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    return { ...CONTROL_DEFAULTS, ...(data.controls || {}) };
-  } catch {
-    return { ...CONTROL_DEFAULTS };
+    const controls = { ...DEFAULTS, ...(data.controls || {}) };
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ controls, savedAt: Date.now() }));
+    return controls;
+  } catch (error) {
+    if (error?.name === "AbortError") throw error;
+    return { ...DEFAULTS };
   }
+}
+
+function setVisible(element, visible) {
+  if (!element) return;
+  element.toggleAttribute("hidden", !visible);
+  element.setAttribute("aria-hidden", visible ? "false" : "true");
+}
+
+function labelFor(key, controls) {
+  return controls[`ui_label_${key}`] || DEFAULTS[`ui_label_${key}`] || "";
+}
+
+function applyControls(controls) {
+  const keys = ["search", "toppers", "analytics", "calculator", "contact", "developer"];
+  for (const key of keys) {
+    const visible = controls[`ui_show_${key}`] !== "false";
+    document.querySelectorAll(`[data-control-key="${key}"]`).forEach((element) => {
+      setVisible(element, visible);
+      const labelNode = element.matches("[data-control-label]") ? element : element.querySelector("[data-control-label]");
+      const nextLabel = labelFor(key, controls);
+      if (labelNode && nextLabel) labelNode.textContent = nextLabel;
+    });
+  }
+
+  document.querySelectorAll(".footer-action-contact").forEach((element) => setVisible(element, controls.ui_show_contact !== "false"));
+  document.querySelectorAll(".footer-action-developer").forEach((element) => setVisible(element, controls.ui_show_developer !== "false"));
+  document.querySelectorAll("footer").forEach((element) => setVisible(element, controls.ui_show_footer !== "false"));
+  document.documentElement.dataset.siteControlsReady = "true";
 }
 
 export default function UiEnhancements() {
   useEffect(() => {
-    let frame = 0;
-    let timer = 0;
-    let controls = { ...CONTROL_DEFAULTS };
+    const controller = new AbortController();
+    let controls = { ...DEFAULTS };
+    let timers = [];
 
-    const apply = () => {
-      cancelAnimationFrame(frame);
-      clearTimeout(timer);
-      frame = requestAnimationFrame(() => {
-        replaceBrevetLabel();
-        markAndHideRepeatedPageTitles();
-        enhanceContactPage();
-        enhanceBacToppers();
-        applySiteControls(controls);
-      });
+    const schedule = () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers = [0, 100, 320].map((delay) => window.setTimeout(() => applyControls(controls), delay));
     };
 
-    const refreshControls = async () => {
-      controls = await fetchSiteControls();
-      apply();
+    const refresh = async () => {
+      sessionStorage.removeItem(CACHE_KEY);
+      controls = await loadControls(controller.signal);
+      schedule();
     };
 
-    const applyAfterNavigation = () => {
-      apply();
-      timer = window.setTimeout(apply, 120);
-    };
+    loadControls(controller.signal).then((value) => {
+      controls = value;
+      schedule();
+    }).catch(() => {});
 
-    refreshControls();
-    window.addEventListener("hashchange", applyAfterNavigation, { passive: true });
-    window.addEventListener("popstate", applyAfterNavigation, { passive: true });
-    document.addEventListener("click", applyAfterNavigation, { passive: true, capture: true });
-    window.addEventListener("mauriresults:site-controls-updated", refreshControls);
+    window.addEventListener("mauriresults:routechange", schedule);
+    window.addEventListener("hashchange", schedule, { passive: true });
+    window.addEventListener("popstate", schedule, { passive: true });
+    window.addEventListener("mauriresults:site-controls-updated", refresh);
 
     return () => {
-      cancelAnimationFrame(frame);
-      clearTimeout(timer);
-      window.removeEventListener("hashchange", applyAfterNavigation);
-      window.removeEventListener("popstate", applyAfterNavigation);
-      document.removeEventListener("click", applyAfterNavigation, true);
-      window.removeEventListener("mauriresults:site-controls-updated", refreshControls);
+      controller.abort();
+      timers.forEach((timer) => window.clearTimeout(timer));
+      window.removeEventListener("mauriresults:routechange", schedule);
+      window.removeEventListener("hashchange", schedule);
+      window.removeEventListener("popstate", schedule);
+      window.removeEventListener("mauriresults:site-controls-updated", refresh);
     };
   }, []);
 
