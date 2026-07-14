@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ApkDownload from "./ApkDownload";
 import "./apk.css";
 
 export const metadata = {
@@ -41,29 +42,7 @@ export default function ApkDownloadPage() {
               احصل على نتائج المسابقات الوطنية بسرعة من هاتفك، مع بقاء الموقع ولوحة الإدارة وكل التحديثات كما هي.
             </p>
 
-            <a
-              href="/apk/MauriResults.apk"
-              download="MauriResults.apk"
-              className="apk-download"
-              aria-label="تحميل تطبيق MauriResults للأندرويد"
-            >
-              <span className="apk-download-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M12 3v12m0 0 4-4m-4 4-4-4" />
-                  <path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
-                </svg>
-              </span>
-              <span>
-                <strong>تحميل التطبيق للأندرويد</strong>
-                <small>ملف APK مباشر من MauriResults</small>
-              </span>
-            </a>
-
-            <div className="apk-meta" aria-label="معلومات الإصدار">
-              <span><b>الإصدار</b> 1.0.0</span>
-              <span><b>النظام</b> Android 7+</span>
-              <span><b>المصدر</b> الموقع الرسمي</span>
-            </div>
+            <ApkDownload />
 
             <ul className="apk-features">
               {FEATURES.map((feature) => (
