@@ -1,4 +1,10 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "native-mobile-source": false,
+      "assistant-*": false
+    }
+  },
   "headers": [
     {
       "source": "/apk/MauriResults.apk",
