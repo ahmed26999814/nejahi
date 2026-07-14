@@ -26,13 +26,16 @@ npm start
 
 ```bash
 npm run prebuild
-npm run build:apk
+cd android
+./gradlew assembleRelease
 ```
 
 ملف APK الناتج يوجد في:
 
 ```text
-android/app/build/outputs/apk/debug/app-debug.apk
+android/app/build/outputs/apk/release/app-release.apk
 ```
 
 الإصدار الحالي: `2.0.0` — الحزمة: `com.mauriresults.app`.
+
+يُبنى الإصدار المنشور تلقائيًا بواسطة GitHub Actions ثم يُرفع إلى موقع MauriResults للتنزيل المباشر.
