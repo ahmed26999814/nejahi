@@ -1,34 +1,63 @@
 {
-  "name": "MauriResults",
+  "id": "/",
+  "name": "MauriResults — نتائج موريتانيا",
   "short_name": "MauriResults",
   "description": "منصة نتائج المسابقات الوطنية في موريتانيا",
-  "lang": "ar",
+  "lang": "ar-MR",
   "dir": "rtl",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#F8FAF8",
   "theme_color": "#15803D",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "categories": ["education", "utilities", "productivity"],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "handle_links": "preferred",
   "icons": [
     {
       "src": "/logo.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/logo.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
     {
-      "name": "البحث عن نتيجة",
-      "short_name": "بحث",
-      "url": "/#exam",
+      "name": "نتائج 2025",
+      "short_name": "نتائج 2025",
+      "description": "فتح مسابقات سنة 2025",
+      "url": "/#year-2025",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "حاسبة المعدل",
+      "short_name": "الحاسبة",
+      "description": "حساب المعدل بسرعة",
+      "url": "/calculator",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "الدروس",
+      "short_name": "الدروس",
+      "description": "فتح الدروس والمراجعة",
+      "url": "/lessons",
       "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
