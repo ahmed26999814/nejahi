@@ -36,6 +36,11 @@ function BookIcon() {
   );
 }
 
+function downloadUrl(book) {
+  const filename = `${book.subject} - ${book.type} - ${book.grade}.pdf`;
+  return `/api/books/download?url=${encodeURIComponent(book.url)}&name=${encodeURIComponent(filename)}`;
+}
+
 export default function LessonsPage() {
   const [grade, setGrade] = useState("1AF");
   const [query, setQuery] = useState("");
@@ -63,7 +68,7 @@ export default function LessonsPage() {
             <div>
               <p className="mb-1 text-xs font-black text-emerald-100">مكتبة MauriResults التعليمية</p>
               <h1 className="text-2xl font-black sm:text-4xl">كتب المرحلة الابتدائية</h1>
-              <p className="mt-2 text-sm font-bold leading-7 text-emerald-50">اختر السنة والمادة، ثم اضغط على زر التحميل للحصول على الكتاب مباشرة بصيغة PDF.</p>
+              <p className="mt-2 text-sm font-bold leading-7 text-emerald-50">اختر السنة والمادة، ثم اضغط على زر التحميل ليبدأ تنزيل الكتاب مباشرة بصيغة PDF.</p>
             </div>
           </div>
         </div>
@@ -101,7 +106,7 @@ export default function LessonsPage() {
                     <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-300">{book.type}</p>
                   </div>
                 </div>
-                <a href={book.url} download target="_blank" rel="noopener noreferrer" className="mt-auto flex h-11 items-center justify-center rounded-2xl bg-mauri-green px-4 text-sm font-black text-white transition hover:brightness-110">تحميل PDF</a>
+                <a href={downloadUrl(book)} className="mt-auto flex h-11 items-center justify-center rounded-2xl bg-mauri-green px-4 text-sm font-black text-white transition hover:brightness-110">تحميل PDF</a>
               </article>
             ))}
           </div>
@@ -113,7 +118,7 @@ export default function LessonsPage() {
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs font-bold leading-6 text-slate-400">الكتب مستضافة لدى المصدر الخارجي، وقد يفتح ملف PDF في المتصفح حسب إعدادات جهازك.</p>
+        <p className="mt-8 text-center text-xs font-bold leading-6 text-slate-400">عند الضغط على زر التحميل يبدأ تنزيل ملف PDF مباشرة على جهازك.</p>
       </section>
     </main>
   );
