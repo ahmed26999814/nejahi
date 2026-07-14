@@ -8,6 +8,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_P
 const REQUEST_TIMEOUT_MS = 10_000;
 const NUMBER_RESULT_LIMIT = "10";
 const NAME_RESULT_LIMIT = "20";
+const MAX_QUERY_LENGTH = 120;
 
 type SearchConfig = {
   table: string;
@@ -48,36 +49,47 @@ function unwrapRpcRows(rows: unknown[]) {
   return (Array.isArray(rows) ? rows : []).map((row: any) => row?.search_uploaded_exam_rows ?? row).filter(Boolean);
 }
 
+async function timedFetch(url: string | URL, init: RequestInit) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function supabaseSearch(table: string, params: URLSearchParams) {
   if (!SUPABASE_URL || !SUPABASE_KEY) return { error: "Missing Supabase environment variables", status: 500 } as const;
   const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
   params.forEach((value, key) => { if (value) url.searchParams.set(key, value); });
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(url, { signal: controller.signal, cache: "no-store", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" } });
+    const response = await timedFetch(url, { cache: "no-store", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" } });
     const text = await response.text();
     if (!response.ok) return { error: text, status: response.status } as const;
     return { rows: text ? JSON.parse(text) : [], status: 200 } as const;
   } catch (error) {
     const message = error instanceof Error && error.name === "AbortError" ? "Search timeout" : String(error);
     return { error: message, status: 504 } as const;
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
 async function searchUploaded(source: string, query: string) {
   if (!SUPABASE_URL || !SUPABASE_KEY) return { error: "Missing Supabase environment variables", status: 500 } as const;
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
-    method: "POST",
-    cache: "no-store",
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ p_source_key: source, p_query: query, p_wilaya: null, p_moughataa: null, p_centre: null }),
-  });
-  const text = await response.text();
-  if (!response.ok) return { error: text, status: response.status } as const;
-  return { rows: unwrapRpcRows(text ? JSON.parse(text) : []), status: 200 } as const;
+  try {
+    const response = await timedFetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
+      method: "POST",
+      cache: "no-store",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ p_source_key: source, p_query: query, p_wilaya: null, p_moughataa: null, p_centre: null }),
+    });
+    const text = await response.text();
+    if (!response.ok) return { error: text, status: response.status } as const;
+    return { rows: unwrapRpcRows(text ? JSON.parse(text) : []), status: 200 } as const;
+  } catch (error) {
+    const message = error instanceof Error && error.name === "AbortError" ? "Search timeout" : String(error);
+    return { error: message, status: 504 } as const;
+  }
 }
 
 function buildParams(config: SearchConfig, query: string, useFallback = false) {
@@ -95,24 +107,31 @@ function buildParams(config: SearchConfig, query: string, useFallback = false) {
   return params;
 }
 
+function responseHeaders(numeric: boolean) {
+  return {
+    "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=3600" : "no-store",
+    "CDN-Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=3600" : "no-store",
+  };
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const source = String(searchParams.get("source") || "").trim();
-  const query = String(searchParams.get("q") || "").trim();
+  const query = String(searchParams.get("q") || "").trim().slice(0, MAX_QUERY_LENGTH);
   const numeric = isNumberSearch(query);
-  if (query.length < 1) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400 });
+  if (query.length < 1) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400, headers: { "Cache-Control": "no-store" } });
 
   if (source.startsWith("upload:")) {
     const result = await searchUploaded(source, query);
     if ("error" in result) return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
-    return NextResponse.json({ rows: result.rows }, { headers: { "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store" } });
+    return NextResponse.json({ rows: result.rows }, { headers: responseHeaders(numeric) });
   }
 
   const config = SEARCH_CONFIG[source];
-  if (!config) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400 });
+  if (!config) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400, headers: { "Cache-Control": "no-store" } });
   let result = await supabaseSearch(config.table, buildParams(config, query));
   const shouldFallback = config.fallbackTable && ("error" in result || !(result.rows || []).length);
   if (shouldFallback) result = await supabaseSearch(config.fallbackTable!, buildParams(config, query, true));
   if ("error" in result) return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
-  return NextResponse.json({ rows: result.rows }, { headers: { "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=86400" : "no-store" } });
+  return NextResponse.json({ rows: result.rows }, { headers: responseHeaders(numeric) });
 }

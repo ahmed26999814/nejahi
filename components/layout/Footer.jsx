@@ -22,24 +22,24 @@ export default function Footer({ content = {}, onNavigate, text }) {
   }, []);
 
   return (
-    <footer id="developer" className={`app-shell ${isApp ? "py-3" : "py-5 md:py-8"}`}>
+    <footer id="developer" className={`app-shell ${isApp ? "py-3" : "py-5 md:py-8"}`} data-control-key="footer">
       <section className="premium-footer compact-home-footer">
         {footerBanner && isWeb && <img className="footer-banner-image" src={footerBanner} alt="" loading="lazy" />}
 
         <div className="footer-actions footer-actions-compact">
-          <button className="footer-action-card footer-action-developer" onClick={() => setDeveloperOpen(true)} type="button">
+          <button className="footer-action-card footer-action-developer active:scale-[.98]" onClick={() => setDeveloperOpen(true)} type="button" data-control-key="developer" data-haptic>
             <span className="footer-action-icon"><CodeIcon /></span>
             <span className="min-w-0 text-start">
-              <strong>الإعداد والتطوير</strong>
+              <strong data-control-label>الإعداد والتطوير</strong>
               {isWeb && <small>معلومات مطوّر المنصة</small>}
             </span>
             {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
           </button>
 
-          <button className="footer-action-card footer-action-contact" onClick={() => onNavigate?.("contact")} type="button">
+          <button className="footer-action-card footer-action-contact active:scale-[.98]" onClick={() => onNavigate?.("contact")} type="button" data-control-key="contact" data-haptic>
             <span className="footer-action-icon"><MessageIcon /></span>
             <span className="min-w-0 text-start">
-              <strong>اتصل بنا</strong>
+              <strong data-control-label>اتصل بنا</strong>
               {isWeb && <small>المساعدة والملاحظات</small>}
             </span>
             {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
