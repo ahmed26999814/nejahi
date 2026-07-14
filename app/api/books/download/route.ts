@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 
-const ALLOWED_HOST = "docs.bsimr.com";
-const ALLOWED_PATH_PREFIX = "/pdfs/";
+const ALLOWED_SOURCES = [
+  { host: "docs.bsimr.com", pathPrefix: "/pdfs/" },
+  { host: "bsimr.s3.us-east-2.amazonaws.com", pathPrefix: "/pdfs/" },
+];
 
 function safeFilename(value: string) {
   return value.replace(/[\r\n"\\/]/g, "_").slice(0, 160) || "book.pdf";
@@ -11,9 +13,7 @@ export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get("url");
   const requestedName = request.nextUrl.searchParams.get("name");
 
-  if (!rawUrl) {
-    return new Response("رابط الكتاب غير موجود.", { status: 400 });
-  }
+  if (!rawUrl) return new Response("رابط الكتاب غير موجود.", { status: 400 });
 
   let sourceUrl: URL;
   try {
@@ -22,12 +22,11 @@ export async function GET(request: NextRequest) {
     return new Response("رابط الكتاب غير صالح.", { status: 400 });
   }
 
-  if (
-    sourceUrl.protocol !== "https:" ||
-    sourceUrl.hostname !== ALLOWED_HOST ||
-    !sourceUrl.pathname.startsWith(ALLOWED_PATH_PREFIX) ||
-    !sourceUrl.pathname.toLowerCase().endsWith(".pdf")
-  ) {
+  const allowedSource = ALLOWED_SOURCES.some(
+    (source) => sourceUrl.hostname === source.host && sourceUrl.pathname.startsWith(source.pathPrefix),
+  );
+
+  if (sourceUrl.protocol !== "https:" || !allowedSource || !sourceUrl.pathname.toLowerCase().endsWith(".pdf")) {
     return new Response("هذا المصدر غير مسموح به.", { status: 403 });
   }
 
