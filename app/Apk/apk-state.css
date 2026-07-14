@@ -1,0 +1,30 @@
+.apk-download-disabled {
+  cursor: wait;
+  background: linear-gradient(135deg, #66756c 0%, #53655a 100%);
+  box-shadow: none;
+  opacity: .82;
+}
+
+.apk-download-disabled:hover,
+.apk-download-disabled:active {
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.apk-download-disabled .apk-download-icon {
+  font-size: 1.5rem;
+  font-weight: 950;
+  animation: apkWaitingPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes apkWaitingPulse {
+  0%, 100% { opacity: .45; transform: scale(.92); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apk-download-disabled .apk-download-icon {
+    animation: none;
+  }
+}
