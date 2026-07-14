@@ -11,6 +11,12 @@ export default function sitemap() {
       priority: 1,
     },
     {
+      url: `${siteUrl}/lessons`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
       url: `${siteUrl}/calculator`,
       lastModified,
       changeFrequency: "monthly",
