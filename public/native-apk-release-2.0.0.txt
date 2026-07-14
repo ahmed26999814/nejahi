@@ -1,0 +1,4 @@
+MauriResults Native Android 2.0.0
+Build: 0ae160a4855617fe2f64f01648b940fb2cba7578
+Published: 2026-07-14
+Framework: React Native + Expo
