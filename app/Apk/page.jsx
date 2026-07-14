@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ApkDownload from "./ApkDownload";
 import "./apk.css";
+import "./apk-state.css";
 
 export const metadata = {
   title: "تحميل تطبيق MauriResults للأندرويد",
