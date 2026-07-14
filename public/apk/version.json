@@ -1,0 +1,13 @@
+{
+  "name": "MauriResults",
+  "package": "com.mauriresults.app",
+  "version": "1.0.0",
+  "versionCode": 1,
+  "minimumAndroid": "7.0",
+  "sizeBytes": 8265441,
+  "sizeMB": 7.88,
+  "sha256": "bddc46177babfb2d98522428ad2a3d0a28d14f4bb01df681e5289a7751283831",
+  "buildCommit": "c8cec74feb0232aa31a680bc5034abc448429a70",
+  "publishedAt": "2026-07-14T04:27:03.127621+00:00",
+  "download": "/apk/MauriResults.apk"
+}
