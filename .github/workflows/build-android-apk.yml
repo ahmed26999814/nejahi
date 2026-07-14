@@ -45,13 +45,6 @@ jobs:
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Restore native mobile source
-        if: ${{ hashFiles('mobile-app/package.json') == '' }}
-        shell: bash
-        run: |
-          mkdir -p mobile-app
-          tar -xzf .bootstrap/mauriresults-mobile-source.tar.gz -C mobile-app
-
       - name: Install JavaScript dependencies
         working-directory: mobile-app
         run: npm install --no-audit --no-fund
@@ -150,11 +143,8 @@ jobs:
           cp /tmp/MauriResults.apk public/apk/MauriResults.apk
           cp /tmp/mauriresults-version.json public/apk/version.json
           rm -f public/apk/build-status.json
-          rm -f .bootstrap/mauriresults-mobile-source.tar.gz
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mobile-app
-          git add -u .bootstrap/mauriresults-mobile-source.tar.gz
           git add -f public/apk/MauriResults.apk public/apk/version.json
           git add -u public/apk/build-status.json 2>/dev/null || true
           if git diff --cached --quiet; then
