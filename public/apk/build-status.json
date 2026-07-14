@@ -1,8 +1,0 @@
-{
-  "status": "failed",
-  "type": "native-react-native-expo",
-  "workflowRunId": "29341074736",
-  "attempt": "1",
-  "buildCommit": "6b9433f1657826a628e3f417b8f74f6d09e20c1a",
-  "reportedAt": "2026-07-14T14:30:10.434662+00:00"
-}
