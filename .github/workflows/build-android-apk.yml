@@ -1,0 +1,155 @@
+name: Build and publish MauriResults APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "android-wrapper/**"
+      - ".github/workflows/build-android-apk.yml"
+      - "public/logo.png"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mauriresults-android-apk
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android 16 SDK
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install Capacitor dependencies
+        working-directory: android-wrapper
+        run: npm install --no-audit --no-fund
+
+      - name: Prepare MauriResults icons and splash screens
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check pillow
+          python3 android-wrapper/scripts/prepare_assets.py
+
+      - name: Generate Capacitor Android project
+        working-directory: android-wrapper
+        shell: bash
+        run: |
+          rm -rf android
+          npx cap add android
+          npx cap sync android
+          npx capacitor-assets generate --android
+
+      - name: Configure Android release information
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          gradle = Path("android-wrapper/android/app/build.gradle")
+          text = gradle.read_text(encoding="utf-8")
+          text = re.sub(r"versionCode\s*=*\s*\d+", "versionCode = 1", text)
+          text = re.sub(r'versionName\s*=*\s*"[^"]+"', 'versionName = "1.0.0"', text)
+          gradle.write_text(text, encoding="utf-8")
+
+          manifest = Path("android-wrapper/android/app/src/main/AndroidManifest.xml")
+          manifest_text = manifest.read_text(encoding="utf-8")
+          if "android:usesCleartextTraffic" not in manifest_text:
+              manifest_text = manifest_text.replace(
+                  "<application",
+                  '<application android:usesCleartextTraffic="false"',
+                  1,
+              )
+          manifest.write_text(manifest_text, encoding="utf-8")
+          PY
+
+      - name: Build installable APK
+        working-directory: android-wrapper/android
+        shell: bash
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Prepare direct-download files
+        shell: bash
+        env:
+          BUILD_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p public/apk
+          cp android-wrapper/android/app/build/outputs/apk/debug/app-debug.apk public/apk/MauriResults.apk
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from hashlib import sha256
+          from pathlib import Path
+          import json
+          import os
+
+          apk = Path("public/apk/MauriResults.apk")
+          digest = sha256(apk.read_bytes()).hexdigest()
+          metadata = {
+              "name": "MauriResults",
+              "package": "com.mauriresults.app",
+              "version": "1.0.0",
+              "versionCode": 1,
+              "minimumAndroid": "7.0",
+              "sizeBytes": apk.stat().st_size,
+              "sizeMB": round(apk.stat().st_size / 1024 / 1024, 2),
+              "sha256": digest,
+              "buildCommit": os.environ.get("BUILD_SHA", ""),
+              "publishedAt": datetime.now(timezone.utc).isoformat(),
+              "download": "/apk/MauriResults.apk"
+          }
+          Path("public/apk/version.json").write_text(
+              json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Upload APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MauriResults-Android-1.0.0
+          path: |
+            public/apk/MauriResults.apk
+            public/apk/version.json
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Publish APK to the website repository
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f public/apk/MauriResults.apk public/apk/version.json
+          if git diff --cached --quiet; then
+            echo "APK is already current."
+            exit 0
+          fi
+          git commit -m "Publish MauriResults Android APK [skip ci]"
+          git push
