@@ -3,6 +3,7 @@
   "appName": "MauriResults",
   "webDir": "www",
   "loggingBehavior": "none",
+  "appendUserAgent": " MauriResultsApp/1.0",
   "backgroundColor": "#F8FAF8",
   "zoomEnabled": false,
   "server": {

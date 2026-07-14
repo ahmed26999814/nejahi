@@ -19,6 +19,8 @@ export default function PremiumHomeView({
 
   return (
     <section className="app-shell grid gap-5 py-3 md:gap-10 md:py-8">
+      <InstallAppCard />
+
       <PremiumHero
         eyebrow="MauriResults"
         title={text.heroTitle}
@@ -49,7 +51,6 @@ export default function PremiumHomeView({
       </section>
 
       <PremiumSiteBanner asset={homepageBanner} />
-      <InstallAppCard />
       <BackToTopButton />
     </section>
   );
