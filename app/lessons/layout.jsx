@@ -1,4 +1,4 @@
-import SiteSectionHeader from "../../components/layout/SiteSectionHeader";
+import IntegratedSectionShell from "../../components/layout/IntegratedSectionShell";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -44,11 +44,10 @@ export default function LessonsLayout({ children }) {
   };
 
   return (
-    <div className="lessons-route">
-      <SiteSectionHeader active="/lessons" />
+    <IntegratedSectionShell active="/lessons">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <style>{`.lessons-route > main > header{display:none}.lessons-route > main{background:linear-gradient(180deg,#f8faf8 0%,#eef6f1 100%)}.dark .lessons-route > main{background:linear-gradient(180deg,#07130d 0%,#0b1b12 100%)}`}</style>
-      {children}
-    </div>
+      <style>{`.lessons-route > main > header{display:none}.lessons-route > main{background:var(--page-bg,linear-gradient(180deg,#f8faf8 0%,#eef6f1 100%))}.dark .lessons-route > main{--page-bg:linear-gradient(180deg,#07130d 0%,#0b1b12 100%)}`}</style>
+      <div className="lessons-route">{children}</div>
+    </IntegratedSectionShell>
   );
 }
