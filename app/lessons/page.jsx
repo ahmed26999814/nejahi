@@ -57,6 +57,7 @@ const BOOKS = [
   { grade: "6AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-6AF-M.pdf" },
   { grade: "6AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-6AF-M.pdf" },
   { grade: "6AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-6AF-M.pdf" },
+  { grade: "6AF", subject: "العلوم الطبيعية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/SN-6AF-M.pdf" },
   { grade: "6AF", subject: "التاريخ", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/HIST-6AF-M.pdf" },
   { grade: "6AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-6AF-M.pdf" },
   { grade: "6AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR-6AF-M.pdf" },
