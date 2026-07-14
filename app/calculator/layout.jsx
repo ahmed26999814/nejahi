@@ -1,4 +1,4 @@
-import SiteSectionHeader from "../../components/layout/SiteSectionHeader";
+import IntegratedSectionShell from "../../components/layout/IntegratedSectionShell";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -11,10 +11,11 @@ export const metadata = {
 
 export default function CalculatorLayout({ children }) {
   return (
-    <div className="calculator-route">
-      <SiteSectionHeader active="/calculator" />
-      <style>{`.calculator-route .average-calculator-page{padding-top:1.2rem;background:linear-gradient(180deg,#f8faf8 0%,#eef6f1 100%)}.calculator-route .calculator-heading{border-color:rgba(20,99,63,.18);background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(236,248,241,.96))}.calculator-route .calculator-card{background:#fff;border-color:rgba(20,99,63,.14)}.dark .calculator-route .average-calculator-page{background:linear-gradient(180deg,#07130d 0%,#0b1b12 100%)}`}</style>
-      {children}
-    </div>
+    <IntegratedSectionShell active="/calculator">
+      <div className="calculator-route">
+        <style>{`.calculator-route .average-calculator-page{padding-top:1.2rem;background:linear-gradient(180deg,#f8faf8 0%,#eef6f1 100%)}.calculator-route .calculator-heading{border-color:rgba(20,99,63,.18);background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(236,248,241,.96))}.calculator-route .calculator-card{background:#fff;border-color:rgba(20,99,63,.14)}.dark .calculator-route .average-calculator-page{background:linear-gradient(180deg,#07130d 0%,#0b1b12 100%)}`}</style>
+        {children}
+      </div>
+    </IntegratedSectionShell>
   );
 }
