@@ -151,12 +151,50 @@ jobs:
           mkdir -p public/apk
           cp /tmp/MauriResults.apk public/apk/MauriResults.apk
           cp /tmp/mauriresults-version.json public/apk/version.json
+          rm -f public/apk/build-status.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f public/apk/MauriResults.apk public/apk/version.json
+          git add -u public/apk/build-status.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "APK is already current."
             exit 0
           fi
           git commit -m "Publish MauriResults Android APK [skip ci]"
+          git push origin HEAD:main
+
+      - name: Report failed APK build
+        if: failure()
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILD_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import json
+          import os
+
+          status = {
+              "status": "failed",
+              "workflowRunId": os.environ.get("RUN_ID", ""),
+              "attempt": os.environ.get("RUN_ATTEMPT", ""),
+              "buildCommit": os.environ.get("BUILD_SHA", ""),
+              "reportedAt": datetime.now(timezone.utc).isoformat()
+          }
+          Path("/tmp/apk-build-status.json").write_text(
+              json.dumps(status, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          git fetch origin main
+          git reset --hard origin/main
+          mkdir -p public/apk
+          cp /tmp/apk-build-status.json public/apk/build-status.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f public/apk/build-status.json
+          git commit -m "Report failed MauriResults APK build [skip ci]"
           git push origin HEAD:main
