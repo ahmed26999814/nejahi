@@ -4,18 +4,20 @@ import "./apk.css";
 import "./apk-state.css";
 
 export const metadata = {
-  title: "تحميل تطبيق MauriResults للأندرويد",
-  description: "حمّل تطبيق MauriResults الرسمي للأندرويد مباشرة من الموقع.",
+  title: "تحميل تطبيق MauriResults الأصلي للأندرويد",
+  description: "حمّل تطبيق MauriResults الأصلي المبني بـ React Native مباشرة من الموقع.",
   alternates: {
     canonical: "https://mauri-results.vercel.app/Apk/",
   },
 };
 
 const FEATURES = [
-  "بحث سريع في نتائج الباك والكونكور وأبريفه",
-  "نفس البيانات والتحديثات الموجودة في الموقع",
-  "واجهة مهيأة للهاتف مع الوضع الداكن",
-  "لا يحتاج إلى Google Play أو Google Drive",
+  "تطبيق Android أصلي بالكامل — لا يستخدم WebView",
+  "بحث سريع بالاسم أو رقم المترشح",
+  "حفظ النتائج وسجل البحث على الهاتف دون اتصال",
+  "مشاركة النتيجة وتصدير كشف PDF",
+  "إحصائيات المسابقات والأوائل والولايات",
+  "العربية والفرنسية والوضع الفاتح والداكن",
 ];
 
 export default function ApkDownloadPage() {
@@ -34,13 +36,13 @@ export default function ApkDownloadPage() {
           <div className="apk-content">
             <div className="apk-logo-wrap">
               <img src="/logo.png" alt="شعار MauriResults" className="apk-logo" width="112" height="112" />
-              <span className="apk-android-badge">Android</span>
+              <span className="apk-android-badge">Native</span>
             </div>
 
-            <p className="apk-kicker">التطبيق الرسمي</p>
-            <h1>تطبيق MauriResults</h1>
+            <p className="apk-kicker">React Native + Expo</p>
+            <h1>تطبيق MauriResults الأصلي</h1>
             <p className="apk-description">
-              احصل على نتائج المسابقات الوطنية بسرعة من هاتفك، مع بقاء الموقع ولوحة الإدارة وكل التحديثات كما هي.
+              تطبيق مستقل بواجهات هاتف حقيقية، متصل بنفس النتائج الرسمية، بينما يبقى الموقع ولوحة الإدارة منفصلين ويعملان كالمعتاد.
             </p>
 
             <ApkDownload />
@@ -57,15 +59,14 @@ export default function ApkDownloadPage() {
             <aside className="apk-install-note">
               <span aria-hidden="true">!</span>
               <p>
-                قد يطلب Android السماح بالتثبيت من هذا المتصفح لأن التطبيق يُحمّل مباشرة وليس من Google Play. اختر
-                <strong> السماح من هذا المصدر </strong>
-                ثم أكمل التثبيت.
+                لأن التحميل مباشر وليس من Google Play، قد يطلب Android اختيار
+                <strong> السماح من هذا المصدر</strong>. إذا كانت النسخة القديمة المبنية بـCapacitor مثبتة، احذفها أولًا ثم ثبّت النسخة الأصلية الجديدة.
               </p>
             </aside>
           </div>
         </section>
 
-        <p className="apk-footer">MauriResults — منصة النتائج الوطنية في موريتانيا</p>
+        <p className="apk-footer">MauriResults — تطبيق النتائج الوطنية الأصلي في موريتانيا</p>
       </section>
     </main>
   );
