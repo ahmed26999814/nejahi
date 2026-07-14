@@ -1,0 +1,23 @@
+{
+  "appId": "com.mauriresults.app",
+  "appName": "MauriResults",
+  "webDir": "www",
+  "loggingBehavior": "none",
+  "backgroundColor": "#F8FAF8",
+  "zoomEnabled": false,
+  "server": {
+    "url": "https://mauri-results.vercel.app",
+    "androidScheme": "https",
+    "cleartext": false,
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#F8FAF8",
+    "zoomEnabled": false,
+    "minWebViewVersion": 60,
+    "resolveServiceWorkerRequests": false
+  }
+}
