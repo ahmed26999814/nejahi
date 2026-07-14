@@ -9,6 +9,7 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
     { label: text.home, view: "home" },
     { label: text.toppers, view: "toppers" },
     { label: text.analytics, view: "analytics" },
+    { label: lang === "ar" ? "الدروس" : "Cours", href: "/lessons" },
     { label: lang === "ar" ? "حاسبة المعدل" : "Calculateur", href: "/calculator" },
   ];
 
