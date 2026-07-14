@@ -1,5 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import "./app-runtime.css";
 import "./result-polish.css";
 import "./footer-contact-polish.css";
 import "./navigation-topper-fixes.css";
@@ -9,10 +10,9 @@ import "./online-counter.css";
 import "./forgot-number.css";
 import "./dashboard-reference.css";
 import "./dashboard-mobile.css";
+import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import UiEnhancements from "../components/ui/UiEnhancements";
-import AdminPublishedLabelCleaner from "../components/ui/AdminPublishedLabelCleaner";
 import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSelectEnhancer";
-import PublishedExamCardEnhancer from "../components/ui/PublishedExamCardEnhancer";
 import ForgotCandidateNumber from "../components/ui/ForgotCandidateNumber";
 import BacTopperTrackOrder from "../components/ui/BacTopperTrackOrder";
 import MotivationalVisibility from "../components/ui/MotivationalVisibility";
@@ -98,12 +98,17 @@ export const metadata = {
     title: "MauriResults",
     statusBarStyle: "default",
   },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F8FAF8" },
     { media: "(prefers-color-scheme: dark)", color: "#07130d" },
@@ -118,7 +123,7 @@ export default function RootLayout({ children }) {
     alternateName: ["Mauri Results", "Mauri Bac"],
     url: siteUrl,
     applicationCategory: "EducationalApplication",
-    operatingSystem: "Web",
+    operatingSystem: "Web, Android, iOS",
     inLanguage: ["ar-MR", "fr-MR"],
     description:
       "منصة موريتانية للبحث عن نتائج البكالوريا وابريفه والكونكور والامتياز.",
@@ -135,13 +140,12 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
-      <body className="font-arabic antialiased">
+      <body className="font-arabic antialiased" suppressHydrationWarning>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <AppRuntimeShell />
         <UiEnhancements />
         <MotivationalVisibility />
-        <AdminPublishedLabelCleaner />
         <UploadedConcoursSelectEnhancer />
-        <PublishedExamCardEnhancer />
         <ForgotCandidateNumber />
         <BacTopperTrackOrder />
         {children}
