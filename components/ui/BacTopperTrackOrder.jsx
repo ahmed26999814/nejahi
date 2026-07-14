@@ -14,15 +14,8 @@ const COMPLEMENTARY_PATTERN = /session|compl|تكمي/i;
 const BAC_PATTERN = /(^|[^a-z])bac([^a-z]|$)|baccalaur|باكالوريا/i;
 
 function normalizeTrack(value) {
-  const normalized = String(value || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[()\[\]{}]/g, " ")
-    .replace(/\s+/g, " ");
-
-  return [...BAC_TRACKS.keys()].find((track) =>
-    normalized === track || normalized.startsWith(`${track} `)
-  ) || "";
+  const normalized = String(value || "").trim().toUpperCase().replace(/[()\[\]{}]/g, " ").replace(/\s+/g, " ");
+  return [...BAC_TRACKS.keys()].find((track) => normalized === track || normalized.startsWith(`${track} `)) || "";
 }
 
 function fullTrackLabel(track) {
@@ -43,9 +36,7 @@ function isNonTrackExam() {
 
 function isMainBacExam() {
   const identity = currentExamIdentity();
-  return BAC_PATTERN.test(identity)
-    && !NON_TRACK_EXAM_PATTERN.test(identity)
-    && !COMPLEMENTARY_PATTERN.test(identity);
+  return BAC_PATTERN.test(identity) && !NON_TRACK_EXAM_PATTERN.test(identity) && !COMPLEMENTARY_PATTERN.test(identity);
 }
 
 function isAnyBacExam() {
@@ -54,8 +45,7 @@ function isAnyBacExam() {
 }
 
 function isTrackControlText(value) {
-  const text = String(value || "").trim();
-  return /كل الشعب|حسب الشعب|الشعب|الشعبة|toutes les séries|par série|série|series|track/i.test(text);
+  return /كل الشعب|حسب الشعب|الشعب|الشعبة|toutes les séries|par série|série|series|track/i.test(String(value || "").trim());
 }
 
 function setHidden(element, hidden) {
@@ -66,40 +56,26 @@ function setHidden(element, hidden) {
 
 function removeNonTrackControls() {
   if (!isNonTrackExam()) return;
-
-  const controls = [
-    ...document.querySelectorAll(".stream-filter-chip"),
-    ...document.querySelectorAll('button[role="tab"]'),
-  ];
-
+  const controls = [...document.querySelectorAll(".stream-filter-chip"), ...document.querySelectorAll('button[role="tab"]')];
   let selectedControlWasHidden = false;
   for (const control of controls) {
     if (!isTrackControlText(control.textContent)) continue;
-    selectedControlWasHidden ||= control.getAttribute("aria-selected") === "true"
-      || control.classList.contains("is-active");
+    selectedControlWasHidden ||= control.getAttribute("aria-selected") === "true" || control.classList.contains("is-active");
     setHidden(control, true);
   }
-
-  if (selectedControlWasHidden) {
-    const replacement = controls.find((control) => !control.hidden && !isTrackControlText(control.textContent));
-    replacement?.click();
-  }
+  if (selectedControlWasHidden) controls.find((control) => !control.hidden && !isTrackControlText(control.textContent))?.click();
 }
 
 function removeNonTrackResultDetails() {
   if (!isNonTrackExam()) return;
-
   document.querySelectorAll(".info-tile").forEach((tile) => {
     const labels = [...tile.querySelectorAll("span")].map((item) => item.textContent || "");
     if (labels.some(isTrackControlText)) setHidden(tile, true);
   });
-
   document.querySelectorAll(".match-row").forEach((row) => {
     const detail = row.querySelector("span.mt-1");
-    if (!detail) return;
-    detail.textContent = String(detail.textContent || "").replace(/\s+-\s+.*$/, "");
+    if (detail) detail.textContent = String(detail.textContent || "").replace(/\s+-\s+.*$/, "");
   });
-
   document.querySelectorAll(".topper-compact p").forEach((label) => setHidden(label, true));
 }
 
@@ -111,28 +87,17 @@ function candidateScore(card) {
 
 function mergeNonTrackTopperGroups() {
   if (!isNonTrackExam() || !window.location.hash.toLowerCase().includes("toppers")) return;
-
   const groups = [...document.querySelectorAll(".track-group")];
   if (groups.length < 2 || groups[0].dataset.noTrackMerged === "true") return;
-
-  const rankedCards = groups
-    .flatMap((group) => [...group.querySelectorAll(".topper-compact")])
-    .sort((a, b) => candidateScore(b) - candidateScore(a))
-    .slice(0, 3);
-
+  const rankedCards = groups.flatMap((group) => [...group.querySelectorAll(".topper-compact")]).sort((a, b) => candidateScore(b) - candidateScore(a)).slice(0, 3);
   if (!rankedCards.length) return;
-
   const primaryGroup = groups[0];
   const cardsContainer = primaryGroup.querySelector(":scope > .grid");
   if (!cardsContainer) return;
-
-  const heading = primaryGroup.querySelector(":scope > div:first-child");
-  setHidden(heading, true);
+  setHidden(primaryGroup.querySelector(":scope > div:first-child"), true);
   cardsContainer.replaceChildren(...rankedCards);
   primaryGroup.dataset.noTrackMerged = "true";
-
   groups.slice(1).forEach((group) => setHidden(group, true));
-
   const rankNames = ["الأول", "الثاني", "الثالث"];
   rankedCards.forEach((card, index) => {
     card.dataset.globalRank = String(index + 1);
@@ -146,22 +111,17 @@ function mergeNonTrackTopperGroups() {
 
 function updateBacTrackGroups() {
   if (!isAnyBacExam()) return;
-
-  const groups = [...document.querySelectorAll(".track-group")];
-  groups.forEach((group, index) => {
+  [...document.querySelectorAll(".track-group")].forEach((group, index) => {
     const heading = group.querySelector("h3");
     const track = normalizeTrack(group.dataset.bacTrack || heading?.textContent);
-
     if (!track) {
       group.style.order = String(100 + index);
       return;
     }
-
     const config = BAC_TRACKS.get(track);
     group.dataset.bacTrack = track;
     group.style.order = String(config.order);
     group.dataset.trackPriority = String(config.order);
-
     const label = fullTrackLabel(track);
     if (heading && heading.textContent !== label) {
       heading.textContent = label;
@@ -172,17 +132,13 @@ function updateBacTrackGroups() {
 
 function updateBacTrackSelector() {
   if (!isMainBacExam()) return;
-
   document.querySelectorAll(".stream-filter-row").forEach((row) => {
-    const buttons = [...row.querySelectorAll(".stream-filter-chip")];
-
-    buttons.forEach((button, index) => {
+    [...row.querySelectorAll(".stream-filter-chip")].forEach((button, index) => {
       const track = normalizeTrack(button.dataset.bacTrack || button.textContent);
       if (!track) {
         button.style.order = isTrackControlText(button.textContent) ? "-1" : String(100 + index);
         return;
       }
-
       button.dataset.bacTrack = track;
       button.textContent = fullTrackLabel(track);
       button.title = fullTrackLabel(track);
@@ -193,23 +149,12 @@ function updateBacTrackSelector() {
 
 function updateBacAnalyticsOrder() {
   if (!isAnyBacExam() || !window.location.hash.toLowerCase().includes("analytics")) return;
-
-  const candidates = [
-    ...document.querySelectorAll(".analytics-ranking-button"),
-    ...document.querySelectorAll(".analytics-reference-card button"),
-  ];
-
+  const candidates = [...document.querySelectorAll(".analytics-ranking-button"), ...document.querySelectorAll(".analytics-reference-card button")];
   candidates.forEach((button, index) => {
-    const label = button.querySelector("strong, span:nth-child(2)")?.textContent || button.textContent;
-    const track = normalizeTrack(label);
+    const labelNode = button.querySelector("strong, span:nth-child(2)");
+    const track = normalizeTrack(labelNode?.textContent || button.textContent);
     button.style.order = track ? String(BAC_TRACKS.get(track).order) : String(100 + index);
-
-    if (track) {
-      const labelNode = button.querySelector("strong, span:nth-child(2)");
-      if (labelNode && labelNode.textContent !== fullTrackLabel(track)) {
-        labelNode.textContent = fullTrackLabel(track);
-      }
-    }
+    if (track && labelNode && labelNode.textContent !== fullTrackLabel(track)) labelNode.textContent = fullTrackLabel(track);
   });
 }
 
@@ -225,23 +170,24 @@ function applyExamTrackRules() {
 export default function BacTopperTrackOrder() {
   useEffect(() => {
     let frame = 0;
-
+    let timers = [];
     const schedule = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(applyExamTrackRules);
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers = [0, 90, 280].map((delay) => window.setTimeout(() => {
+        frame = requestAnimationFrame(applyExamTrackRules);
+      }, delay));
     };
 
     schedule();
-
-    const root = document.querySelector("main") || document.body;
-    const observer = new MutationObserver(schedule);
-    observer.observe(root, { childList: true, subtree: true, characterData: true });
-    window.addEventListener("hashchange", schedule);
-    window.addEventListener("popstate", schedule);
+    window.addEventListener("mauriresults:routechange", schedule);
+    window.addEventListener("hashchange", schedule, { passive: true });
+    window.addEventListener("popstate", schedule, { passive: true });
 
     return () => {
       cancelAnimationFrame(frame);
-      observer.disconnect();
+      timers.forEach((timer) => window.clearTimeout(timer));
+      window.removeEventListener("mauriresults:routechange", schedule);
       window.removeEventListener("hashchange", schedule);
       window.removeEventListener("popstate", schedule);
     };
