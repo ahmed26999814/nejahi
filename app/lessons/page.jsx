@@ -2,66 +2,84 @@
 
 import { useMemo, useState } from "react";
 
-const GRADES = [
-  { id: "1AF", label: "السنة الأولى", short: "1AF" },
-  { id: "2AF", label: "السنة الثانية", short: "2AF" },
-  { id: "3AF", label: "السنة الثالثة", short: "3AF" },
-  { id: "4AF", label: "السنة الرابعة", short: "4AF" },
-  { id: "5AF", label: "السنة الخامسة", short: "5AF" },
-  { id: "6AF", label: "السنة السادسة", short: "6AF" },
+const STAGES = [
+  {
+    id: "primary",
+    label: "الابتدائية",
+    title: "كتب المرحلة الابتدائية",
+    grades: ["1AF", "2AF", "3AF", "4AF", "5AF", "6AF"],
+  },
+  {
+    id: "middle",
+    label: "الإعدادية",
+    title: "كتب المرحلة الإعدادية",
+    grades: ["1AS", "2AS", "3AS", "4AS"],
+  },
 ];
 
-const BOOKS = [
-  { grade: "1AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-1AF-M.pdf" },
-  { grade: "1AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/Manuel_Arabe_1AP.pdf" },
-  { grade: "1AF", subject: "اللغة العربية", type: "دفتر التمارين", url: "https://docs.bsimr.com/pdfs/fondamentals/Cahier_Arabe_1AP.pdf" },
-  { grade: "1AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC1AF-M.pdf" },
-  { grade: "1AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/Math_1AP_Manuel_eleve.pdf" },
-  { grade: "1AF", subject: "الرياضيات", type: "دفتر التمارين", url: "https://docs.bsimr.com/pdfs/fondamentals/Math_1AP_Cahier_exercice.pdf" },
+const GRADE_LABELS = {
+  "1AF": "السنة الأولى", "2AF": "السنة الثانية", "3AF": "السنة الثالثة",
+  "4AF": "السنة الرابعة", "5AF": "السنة الخامسة", "6AF": "السنة السادسة",
+  "1AS": "السنة الأولى", "2AS": "السنة الثانية", "3AS": "السنة الثالثة", "4AS": "السنة الرابعة",
+};
 
-  { grade: "2AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-2AF-M.pdf" },
-  { grade: "2AF", subject: "اللغة العربية", type: "كتاب القراءة", url: "https://docs.bsimr.com/pdfs/student/MART05_Arabe%202AP.pdf" },
-  { grade: "2AF", subject: "اللغة العربية", type: "دفتر الكتابة", url: "https://docs.bsimr.com/pdfs/student/MART06_Arabe_2AP.pdf" },
-  { grade: "2AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/ic-2AF-M.pdf" },
-  { grade: "2AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MATHE-2AF.pdf" },
-  { grade: "2AF", subject: "الرياضيات", type: "دفتر التمارين", url: "https://docs.bsimr.com/pdfs/fondamentals/MATHE-2AF-Exercices.pdf" },
-  { grade: "2AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR_2AP_M_ELEVE.pdf" },
-
-  { grade: "3AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-3AF-M.pdf" },
-  { grade: "3AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-3AF-M.pdf" },
-  { grade: "3AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-3AF-M.pdf" },
-  { grade: "3AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-3AF-M.pdf" },
-  { grade: "3AF", subject: "العلوم الطبيعية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/SN-3AF-M.pdf" },
-  { grade: "3AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-3AF-M.pdf" },
-  { grade: "3AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/student/MART08%20livre%20de%20lecture%20Franc%CC%A7ais%203AP%20Livre_Inside.pdf" },
-  { grade: "3AF", subject: "الفرنسية", type: "دفتر الكتابة", url: "https://docs.bsimr.com/pdfs/student/MART07_Article%2007%20Cahier%20Franc%CC%A7ais%203AP_Inside.pdf" },
-
-  { grade: "4AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-4AF-M.pdf" },
-  { grade: "4AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-4AF-M.pdf" },
-  { grade: "4AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-4AF-M.pdf" },
-  { grade: "4AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-4AF-M.pdf" },
-  { grade: "4AF", subject: "العلوم الطبيعية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/SN-4AF-M.pdf" },
-  { grade: "4AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-4AF-M.pdf" },
-  { grade: "4AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR-4AF-M.pdf" },
-
-  { grade: "5AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-5AF-M.pdf" },
-  { grade: "5AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-5AF-M.pdf" },
-  { grade: "5AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-5AF-M.pdf" },
-  { grade: "5AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-5AF-M.pdf" },
-  { grade: "5AF", subject: "العلوم الطبيعية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/SN-5AF-M.pdf" },
-  { grade: "5AF", subject: "التاريخ", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/HIST-5AF-M.pdf" },
-  { grade: "5AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-5AF-M.pdf" },
-  { grade: "5AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR-5AF-M.pdf" },
-
-  { grade: "6AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-6AF-M.pdf" },
-  { grade: "6AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-6AF-M.pdf" },
-  { grade: "6AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-6AF-M.pdf" },
-  { grade: "6AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-6AF-M.pdf" },
-  { grade: "6AF", subject: "العلوم الطبيعية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/SN-6AF-M.pdf" },
-  { grade: "6AF", subject: "التاريخ", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/HIST-6AF-M.pdf" },
-  { grade: "6AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-6AF-M.pdf" },
-  { grade: "6AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR-6AF-M.pdf" },
+const PRIMARY_BOOKS = [
+  ["1AF", "التربية الإسلامية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/IMR-1AF-M.pdf"],
+  ["1AF", "اللغة العربية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/Manuel_Arabe_1AP.pdf"],
+  ["1AF", "اللغة العربية", "دفتر التمارين", "https://docs.bsimr.com/pdfs/fondamentals/Cahier_Arabe_1AP.pdf"],
+  ["1AF", "التربية المدنية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/IC1AF-M.pdf"],
+  ["1AF", "الرياضيات", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/Math_1AP_Manuel_eleve.pdf"],
+  ["1AF", "الرياضيات", "دفتر التمارين", "https://docs.bsimr.com/pdfs/fondamentals/Math_1AP_Cahier_exercice.pdf"],
+  ["2AF", "التربية الإسلامية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/IMR-2AF-M.pdf"],
+  ["2AF", "اللغة العربية", "كتاب القراءة", "https://docs.bsimr.com/pdfs/student/MART05_Arabe%202AP.pdf"],
+  ["2AF", "اللغة العربية", "دفتر الكتابة", "https://docs.bsimr.com/pdfs/student/MART06_Arabe_2AP.pdf"],
+  ["2AF", "التربية المدنية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/ic-2AF-M.pdf"],
+  ["2AF", "الرياضيات", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/MATHE-2AF.pdf"],
+  ["2AF", "الرياضيات", "دفتر التمارين", "https://docs.bsimr.com/pdfs/fondamentals/MATHE-2AF-Exercices.pdf"],
+  ["2AF", "الفرنسية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/FR_2AP_M_ELEVE.pdf"],
+  ["3AF", "التربية الإسلامية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/IMR-3AF-M.pdf"],
+  ["3AF", "اللغة العربية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/AR-3AF-M.pdf"],
+  ["3AF", "التربية المدنية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/IC-3AF-M.pdf"],
+  ["3AF", "الرياضيات", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/MA-3AF-M.pdf"],
+  ["3AF", "العلوم الطبيعية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/SN-3AF-M.pdf"],
+  ["3AF", "الجغرافيا", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/fondamentals/GEO-3AF-M.pdf"],
+  ["3AF", "الفرنسية", "كتاب التلميذ", "https://docs.bsimr.com/pdfs/student/MART08%20livre%20de%20lecture%20Franc%CC%A7ais%203AP%20Livre_Inside.pdf"],
+  ["3AF", "الفرنسية", "دفتر الكتابة", "https://docs.bsimr.com/pdfs/student/MART07_Article%2007%20Cahier%20Franc%CC%A7ais%203AP_Inside.pdf"],
+  ...["4AF", "5AF", "6AF"].flatMap((grade) => {
+    const subjects = [
+      ["التربية الإسلامية", "IMR"], ["اللغة العربية", "AR"], ["التربية المدنية", "IC"],
+      ["الرياضيات", "MA"], ["العلوم الطبيعية", "SN"],
+      ...(grade === "4AF" ? [] : [["التاريخ", "HIST"]]),
+      ["الجغرافيا", "GEO"], ["الفرنسية", "FR"],
+    ];
+    return subjects.map(([subject, code]) => [grade, subject, "كتاب التلميذ", `https://docs.bsimr.com/pdfs/fondamentals/${code}-${grade}-M.pdf`]);
+  }),
 ];
+
+const MIDDLE_SUBJECTS = [
+  ["التربية الإسلامية", "IMR", true],
+  ["اللغة العربية", "AR", true],
+  ["التربية المدنية", "IC", true],
+  ["الرياضيات", "MA", true],
+  ["العلوم الطبيعية", "SN", true],
+  ["الجغرافيا", "GEO", true],
+  ["التاريخ", "HIS", false],
+  ["الفرنسية", "FR", true],
+  ["الإنجليزية", "ANG", true],
+];
+
+const MIDDLE_BOOKS = ["1AS", "2AS", "3AS", "4AS"].flatMap((grade) => {
+  const subjects = grade === "3AS" || grade === "4AS"
+    ? [...MIDDLE_SUBJECTS, ["الفيزياء", "PHY", true]]
+    : MIDDLE_SUBJECTS;
+
+  return subjects.map(([subject, code, hasManualSuffix]) => {
+    const filename = `${code}-${grade}${hasManualSuffix ? "-M" : ""}.pdf`;
+    return [grade, subject, "كتاب التلميذ", `https://docs.bsimr.com/pdfs/secondaire1s/${filename}`];
+  });
+});
+
+const BOOKS = [...PRIMARY_BOOKS, ...MIDDLE_BOOKS].map(([grade, subject, type, url]) => ({ grade, subject, type, url }));
 
 function BookIcon() {
   return (
@@ -78,10 +96,17 @@ function downloadUrl(book) {
 }
 
 export default function LessonsPage() {
+  const [stageId, setStageId] = useState("primary");
   const [grade, setGrade] = useState("1AF");
   const [query, setQuery] = useState("");
+  const stage = STAGES.find((item) => item.id === stageId) || STAGES[0];
 
-  const selectedGrade = GRADES.find((item) => item.id === grade);
+  function chooseStage(nextStage) {
+    setStageId(nextStage.id);
+    setGrade(nextStage.grades[0]);
+    setQuery("");
+  }
+
   const books = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return BOOKS.filter((book) => book.grade === grade && (!normalized || `${book.subject} ${book.type}`.toLowerCase().includes(normalized)));
@@ -103,21 +128,29 @@ export default function LessonsPage() {
             <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/15"><BookIcon /></div>
             <div>
               <p className="mb-1 text-xs font-black text-emerald-100">مكتبة MauriResults التعليمية</p>
-              <h1 className="text-2xl font-black sm:text-4xl">كتب المرحلة الابتدائية</h1>
-              <p className="mt-2 text-sm font-bold leading-7 text-emerald-50">اختر السنة والمادة، ثم اضغط على زر التحميل ليبدأ تنزيل الكتاب مباشرة بصيغة PDF.</p>
+              <h1 className="text-2xl font-black sm:text-4xl">{stage.title}</h1>
+              <p className="mt-2 text-sm font-bold leading-7 text-emerald-50">اختر المرحلة والسنة والمادة، ثم اضغط على زر التحميل ليبدأ تنزيل الكتاب مباشرة بصيغة PDF.</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
-          {GRADES.map((item) => {
-            const count = BOOKS.filter((book) => book.grade === item.id).length;
-            const active = grade === item.id;
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          {STAGES.map((item) => (
+            <button key={item.id} type="button" onClick={() => chooseStage(item)} className={`rounded-2xl border px-4 py-4 text-base font-black transition ${stageId === item.id ? "border-mauri-green bg-mauri-green text-white shadow-lg" : "border-slate-200 bg-white hover:border-mauri-green/40 dark:border-white/10 dark:bg-white/5"}`}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <div className={`mt-4 grid gap-2 ${stage.grades.length === 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3 sm:grid-cols-6"}`}>
+          {stage.grades.map((item) => {
+            const count = BOOKS.filter((book) => book.grade === item).length;
+            const active = grade === item;
             return (
-              <button key={item.id} type="button" onClick={() => setGrade(item.id)} className={`rounded-2xl border p-3 text-center transition ${active ? "border-mauri-green bg-mauri-green text-white shadow-lg" : "border-slate-200 bg-white hover:border-mauri-green/40 dark:border-white/10 dark:bg-white/5"}`}>
-                <strong className="block text-sm font-black">{item.label}</strong>
-                <span className={`mt-1 block text-xs font-bold ${active ? "text-white/80" : "text-slate-500"}`}>{item.short}</span>
-                <span className={`mt-1 block text-[10px] font-bold ${active ? "text-white/75" : "text-slate-400"}`}>{count ? `${count} كتب` : "قريبًا"}</span>
+              <button key={item} type="button" onClick={() => setGrade(item)} className={`rounded-2xl border p-3 text-center transition ${active ? "border-mauri-green bg-mauri-green text-white shadow-lg" : "border-slate-200 bg-white hover:border-mauri-green/40 dark:border-white/10 dark:bg-white/5"}`}>
+                <strong className="block text-sm font-black">{GRADE_LABELS[item]}</strong>
+                <span className={`mt-1 block text-xs font-bold ${active ? "text-white/80" : "text-slate-500"}`}>{item}</span>
+                <span className={`mt-1 block text-[10px] font-bold ${active ? "text-white/75" : "text-slate-400"}`}>{count} كتب</span>
               </button>
             );
           })}
@@ -125,34 +158,26 @@ export default function LessonsPage() {
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-black">{selectedGrade?.label} ابتدائية</h2>
-            <p className="mt-1 text-sm font-bold text-slate-500">{books.length ? `${books.length} ملفات متاحة للتحميل` : "ستُضاف كتب هذه السنة قريبًا"}</p>
+            <h2 className="text-xl font-black">{GRADE_LABELS[grade]} {stage.label}</h2>
+            <p className="mt-1 text-sm font-bold text-slate-500">{books.length} ملفات متاحة للتحميل</p>
           </div>
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث عن مادة أو كتاب..." className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none transition focus:border-mauri-green focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/5 sm:max-w-xs" />
         </div>
 
-        {books.length ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {books.map((book) => (
-              <article key={`${book.grade}-${book.subject}-${book.type}`} className="flex min-h-40 flex-col rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-white/5">
-                <div className="flex items-start gap-3">
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-mauri-green/10 text-mauri-green"><BookIcon /></div>
-                  <div className="min-w-0">
-                    <h3 className="text-base font-black">{book.subject}</h3>
-                    <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-300">{book.type}</p>
-                  </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {books.map((book) => (
+            <article key={`${book.grade}-${book.subject}-${book.type}`} className="flex min-h-40 flex-col rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-start gap-3">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-mauri-green/10 text-mauri-green"><BookIcon /></div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-black">{book.subject}</h3>
+                  <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-300">{book.type}</p>
                 </div>
-                <a href={downloadUrl(book)} className="mt-auto flex h-11 items-center justify-center rounded-2xl bg-mauri-green px-4 text-sm font-black text-white transition hover:brightness-110">تحميل PDF</a>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-5 rounded-[26px] border border-dashed border-slate-300 bg-white p-10 text-center dark:border-white/15 dark:bg-white/5">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-white/10"><BookIcon /></div>
-            <h3 className="mt-4 font-black">لا توجد كتب متاحة حاليًا</h3>
-            <p className="mt-2 text-sm font-bold text-slate-500">سيتم إضافة كتب {selectedGrade?.label} عند توفر روابطها.</p>
-          </div>
-        )}
+              </div>
+              <a href={downloadUrl(book)} className="mt-auto flex h-11 items-center justify-center rounded-2xl bg-mauri-green px-4 text-sm font-black text-white transition hover:brightness-110">تحميل PDF</a>
+            </article>
+          ))}
+        </div>
 
         <p className="mt-8 text-center text-xs font-bold leading-6 text-slate-400">عند الضغط على زر التحميل يبدأ تنزيل ملف PDF مباشرة على جهازك.</p>
       </section>
