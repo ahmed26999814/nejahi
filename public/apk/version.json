@@ -6,8 +6,8 @@
   "minimumAndroid": "7.0",
   "sizeBytes": 8265441,
   "sizeMB": 7.88,
-  "sha256": "bddc46177babfb2d98522428ad2a3d0a28d14f4bb01df681e5289a7751283831",
-  "buildCommit": "c8cec74feb0232aa31a680bc5034abc448429a70",
-  "publishedAt": "2026-07-14T04:27:03.127621+00:00",
+  "sha256": "2f005bd90a496819464d71309e7145d303c8d3a2b27c50a7a6c802fca5e35938",
+  "buildCommit": "b2f97bad60d784fde574afd2fe8d228e5e3133f3",
+  "publishedAt": "2026-07-14T04:29:40.899090+00:00",
   "download": "/apk/MauriResults.apk"
 }
