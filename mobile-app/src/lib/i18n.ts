@@ -3,6 +3,7 @@ import type { Language } from "../types";
 const dictionary = {
   ar: {
     appName: "MauriResults", home: "الرئيسية", saved: "المحفوظات", stats: "الإحصائيات", settings: "الإعدادات",
+    calculator: "الحاسبة", lessons: "الدروس",
     officialResults: "النتائج الوطنية", chooseExam: "اختر المسابقة للبحث", refresh: "تحديث",
     offline: "أنت غير متصل. يتم عرض آخر بيانات محفوظة.", noExams: "لا توجد مسابقات متاحة حاليًا.",
     searchTitle: "البحث عن النتيجة", searchPlaceholder: "اكتب رقم المترشح أو الاسم", search: "بحث",
@@ -17,8 +18,8 @@ const dictionary = {
     tracks: "الشعب", pickExamForStats: "اختر مسابقة لعرض الإحصائيات", language: "اللغة", appearance: "المظهر",
     system: "حسب النظام", light: "فاتح", dark: "داكن", notifications: "إشعارات النتائج الجديدة",
     notificationsHint: "يتم تنبيهك محليًا عند اكتشاف مسابقة جديدة أثناء تحديث التطبيق.", about: "حول التطبيق",
-    aboutText: "تطبيق أصلي مستقل للبحث في نتائج MauriResults، مع الحفظ دون اتصال والمشاركة وملفات PDF.",
-    version: "الإصدار 2.0.0", newExamTitle: "نتائج جديدة متاحة", newExamBody: "تم نشر مسابقة جديدة في MauriResults.",
+    aboutText: "تطبيق أصلي مستقل للنتائج وحساب المعدل والدروس، مع الحفظ دون اتصال والمشاركة وملفات PDF.",
+    version: "الإصدار 2.1.0", newExamTitle: "نتائج جديدة متاحة", newExamBody: "تم نشر مسابقة جديدة في MauriResults.",
     error: "حدث خطأ. حاول مرة أخرى.", loading: "جاري التحميل...", cached: "محفوظ دون اتصال", live: "متصل مباشرة",
     back: "رجوع", cancel: "إلغاء", close: "إغلاق", yes: "نعم", permissionNeeded: "يلزم السماح بالإشعارات من إعدادات الهاتف.",
     selectedExam: "المسابقة المختارة", allFields: "بيانات إضافية", favoriteCandidate: "نتيجة محفوظة",
@@ -26,6 +27,7 @@ const dictionary = {
   },
   fr: {
     appName: "MauriResults", home: "Accueil", saved: "Enregistrés", stats: "Statistiques", settings: "Réglages",
+    calculator: "Calcul", lessons: "Cours",
     officialResults: "Résultats nationaux", chooseExam: "Choisissez un examen", refresh: "Actualiser",
     offline: "Vous êtes hors ligne. Les dernières données enregistrées sont affichées.", noExams: "Aucun examen disponible.",
     searchTitle: "Rechercher un résultat", searchPlaceholder: "Numéro du candidat ou nom", search: "Rechercher",
@@ -41,8 +43,8 @@ const dictionary = {
     language: "Langue", appearance: "Apparence", system: "Système", light: "Clair", dark: "Sombre",
     notifications: "Notifications des nouveaux résultats",
     notificationsHint: "Une notification locale apparaît lorsqu’un nouvel examen est détecté pendant l’actualisation.",
-    about: "À propos", aboutText: "Application native indépendante pour rechercher les résultats, les enregistrer hors ligne, les partager et créer un PDF.",
-    version: "Version 2.0.0", newExamTitle: "Nouveaux résultats disponibles", newExamBody: "Un nouvel examen a été publié sur MauriResults.",
+    about: "À propos", aboutText: "Application native pour les résultats, le calcul de moyenne et les cours, avec accès hors ligne, partage et PDF.",
+    version: "Version 2.1.0", newExamTitle: "Nouveaux résultats disponibles", newExamBody: "Un nouvel examen a été publié sur MauriResults.",
     error: "Une erreur est survenue. Réessayez.", loading: "Chargement...", cached: "Disponible hors ligne", live: "Connexion directe",
     back: "Retour", cancel: "Annuler", close: "Fermer", yes: "Oui",
     permissionNeeded: "Autorisez les notifications dans les réglages du téléphone.", selectedExam: "Examen sélectionné",
