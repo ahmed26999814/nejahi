@@ -1,0 +1,20 @@
+import React, { useMemo, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useApp } from "../context/AppContext";
+import { t } from "../lib/i18n";
+import { getPrimaryFields, textValue } from "../lib/result";
+import type { SavedResult } from "../types";
+import { EmptyState, SectionTitle } from "../components/ui";
+import { ResultCard } from "../components/ResultCard";
+
+export function SavedScreen({ onOpen }: { onOpen: (item: SavedResult) => void }) {
+  const { colors, language, saved, history, clearHistory } = useApp(); const [filter, setFilter] = useState("");
+  const filtered = useMemo(() => { const q = filter.trim().toLowerCase(); if (!q) return saved; return saved.filter((item) => { const fields = getPrimaryFields(item.exam, item.row); return `${textValue(fields.name)} ${textValue(fields.number)} ${item.exam.title_ar} ${item.exam.title_fr}`.toLowerCase().includes(q); }); }, [filter, saved]);
+  return <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}><SectionTitle eyebrow={`${saved.length}`} title={t(language, "saved")} />
+    <TextInput value={filter} onChangeText={setFilter} placeholder={t(language, "searchPlaceholder")} placeholderTextColor={colors.muted} style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text, textAlign: language === "ar" ? "right" : "left", writingDirection: language === "ar" ? "rtl" : "ltr" }]} />
+    {filtered.length ? <View style={styles.list}>{filtered.map((item) => <View key={item.id} style={styles.savedGroup}><Text style={[styles.examTitle, { color: colors.muted, textAlign: language === "ar" ? "right" : "left", writingDirection: language === "ar" ? "rtl" : "ltr" }]} numberOfLines={1}>{language === "ar" ? item.exam.title_ar : item.exam.title_fr}</Text><ResultCard exam={item.exam} row={item.row} onPress={() => onOpen(item)} /></View>)}</View> : <EmptyState icon="⭐" title={t(language, "emptySaved")} description={filter ? t(language, "noResults") : undefined} />}
+    <View style={styles.sectionGap} /><SectionTitle title={t(language, "history")} action={history.length ? <Pressable onPress={() => void clearHistory()} style={[styles.clearButton, { backgroundColor: `${colors.danger}16`, borderColor: `${colors.danger}35` }]}><Text style={[styles.clearText, { color: colors.danger }]}>{t(language, "clearHistory")}</Text></Pressable> : undefined} />
+    {history.length ? <View style={styles.list}>{history.map((item) => <View key={item.id} style={[styles.historyCard, { backgroundColor: colors.surface, borderColor: colors.border, flexDirection: language === "ar" ? "row-reverse" : "row" }]}><View style={{ flex: 1, alignItems: language === "ar" ? "flex-end" : "flex-start" }}><Text style={[styles.historyTitle, { color: colors.text, writingDirection: language === "ar" ? "rtl" : "ltr" }]} numberOfLines={1}>{language === "ar" ? item.titleAr : item.titleFr}</Text><Text style={[styles.historyQuery, { color: colors.primary }]}>{item.query}</Text></View><Text style={[styles.historyCount, { color: colors.muted }]}>{item.resultCount}</Text></View>)}</View> : <EmptyState icon="🕘" title={t(language, "emptyHistory")} />}
+  </ScrollView>;
+}
+const styles = StyleSheet.create({ content: { padding: 14, paddingBottom: 110 }, input: { minHeight: 52, borderWidth: 1, borderRadius: 17, paddingHorizontal: 15, fontSize: 14, fontWeight: "700", marginBottom: 13 }, list: { gap: 11 }, savedGroup: { gap: 6 }, examTitle: { fontSize: 10, fontWeight: "800", paddingHorizontal: 6 }, sectionGap: { height: 26 }, clearButton: { minHeight: 34, borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, alignItems: "center", justifyContent: "center" }, clearText: { fontSize: 10, fontWeight: "900" }, historyCard: { borderWidth: 1, borderRadius: 17, padding: 12, gap: 10, alignItems: "center" }, historyTitle: { fontSize: 12, fontWeight: "900" }, historyQuery: { marginTop: 4, fontSize: 11, fontWeight: "800" }, historyCount: { minWidth: 28, textAlign: "center", fontSize: 12, fontWeight: "900" } });
