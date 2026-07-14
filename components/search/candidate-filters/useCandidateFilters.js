@@ -2,23 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchCandidateFilterData, findCandidateFilterTarget } from "./api";
-import {
-  EMPTY_FILTERS,
-  getFilterLevels,
-  resolveExamSource,
-} from "./config";
+import { EMPTY_FILTERS, getFilterLevels, resolveExamSource } from "./config";
 
 function freshFilters() {
   return { ...EMPTY_FILTERS };
 }
 
 function freshOptions() {
-  return {
-    track: [],
-    wilaya: [],
-    centre: [],
-    school: [],
-  };
+  return { track: [], wilaya: [], centre: [], school: [] };
 }
 
 export function useCandidateFilters() {
@@ -35,26 +26,33 @@ export function useCandidateFilters() {
   const levels = useMemo(() => getFilterLevels(source), [source]);
 
   useEffect(() => {
+    let timers = [];
     const refresh = () => {
-      setSource(resolveExamSource());
-      setTarget(findCandidateFilterTarget());
+      const nextSource = resolveExamSource();
+      const nextTarget = findCandidateFilterTarget();
+      setSource((current) => current === nextSource ? current : nextSource);
+      setTarget((current) => current === nextTarget ? current : nextTarget);
+    };
+    const schedule = () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers = [0, 80, 240].map((delay) => window.setTimeout(refresh, delay));
     };
 
-    refresh();
-    const observer = new MutationObserver(refresh);
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("hashchange", refresh);
-    window.addEventListener("popstate", refresh);
+    schedule();
+    window.addEventListener("mauriresults:routechange", schedule);
+    window.addEventListener("hashchange", schedule, { passive: true });
+    window.addEventListener("popstate", schedule, { passive: true });
 
     return () => {
-      observer.disconnect();
-      window.removeEventListener("hashchange", refresh);
-      window.removeEventListener("popstate", refresh);
+      timers.forEach((timer) => window.clearTimeout(timer));
+      window.removeEventListener("mauriresults:routechange", schedule);
+      window.removeEventListener("hashchange", schedule);
+      window.removeEventListener("popstate", schedule);
     };
   }, []);
 
   useEffect(() => {
-    if (!source) return;
+    if (!source) return undefined;
 
     activeRequestRef.current?.abort();
     const controller = new AbortController();
@@ -68,16 +66,10 @@ export function useCandidateFilters() {
     setMessage("");
     setLoading(firstLevel);
 
-    fetchCandidateFilterData(
-      { mode: "options", source, level: firstLevel },
-      controller.signal
-    )
+    fetchCandidateFilterData({ mode: "options", source, level: firstLevel }, controller.signal)
       .then((data) => {
         if (controller.signal.aborted) return;
-        setOptions((current) => ({
-          ...current,
-          [firstLevel]: data.options || [],
-        }));
+        setOptions((current) => ({ ...current, [firstLevel]: data.options || [] }));
       })
       .catch((error) => {
         if (error.name !== "AbortError") setMessage("تعذر تحميل خيارات البحث.");
@@ -93,17 +85,12 @@ export function useCandidateFilters() {
     activeRequestRef.current?.abort();
     const controller = new AbortController();
     activeRequestRef.current = controller;
-
     setLoading("candidates");
     setMessage("");
 
     try {
-      const data = await fetchCandidateFilterData(
-        { source, ...nextValues },
-        controller.signal
-      );
+      const data = await fetchCandidateFilterData({ source, ...nextValues }, controller.signal);
       if (controller.signal.aborted) return;
-
       const rows = data.candidates || [];
       setCandidates(rows);
       if (!rows.length) setMessage("لا توجد نتائج ناجحة مطابقة لهذه الاختيارات.");
@@ -120,7 +107,6 @@ export function useCandidateFilters() {
     activeRequestRef.current?.abort();
     const index = levels.indexOf(level);
     const nextValues = { ...values, [level]: value };
-
     for (const later of levels.slice(index + 1)) nextValues[later] = "";
 
     setValues(nextValues);
@@ -150,22 +136,14 @@ export function useCandidateFilters() {
     setLoading(nextLevel);
 
     try {
-      const data = await fetchCandidateFilterData({
-        mode: "options",
-        source,
-        level: nextLevel,
-        ...nextValues,
-      }, controller.signal);
-
+      const data = await fetchCandidateFilterData({ mode: "options", source, level: nextLevel, ...nextValues }, controller.signal);
       if (controller.signal.aborted) return;
       const rows = data.options || [];
-
       if (!rows.length) {
         setVisibleCount(index + 1);
         await loadCandidates(nextValues);
         return;
       }
-
       setOptions((current) => ({ ...current, [nextLevel]: rows }));
       setVisibleCount(index + 2);
     } catch (error) {
@@ -177,16 +155,5 @@ export function useCandidateFilters() {
     }
   }, [levels, loadCandidates, source, values]);
 
-  return {
-    source,
-    target,
-    levels,
-    values,
-    options,
-    visibleCount,
-    loading,
-    candidates,
-    message,
-    selectLevel,
-  };
+  return { source, target, levels, values, options, visibleCount, loading, candidates, message, selectLevel };
 }
