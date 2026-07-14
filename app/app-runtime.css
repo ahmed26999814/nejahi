@@ -23,6 +23,13 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* The legacy page shell had an inline opacity animation that hid the entire
+   server-rendered page until hydration. Keep content visible immediately for
+   a faster LCP while preserving all local component animations. */
+.app-background {
+  opacity: 1 !important;
+}
+
 button,
 a,
 input,
