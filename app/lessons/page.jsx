@@ -18,6 +18,7 @@ const BOOKS = [
   { grade: "1AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC1AF-M.pdf" },
   { grade: "1AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/Math_1AP_Manuel_eleve.pdf" },
   { grade: "1AF", subject: "الرياضيات", type: "دفتر التمارين", url: "https://docs.bsimr.com/pdfs/fondamentals/Math_1AP_Cahier_exercice.pdf" },
+
   { grade: "2AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-2AF-M.pdf" },
   { grade: "2AF", subject: "اللغة العربية", type: "كتاب القراءة", url: "https://docs.bsimr.com/pdfs/student/MART05_Arabe%202AP.pdf" },
   { grade: "2AF", subject: "اللغة العربية", type: "دفتر الكتابة", url: "https://docs.bsimr.com/pdfs/student/MART06_Arabe_2AP.pdf" },
@@ -25,6 +26,40 @@ const BOOKS = [
   { grade: "2AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MATHE-2AF.pdf" },
   { grade: "2AF", subject: "الرياضيات", type: "دفتر التمارين", url: "https://docs.bsimr.com/pdfs/fondamentals/MATHE-2AF-Exercices.pdf" },
   { grade: "2AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR_2AP_M_ELEVE.pdf" },
+
+  { grade: "3AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-3AF-M.pdf" },
+  { grade: "3AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-3AF-M.pdf" },
+  { grade: "3AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-3AF-M.pdf" },
+  { grade: "3AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-3AF-M.pdf" },
+  { grade: "3AF", subject: "العلوم الطبيعية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/SN-3AF-M.pdf" },
+  { grade: "3AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-3AF-M.pdf" },
+  { grade: "3AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/student/MART08%20livre%20de%20lecture%20Franc%CC%A7ais%203AP%20Livre_Inside.pdf" },
+  { grade: "3AF", subject: "الفرنسية", type: "دفتر الكتابة", url: "https://docs.bsimr.com/pdfs/student/MART07_Article%2007%20Cahier%20Franc%CC%A7ais%203AP_Inside.pdf" },
+
+  { grade: "4AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-4AF-M.pdf" },
+  { grade: "4AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-4AF-M.pdf" },
+  { grade: "4AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-4AF-M.pdf" },
+  { grade: "4AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-4AF-M.pdf" },
+  { grade: "4AF", subject: "العلوم الطبيعية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/SN-4AF-M.pdf" },
+  { grade: "4AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-4AF-M.pdf" },
+  { grade: "4AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR-4AF-M.pdf" },
+
+  { grade: "5AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-5AF-M.pdf" },
+  { grade: "5AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-5AF-M.pdf" },
+  { grade: "5AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-5AF-M.pdf" },
+  { grade: "5AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-5AF-M.pdf" },
+  { grade: "5AF", subject: "العلوم الطبيعية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/SN-5AF-M.pdf" },
+  { grade: "5AF", subject: "التاريخ", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/HIST-5AF-M.pdf" },
+  { grade: "5AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-5AF-M.pdf" },
+  { grade: "5AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR-5AF-M.pdf" },
+
+  { grade: "6AF", subject: "التربية الإسلامية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IMR-6AF-M.pdf" },
+  { grade: "6AF", subject: "اللغة العربية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/AR-6AF-M.pdf" },
+  { grade: "6AF", subject: "التربية المدنية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/IC-6AF-M.pdf" },
+  { grade: "6AF", subject: "الرياضيات", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/MA-6AF-M.pdf" },
+  { grade: "6AF", subject: "التاريخ", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/HIST-6AF-M.pdf" },
+  { grade: "6AF", subject: "الجغرافيا", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/GEO-6AF-M.pdf" },
+  { grade: "6AF", subject: "الفرنسية", type: "كتاب التلميذ", url: "https://docs.bsimr.com/pdfs/fondamentals/FR-6AF-M.pdf" },
 ];
 
 function BookIcon() {
