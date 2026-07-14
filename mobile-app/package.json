@@ -1,6 +1,6 @@
 {
   "name": "mauriresults-mobile",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "main": "index.ts",
   "scripts": {
@@ -8,7 +8,7 @@
     "android": "expo run:android",
     "prebuild": "npm run assets && expo prebuild --platform android --clean",
     "typecheck": "tsc --noEmit",
-    "build:apk": "cd android && ./gradlew assembleDebug",
+    "build:apk": "cd android && ./gradlew assembleRelease",
     "assets": "python3 scripts/generate_assets.py"
   },
   "dependencies": {
