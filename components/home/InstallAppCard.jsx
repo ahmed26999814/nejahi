@@ -87,18 +87,26 @@ export default function InstallAppCard() {
             <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300">تجربة أسرع على الهاتف</span>
             <h2 className="mt-1 text-lg font-black text-slate-950 dark:text-white md:text-xl">حمّل MauriResults كتطبيق</h2>
             <p className="mt-1 text-xs font-bold leading-5 text-slate-500 dark:text-slate-300">
-              افتح النتائج بسرعة من الشاشة الرئيسية على Android وiPhone دون البحث عن رابط الموقع كل مرة.
+              نسخة APK مباشرة للأندرويد، أو تثبيت سريع من المتصفح على Android وiPhone.
             </p>
             {message && <p className="mt-2 text-[11px] font-black text-emerald-700 dark:text-emerald-300">{message}</p>}
           </div>
 
-          <button
-            type="button"
-            onClick={installApp}
-            className="min-h-12 rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(4,120,72,.22)] transition hover:bg-emerald-800 active:scale-[.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/25 disabled:cursor-default disabled:opacity-70"
-          >
-            {installed ? "مثبّت ✓" : "تثبيت التطبيق"}
-          </button>
+          <div className="grid min-w-[164px] gap-2">
+            <a
+              href="/Apk/"
+              className="grid min-h-12 place-items-center rounded-2xl bg-emerald-700 px-5 py-3 text-center text-sm font-black text-white shadow-[0_12px_28px_rgba(4,120,72,.22)] transition hover:bg-emerald-800 active:scale-[.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/25"
+            >
+              تحميل APK للأندرويد
+            </a>
+            <button
+              type="button"
+              onClick={installApp}
+              className="min-h-11 rounded-2xl border border-emerald-700/20 bg-white/80 px-4 py-2 text-xs font-black text-emerald-800 transition hover:bg-white active:scale-[.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/20 disabled:cursor-default disabled:opacity-70 dark:border-white/10 dark:bg-white/10 dark:text-emerald-200"
+            >
+              {installed ? "نسخة المتصفح مثبّتة ✓" : "تثبيت من المتصفح"}
+            </button>
+          </div>
         </div>
       </section>
 
