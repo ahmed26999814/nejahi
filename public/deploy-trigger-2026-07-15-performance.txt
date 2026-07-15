@@ -1,0 +1,3 @@
+MauriResults production deployment trigger
+Purpose: remove duplicate 2025 cards and publish cached search and analytics APIs.
+Date: 2026-07-15
