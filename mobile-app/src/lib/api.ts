@@ -20,7 +20,7 @@ async function requestJson<T>(path: string): Promise<T> {
 }
 
 export async function fetchExams(): Promise<Exam[]> {
-  const data = await requestJson<{ exams?: Exam[] }>("/api/public-exams");
+  const data = await requestJson<{ exams?: Exam[] }>("/api/public-exams?client=mobile");
   return Array.isArray(data.exams) ? data.exams : [];
 }
 
