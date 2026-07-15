@@ -5,10 +5,17 @@ import { useEffect } from "react";
 const optionCache = new Map();
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
-function sourceFromStorage() {
-  const examId = localStorage.getItem("mauriresults-selected-exam") || "";
+function normalizeStoredSource(value) {
+  const examId = decodeURIComponent(String(value || "")).replace(/^#/, "").trim().toLowerCase();
+  if (!examId) return "";
+  if (examId.startsWith("upload:")) return examId;
   if (examId.startsWith("upload-")) return `upload:${examId.slice("upload-".length)}`;
+  if (/concours(?:[_-]?2026)?|كونكور/.test(examId)) return "concours";
   return "";
+}
+
+function sourceFromStorage() {
+  return normalizeStoredSource(localStorage.getItem("mauriresults-selected-exam") || "");
 }
 
 async function resolveSource() {
@@ -16,16 +23,19 @@ async function resolveSource() {
   if (stored) return stored;
 
   try {
-    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" } });
+    const response = await fetch("/api/public-exams", { cache: "no-store", headers: { Accept: "application/json" } });
     const data = await response.json();
-    const heading = document.querySelector("main h1")?.textContent || "";
-    const match = (data.exams || []).find((exam) =>
-      exam.search_mode === "concours" &&
-      (heading.includes(String(exam.title_ar || "")) || heading.includes(String(exam.title_fr || "")))
-    );
-    return match?.source_key || "";
+    const pageIdentity = `${window.location.hash} ${document.querySelector("main h1")?.textContent || ""} ${document.body?.textContent || ""}`;
+    const match = (data.exams || []).find((exam) => {
+      if (exam.search_mode !== "concours") return false;
+      const sourceKey = String(exam.source_key || "");
+      const titleAr = String(exam.title_ar || "");
+      const titleFr = String(exam.title_fr || "");
+      return pageIdentity.includes(sourceKey) || (titleAr && pageIdentity.includes(titleAr)) || (titleFr && pageIdentity.includes(titleFr));
+    });
+    return match?.source_key || (/كونكور|concours/i.test(pageIdentity) ? "concours" : "");
   } catch {
-    return "";
+    return /كونكور|concours/i.test(document.body?.textContent || "") ? "concours" : "";
   }
 }
 
@@ -45,6 +55,7 @@ async function fetchOptions(source, level, wilaya = "", moughataa = "") {
   if (wilaya) params.set("wilaya", wilaya);
   if (moughataa) params.set("moughataa", moughataa);
   const response = await fetch(`/api/uploaded-concours-locations?${params.toString()}`, {
+    cache: "no-store",
     headers: { Accept: "application/json" },
   });
   const data = await response.json();
@@ -175,11 +186,12 @@ export default function UploadedConcoursSelectEnhancer() {
 
     const schedule = () => {
       timers.forEach((timer) => window.clearTimeout(timer));
-      timers = [0, 90, 260].map((delay) => window.setTimeout(enhance, delay));
+      timers = [0, 100, 350, 900].map((delay) => window.setTimeout(enhance, delay));
     };
 
     schedule();
     window.addEventListener("mauriresults:routechange", schedule);
+    window.addEventListener("mauriresults:exams-updated", schedule);
     window.addEventListener("hashchange", schedule, { passive: true });
     window.addEventListener("popstate", schedule, { passive: true });
 
@@ -187,6 +199,7 @@ export default function UploadedConcoursSelectEnhancer() {
       stopped = true;
       timers.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener("mauriresults:routechange", schedule);
+      window.removeEventListener("mauriresults:exams-updated", schedule);
       window.removeEventListener("hashchange", schedule);
       window.removeEventListener("popstate", schedule);
     };
