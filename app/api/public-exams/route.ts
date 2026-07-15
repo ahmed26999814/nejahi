@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=3600";
+const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=21600";
 
 const LEGACY_2025_EXAMS = [
   {
@@ -227,7 +227,7 @@ function sortExams(rows: Array<Record<string, unknown>>) {
 
 async function fetchPublishedExams() {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return { rows: sortExams(LEGACY_2025_EXAMS.map(cleanExam)), error: "Missing Supabase environment variables", status: 500 } as const;
+    return { rows: [], error: "Missing Supabase environment variables", status: 500 } as const;
   }
 
   const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
@@ -246,25 +246,36 @@ async function fetchPublishedExams() {
   });
 
   const text = await response.text();
-  if (!response.ok) {
-    return { rows: sortExams(LEGACY_2025_EXAMS.map(cleanExam)), error: text, status: response.status } as const;
-  }
+  if (!response.ok) return { rows: [], error: text, status: response.status } as const;
 
-  const uploadedRows: Array<Record<string, unknown>> = (text ? JSON.parse(text) : [])
+  const rows: Array<Record<string, unknown>> = (text ? JSON.parse(text) : [])
     .filter((exam: Record<string, unknown>) => /^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(String(exam.table_name || "").trim()))
     .map(cleanExam);
 
+  return { rows: sortExams(rows), status: 200 } as const;
+}
+
+function mobileCatalog(uploadedRows: Array<Record<string, unknown>>) {
   const bySource = new Map<string, Record<string, unknown>>();
   for (const exam of LEGACY_2025_EXAMS.map(cleanExam)) bySource.set(String(exam.source_key), exam);
   for (const exam of uploadedRows) bySource.set(String(exam.source_key), exam);
-
-  return { rows: sortExams([...bySource.values()]), status: 200 } as const;
+  return sortExams([...bySource.values()]);
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const result = await fetchPublishedExams();
+  const client = new URL(request.url).searchParams.get("client");
+  const exams = client === "mobile" ? mobileCatalog(result.rows) : result.rows;
+
   return NextResponse.json(
-    { exams: result.rows },
-    { status: 200, headers: { "Cache-Control": "error" in result ? "no-store" : PUBLIC_CACHE } }
+    { exams },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "error" in result ? "no-store" : PUBLIC_CACHE,
+        "CDN-Cache-Control": "error" in result ? "no-store" : PUBLIC_CACHE,
+        Vary: "Accept-Encoding",
+      },
+    }
   );
 }
