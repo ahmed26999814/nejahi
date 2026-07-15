@@ -10,6 +10,7 @@ import "./online-counter.css";
 import "./forgot-number.css";
 import "./dashboard-reference.css";
 import "./dashboard-mobile.css";
+import "./results-notice.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import UiEnhancements from "../components/ui/UiEnhancements";
 import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSelectEnhancer";
@@ -142,6 +143,10 @@ export default function RootLayout({ children }) {
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className="font-arabic antialiased" suppressHydrationWarning>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <div className="results-notice" role="status" aria-live="polite">
+          <span className="results-notice-dot" aria-hidden="true" />
+          <span>نتائج ابريفه وكونكور 2026 نعمل على إضافتها، وستكون متاحة بعد لحظات</span>
+        </div>
         <AppRuntimeShell />
         <UiEnhancements />
         <MotivationalVisibility />
