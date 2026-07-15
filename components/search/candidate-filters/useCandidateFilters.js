@@ -4,13 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchCandidateFilterData, findCandidateFilterTarget } from "./api";
 import { EMPTY_FILTERS, getFilterLevels, resolveExamSource } from "./config";
 
-function freshFilters() {
-  return { ...EMPTY_FILTERS };
-}
-
-function freshOptions() {
-  return { track: [], wilaya: [], centre: [], school: [] };
-}
+function freshFilters() { return { ...EMPTY_FILTERS }; }
+function freshOptions() { return { track: [], wilaya: [], centre: [], school: [] }; }
 
 export function useCandidateFilters() {
   const [source, setSource] = useState("");
@@ -22,27 +17,24 @@ export function useCandidateFilters() {
   const [candidates, setCandidates] = useState([]);
   const [message, setMessage] = useState("");
   const activeRequestRef = useRef(null);
-
   const levels = useMemo(() => getFilterLevels(source), [source]);
 
   useEffect(() => {
     let timers = [];
     const refresh = () => {
       const nextSource = resolveExamSource();
-      const nextTarget = findCandidateFilterTarget();
+      const nextTarget = nextSource === "concours" ? null : findCandidateFilterTarget();
       setSource((current) => current === nextSource ? current : nextSource);
       setTarget((current) => current === nextTarget ? current : nextTarget);
     };
     const schedule = () => {
       timers.forEach((timer) => window.clearTimeout(timer));
-      timers = [0, 80, 240].map((delay) => window.setTimeout(refresh, delay));
+      timers = [0, 80, 240, 700].map((delay) => window.setTimeout(refresh, delay));
     };
-
     schedule();
     window.addEventListener("mauriresults:routechange", schedule);
     window.addEventListener("hashchange", schedule, { passive: true });
     window.addEventListener("popstate", schedule, { passive: true });
-
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener("mauriresults:routechange", schedule);
@@ -52,24 +44,22 @@ export function useCandidateFilters() {
   }, []);
 
   useEffect(() => {
-    if (!source) return undefined;
-
     activeRequestRef.current?.abort();
-    const controller = new AbortController();
-    activeRequestRef.current = controller;
-    const firstLevel = levels[0];
-
     setValues(freshFilters());
     setOptions(freshOptions());
     setVisibleCount(1);
     setCandidates([]);
     setMessage("");
-    setLoading(firstLevel);
+    setLoading("");
+    if (!source || !levels.length) return undefined;
 
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
+    const firstLevel = levels[0];
+    setLoading(firstLevel);
     fetchCandidateFilterData({ mode: "options", source, level: firstLevel }, controller.signal)
       .then((data) => {
-        if (controller.signal.aborted) return;
-        setOptions((current) => ({ ...current, [firstLevel]: data.options || [] }));
+        if (!controller.signal.aborted) setOptions((current) => ({ ...current, [firstLevel]: data.options || [] }));
       })
       .catch((error) => {
         if (error.name !== "AbortError") setMessage("تعذر تحميل خيارات البحث.");
@@ -77,7 +67,6 @@ export function useCandidateFilters() {
       .finally(() => {
         if (!controller.signal.aborted) setLoading("");
       });
-
     return () => controller.abort();
   }, [source, levels]);
 
@@ -87,7 +76,6 @@ export function useCandidateFilters() {
     activeRequestRef.current = controller;
     setLoading("candidates");
     setMessage("");
-
     try {
       const data = await fetchCandidateFilterData({ source, ...nextValues }, controller.signal);
       if (controller.signal.aborted) return;
@@ -106,9 +94,9 @@ export function useCandidateFilters() {
   const selectLevel = useCallback(async (level, value) => {
     activeRequestRef.current?.abort();
     const index = levels.indexOf(level);
+    if (index < 0) return;
     const nextValues = { ...values, [level]: value };
     for (const later of levels.slice(index + 1)) nextValues[later] = "";
-
     setValues(nextValues);
     setCandidates([]);
     setMessage("");
@@ -117,24 +105,20 @@ export function useCandidateFilters() {
       for (const later of levels.slice(index + 1)) next[later] = [];
       return next;
     });
-
     if (!value) {
       setVisibleCount(index + 1);
       setLoading("");
       return;
     }
-
     const nextLevel = levels[index + 1];
     if (!nextLevel) {
       setVisibleCount(levels.length);
       await loadCandidates(nextValues);
       return;
     }
-
     const controller = new AbortController();
     activeRequestRef.current = controller;
     setLoading(nextLevel);
-
     try {
       const data = await fetchCandidateFilterData({ mode: "options", source, level: nextLevel, ...nextValues }, controller.signal);
       if (controller.signal.aborted) return;
@@ -147,9 +131,10 @@ export function useCandidateFilters() {
       setOptions((current) => ({ ...current, [nextLevel]: rows }));
       setVisibleCount(index + 2);
     } catch (error) {
-      if (error.name === "AbortError") return;
-      setMessage("تعذر تحميل الخيارات التالية.");
-      setVisibleCount(index + 1);
+      if (error.name !== "AbortError") {
+        setMessage("تعذر تحميل الخيارات التالية.");
+        setVisibleCount(index + 1);
+      }
     } finally {
       if (!controller.signal.aborted) setLoading("");
     }
