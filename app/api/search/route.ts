@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -5,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const REQUEST_TIMEOUT_MS = 10_000;
+const REQUEST_TIMEOUT_MS = 8_000;
 const NUMBER_RESULT_LIMIT = "10";
 const NAME_RESULT_LIMIT = "20";
 const MAX_QUERY_LENGTH = 120;
@@ -43,6 +44,10 @@ function numberSearchValues(query: string) {
 
 function isNumberSearch(query: string) {
   return /^\d+$/.test(query.trim());
+}
+
+function normalizeQuery(query: string) {
+  return query.trim().replace(/\s+/g, " ").slice(0, MAX_QUERY_LENGTH);
 }
 
 function unwrapRpcRows(rows: unknown[]) {
@@ -107,31 +112,43 @@ function buildParams(config: SearchConfig, query: string, useFallback = false) {
   return params;
 }
 
+async function executeSearch(source: string, query: string) {
+  if (source.startsWith("upload:")) return searchUploaded(source, query);
+  const config = SEARCH_CONFIG[source];
+  if (!config) return { error: "Unknown source", status: 400 } as const;
+  let result = await supabaseSearch(config.table, buildParams(config, query));
+  const shouldFallback = config.fallbackTable && ("error" in result || !(result.rows || []).length);
+  if (shouldFallback) result = await supabaseSearch(config.fallbackTable!, buildParams(config, query, true));
+  return result;
+}
+
+const cachedSearch = unstable_cache(
+  async (source: string, query: string) => executeSearch(source, query),
+  ["mauriresults-public-search-v3"],
+  { revalidate: 60 }
+);
+
 function responseHeaders(numeric: boolean) {
+  const cache = numeric
+    ? "public, s-maxage=300, stale-while-revalidate=21600"
+    : "public, s-maxage=60, stale-while-revalidate=3600";
   return {
-    "Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=3600" : "no-store",
-    "CDN-Cache-Control": numeric ? "public, s-maxage=300, stale-while-revalidate=3600" : "no-store",
+    "Cache-Control": cache,
+    "CDN-Cache-Control": cache,
+    Vary: "Accept-Encoding",
   };
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const source = String(searchParams.get("source") || "").trim();
-  const query = String(searchParams.get("q") || "").trim().slice(0, MAX_QUERY_LENGTH);
+  const query = normalizeQuery(String(searchParams.get("q") || ""));
   const numeric = isNumberSearch(query);
+
   if (query.length < 1) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400, headers: { "Cache-Control": "no-store" } });
+  if (!source.startsWith("upload:") && !SEARCH_CONFIG[source]) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400, headers: { "Cache-Control": "no-store" } });
 
-  if (source.startsWith("upload:")) {
-    const result = await searchUploaded(source, query);
-    if ("error" in result) return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
-    return NextResponse.json({ rows: result.rows }, { headers: responseHeaders(numeric) });
-  }
-
-  const config = SEARCH_CONFIG[source];
-  if (!config) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400, headers: { "Cache-Control": "no-store" } });
-  let result = await supabaseSearch(config.table, buildParams(config, query));
-  const shouldFallback = config.fallbackTable && ("error" in result || !(result.rows || []).length);
-  if (shouldFallback) result = await supabaseSearch(config.fallbackTable!, buildParams(config, query, true));
+  const result = await cachedSearch(source, query);
   if ("error" in result) return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });
   return NextResponse.json({ rows: result.rows }, { headers: responseHeaders(numeric) });
 }
