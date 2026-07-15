@@ -26,26 +26,11 @@ export async function POST(request: Request) {
   }
 
   let body: Record<string, unknown>;
-  try {
-    body = await request.json();
-  } catch {
-    return json(400, { ok: false, error: "Invalid JSON body" });
-  }
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: "Invalid JSON body" }); }
 
   const tableName = safeTableName(body.tableName || body.table);
   if (!tableName) return json(400, { ok: false, error: "Invalid table name" });
-
-  // Only uploaded/custom tables may be reset. Protect the built-in official tables.
-  const protectedTables = new Set([
-    "bac_results",
-    "brevet_results",
-    "concours_results",
-    "bac_session2_results",
-    "excellence_1as_results",
-  ]);
-  if (protectedTables.has(tableName)) {
-    return json(403, { ok: false, error: "Built-in result tables cannot be reset from this endpoint" });
-  }
 
   const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/reset_results_upload_table`, {
     method: "POST",
@@ -61,14 +46,7 @@ export async function POST(request: Request) {
 
   const text = await response.text();
   if (!response.ok) {
-    return json(response.status, {
-      ok: false,
-      error: text.replace(/\s+/g, " ").slice(0, 900),
-      hint: "Run the reset_results_upload_table SQL migration in Supabase.",
-    });
+    return json(response.status, { ok: false, error: text.replace(/\s+/g, " ").slice(0, 900) });
   }
-
-  let result: unknown = null;
-  try { result = text ? JSON.parse(text) : null; } catch { result = text; }
-  return json(200, { ok: true, result });
+  return json(200, { ok: true, table: tableName });
 }
