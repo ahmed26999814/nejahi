@@ -1,2 +1,4 @@
-Official Concours 2025 restored successfully.
-Rows: 117624
+Official 2025 results restoration verified.
+BEPC rows: 74821
+Concours rows: 117624
+Quran verse UI: homepage below the main header and above result cards.
