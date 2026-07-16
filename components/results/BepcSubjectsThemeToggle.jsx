@@ -49,7 +49,7 @@ export default function BepcSubjectsThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="fixed left-[4.15rem] top-[calc(env(safe-area-inset-top)+.65rem)] z-50 grid h-10 w-10 place-items-center rounded-[15px] border border-slate-200 bg-white text-slate-700 shadow-[0_8px_22px_rgba(15,23,42,.12)] transition active:scale-95 dark:border-white/10 dark:bg-[#10241a] dark:text-amber-300 sm:left-[calc((100vw-42rem)/2+4.15rem)]"
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-[15px] border border-slate-200 bg-white text-slate-700 shadow-sm transition active:scale-95 dark:border-white/10 dark:bg-white/[.07] dark:text-amber-300"
       aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
       title={theme === "dark" ? "الوضع الفاتح" : "الوضع الداكن"}
     >
