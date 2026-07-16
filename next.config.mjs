@@ -1,6 +1,15 @@
-const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-  : "**.supabase.co";
+function resolveSupabaseHost(value) {
+  const raw = String(value || "").trim();
+  if (!raw || raw === "[SENSITIVE]") return "**.supabase.co";
+
+  try {
+    return new URL(raw).hostname || "**.supabase.co";
+  } catch {
+    return "**.supabase.co";
+  }
+}
+
+const supabaseHost = resolveSupabaseHost(process.env.NEXT_PUBLIC_SUPABASE_URL);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
