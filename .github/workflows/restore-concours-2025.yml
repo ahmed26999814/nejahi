@@ -1,0 +1,142 @@
+name: Restore Concours 2025
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/restore-concours-2025.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: restore-concours-2025
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install streaming Excel reader
+        run: python3 -m pip install --disable-pip-version-check openpyxl requests
+
+      - name: Download and restore official Concours 2025 results
+        env:
+          FILE_URL: https://www.ami.mr/wp-content/uploads/2025/07/RESU_C1AS_2025_23_07.xlsx
+          IMPORT_URL: https://nxizqnlemsbjmsfyuevg.supabase.co/functions/v1/import-concours-2025-batch?key=mr-c2025-restore-4f91d7c2
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import time
+          from pathlib import Path
+
+          import requests
+          from openpyxl import load_workbook
+
+          file_url = os.environ["FILE_URL"]
+          import_url = os.environ["IMPORT_URL"]
+          destination = Path("/tmp/concours-2025.xlsx")
+          expected_headers = [
+              "Noreg",
+              "Numéro_C1AS",
+              "NODOSS",
+              "NOM_AR",
+              "LIEU NAISS_AR",
+              "TYPE",
+              "Ecole_AR",
+              "ANNEE_NAISS",
+              "WILAYA_AR",
+              "MOUGHATAA_AR",
+              "Centre Examen_AR",
+              "TOTAL",
+          ]
+          expected_rows = 117624
+
+          with requests.get(file_url, stream=True, timeout=(30, 300), headers={"User-Agent": "Mozilla/5.0"}) as response:
+              response.raise_for_status()
+              with destination.open("wb") as output:
+                  for chunk in response.iter_content(chunk_size=1024 * 1024):
+                      if chunk:
+                          output.write(chunk)
+
+          workbook = load_workbook(destination, read_only=True, data_only=True)
+          worksheet = workbook[workbook.sheetnames[0]]
+          rows = worksheet.iter_rows(values_only=True)
+          headers = [str(value).strip() if value is not None else "" for value in next(rows)]
+          if headers != expected_headers:
+              raise RuntimeError(f"Unexpected headers: {headers!r}")
+
+          def clean(value):
+              if value is None:
+                  return None
+              if isinstance(value, float) and value.is_integer():
+                  return str(int(value))
+              return str(value).strip()
+
+          session = requests.Session()
+          session.headers.update({"Content-Type": "application/json", "User-Agent": "MauriResults-Restore/1.0"})
+
+          def send(batch):
+              last_error = None
+              for attempt in range(1, 7):
+                  try:
+                      response = session.post(import_url, data=json.dumps(batch, ensure_ascii=False).encode("utf-8"), timeout=(30, 180))
+                      if response.ok:
+                          payload = response.json()
+                          if payload.get("ok"):
+                              return
+                      last_error = RuntimeError(f"HTTP {response.status_code}: {response.text[:500]}")
+                  except Exception as error:
+                      last_error = error
+                  time.sleep(min(20, attempt * 3))
+              raise RuntimeError(f"Batch import failed: {last_error}")
+
+          batch = []
+          processed = 0
+          for values in rows:
+              row = {header: clean(value) for header, value in zip(expected_headers, values)}
+              if not row["NODOSS"]:
+                  continue
+              batch.append(row)
+              if len(batch) == 1000:
+                  send(batch)
+                  processed += len(batch)
+                  batch = []
+                  if processed % 10000 == 0:
+                      print(f"Restored {processed}/{expected_rows}", flush=True)
+
+          if batch:
+              send(batch)
+              processed += len(batch)
+
+          workbook.close()
+          if processed != expected_rows:
+              raise RuntimeError(f"Parsed {processed} rows, expected {expected_rows}")
+
+          count_response = session.get(f"{import_url}&count=1", timeout=(30, 180))
+          count_response.raise_for_status()
+          count = int(count_response.json().get("count", 0))
+          if count != expected_rows:
+              raise RuntimeError(f"Database contains {count} rows, expected {expected_rows}")
+
+          Path("CONCOURS_2025_RESTORED.txt").write_text(
+              f"Official Concours 2025 restored successfully.\nRows: {count}\n",
+              encoding="utf-8",
+          )
+          print(f"Restore verified: {count} rows", flush=True)
+          PY
+
+      - name: Record successful restoration
+        run: |
+          rm -f .github/workflows/restore-concours-2025.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Verify official Concours 2025 restoration [skip ci]"
+          git push
