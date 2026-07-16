@@ -1,8 +1,0 @@
-node_modules/
-.expo/
-android/
-ios/
-dist/
-assets/*.png
-*.log
-.DS_Store
