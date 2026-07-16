@@ -97,7 +97,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     title: "MauriResults",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
   formatDetection: {
     telephone: false,
@@ -110,11 +110,10 @@ export const viewport = {
   maximumScale: 5,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F8FAF8" },
-    { media: "(prefers-color-scheme: dark)", color: "#07130d" },
-  ],
+  themeColor: "#07130d",
 };
+
+const themeInitializer = `(function(){try{var key="mauriresults-theme";var saved=localStorage.getItem(key);var theme=saved==="light"||saved==="dark"?saved:"dark";if(!saved)localStorage.setItem(key,theme);var root=document.documentElement;root.dataset.theme=theme;root.classList.toggle("dark",theme==="dark");root.style.colorScheme=theme;}catch(error){var root=document.documentElement;root.dataset.theme="dark";root.classList.add("dark");root.style.colorScheme="dark";}})();`;
 
 export default function RootLayout({ children }) {
   const structuredData = {
@@ -140,8 +139,9 @@ export default function RootLayout({ children }) {
   };
 
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning>
+    <html lang="ar" dir="rtl" className="dark" data-theme="dark" suppressHydrationWarning>
       <body className="font-arabic antialiased" suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="results-notice" role="status" aria-live="polite">
           <span className="results-notice-dot" aria-hidden="true" />
