@@ -108,19 +108,16 @@ async function fetchPublishedExams(): Promise<{ rows: Array<Record<string, unkno
   return { rows: sortExams(rows) };
 }
 
-function publicCatalog(uploadedRows: ReadonlyArray<Record<string, unknown>>) {
-  const bySourceAndYear = new Map<string, Record<string, unknown>>();
-  for (const exam of LEGACY_2025_EXAMS.map(cleanExam)) {
-    bySourceAndYear.set(`${String(exam.source_key)}:${String(exam.year || "2025")}`, exam);
-  }
-  for (const exam of uploadedRows) {
-    bySourceAndYear.set(`${String(exam.source_key)}:${String(exam.year || yearNumber(exam.title_ar) || yearNumber(exam.title_fr) || "")}`, exam);
-  }
-  return sortExams([...bySourceAndYear.values()]);
+function mobileCatalog(uploadedRows: ReadonlyArray<Record<string, unknown>>) {
+  const bySource = new Map<string, Record<string, unknown>>();
+  for (const exam of LEGACY_2025_EXAMS.map(cleanExam)) bySource.set(String(exam.source_key), exam);
+  for (const exam of uploadedRows) bySource.set(String(exam.source_key), exam);
+  return sortExams([...bySource.values()]);
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const result = await fetchPublishedExams();
-  const exams = publicCatalog(result.rows);
+  const client = new URL(request.url).searchParams.get("client");
+  const exams = client === "mobile" ? mobileCatalog(result.rows) : result.rows;
   return NextResponse.json({ exams }, { status: 200, headers: { "Cache-Control": PUBLIC_CACHE, "CDN-Cache-Control": PUBLIC_CACHE, Vary: "Accept-Encoding" } });
 }
