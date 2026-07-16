@@ -115,135 +115,149 @@ function formatDate(value) {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat("ar-MR", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat("ar-MR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
-function subjectTone(score) {
+function scoreTheme(score) {
   if (typeof score !== "number" || score < 0) {
     return {
-      card: "border-slate-200 bg-slate-50/80 dark:border-white/10 dark:bg-white/[.04]",
-      badge: "bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-slate-300",
+      rail: "bg-slate-300 dark:bg-slate-600",
+      badge: "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-white/10 dark:text-slate-300 dark:ring-white/10",
+      label: "غير محتسب",
     };
   }
   if (score >= 10) {
     return {
-      card: "border-emerald-200/80 bg-emerald-50/75 dark:border-emerald-300/15 dark:bg-emerald-300/[.07]",
-      badge: "bg-emerald-600 text-white",
+      rail: "bg-emerald-500",
+      badge: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-300/10 dark:text-emerald-300 dark:ring-emerald-300/20",
+      label: "جيد",
     };
   }
   if (score >= 8) {
     return {
-      card: "border-amber-200/80 bg-amber-50/80 dark:border-amber-300/15 dark:bg-amber-300/[.07]",
-      badge: "bg-amber-500 text-white",
+      rail: "bg-amber-500",
+      badge: "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-300/10 dark:text-amber-300 dark:ring-amber-300/20",
+      label: "قريب من النجاح",
     };
   }
   return {
-    card: "border-rose-200/80 bg-rose-50/75 dark:border-rose-300/15 dark:bg-rose-300/[.07]",
-    badge: "bg-rose-500 text-white",
+    rail: "bg-rose-500",
+    badge: "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-300/10 dark:text-rose-300 dark:ring-rose-300/20",
+    label: "أقل من 8",
   };
 }
 
-function CandidateSummary({ candidate }) {
-  if (!candidate) return null;
-  const name = candidate.nameAr || candidate.nameFr || "المترشح";
-  const centre = candidate.centreAr || candidate.centreFr || "—";
+function CandidateHeader({ candidate, subjectCount }) {
+  const name = candidate?.nameAr || candidate?.nameFr || "المترشح";
+  const centre = candidate?.centreAr || candidate?.centreFr || "—";
 
   return (
-    <section className="overflow-hidden rounded-[24px] border border-emerald-200/80 bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-600 p-4 text-white shadow-[0_20px_50px_rgba(6,78,59,.20)] sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black text-emerald-100">بيانات المترشح الرسمية</p>
-          <h3 className="mt-1 text-lg font-black leading-7 sm:text-xl">{name}</h3>
-          <p className="mt-1 text-xs font-bold text-emerald-100">رقم المترشح: {candidate.number || "—"}</p>
+    <div className="overflow-hidden rounded-[22px] bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-600 text-white shadow-[0_18px_45px_rgba(6,78,59,.18)]">
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-black text-emerald-100">
+              <span className="rounded-full bg-white/12 px-2.5 py-1 ring-1 ring-white/15">بيانات رسمية</span>
+              <span>{subjectCount} مواد</span>
+            </div>
+            <h3 className="mt-2 break-words text-lg font-black leading-7 sm:text-xl">{name}</h3>
+            <p className="mt-1 text-xs font-bold text-emerald-100">رقم المترشح: {candidate?.number || "—"}</p>
+          </div>
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/14 text-xl ring-1 ring-white/20" aria-hidden="true">
+            🎓
+          </span>
         </div>
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15 text-xl ring-1 ring-white/20" aria-hidden="true">
-          🎓
-        </span>
-      </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
-          <small className="block text-[10px] font-bold text-emerald-100">المعدل</small>
-          <strong className="mt-1 block text-lg font-black">{formatNumber(candidate.average)}</strong>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="rounded-2xl bg-white/10 px-3 py-2.5 ring-1 ring-white/10">
+            <small className="block text-[9px] font-bold text-emerald-100">المعدل</small>
+            <strong className="mt-1 block text-base font-black sm:text-lg">{formatNumber(candidate?.average)}</strong>
+          </div>
+          <div className="rounded-2xl bg-white/10 px-3 py-2.5 ring-1 ring-white/10">
+            <small className="block text-[9px] font-bold text-emerald-100">القرار</small>
+            <strong className="mt-1 block truncate text-xs font-black sm:text-sm">{candidate?.decision || "—"}</strong>
+          </div>
+          <div className="rounded-2xl bg-white/10 px-3 py-2.5 ring-1 ring-white/10">
+            <small className="block text-[9px] font-bold text-emerald-100">الشعبة</small>
+            <strong className="mt-1 block truncate text-xs font-black sm:text-sm">{candidate?.series || "—"}</strong>
+          </div>
+          <div className="rounded-2xl bg-white/10 px-3 py-2.5 ring-1 ring-white/10">
+            <small className="block text-[9px] font-bold text-emerald-100">تاريخ الميلاد</small>
+            <strong className="mt-1 block text-[11px] font-black sm:text-xs">{formatDate(candidate?.birthDate)}</strong>
+          </div>
         </div>
-        <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
-          <small className="block text-[10px] font-bold text-emerald-100">القرار</small>
-          <strong className="mt-1 block truncate text-sm font-black">{candidate.decision || "—"}</strong>
-        </div>
-        <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
-          <small className="block text-[10px] font-bold text-emerald-100">الشعبة</small>
-          <strong className="mt-1 block text-sm font-black">{candidate.series || "—"}</strong>
-        </div>
-        <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
-          <small className="block text-[10px] font-bold text-emerald-100">تاريخ الميلاد</small>
-          <strong className="mt-1 block text-xs font-black">{formatDate(candidate.birthDate)}</strong>
+
+        <div className="mt-3 flex min-w-0 items-center gap-2 rounded-2xl bg-black/10 px-3 py-2 ring-1 ring-white/10">
+          <span aria-hidden="true">📍</span>
+          <p className="min-w-0 truncate text-[11px] font-bold text-emerald-50">{centre}</p>
         </div>
       </div>
-
-      <p className="mt-3 rounded-2xl bg-black/10 px-3 py-2 text-xs font-bold leading-5 text-emerald-50 ring-1 ring-white/10">
-        المركز: {centre}
-      </p>
-    </section>
+    </div>
   );
 }
 
-function SubjectsResult({ data }) {
+function SubjectRow({ subject, index }) {
+  const theme = scoreTheme(subject.score);
+  const unavailable = typeof subject.score !== "number" || subject.score < 0;
+  const title = subject.nameAr || subject.nameFr || `المادة ${index + 1}`;
+  const subtitle = subject.nameFr && subject.nameFr !== subject.nameAr ? subject.nameFr : "";
+
+  return (
+    <article className="relative overflow-hidden rounded-[18px] border border-slate-200/80 bg-white px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,.045)] dark:border-white/10 dark:bg-white/[.045] sm:px-4">
+      <span className={`absolute inset-y-0 right-0 w-1 ${theme.rail}`} aria-hidden="true" />
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 pr-2">
+        <div className="min-w-0">
+          <h4 className="break-words text-[13px] font-black leading-5 text-slate-900 dark:text-white sm:text-sm">{title}</h4>
+          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[9px] font-bold text-slate-500 dark:text-slate-400 sm:text-[10px]">
+            {subtitle ? <span className="max-w-full truncate" dir="ltr">{subtitle}</span> : null}
+            <span>المعامل {formatNumber(subject.coefficient, 0)}</span>
+            <span>{theme.label}</span>
+          </div>
+        </div>
+        <div className={`min-w-[66px] rounded-[14px] px-2.5 py-2 text-center ring-1 ${theme.badge}`}>
+          <strong className="block text-sm font-black sm:text-base">{unavailable ? "—" : formatNumber(subject.score)}</strong>
+          <small className="mt-0.5 block text-[8px] font-black opacity-75">من 20</small>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function UnifiedResults({ data }) {
   const subjects = Array.isArray(data?.subjects) ? data.subjects : [];
 
   return (
-    <div className="grid gap-3">
-      <CandidateSummary candidate={data?.candidate} />
+    <div className="space-y-3">
+      <CandidateHeader candidate={data?.candidate} subjectCount={subjects.length} />
 
-      <section className="rounded-[24px] border border-slate-200/80 bg-white/95 p-3 shadow-[0_16px_45px_rgba(15,23,42,.07)] dark:border-white/10 dark:bg-[#0d1f16]/95 sm:p-4">
-        <header className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-black text-mauri-green dark:text-emerald-300">الكشف التفصيلي</p>
-            <h3 className="mt-0.5 text-lg font-black text-slate-950 dark:text-white">درجات المواد</h3>
-          </div>
-          <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-[11px] font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">
-            {subjects.length} مواد
-          </span>
-        </header>
+      <div className="flex items-center justify-between gap-3 px-1">
+        <div>
+          <p className="text-[10px] font-black text-mauri-green dark:text-emerald-300">الكشف التفصيلي</p>
+          <h3 className="text-base font-black text-slate-950 dark:text-white sm:text-lg">درجات المواد</h3>
+        </div>
+        <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-[10px] font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">
+          {subjects.length} مواد
+        </span>
+      </div>
 
-        {subjects.length ? (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {subjects.map((subject, index) => {
-              const tone = subjectTone(subject.score);
-              const unavailable = typeof subject.score !== "number" || subject.score < 0;
-              return (
-                <article key={`${subject.nameAr || subject.nameFr}-${index}`} className={`rounded-[19px] border p-3 ${tone.card}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h4 className="text-sm font-black leading-6 text-slate-900 dark:text-white">
-                        {subject.nameAr || subject.nameFr || `المادة ${index + 1}`}
-                      </h4>
-                      {subject.nameFr && subject.nameFr !== subject.nameAr ? (
-                        <p className="mt-0.5 truncate text-[10px] font-bold text-slate-500 dark:text-slate-400" dir="ltr">
-                          {subject.nameFr}
-                        </p>
-                      ) : null}
-                    </div>
-                    <span className={`shrink-0 rounded-xl px-2.5 py-1.5 text-xs font-black ${tone.badge}`}>
-                      {unavailable ? "—" : `${formatNumber(subject.score)} / 20`}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between gap-2 border-t border-black/5 pt-2 text-[10px] font-bold text-slate-500 dark:border-white/10 dark:text-slate-400">
-                    <span>المعامل: {formatNumber(subject.coefficient, 0)}</span>
-                    <span>{unavailable ? "غير محتسب" : subject.score >= 10 ? "ناجح في المادة" : "أقل من 10"}</span>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-slate-300 p-5 text-center text-sm font-bold text-slate-500 dark:border-white/15 dark:text-slate-300">
-            بيانات المترشح موجودة، لكن تفاصيل المواد غير متاحة حاليًا من منصة الوزارة.
-          </div>
-        )}
-      </section>
+      {subjects.length ? (
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+          {subjects.map((subject, index) => (
+            <SubjectRow key={`${subject.nameAr || subject.nameFr}-${index}`} subject={subject} index={index} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-[18px] border border-dashed border-slate-300 bg-white/70 p-5 text-center text-sm font-bold text-slate-500 dark:border-white/15 dark:bg-white/[.035] dark:text-slate-300">
+          بيانات المترشح موجودة، لكن تفاصيل المواد غير متاحة حاليًا من منصة الوزارة.
+        </div>
+      )}
 
-      <p className="text-center text-[10px] font-bold leading-5 text-slate-500 dark:text-slate-400">
-        البيانات معروضة من منصة إدارة الامتحانات والمسابقات الرسمية.
+      <p className="px-2 pb-1 text-center text-[9px] font-bold leading-4 text-slate-500 dark:text-slate-400 sm:text-[10px]">
+        البيانات معروضة مباشرة من منصة إدارة الامتحانات والمسابقات الرسمية.
       </p>
     </div>
   );
@@ -355,27 +369,27 @@ export default function ResultDetailSanitizer() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] grid place-items-center overflow-y-auto bg-slate-950/65 p-2 backdrop-blur-md sm:p-4"
+      className="fixed inset-0 z-[9999] grid place-items-center overflow-hidden bg-slate-950/65 p-0 backdrop-blur-md sm:p-4"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) closeModal();
       }}
     >
       <section
-        className="relative my-auto w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/70 bg-[#f6f8f6] shadow-[0_30px_90px_rgba(2,20,12,.35)] dark:border-white/10 dark:bg-[#07130d]"
+        className="flex h-[100dvh] w-full min-w-0 flex-col overflow-hidden bg-[#f6f8f6] shadow-[0_30px_90px_rgba(2,20,12,.35)] dark:bg-[#07130d] sm:h-auto sm:max-h-[92dvh] sm:max-w-3xl sm:rounded-[30px] sm:border sm:border-white/70 dark:sm:border-white/10"
         role="dialog"
         aria-modal="true"
         aria-labelledby="subject-details-title"
         dir="rtl"
       >
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1b12]/90 sm:px-5">
+        <header className="z-20 flex shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/92 px-3 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1b12]/92 sm:px-5 sm:py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-mauri-green/10 text-xl text-mauri-green dark:bg-emerald-300/10" aria-hidden="true">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-mauri-green/10 text-lg text-mauri-green dark:bg-emerald-300/10" aria-hidden="true">
               📚
             </span>
             <div className="min-w-0">
-              <p className="text-[10px] font-black text-mauri-green dark:text-emerald-300">البريفيه</p>
-              <h2 id="subject-details-title" className="truncate text-lg font-black text-slate-950 dark:text-white">
+              <p className="text-[9px] font-black text-mauri-green dark:text-emerald-300">البريفيه</p>
+              <h2 id="subject-details-title" className="truncate text-base font-black text-slate-950 dark:text-white sm:text-lg">
                 تفاصيل المواد
               </h2>
             </div>
@@ -390,77 +404,71 @@ export default function ResultDetailSanitizer() {
           </button>
         </header>
 
-        <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto p-3 sm:p-5">
-          <section className="rounded-[24px] border border-slate-200/80 bg-white/95 p-4 shadow-[0_16px_45px_rgba(15,23,42,.06)] dark:border-white/10 dark:bg-[#0d1f16]/95 sm:p-5">
-            <div className="mb-4">
-              <p className="text-[11px] font-black text-mauri-green dark:text-emerald-300">البحث الرسمي</p>
-              <h3 className="mt-1 text-xl font-black text-slate-950 dark:text-white">أدخل رقم المترشح</h3>
-              <p className="mt-1 text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">
-                سيبحث MauriResults نيابةً عنك في منصة إدارة الامتحانات، ثم يعرض الدرجات هنا.
-              </p>
+        <div className="shrink-0 border-b border-slate-200/70 bg-white/80 px-3 py-3 backdrop-blur-lg dark:border-white/10 dark:bg-[#0b1b12]/75 sm:px-5">
+          <form onSubmit={searchSubjectDetails} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <label className="sr-only" htmlFor="bepc-subject-candidate-number">رقم المترشح</label>
+            <div className="relative min-w-0">
+              <span className="pointer-events-none absolute inset-y-0 right-3 grid place-items-center text-sm font-black text-slate-400" aria-hidden="true">#</span>
+              <input
+                ref={inputRef}
+                id="bepc-subject-candidate-number"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={number}
+                onChange={(event) => setNumber(normalizeDigits(event.target.value))}
+                placeholder="رقم المترشح"
+                className="h-12 w-full min-w-0 rounded-[16px] border border-slate-200 bg-slate-50 pr-9 pl-3 text-sm font-black text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green focus:bg-white focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/[.05] dark:text-white dark:focus:border-emerald-300"
+              />
             </div>
+            <button
+              type="submit"
+              disabled={status === "loading" || !cleanNumber}
+              className="h-12 min-w-[86px] rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-4 text-xs font-black text-white shadow-[0_12px_26px_rgba(21,128,61,.20)] transition hover:-translate-y-0.5 active:scale-[.98] disabled:pointer-events-none disabled:opacity-50 sm:min-w-28 sm:text-sm"
+            >
+              {status === "loading" ? "بحث..." : "بحث"}
+            </button>
+          </form>
+        </div>
 
-            <form onSubmit={searchSubjectDetails} className="grid gap-2 sm:grid-cols-[1fr_auto]">
-              <label className="sr-only" htmlFor="bepc-subject-candidate-number">
-                رقم المترشح
-              </label>
-              <div className="relative">
-                <span className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-slate-400" aria-hidden="true">
-                  #
-                </span>
-                <input
-                  ref={inputRef}
-                  id="bepc-subject-candidate-number"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  value={number}
-                  onChange={(event) => setNumber(normalizeDigits(event.target.value))}
-                  placeholder="مثال: 75457"
-                  className="h-13 min-h-[52px] w-full rounded-[17px] border border-slate-200 bg-slate-50 px-11 text-base font-black text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-mauri-green focus:bg-white focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-white/[.05] dark:text-white dark:focus:border-emerald-300"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={status === "loading" || !cleanNumber}
-                className="min-h-[52px] rounded-[17px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-6 text-sm font-black text-white shadow-[0_14px_30px_rgba(21,128,61,.20)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(21,128,61,.28)] active:scale-[.98] disabled:pointer-events-none disabled:opacity-50 sm:min-w-32"
-              >
-                {status === "loading" ? "جاري البحث..." : "بحث"}
-              </button>
-            </form>
-          </section>
-
-          <div className="mt-3" aria-live="polite">
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-4">
+          <div aria-live="polite">
             {status === "idle" ? (
-              <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/55 p-5 text-center dark:border-white/15 dark:bg-white/[.03]">
-                <span className="text-3xl" aria-hidden="true">🔎</span>
-                <p className="mt-2 text-sm font-black text-slate-700 dark:text-slate-200">أدخل الرقم لعرض درجات جميع المواد.</p>
+              <div className="grid min-h-[46dvh] place-items-center rounded-[22px] border border-dashed border-slate-300 bg-white/60 p-6 text-center dark:border-white/15 dark:bg-white/[.03] sm:min-h-64">
+                <div>
+                  <span className="text-4xl" aria-hidden="true">🔎</span>
+                  <h3 className="mt-3 text-base font-black text-slate-800 dark:text-white">ابحث عن درجات المواد</h3>
+                  <p className="mx-auto mt-1 max-w-sm text-xs font-bold leading-6 text-slate-500 dark:text-slate-400">
+                    أدخل رقم المترشح، وستظهر بياناته ودرجات جميع المواد في هذه الواجهة نفسها.
+                  </p>
+                </div>
               </div>
             ) : null}
 
             {status === "loading" ? (
-              <div className="grid gap-3 rounded-[22px] border border-slate-200/80 bg-white/80 p-4 dark:border-white/10 dark:bg-white/[.04]">
-                <div className="h-20 animate-pulse rounded-2xl bg-slate-200/80 dark:bg-white/10" />
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="h-24 animate-pulse rounded-2xl bg-slate-200/70 dark:bg-white/10" />
-                  <div className="h-24 animate-pulse rounded-2xl bg-slate-200/70 dark:bg-white/10" />
+              <div className="space-y-3">
+                <div className="h-44 animate-pulse rounded-[22px] bg-slate-200/80 dark:bg-white/10" />
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="h-20 animate-pulse rounded-[18px] bg-slate-200/70 dark:bg-white/10" />
+                  ))}
                 </div>
               </div>
             ) : null}
 
             {status === "error" ? (
-              <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-center dark:border-rose-300/15 dark:bg-rose-300/[.07]">
-                <span className="text-2xl" aria-hidden="true">⚠️</span>
-                <p className="mt-2 text-sm font-black text-rose-700 dark:text-rose-200">{error}</p>
-                <p className="mt-1 text-[11px] font-bold text-rose-600/80 dark:text-rose-200/70">
-                  تأكد من الرقم ثم أعد المحاولة.
-                </p>
+              <div className="grid min-h-[40dvh] place-items-center rounded-[22px] border border-rose-200 bg-rose-50 p-6 text-center dark:border-rose-300/15 dark:bg-rose-300/[.07] sm:min-h-56">
+                <div>
+                  <span className="text-3xl" aria-hidden="true">⚠️</span>
+                  <p className="mt-3 text-sm font-black text-rose-700 dark:text-rose-200">{error}</p>
+                  <p className="mt-1 text-[11px] font-bold text-rose-600/80 dark:text-rose-200/70">تأكد من الرقم ثم أعد المحاولة.</p>
+                </div>
               </div>
             ) : null}
 
-            {status === "success" && data ? <SubjectsResult data={data} /> : null}
+            {status === "success" && data ? <UnifiedResults data={data} /> : null}
           </div>
-        </div>
+        </main>
       </section>
     </div>,
     document.body,
