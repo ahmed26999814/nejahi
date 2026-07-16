@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+  "orgId": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+  "projectName": "mauriresults",
+  "settings": {
+    "createdAt": 1783321432060,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
