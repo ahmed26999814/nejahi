@@ -73,3 +73,5 @@ jobs:
           git add -A
           git commit -m "Record fixed production deployment [skip ci]" || true
           git push || true
+
+# Triggered after workflow registration.
