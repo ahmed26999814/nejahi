@@ -7,7 +7,10 @@ const DEC_ORIGIN = "https://dec.education.gov.mr";
 const REQUEST_TIMEOUT_MS = 12_000;
 
 function normalizeCandidateNumber(value: string | null) {
-  return String(value || "").trim().replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit))).replace(/\D/g, "");
+  return String(value || "")
+    .trim()
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/\D/g, "");
 }
 
 function safeObject(value: unknown): Record<string, unknown> | null {
@@ -17,11 +20,23 @@ function safeObject(value: unknown): Record<string, unknown> | null {
 
 function safeArray(value: unknown): Record<string, unknown>[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object" && !Array.isArray(item)));
+  return value.filter(
+    (item): item is Record<string, unknown> => Boolean(item && typeof item === "object" && !Array.isArray(item)),
+  );
 }
 
-async function decJson(path: string) {
-  const response = await fetch(`${DEC_ORIGIN}${path}`, {
+function stringValue(value: unknown) {
+  return value === null || value === undefined ? "" : String(value).trim();
+}
+
+function numberValue(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const parsed = Number(String(value ?? "").replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+async function fetchOfficialDetails(number: string) {
+  const response = await fetch(`${DEC_ORIGIN}/_api/details-bepc/${encodeURIComponent(number)}`, {
     headers: {
       accept: "application/json, text/plain, */*",
       "accept-language": "ar,fr;q=0.9,en;q=0.8",
@@ -40,14 +55,22 @@ async function decJson(path: string) {
     data = null;
   }
 
-  return { ok: response.ok, status: response.status, data, text };
+  return { ok: response.ok, status: response.status, data };
 }
 
-function uniqueIdentifiers(candidate: Record<string, unknown>, fallback: string) {
-  const values = [candidate.numDossier, candidate.numero, candidate.nni, candidate.id, fallback]
-    .map((value) => String(value ?? "").trim())
-    .filter(Boolean);
-  return Array.from(new Set(values));
+function normalizeSubject(row: Record<string, unknown>) {
+  const score = numberValue(row.note ?? row.noteMatiere ?? row.noteRetenue);
+  const coefficient = numberValue(row.coef ?? row.coeficient ?? row.coefficient);
+  const nameAr = stringValue(row.lmata ?? row.nomMatiereA ?? row.matiereAr ?? row.matiere);
+  const nameFr = stringValue(row.lmatf ?? row.nomMatiereF ?? row.matiere);
+
+  return {
+    nameAr,
+    nameFr,
+    score,
+    coefficient,
+    observation: stringValue(row.observation),
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -61,59 +84,52 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const candidateResponse = await decJson(`/_api/bepc/search/${encodeURIComponent(number)}`);
+    const officialResponse = await fetchOfficialDetails(number);
+    const officialCandidate = safeObject(officialResponse.data);
 
-    if (candidateResponse.status === 404 || !candidateResponse.data) {
+    if (officialResponse.status === 404 || !officialCandidate) {
       return NextResponse.json(
         { ok: false, code: "NOT_FOUND", message: "لم يتم العثور على مترشح بهذا الرقم في منصة الوزارة." },
         { status: 404, headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } },
       );
     }
 
-    if (!candidateResponse.ok) {
+    if (!officialResponse.ok) {
       return NextResponse.json(
         { ok: false, code: "DEC_UNAVAILABLE", message: "خدمة الوزارة غير متاحة مؤقتًا. حاول بعد قليل." },
         { status: 502, headers: { "Cache-Control": "no-store" } },
       );
     }
 
-    const candidate = safeObject(candidateResponse.data) || safeArray(candidateResponse.data)[0] || null;
-    if (!candidate) {
-      return NextResponse.json(
-        { ok: false, code: "NOT_FOUND", message: "لم يتم العثور على بيانات مترشح مطابقة." },
-        { status: 404, headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } },
-      );
-    }
+    const rawSubjects = safeArray(
+      officialCandidate.notes || officialCandidate.details || officialCandidate.subjects || officialCandidate.content,
+    );
+    const subjects = rawSubjects
+      .map(normalizeSubject)
+      .filter((subject) => subject.nameAr || subject.nameFr || subject.score !== null);
 
-    let subjects: Record<string, unknown>[] = [];
-    let detailsStatus = 404;
-
-    for (const identifier of uniqueIdentifiers(candidate, number)) {
-      const detailsResponse = await decJson(`/_api/details-bepc/${encodeURIComponent(identifier)}`);
-      detailsStatus = detailsResponse.status;
-      const rows = safeArray(detailsResponse.data);
-      if (rows.length) {
-        subjects = rows;
-        break;
-      }
-      const detailsObject = safeObject(detailsResponse.data);
-      if (detailsObject) {
-        const nested = safeArray(detailsObject.content || detailsObject.details || detailsObject.notes || detailsObject.subjects);
-        if (nested.length) {
-          subjects = nested;
-          break;
-        }
-      }
-    }
+    const candidate = {
+      number: stringValue(officialCandidate.numDossier ?? officialCandidate.numero ?? number),
+      nameAr: stringValue(officialCandidate.nomAr ?? officialCandidate.nameAr ?? officialCandidate.nomFr),
+      nameFr: stringValue(officialCandidate.nomFr ?? officialCandidate.nameFr ?? officialCandidate.nomAr),
+      birthPlaceAr: stringValue(officialCandidate.lieuNaissAr),
+      birthPlaceFr: stringValue(officialCandidate.lieuNaissFr),
+      birthDate: stringValue(officialCandidate.dateNaiss),
+      centreAr: stringValue(officialCandidate.centreExamen ?? officialCandidate.centreAr),
+      centreFr: stringValue(officialCandidate.centreFr ?? officialCandidate.centreExamen),
+      series: stringValue(officialCandidate.serie),
+      average: numberValue(officialCandidate.moyenne),
+      decision: stringValue(officialCandidate.decision),
+    };
 
     return NextResponse.json(
       {
         ok: true,
         source: "dec.education.gov.mr",
+        sourceUrl: `${DEC_ORIGIN}/search-bepc`,
         candidate,
         subjects,
         detailsAvailable: subjects.length > 0,
-        detailsStatus,
       },
       {
         headers: {
@@ -128,7 +144,9 @@ export async function GET(request: NextRequest) {
       {
         ok: false,
         code: timedOut ? "TIMEOUT" : "UPSTREAM_ERROR",
-        message: timedOut ? "استغرقت منصة الوزارة وقتًا طويلًا في الرد. أعد المحاولة." : "تعذر الاتصال بمنصة الوزارة مؤقتًا.",
+        message: timedOut
+          ? "استغرقت منصة الوزارة وقتًا طويلًا في الرد. أعد المحاولة."
+          : "تعذر الاتصال بمنصة الوزارة مؤقتًا.",
       },
       { status: 502, headers: { "Cache-Control": "no-store" } },
     );
