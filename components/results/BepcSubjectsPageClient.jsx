@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import BepcSubjectsThemeToggle from "./BepcSubjectsThemeToggle";
 
 function normalizeDigits(value) {
   return String(value || "")
@@ -61,6 +62,17 @@ function ArrowRightIcon() {
       <path d="M19 12H5" />
       <path d="m12 19-7-7 7-7" />
     </svg>
+  );
+}
+
+function QuranVerseBanner() {
+  return (
+    <aside className="relative z-40 border-b border-amber-300/15 bg-gradient-to-l from-[#06150d] via-[#0a2417] to-[#06150d] px-3 py-2.5 text-center text-amber-50 shadow-[0_8px_22px_rgba(0,0,0,.16)]">
+      <p className="mx-auto max-w-2xl text-[10px] font-bold leading-5 sm:text-xs sm:leading-6">
+        ﴿ إِنَّ اللَّهَ وَمَلَائِكَتَهُ يُصَلُّونَ عَلَى النَّبِيِّ ۚ يَا أَيُّهَا الَّذِينَ آمَنُوا صَلُّوا عَلَيْهِ وَسَلِّمُوا تَسْلِيمًا ﴾
+      </p>
+      <span className="mt-0.5 block text-[8px] font-black text-emerald-300/80">سورة الأحزاب — الآية ٥٦</span>
+    </aside>
   );
 }
 
@@ -238,7 +250,9 @@ export default function BepcSubjectsPageClient({ initialNumber = "" }) {
     <main dir="rtl" className="min-h-[100dvh] bg-[#f3f7f4] text-slate-950 dark:bg-[#061109] dark:text-white">
       <div className="pointer-events-none fixed inset-x-0 top-0 h-56 bg-gradient-to-b from-emerald-100/65 to-transparent dark:from-emerald-950/35" aria-hidden="true" />
 
-      <header className="sticky top-0 z-30 border-b border-white/70 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/92">
+      <QuranVerseBanner />
+
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 text-slate-950 shadow-[0_8px_26px_rgba(15,23,42,.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d] dark:text-white dark:shadow-[0_8px_26px_rgba(0,0,0,.22)]">
         <div className="mx-auto flex min-h-[60px] max-w-2xl items-center justify-between gap-3 px-3 pt-[env(safe-area-inset-top)] sm:px-4">
           <button type="button" onClick={goBack} className="grid h-10 w-10 shrink-0 place-items-center rounded-[15px] border border-slate-200 bg-white text-slate-700 shadow-sm transition active:scale-95 dark:border-white/10 dark:bg-white/[.06] dark:text-white" aria-label="رجوع">
             <ArrowRightIcon />
@@ -247,13 +261,16 @@ export default function BepcSubjectsPageClient({ initialNumber = "" }) {
             <p className="text-[8px] font-black text-emerald-700 dark:text-emerald-300">البريفيه</p>
             <h1 className="truncate text-base font-black">تفاصيل درجات المواد</h1>
           </div>
-          {showingResult ? (
-            <button type="button" onClick={resetSearch} className="grid h-10 w-10 shrink-0 place-items-center rounded-[15px] bg-emerald-100 text-emerald-700 transition active:scale-95 dark:bg-emerald-300/10 dark:text-emerald-300" aria-label="بحث جديد">
-              <SearchIcon />
-            </button>
-          ) : (
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[15px] bg-emerald-100 text-xl dark:bg-emerald-300/10" aria-hidden="true">📚</div>
-          )}
+          <div className="flex shrink-0 items-center gap-1.5">
+            <BepcSubjectsThemeToggle />
+            {showingResult ? (
+              <button type="button" onClick={resetSearch} className="grid h-10 w-10 shrink-0 place-items-center rounded-[15px] bg-emerald-100 text-emerald-700 transition active:scale-95 dark:bg-emerald-300/10 dark:text-emerald-300" aria-label="بحث جديد">
+                <SearchIcon />
+              </button>
+            ) : (
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[15px] bg-emerald-100 text-xl dark:bg-emerald-300/10" aria-hidden="true">📚</div>
+            )}
+          </div>
         </div>
       </header>
 
