@@ -34,12 +34,8 @@ function addSubjectDetailsButton() {
   document.querySelectorAll(".result-modal").forEach((card) => {
     if (card.querySelector("[data-subject-details-button]")) return;
 
-    const banner = card.querySelector(".site-banner");
-    const socialActions = banner?.nextElementSibling;
-    const primaryActions = banner?.previousElementSibling;
-    const insertBefore = banner || socialActions;
-
-    if (!primaryActions || !insertBefore) return;
+    const primaryActions = card.querySelector(".action-button")?.parentElement;
+    if (!primaryActions) return;
 
     const link = document.createElement("a");
     link.href = SUBJECT_DETAILS_URL;
@@ -50,7 +46,7 @@ function addSubjectDetailsButton() {
     link.setAttribute("aria-label", "تفاصيل المواد على موقع إدارة الامتحانات");
     link.innerHTML = '<span aria-hidden="true">📚</span><span>تفاصيل المواد</span><span aria-hidden="true">↗</span>';
 
-    card.insertBefore(link, insertBefore);
+    primaryActions.insertAdjacentElement("afterend", link);
   });
 }
 
