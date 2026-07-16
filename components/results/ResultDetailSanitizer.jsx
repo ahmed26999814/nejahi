@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import BepcSubjectDetailsModal from "./BepcSubjectDetailsModal";
 
-const OPEN_SUBJECT_DETAILS_EVENT = "mauriresults:open-subject-details";
 const UNAVAILABLE_VALUES = new Set([
   "",
   "غير متوفر",
@@ -88,15 +86,14 @@ function addSubjectDetailsButton() {
     button.dataset.subjectDetailsButton = "true";
     button.className =
       "action-button mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-mauri-green/25 bg-mauri-green/5 px-4 text-sm font-black text-mauri-green transition hover:border-mauri-green/40 hover:bg-mauri-green/10 active:scale-[.98] dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300";
-    button.setAttribute("aria-label", "البحث عن تفاصيل مواد البريفيه");
+    button.setAttribute("aria-label", "فتح صفحة تفاصيل مواد البريفيه");
     button.innerHTML =
       '<span aria-hidden="true">📚</span><span>تفاصيل المواد</span><span aria-hidden="true">←</span>';
     button.addEventListener("click", () => {
-      window.dispatchEvent(
-        new CustomEvent(OPEN_SUBJECT_DETAILS_EVENT, {
-          detail: { number: extractCandidateNumber(card) },
-        }),
-      );
+      const number = extractCandidateNumber(card);
+      const url = new URL("/bepc-subjects", window.location.origin);
+      if (number) url.searchParams.set("number", number);
+      window.location.assign(url.toString());
     });
 
     primaryActions.insertAdjacentElement("afterend", button);
@@ -130,5 +127,5 @@ export default function ResultDetailSanitizer() {
     };
   }, []);
 
-  return <BepcSubjectDetailsModal />;
+  return null;
 }
