@@ -32,7 +32,7 @@ function scoreStyle(score) {
   if (typeof score !== "number" || score < 0) {
     return {
       dot: "bg-slate-300 dark:bg-slate-600",
-      score: "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300",
+      score: "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-white/10 dark:text-slate-300 dark:ring-white/10",
       label: "غير محتسب",
       labelClass: "text-slate-500 dark:text-slate-400",
     };
@@ -41,7 +41,7 @@ function scoreStyle(score) {
   if (score >= 10) {
     return {
       dot: "bg-emerald-500",
-      score: "bg-emerald-100 text-emerald-800 dark:bg-emerald-300/15 dark:text-emerald-200",
+      score: "bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-300/15 dark:text-emerald-200 dark:ring-emerald-300/20",
       label: "جيد",
       labelClass: "text-emerald-700 dark:text-emerald-300",
     };
@@ -50,15 +50,15 @@ function scoreStyle(score) {
   if (score >= 8) {
     return {
       dot: "bg-amber-400",
-      score: "bg-amber-100 text-amber-800 dark:bg-amber-300/15 dark:text-amber-200",
-      label: "متوسط",
+      score: "bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-300/15 dark:text-amber-200 dark:ring-amber-300/20",
+      label: "قريب من النجاح",
       labelClass: "text-amber-700 dark:text-amber-300",
     };
   }
 
   return {
     dot: "bg-rose-500",
-    score: "bg-rose-100 text-rose-800 dark:bg-rose-300/15 dark:text-rose-200",
+    score: "bg-rose-50 text-rose-800 ring-rose-200 dark:bg-rose-300/15 dark:text-rose-200 dark:ring-rose-300/20",
     label: "يحتاج تحسين",
     labelClass: "text-rose-700 dark:text-rose-300",
   };
@@ -76,14 +76,14 @@ function SummaryItem({ label, value, accent = false }) {
 function SearchState({ status, error }) {
   if (status === "loading") {
     return (
-      <div className="space-y-2 px-4 py-5 sm:px-5">
-        <div className="h-24 animate-pulse rounded-3xl bg-slate-200/75 dark:bg-white/10" />
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-white/10 dark:bg-white/[.04]">
+      <div className="space-y-2 px-3 py-4 sm:px-5 sm:py-5">
+        <div className="h-44 animate-pulse rounded-[24px] bg-slate-200/75 dark:bg-white/10" />
+        <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white dark:border-white/10 dark:bg-white/[.04]">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="flex items-center gap-3 border-b border-slate-100 px-4 py-3 last:border-0 dark:border-white/10">
-              <div className="h-9 w-9 animate-pulse rounded-xl bg-slate-200 dark:bg-white/10" />
+            <div key={index} className="flex items-center gap-3 border-b border-slate-100 px-3 py-3 last:border-0 dark:border-white/10 sm:px-4">
+              <div className="h-3 w-3 animate-pulse rounded-full bg-slate-200 dark:bg-white/10" />
               <div className="h-4 flex-1 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-              <div className="h-8 w-16 animate-pulse rounded-xl bg-slate-200 dark:bg-white/10" />
+              <div className="h-10 w-16 animate-pulse rounded-xl bg-slate-200 dark:bg-white/10" />
             </div>
           ))}
         </div>
@@ -112,9 +112,9 @@ function SearchState({ status, error }) {
         <span className="mx-auto grid h-16 w-16 place-items-center rounded-[22px] bg-mauri-green/10 text-3xl dark:bg-emerald-300/10" aria-hidden="true">
           📚
         </span>
-        <h3 className="mt-4 text-lg font-black text-slate-900 dark:text-white">درجات جميع المواد في مكان واحد</h3>
+        <h3 className="mt-4 text-lg font-black text-slate-900 dark:text-white">درجات جميع المواد في واجهة واحدة</h3>
         <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
-          أدخل رقم المترشح في الأعلى لعرض الكشف الرسمي من منصة إدارة الامتحانات.
+          أدخل رقم المترشح في الأعلى لعرض الكشف الرسمي المتوافق مع الهاتف.
         </p>
       </div>
     </div>
@@ -129,15 +129,18 @@ function ResultView({ data }) {
 
   return (
     <div className="px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pb-5">
-      <section className="overflow-hidden rounded-[26px] border border-emerald-700/20 bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-600 text-white shadow-[0_18px_48px_rgba(6,78,59,.24)]">
-        <div className="p-4 sm:p-5">
+      <section className="overflow-hidden rounded-[26px] border border-slate-200/90 bg-white shadow-[0_18px_48px_rgba(15,23,42,.10)] dark:border-white/10 dark:bg-[#0d1f16]">
+        <div className="bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-600 p-4 text-white sm:p-5">
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[10px] font-black text-emerald-100">
-                <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                بيانات رسمية
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-black text-emerald-100">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 ring-1 ring-white/15">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                  بيانات رسمية
+                </span>
+                <span>{subjects.length} مواد</span>
               </div>
-              <h3 className="mt-1.5 text-lg font-black leading-7 sm:text-xl">{name}</h3>
+              <h3 className="mt-2 break-words text-lg font-black leading-7 sm:text-xl">{name}</h3>
               <p className="mt-1 text-xs font-bold text-emerald-100">رقم المترشح: {candidate.number || "—"}</p>
             </div>
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15 text-xl ring-1 ring-white/20" aria-hidden="true">
@@ -145,83 +148,80 @@ function ResultView({ data }) {
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-2">
             <SummaryItem label="المعدل" value={formatNumber(candidate.average)} accent />
             <SummaryItem label="القرار" value={candidate.decision} />
             <SummaryItem label="الشعبة" value={candidate.series} />
+            <SummaryItem label="تاريخ الميلاد" value={formatDate(candidate.birthDate)} />
           </div>
 
-          <div className="mt-3 grid gap-2 text-[11px] font-bold text-emerald-50 sm:grid-cols-2">
-            <p className="truncate rounded-2xl bg-black/10 px-3 py-2.5 ring-1 ring-white/10">📍 {centre}</p>
-            <p className="rounded-2xl bg-black/10 px-3 py-2.5 ring-1 ring-white/10">🎂 {formatDate(candidate.birthDate)}</p>
-          </div>
+          <p className="mt-3 flex min-w-0 items-center gap-2 rounded-2xl bg-black/10 px-3 py-2.5 text-[11px] font-bold text-emerald-50 ring-1 ring-white/10">
+            <span className="shrink-0" aria-hidden="true">📍</span>
+            <span className="min-w-0 truncate">{centre}</span>
+          </p>
         </div>
 
-        <div className="border-t border-white/10 bg-white/[.07] px-4 py-3 backdrop-blur-sm sm:px-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black text-emerald-100">الكشف التفصيلي</p>
-              <h4 className="text-base font-black">درجات المواد</h4>
-            </div>
-            <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-black ring-1 ring-white/15">{subjects.length} مواد</span>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-3 dark:border-white/10 dark:bg-white/[.04] sm:px-4">
+          <div>
+            <p className="text-[9px] font-black text-mauri-green dark:text-emerald-300">الكشف التفصيلي</p>
+            <h4 className="text-base font-black text-slate-900 dark:text-white">درجات المواد</h4>
           </div>
+          <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-[10px] font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">
+            {subjects.length} مواد
+          </span>
         </div>
-      </section>
 
-      {subjects.length ? (
-        <section className="mt-3 overflow-hidden rounded-[24px] border border-slate-200/90 bg-white shadow-[0_14px_35px_rgba(15,23,42,.07)] dark:border-white/10 dark:bg-[#0d1f16]">
-          <div className="grid grid-cols-[minmax(0,1fr)_46px_72px] items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2.5 text-[9px] font-black text-slate-500 dark:border-white/10 dark:bg-white/[.04] dark:text-slate-400 sm:grid-cols-[minmax(0,1fr)_70px_92px] sm:px-4">
-            <span>المادة</span>
-            <span className="text-center">المعامل</span>
-            <span className="text-center">الدرجة</span>
-          </div>
-
+        {subjects.length ? (
           <div className="divide-y divide-slate-100 dark:divide-white/10">
             {subjects.map((subject, index) => {
               const style = scoreStyle(subject.score);
               const unavailable = typeof subject.score !== "number" || subject.score < 0;
+              const subjectName = subject.nameAr || subject.nameFr || `المادة ${index + 1}`;
+              const frenchName = subject.nameFr && subject.nameFr !== subject.nameAr ? subject.nameFr : "";
 
               return (
                 <article
                   key={`${subject.nameAr || subject.nameFr}-${index}`}
-                  className="grid min-h-[68px] grid-cols-[minmax(0,1fr)_46px_72px] items-center gap-2 px-3 py-2.5 transition hover:bg-slate-50/80 dark:hover:bg-white/[.03] sm:grid-cols-[minmax(0,1fr)_70px_92px] sm:px-4"
+                  className="grid min-h-[68px] grid-cols-[minmax(0,1fr)_72px] items-center gap-3 px-3 py-2.5 transition hover:bg-slate-50/80 dark:hover:bg-white/[.03] sm:grid-cols-[minmax(0,1fr)_90px] sm:px-4"
                 >
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${style.dot}`} />
-                    <div className="min-w-0">
-                      <h5 className="truncate text-[13px] font-black text-slate-900 dark:text-white sm:text-sm">
-                        {subject.nameAr || subject.nameFr || `المادة ${index + 1}`}
+                    <div className="min-w-0 flex-1">
+                      <h5 className="break-words text-[13px] font-black leading-5 text-slate-900 dark:text-white sm:text-sm">
+                        {subjectName}
                       </h5>
-                      <p className={`mt-0.5 truncate text-[9px] font-black ${style.labelClass}`}>
-                        {subject.nameFr && subject.nameFr !== subject.nameAr ? subject.nameFr : style.label}
-                      </p>
+                      <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] font-black sm:text-[10px]">
+                        {frenchName ? (
+                          <span className="max-w-full truncate text-slate-500 dark:text-slate-400" dir="ltr">{frenchName}</span>
+                        ) : null}
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                          المعامل {formatNumber(subject.coefficient, 0)}
+                        </span>
+                        <span className={style.labelClass}>{style.label}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <span className="text-center text-xs font-black text-slate-600 dark:text-slate-300">
-                    {formatNumber(subject.coefficient, 0)}
-                  </span>
-
                   <div className="text-center">
-                    <span className={`inline-flex min-w-[62px] items-center justify-center rounded-xl px-2 py-2 text-xs font-black ${style.score}`}>
-                      {unavailable ? "—" : formatNumber(subject.score)}
-                      {!unavailable ? <small className="mr-0.5 text-[8px] opacity-70">/20</small> : null}
+                    <span className={`inline-flex min-w-[66px] flex-col items-center justify-center rounded-[14px] px-2 py-2 text-sm font-black ring-1 ${style.score}`}>
+                      <span>{unavailable ? "—" : formatNumber(subject.score)}</span>
+                      <small className="mt-0.5 text-[8px] font-black opacity-70">من 20</small>
                     </span>
                   </div>
                 </article>
               );
             })}
           </div>
-        </section>
-      ) : (
-        <div className="mt-3 rounded-[24px] border border-dashed border-slate-300 bg-white p-6 text-center text-sm font-bold text-slate-500 dark:border-white/15 dark:bg-white/[.03] dark:text-slate-300">
-          بيانات المترشح موجودة، لكن تفاصيل المواد غير متاحة حاليًا من منصة الوزارة.
-        </div>
-      )}
+        ) : (
+          <div className="p-6 text-center text-sm font-bold text-slate-500 dark:text-slate-300">
+            بيانات المترشح موجودة، لكن تفاصيل المواد غير متاحة حاليًا من منصة الوزارة.
+          </div>
+        )}
 
-      <p className="px-3 pb-1 pt-3 text-center text-[9px] font-bold leading-5 text-slate-500 dark:text-slate-400">
-        المصدر: منصة إدارة الامتحانات والمسابقات الرسمية
-      </p>
+        <p className="border-t border-slate-100 px-3 py-3 text-center text-[9px] font-bold leading-5 text-slate-500 dark:border-white/10 dark:text-slate-400">
+          المصدر: منصة إدارة الامتحانات والمسابقات الرسمية
+        </p>
+      </section>
     </div>
   );
 }
