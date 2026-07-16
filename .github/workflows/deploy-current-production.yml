@@ -26,12 +26,19 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Verify deployment credentials
+      - name: Check deployment credentials
+        id: credentials
         shell: bash
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          test -n "$VERCEL_TOKEN" || { echo "VERCEL_TOKEN secret is missing"; exit 1; }
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "VERCEL_TOKEN secret is missing"
+            exit 1
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -54,12 +61,17 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
 
-      - name: Remove temporary workflow
+      - name: Record outcome and clean workflow
+        if: always()
         shell: bash
+        env:
+          TOKEN_AVAILABLE: ${{ steps.credentials.outputs.available }}
+          JOB_STATUS: ${{ job.status }}
         run: |
+          printf 'status=%s\nvercel_token_available=%s\ncommit=%s\n' "$JOB_STATUS" "${TOKEN_AVAILABLE:-false}" "$GITHUB_SHA" > VERCEL_DEPLOYMENT_STATUS.txt
           rm -f .github/workflows/deploy-current-production.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Complete production deployment [skip ci]"
+          git commit -m "Record production deployment outcome [skip ci]"
           git push
