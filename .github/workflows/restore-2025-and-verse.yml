@@ -91,3 +91,5 @@ jobs:
           git add -A
           git commit -m "Restore 2025 exams and add Quran verse banners"
           git push
+
+# Trigger after workflow exists on main.
