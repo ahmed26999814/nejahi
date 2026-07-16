@@ -1,0 +1,3 @@
+status=failure
+vercel_token_available=false
+commit=aef3b83feb422d2423e398aab084af2095707d4b
