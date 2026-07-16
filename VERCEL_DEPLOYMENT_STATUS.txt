@@ -1,3 +1,4 @@
 status=failure
-vercel_token_available=false
-commit=aef3b83feb422d2423e398aab084af2095707d4b
+vercel_token_available=true
+deployment_url=
+commit=08a8d861b42928fb14978c82c73df5404f6073fc
