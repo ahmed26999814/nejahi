@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { contentValue } from "../common/content";
 import { CodeIcon, MessageIcon } from "../common/icons";
@@ -7,6 +8,8 @@ import { isNativeAppRuntime, isStandaloneMode } from "../../lib/runtimeEnvironme
 import DeveloperModal from "./DeveloperModal";
 import VisitorCounter from "./VisitorCounter";
 import OnlineUsersCounter from "./OnlineUsersCounter";
+
+const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/GN6CJ4edITnJqVfaV5rYuI?s=cl&p=a&ilr=0&amv=3";
 
 export default function Footer({ content = {}, onNavigate, text }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
@@ -44,6 +47,21 @@ export default function Footer({ content = {}, onNavigate, text }) {
             </span>
             {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
           </button>
+
+          <a
+            className="footer-action-card footer-action-whatsapp active:scale-[.98]"
+            href={WHATSAPP_GROUP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-haptic
+          >
+            <span className="footer-action-icon"><MessageIcon /></span>
+            <span className="min-w-0 text-start">
+              <strong>مجموعة الموقع على واتساب</strong>
+              {isWeb && <small>تنبيهات النتائج وآخر الأخبار</small>}
+            </span>
+            {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
+          </a>
         </div>
 
         {(showVisitors || showOnline) && (
@@ -55,6 +73,12 @@ export default function Footer({ content = {}, onNavigate, text }) {
 
         {isWeb && (
           <div className="mt-4 border-t border-mauri-border/70 pt-3 text-center text-xs font-bold text-slate-500 dark:border-white/10 dark:text-slate-400">
+            <nav className="footer-seo-links" aria-label="روابط المنصة">
+              <Link href="/toppers">الأوائل</Link>
+              <Link href="/statistics">الإحصائيات</Link>
+              <Link href="/lessons">الدروس</Link>
+              <Link href="/calculator">حاسبة المعدل</Link>
+            </nav>
             <span>© {new Date().getFullYear()} MauriResults</span>
           </div>
         )}
