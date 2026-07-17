@@ -1,0 +1,54 @@
+name: Restore Vercel Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/restore-vercel-production.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  VERCEL_ORG_ID: team_Hs9izwrJBXYbv6mC5FxhcyNy
+  VERCEL_PROJECT_ID: prj_gakC4aJHh0P8f3exGw7xsygjxlaC
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Promote existing ready deployment
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set +e
+          LOG=/tmp/vercel-promote.log
+          : > "$LOG"
+          STATUS=failure
+
+          npm install --global vercel@56.3.0 >> "$LOG" 2>&1
+          if [ $? -eq 0 ] && [ -n "$VERCEL_TOKEN" ]; then
+            vercel promote https://mauriresults-3jw622429-ahmed-abdellahi-madys-projects.vercel.app --yes --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects >> "$LOG" 2>&1
+            if [ $? -eq 0 ]; then STATUS=success; fi
+          fi
+
+          {
+            printf 'status=%s\n' "$STATUS"
+            tail -n 100 "$LOG"
+          } > VERCEL_ALIAS_RESTORE_STATUS.txt
+
+          rm -f .github/workflows/restore-vercel-production.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Record Vercel alias restoration [skip ci]" || true
+          git push || true
+
+          test "$STATUS" = "success"
