@@ -101,17 +101,28 @@ function buildParams(config: SearchConfig, query: string, useFallback = false) {
   return params;
 }
 
+function shouldUseFallback(result: Awaited<ReturnType<typeof supabaseSearch>>) {
+  if (!("error" in result)) return false;
+  const message = String(result.error || "");
+  return result.status === 404
+    || message.includes("PGRST205")
+    || message.includes("42P01")
+    || /relation .* does not exist/i.test(message);
+}
+
 async function executeSearch(source: string, query: string) {
   if (source.startsWith("upload:")) return searchUploaded(source, query);
   const canonicalSource = SOURCE_ALIASES[source] || source;
   const config = SEARCH_CONFIG[canonicalSource];
   if (!config) return { error: "Unknown source", status: 400 } as const;
   let result = await supabaseSearch(config.table, buildParams(config, query));
-  if (config.fallbackTable && ("error" in result || !(result.rows || []).length)) result = await supabaseSearch(config.fallbackTable, buildParams(config, query, true));
+  if (config.fallbackTable && shouldUseFallback(result)) {
+    result = await supabaseSearch(config.fallbackTable, buildParams(config, query, true));
+  }
   return result;
 }
 
-const cachedSearch = unstable_cache(async (source: string, query: string) => executeSearch(source, query), ["mauriresults-public-search-v4"], { revalidate: 60 });
+const cachedSearch = unstable_cache(async (source: string, query: string) => executeSearch(source, query), ["mauriresults-public-search-v5"], { revalidate: 60 });
 function responseHeaders(numeric: boolean) {
   const cache = numeric ? "public, s-maxage=300, stale-while-revalidate=21600" : "public, s-maxage=60, stale-while-revalidate=3600";
   return { "Cache-Control": cache, "CDN-Cache-Control": cache, Vary: "Accept-Encoding" };
@@ -123,7 +134,9 @@ export async function GET(request: Request) {
   const query = normalizeQuery(String(searchParams.get("q") || ""));
   const numeric = isNumberSearch(query);
   const canonicalSource = SOURCE_ALIASES[source] || source;
-  if (query.length < 1) return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400, headers: { "Cache-Control": "no-store" } });
+  if ((numeric && query.length < 1) || (!numeric && query.length < 2)) {
+    return NextResponse.json({ rows: [], error: "Query too short" }, { status: 400, headers: { "Cache-Control": "no-store" } });
+  }
   if (!source.startsWith("upload:") && !SEARCH_CONFIG[canonicalSource]) return NextResponse.json({ rows: [], error: "Unknown source" }, { status: 400, headers: { "Cache-Control": "no-store" } });
   const result = await cachedSearch(source, query);
   if ("error" in result) return NextResponse.json({ rows: [], error: result.error }, { status: result.status, headers: { "Cache-Control": "no-store" } });

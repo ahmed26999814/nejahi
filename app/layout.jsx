@@ -12,6 +12,7 @@ import "./dashboard-reference.css";
 import "./dashboard-mobile.css";
 import "./results-notice.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
+import PublicDataFetchBridge from "../components/layout/PublicDataFetchBridge";
 import UiEnhancements from "../components/ui/UiEnhancements";
 import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSelectEnhancer";
 import ForgotCandidateNumber from "../components/ui/ForgotCandidateNumber";
@@ -55,10 +56,6 @@ export const metadata = {
   manifest: "/manifest.webmanifest",
   alternates: {
     canonical: siteUrl,
-    languages: {
-      "ar-MR": siteUrl,
-      "fr-MR": siteUrl,
-    },
   },
   robots: {
     index: true,
@@ -147,6 +144,7 @@ export default function RootLayout({ children }) {
           <span className="results-notice-dot" aria-hidden="true" />
           <span>نتائج ابريفه وكونكور 2026 نعمل على إضافتها، وستكون متاحة بعد لحظات</span>
         </div>
+        <PublicDataFetchBridge />
         <AppRuntimeShell />
         <UiEnhancements />
         <MotivationalVisibility />

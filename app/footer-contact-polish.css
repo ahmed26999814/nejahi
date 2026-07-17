@@ -14,9 +14,9 @@
 /* Footer actions: clearer icons, hierarchy and touch targets. */
 .footer-actions {
   display: grid;
-  width: min(100%, 31rem);
+  width: min(100%, 48rem);
   gap: .65rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .footer-action-card {
@@ -59,6 +59,12 @@
   color: #265891;
 }
 
+.footer-action-whatsapp .footer-action-icon {
+  border-color: rgba(18, 140, 80, .18);
+  background: #e8f7ee;
+  color: #128c50;
+}
+
 .footer-action-icon svg { width: 1.25rem; height: 1.25rem; }
 .footer-action-card strong { display: block; font-size: .82rem; font-weight: 900; }
 .footer-action-card small { display: block; margin-top: .16rem; color: #738078; font-size: .66rem; font-weight: 750; line-height: 1.35; }
@@ -68,6 +74,20 @@
 .dark .footer-action-card { border-color: rgba(255,255,255,.09); background: rgba(255,255,255,.055); color: #f6faf7; }
 .dark .footer-action-card small { color: #9baba1; }
 .dark .footer-action-icon { border-color: rgba(255,255,255,.08); background: rgba(255,255,255,.07); color: #b8ddc7; }
+
+.counter-pending { visibility: hidden; }
+
+.footer-seo-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .35rem .85rem;
+  margin-bottom: .55rem;
+}
+
+.footer-seo-links a { transition: color .18s ease; }
+.footer-seo-links a:hover { color: #14633f; }
+.dark .footer-seo-links a:hover { color: #b8ddc7; }
 
 .visitor-counter {
   display: inline-grid;
