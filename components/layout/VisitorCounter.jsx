@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SESSION_KEY = "mauriresults_visit_session";
 
@@ -24,9 +24,30 @@ function getSessionId() {
 }
 
 export default function VisitorCounter() {
+  const rootRef = useRef(null);
+  const [active, setActive] = useState(false);
   const [count, setCount] = useState(null);
 
   useEffect(() => {
+    const element = rootRef.current;
+    if (!element) return undefined;
+    if (!("IntersectionObserver" in window)) {
+      setActive(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setActive(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "300px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!active) return undefined;
     let cancelled = false;
     const sessionId = getSessionId();
 
@@ -44,15 +65,18 @@ export default function VisitorCounter() {
       .catch((error) => console.warn("[MauriResults Visits]", error));
 
     return () => { cancelled = true; };
-  }, []);
-
-  if (count === null) return null;
+  }, [active]);
 
   return (
-    <div className="visitor-counter" aria-label={`عدد الزيارات ${count}`}>
+    <div
+      ref={rootRef}
+      className={`visitor-counter ${count === null ? "counter-pending" : ""}`}
+      aria-hidden={count === null ? "true" : undefined}
+      aria-label={count === null ? undefined : `عدد الزيارات ${count}`}
+    >
       <span className="visitor-counter-icon"><VisitorsIcon /></span>
       <span className="visitor-counter-label">الزيارات</span>
-      <strong>{count.toLocaleString("ar-MR")}</strong>
+      <strong>{count === null ? "—" : count.toLocaleString("ar-MR")}</strong>
     </div>
   );
 }
