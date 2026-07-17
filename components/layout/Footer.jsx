@@ -10,6 +10,7 @@ import VisitorCounter from "./VisitorCounter";
 import OnlineUsersCounter from "./OnlineUsersCounter";
 
 const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/GN6CJ4edITnJqVfaV5rYuI?s=cl&p=a&ilr=0&amv=3";
+const SUGGESTION_WHATSAPP_URL = `https://wa.me/22244881891?text=${encodeURIComponent("السلام عليكم، لدي اقتراح لموقع MauriResults")}`;
 
 export default function Footer({ content = {}, onNavigate, text }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
@@ -59,6 +60,22 @@ export default function Footer({ content = {}, onNavigate, text }) {
             <span className="min-w-0 text-start">
               <strong>مجموعة الموقع على واتساب</strong>
               {isWeb && <small>تنبيهات النتائج وآخر الأخبار</small>}
+            </span>
+            {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
+          </a>
+
+          <a
+            className="footer-action-card footer-action-whatsapp footer-action-suggestion active:scale-[.98]"
+            href={SUGGESTION_WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="اقترح لنا عبر واتساب"
+            data-haptic
+          >
+            <span className="footer-action-icon"><MessageIcon /></span>
+            <span className="min-w-0 text-start">
+              <strong>اقترح لنا</strong>
+              {isWeb && <small>شاركنا فكرتك لتطوير الموقع</small>}
             </span>
             {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
           </a>
