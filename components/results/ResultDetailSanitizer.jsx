@@ -88,7 +88,7 @@ function sanitizeResultDetails() {
 function isBepcContext(card) {
   const activeLabel = document.querySelector('[aria-current="page"]')?.textContent || "";
   const context = normalize(`${window.location.hash} ${activeLabel} ${card.textContent || ""}`);
-  return /bepc|brevet|البريفيه|ابريفه|أبريفه|بريفه|ختم الدروس الإعدادية/.test(context);
+  return /bepc|brevet|ابريفه|ابريفه|ابريفه|بريفه|ختم الدروس الإعدادية/.test(context);
 }
 
 function extractCandidateNumber(card) {

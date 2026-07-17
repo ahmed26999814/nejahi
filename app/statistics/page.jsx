@@ -1,14 +1,14 @@
 import FeatureSeoPage from "../../components/seo/FeatureSeoPage";
 
-const url = "https://mauri-results.vercel.app/statistics";
+const url = "https://mauriresults.vercel.app/statistics";
 
 export const metadata = {
-  title: "إحصائيات البكالوريا والبريفيه والكونكور في موريتانيا 2026",
+  title: "إحصائيات البكالوريا وابريفه والكونكور في موريتانيا 2026",
   description: "إحصائيات المسابقات الوطنية في موريتانيا: الناجحون ونسبة النجاح وأعلى معدل وترتيب الولايات والمدارس والمراكز.",
   alternates: { canonical: url },
   openGraph: {
     title: "إحصائيات المسابقات الوطنية في موريتانيا | MauriResults",
-    description: "إحصائيات البكالوريا والبريفيه والكونكور والامتياز بطريقة سريعة وواضحة.",
+    description: "إحصائيات البكالوريا وابريفه والكونكور والامتياز بطريقة سريعة وواضحة.",
     url,
     type: "website",
     images: ["/logo.png"],

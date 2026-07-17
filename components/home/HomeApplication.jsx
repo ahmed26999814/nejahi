@@ -62,7 +62,7 @@ const actionButtonClass = cva("action-button", {
 
 const EXAM_CARDS = [
   { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },
-  { id: "brevet-2025", title: { ar: "نتائج البريفيه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية الرسمية.", fr: "Résultats officiels du BEPC." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
+  { id: "brevet-2025", title: { ar: "نتائج ابريفه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية الرسمية.", fr: "Résultats officiels du BEPC." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
   { id: "concours-2025", title: { ar: "كونكور 2025", fr: "Concours 2025" }, description: { ar: "بحث خاص بالولاية والمقاطعة والمركز ورقم المترشح.", fr: "Recherche par région, département, centre et numéro." }, tone: "gold", available: true, source: "concours", icon: <SchoolIcon /> },
   { id: "excellence-1as-2025", title: { ar: "الامتياز الأولى إعدادية 2025", fr: "Excellence 1AS 2025" }, description: { ar: "نتائج مسابقة الامتياز الأولى إعدادية.", fr: "Résultats du concours Excellence 1AS." }, tone: "teal", available: true, source: "excellence_1as", icon: <AwardIcon /> },
   { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "نتائج الدورة التكميلية الرسمية.", fr: "Résultats officiels de la session complémentaire." }, tone: "amber", available: true, source: "bac_session", icon: <AlertIcon /> },
@@ -400,7 +400,7 @@ function formatScore(student, text = UI_TEXT.ar) {
 }
 
 function getResultUrl(student) {
-  if (typeof window === "undefined") return "https://mauri-results.vercel.app";
+  if (typeof window === "undefined") return "https://mauriresults.vercel.app";
   const url = new URL(window.location.href);
   url.searchParams.set("source", cleanText(student?.source));
   url.searchParams.set("candidate", cleanText(student?.id));
@@ -2199,13 +2199,115 @@ function ConcoursSearchPanel({ onSelect, text }) {
   );
 }
 
+async function fetchUploadedConcoursOptions(source, level, wilaya = "", moughataa = "", signal) {
+  const params = new URLSearchParams({ source, level });
+  if (wilaya) params.set("wilaya", wilaya);
+  if (moughataa) params.set("moughataa", moughataa);
+  const response = await fetch(`/api/uploaded-concours-locations?${params.toString()}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+    signal,
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+  return uniqueSorted(Array.isArray(data.options) ? data.options : []);
+}
+
 function UploadedConcoursSearchPanel({ exam, onSelect, text }) {
   const [wilaya, setWilaya] = useState("");
   const [moughataa, setMoughataa] = useState("");
   const [centre, setCentre] = useState("");
   const [number, setNumber] = useState("");
+  const [wilayas, setWilayas] = useState([]);
+  const [moughataas, setMoughataas] = useState([]);
+  const [centres, setCentres] = useState([]);
+  const [loadingLevel, setLoadingLevel] = useState("wilaya");
   const [searching, setSearching] = useState(false);
   const [localError, setLocalError] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setWilaya("");
+    setMoughataa("");
+    setCentre("");
+    setNumber("");
+    setWilayas([]);
+    setMoughataas([]);
+    setCentres([]);
+    setLocalError("");
+    setLoadingLevel("wilaya");
+
+    fetchUploadedConcoursOptions(exam.source, "wilaya", "", "", controller.signal)
+      .then((options) => {
+        setWilayas(options);
+        if (!options.length) setLocalError(text.noData || "لا توجد خيارات متاحة.");
+      })
+      .catch((error) => {
+        if (error?.name !== "AbortError") {
+console.error("[MauriResults Uploaded Concours Wilayas]", error);
+setLocalError(text.connectionError);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingLevel("");
+      });
+
+    return () => controller.abort();
+  }, [exam.source, text.connectionError, text.noData]);
+
+  useEffect(() => {
+    setMoughataa("");
+    setCentre("");
+    setNumber("");
+    setMoughataas([]);
+    setCentres([]);
+    if (!wilaya) return undefined;
+
+    const controller = new AbortController();
+    setLocalError("");
+    setLoadingLevel("moughataa");
+    fetchUploadedConcoursOptions(exam.source, "moughataa", wilaya, "", controller.signal)
+      .then((options) => {
+        setMoughataas(options);
+        if (!options.length) setLocalError(text.noData || "لا توجد مقاطعات متاحة.");
+      })
+      .catch((error) => {
+        if (error?.name !== "AbortError") {
+console.error("[MauriResults Uploaded Concours Moughataas]", error);
+setLocalError(text.connectionError);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingLevel("");
+      });
+    return () => controller.abort();
+  }, [exam.source, wilaya, text.connectionError, text.noData]);
+
+  useEffect(() => {
+    setCentre("");
+    setNumber("");
+    setCentres([]);
+    if (!wilaya || !moughataa) return undefined;
+
+    const controller = new AbortController();
+    setLocalError("");
+    setLoadingLevel("centre");
+    fetchUploadedConcoursOptions(exam.source, "centre", wilaya, moughataa, controller.signal)
+      .then((options) => {
+        setCentres(options);
+        if (!options.length) setLocalError(text.noData || "لا توجد مراكز متاحة.");
+      })
+      .catch((error) => {
+        if (error?.name !== "AbortError") {
+console.error("[MauriResults Uploaded Concours Centres]", error);
+setLocalError(text.connectionError);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingLevel("");
+      });
+    return () => controller.abort();
+  }, [exam.source, wilaya, moughataa, text.connectionError, text.noData]);
 
   async function submit(event) {
     event.preventDefault();
@@ -2217,8 +2319,17 @@ function UploadedConcoursSearchPanel({ exam, onSelect, text }) {
 
     setSearching(true);
     try {
-      const params = new URLSearchParams({ source: exam.source, wilaya: wilaya.trim(), moughataa: moughataa.trim(), centre: centre.trim(), number: number.trim() });
-      const response = await fetch(`/api/uploaded-concours-search?${params.toString()}`, { headers: { Accept: "application/json" }, cache: "no-store" });
+      const params = new URLSearchParams({
+        source: exam.source,
+        wilaya: wilaya.trim(),
+        moughataa: moughataa.trim(),
+        centre: centre.trim(),
+        number: number.trim(),
+      });
+      const response = await fetch(`/api/uploaded-concours-search?${params.toString()}`, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
       const students = prepareRowsForExam(exam, data.rows || []);
@@ -2235,22 +2346,47 @@ function UploadedConcoursSearchPanel({ exam, onSelect, text }) {
     }
   }
 
-  const fields = [
-    { label: text.chooseWilaya || "الولاية", value: wilaya, setValue: (value) => { setWilaya(value); setMoughataa(""); setCentre(""); setNumber(""); } },
-    { label: text.chooseMoughataa || "المقاطعة", value: moughataa, setValue: (value) => { setMoughataa(value); setCentre(""); setNumber(""); }, disabled: !wilaya },
-    { label: text.chooseCentre || "المركز", value: centre, setValue: (value) => { setCentre(value); setNumber(""); }, disabled: !moughataa },
-    { label: text.candidateNumber || text.number || "رقم المترشح", value: number, setValue: setNumber, inputMode: "numeric", disabled: !centre },
-  ];
-
   return (
-    <form className="search-card animate-slide-up" onSubmit={submit}>
-      {fields.map((field) => (
-        <label className="grid gap-1" key={field.label}>
-          <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{field.label}</span>
-          <input className="search-input pr-4" disabled={searching || field.disabled} inputMode={field.inputMode} enterKeyHint={field.inputMode === "numeric" ? "search" : "next"} onChange={(event) => field.setValue(event.target.value)} placeholder={field.label} value={field.value} />
-        </label>
-      ))}
-      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={searching} type="submit">
+    <form className="search-card animate-slide-up" onSubmit={submit} aria-busy={searching || Boolean(loadingLevel)}>
+      <div className="col-span-full flex items-center justify-between gap-2 px-1">
+        <strong className="text-xs font-black text-mauri-green dark:text-mauri-gold">البحث بالخيارات</strong>
+        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">الولاية ← المقاطعة ← المركز ← الرقم</span>
+      </div>
+      <SelectField
+        disabled={searching || loadingLevel === "wilaya"}
+        label={loadingLevel === "wilaya" ? "جاري تحميل الولايات..." : (text.chooseWilaya || "اختر الولاية")}
+        onChange={setWilaya}
+        options={wilayas}
+        value={wilaya}
+      />
+      <SelectField
+        disabled={searching || !wilaya || loadingLevel === "moughataa"}
+        label={loadingLevel === "moughataa" ? "جاري تحميل المقاطعات..." : (text.chooseMoughataa || "اختر المقاطعة")}
+        onChange={setMoughataa}
+        options={moughataas}
+        value={moughataa}
+      />
+      <SelectField
+        disabled={searching || !moughataa || loadingLevel === "centre"}
+        label={loadingLevel === "centre" ? "جاري تحميل المراكز..." : (text.chooseCentre || "اختر مركز الامتحان")}
+        onChange={setCentre}
+        options={centres}
+        value={centre}
+      />
+      <label className="grid gap-1">
+        <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{text.candidateNumber || text.number || "رقم المترشح"}</span>
+        <input
+className="search-input pr-4"
+disabled={searching || !centre}
+inputMode="numeric"
+enterKeyHint="search"
+pattern="[0-9]*"
+onChange={(event) => setNumber(event.target.value)}
+placeholder={text.candidateNumber || text.number || "رقم المترشح"}
+value={number}
+        />
+      </label>
+      <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={searching || Boolean(loadingLevel)} type="submit">
         {searching ? text.searching : text.searchButton}
       </button>
       {localError && <SearchErrorHelp error={localError} text={text} />}
@@ -2528,7 +2664,7 @@ function ResultCard({ onOpenRanking, resultBanner, student, onShare, text = UI_T
     : student.source === "brevet"
     ? [
       [text.id, student.id, <HashIcon key="hash" />],
-      [text.exam || "المسابقة", "البريفيه 2025", <BookIcon key="exam" />],
+      [text.exam || "المسابقة", "ابريفه 2025", <BookIcon key="exam" />],
       [text.school, student.ms || text.unavailable, <SchoolIcon key="school" />, () => onOpenRanking?.("ms", student.ms, text.school)],
       [text.center, student.centre || text.unavailable, <MapIcon key="center" />],
       [text.region, student.wl || text.unavailable, <MapIcon key="map" />, () => onOpenRanking?.("wl", student.wl, text.region)],

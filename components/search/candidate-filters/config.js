@@ -64,7 +64,7 @@ export function resolveExamSource() {
   const pageText = document.querySelector("main")?.textContent || "";
   if (/نتائج كونكور|concours|c1as/i.test(pageText)) return "concours";
   if (/الدورة التكميلية|session complémentaire/i.test(pageText)) return "bac_session";
-  if (/نتائج أبريفه|نتائج ابريفه|BEPC|Brevet/i.test(pageText)) return "brevet";
+  if (/نتائج ابريفه|نتائج ابريفه|BEPC|Brevet/i.test(pageText)) return "brevet";
   if (/نتائج باكالوريا|نتائج البكالوريا|Baccalauréat|Bac 20/i.test(pageText)) return "bac";
   return "";
 }

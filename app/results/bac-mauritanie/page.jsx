@@ -1,6 +1,6 @@
 import ExamSeoPage from "../../../components/seo/ExamSeoPage";
 
-const url = "https://mauri-results.vercel.app/results/bac-mauritanie";
+const url = "https://mauriresults.vercel.app/results/bac-mauritanie";
 
 export const metadata = {
   title: "نتائج البكالوريا موريتانيا 2026",

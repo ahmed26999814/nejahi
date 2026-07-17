@@ -1,6 +1,6 @@
 import ExamSeoPage from "../../../components/seo/ExamSeoPage";
 
-const url = "https://mauri-results.vercel.app/results/concours-mauritanie";
+const url = "https://mauriresults.vercel.app/results/concours-mauritanie";
 
 export const metadata = {
   title: "نتائج الكونكور موريتانيا 2026",

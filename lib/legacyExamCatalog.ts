@@ -7,7 +7,7 @@ export const LEGACY_2025_EXAMS: Array<Record<string, unknown>> = [
     birth_place_column: "", birth_date_column: "", ranked_view: "bac_ranked_results", total_rows: null, created_at: "2025-07-01T00:00:00.000Z",
   },
   {
-    source_key: "brevet", table_name: "brevet_results", title_ar: "نتائج أبريفه 2025", title_fr: "Résultats BEPC 2025",
+    source_key: "brevet", table_name: "brevet_results", title_ar: "نتائج ابريفه 2025", title_fr: "Résultats BEPC 2025",
     description_ar: "نتائج شهادة ختم الدروس الإعدادية الرسمية لسنة 2025.", description_fr: "Résultats officiels du BEPC 2025.",
     year: "2025", tone: "blue", search_mode: "simple", number_column: "Num_Bepc", name_column: "NOM", score_column: "Moyenne_Bepc",
     decision_column: "Decision", track_column: null, wilaya_column: "WILAYA", moughataa_column: "", school_column: "Ecole", centre_column: "Centre",

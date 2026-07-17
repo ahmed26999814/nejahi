@@ -37,8 +37,8 @@ export default function ResultsCountdownBanner() {
   const finished = remaining.distance <= 0;
   const title = useMemo(
     () => finished
-      ? "تم فتح نتائج الكونكور وأبريفه 2026"
-      : "موعد نشر نتائج الكونكور وأبريفه 2026",
+      ? "تم فتح نتائج الكونكور وابريفه 2026"
+      : "موعد نشر نتائج الكونكور وابريفه 2026",
     [finished],
   );
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-const siteUrl = "https://mauri-results.vercel.app";
+const siteUrl = "https://mauriresults.vercel.app";
 
 const pages = {
   "bac-mauritanie": {
@@ -12,10 +12,10 @@ const pages = {
     hash: "year-2025",
   },
   "brevet-mauritanie": {
-    title: "نتائج أبريفه في موريتانيا | MauriResults",
-    heading: "نتائج أبريفه في موريتانيا",
-    description: "الوصول بسرعة إلى نتائج أبريفه في موريتانيا عبر رقم المترشح أو الاسم، مع بطاقة نتيجة واضحة ومهيأة للهاتف.",
-    keywords: ["نتائج أبريفه موريتانيا", "نتائج BEPC موريتانيا", "Brevet Mauritanie", "Résultats BEPC Mauritanie"],
+    title: "نتائج ابريفه في موريتانيا | MauriResults",
+    heading: "نتائج ابريفه في موريتانيا",
+    description: "الوصول بسرعة إلى نتائج ابريفه في موريتانيا عبر رقم المترشح أو الاسم، مع بطاقة نتيجة واضحة ومهيأة للهاتف.",
+    keywords: ["نتائج ابريفه موريتانيا", "نتائج BEPC موريتانيا", "Brevet Mauritanie", "Résultats BEPC Mauritanie"],
     hash: "year-2025",
   },
   "concours-mauritanie": {

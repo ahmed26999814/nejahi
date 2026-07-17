@@ -39,7 +39,7 @@ function brevetMotivationalPhrase(average) {
 function isBrevetResult(root, source) {
   if (String(source || "").trim().toLowerCase() === "brevet") return true;
   const resultText = String(root?.closest?.(".result-modal")?.textContent || "");
-  return /(?:البريفيه|أبريفه|بريفه|BEPC)/i.test(resultText);
+  return /(?:ابريفه|ابريفه|بريفه|BEPC)/i.test(resultText);
 }
 
 function parseScore(value) {

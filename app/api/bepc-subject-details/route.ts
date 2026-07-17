@@ -41,7 +41,7 @@ async function fetchOfficialDetails(number: string) {
       accept: "application/json, text/plain, */*",
       "accept-language": "ar,fr;q=0.9,en;q=0.8",
       referer: `${DEC_ORIGIN}/search-bepc`,
-      "user-agent": "MauriResults/2.1 (+https://mauri-results.vercel.app)",
+      "user-agent": "MauriResults/2.1 (+https://mauriresults.vercel.app)",
     },
     next: { revalidate: 300 },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

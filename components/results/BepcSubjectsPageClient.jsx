@@ -258,7 +258,7 @@ export default function BepcSubjectsPageClient({ initialNumber = "" }) {
             <ArrowRightIcon />
           </button>
           <div className="min-w-0 flex-1 text-center">
-            <p className="text-[8px] font-black text-emerald-700 dark:text-emerald-300">البريفيه</p>
+            <p className="text-[8px] font-black text-emerald-700 dark:text-emerald-300">ابريفه</p>
             <h1 className="truncate text-base font-black">تفاصيل درجات المواد</h1>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">

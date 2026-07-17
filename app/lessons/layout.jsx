@@ -1,6 +1,6 @@
 import IntegratedSectionShell from "../../components/layout/IntegratedSectionShell";
 
-const siteUrl = "https://mauri-results.vercel.app";
+const siteUrl = "https://mauriresults.vercel.app";
 
 export const metadata = {
   title: "الكتب المدرسية الموريتانية PDF للابتدائية والإعدادية والثانوية",

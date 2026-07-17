@@ -1,6 +1,6 @@
 import LessonsExplorer from "./LessonsExplorer";
 
-const url = "https://mauri-results.vercel.app/lessons";
+const url = "https://mauriresults.vercel.app/lessons";
 
 export const metadata = {
   title: "الدروس والملخصات التعليمية في موريتانيا",

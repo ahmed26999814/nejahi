@@ -25,7 +25,7 @@ function yearNumber(value: unknown) {
 function examKind(exam: Record<string, unknown>) {
   const identity = `${exam.table_name || ""} ${exam.title_ar || ""} ${exam.title_fr || ""}`.toLowerCase();
   if (/concours|c1as|كونكور|دخول السنة الأولى/.test(identity)) return "concours";
-  if (/bepc|brevet|بريف|أبريفه|ابريفه/.test(identity)) return "brevet";
+  if (/bepc|brevet|بريف|ابريفه|ابريفه/.test(identity)) return "brevet";
   if (/excellence|امتياز/.test(identity)) return "excellence";
   if (/session|complémentaire|complementaire|تكميلية|sc/.test(identity)) return "session";
   if (/bac|baccalaureat|baccalauréat|باكالوريا/.test(identity)) return "bac";

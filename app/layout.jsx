@@ -14,12 +14,11 @@ import "./results-notice.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import PublicDataFetchBridge from "../components/layout/PublicDataFetchBridge";
 import UiEnhancements from "../components/ui/UiEnhancements";
-import UploadedConcoursSelectEnhancer from "../components/ui/UploadedConcoursSelectEnhancer";
 import ForgotCandidateNumber from "../components/ui/ForgotCandidateNumber";
 import BacTopperTrackOrder from "../components/ui/BacTopperTrackOrder";
 import MotivationalVisibility from "../components/ui/MotivationalVisibility";
 
-const siteUrl = "https://mauri-results.vercel.app";
+const siteUrl = "https://mauriresults.vercel.app";
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
@@ -142,13 +141,12 @@ export default function RootLayout({ children }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="results-notice" role="status" aria-live="polite">
           <span className="results-notice-dot" aria-hidden="true" />
-          <span>نتائج ابريفه وكونكور 2026 نعمل على إضافتها، وستكون متاحة بعد لحظات</span>
+          <span>تم فتح نتائج ابريفه وكونكور 2026 — ابحث الآن عن نتيجتك</span>
         </div>
         <PublicDataFetchBridge />
         <AppRuntimeShell />
         <UiEnhancements />
         <MotivationalVisibility />
-        <UploadedConcoursSelectEnhancer />
         <ForgotCandidateNumber />
         <BacTopperTrackOrder />
         {children}

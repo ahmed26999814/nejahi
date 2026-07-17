@@ -22,7 +22,7 @@ function getYear(title) {
 function classify(title) {
   const value = title.toLowerCase();
   if (/كونكور|concours|c1as|دخول السنة الأولى/.test(value)) return "concours";
-  if (/أبريفه|ابريفه|بريف|bepc|brevet/.test(value)) return "brevet";
+  if (/ابريفه|ابريفه|بريف|bepc|brevet/.test(value)) return "brevet";
   if (/امتياز|excellence/.test(value)) return "excellence";
   if (/تكميلية|session|complémentaire|complementaire/.test(value)) return "session";
   if (/باكالوريا|bac|baccalaureat|baccalauréat/.test(value)) return "bac";

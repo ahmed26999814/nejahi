@@ -6,7 +6,7 @@ import { detectColumnMappings } from "../../../lib/columnMapping";
 
 const SOURCES = [
   { value: "bac", label: "الباكالوريا", table: "bac_results" },
-  { value: "brevet", label: "أبريفه", table: "brevet_results" },
+  { value: "brevet", label: "ابريفه", table: "brevet_results" },
   { value: "concours", label: "الكونكور", table: "concours_results" },
   { value: "bac_session", label: "الدورة التكميلية", table: "bac_session2_results" },
   { value: "excellence_1as", label: "الامتياز الأولى إعدادية", table: "excellence_1as_results" },

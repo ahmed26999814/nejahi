@@ -6,7 +6,7 @@ import "./apk-state.css";
 export const metadata = {
   title: "تحميل تطبيق MauriResults للأندرويد",
   description: "حمّل تطبيق MauriResults للنتائج وحساب المعدل والدروس.",
-  alternates: { canonical: "https://mauri-results.vercel.app/Apk/" },
+  alternates: { canonical: "https://mauriresults.vercel.app/Apk/" },
 };
 
 const HIGHLIGHTS = [

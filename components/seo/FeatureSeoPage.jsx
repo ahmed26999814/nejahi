@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const SITE_URL = "https://mauri-results.vercel.app";
+const SITE_URL = "https://mauriresults.vercel.app";
 
 export default function FeatureSeoPage({ slug, title, eyebrow, intro, ctaLabel, ctaHash, sections }) {
   const pageUrl = `${SITE_URL}/${slug}`;
@@ -58,7 +58,7 @@ export default function FeatureSeoPage({ slug, title, eyebrow, intro, ctaLabel, 
           <h2 className="text-xl font-black">صفحات المسابقات</h2>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold">
             <Link href="/results/bac-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">البكالوريا</Link>
-            <Link href="/results/brevet-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">البريفيه</Link>
+            <Link href="/results/brevet-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">ابريفه</Link>
             <Link href="/results/concours-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">الكونكور</Link>
             <Link href="/results/excellence-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">الامتياز</Link>
           </div>

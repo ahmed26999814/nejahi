@@ -1,4 +1,4 @@
-const siteUrl = "https://mauri-results.vercel.app";
+const siteUrl = "https://mauriresults.vercel.app";
 
 export default function sitemap() {
   return [

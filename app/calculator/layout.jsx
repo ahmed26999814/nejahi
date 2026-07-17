@@ -1,11 +1,11 @@
 import IntegratedSectionShell from "../../components/layout/IntegratedSectionShell";
 
-const siteUrl = "https://mauri-results.vercel.app";
+const siteUrl = "https://mauriresults.vercel.app";
 
 export const metadata = {
-  title: "حاسبة معدل الباك والبريفيه في موريتانيا",
-  description: "حاسبة سريعة لمعدل البكالوريا والبريفيه في موريتانيا حسب معاملات الشعب، مع تقدير حالة النجاح أو الدورة التكميلية.",
-  keywords: ["حاسبة معدل الباك موريتانيا", "حساب معدل البكالوريا", "حاسبة البريفيه", "معاملات الباك موريتانيا", "MauriResults"],
+  title: "حاسبة معدل الباك وابريفه في موريتانيا",
+  description: "حاسبة سريعة لمعدل البكالوريا وابريفه في موريتانيا حسب معاملات الشعب، مع تقدير حالة النجاح أو الدورة التكميلية.",
+  keywords: ["حاسبة معدل الباك موريتانيا", "حساب معدل البكالوريا", "حاسبة ابريفه", "معاملات الباك موريتانيا", "MauriResults"],
   alternates: { canonical: `${siteUrl}/calculator` },
 };
 
