@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=3600";
+const REQUIRED_APP_VERSION = "3.0.0";
 
 function isAdminPlaceholder(value: unknown) {
   const text = String(value || "").trim().toLowerCase();
@@ -122,9 +123,64 @@ function mobileCatalog(uploadedRows: ReadonlyArray<Record<string, unknown>>) {
   return sortExams([...bySource.values()]);
 }
 
+function legacyUpdateExam(): Record<string, unknown> {
+  return {
+    source_key: "update_required_v3",
+    table_name: "update_required_v3",
+    title_ar: "هذا الإصدار متوقف",
+    title_fr: "Cette version est arrêtée",
+    description_ar: `نزّل تحديث MauriResults الجديد ${REQUIRED_APP_VERSION} من mauriresults.vercel.app/Apk للمتابعة.`,
+    description_fr: `Téléchargez la nouvelle version MauriResults ${REQUIRED_APP_VERSION} depuis mauriresults.vercel.app/Apk.`,
+    year: "2026",
+    tone: "amber",
+    search_mode: "number",
+    number_column: "Numero",
+    name_column: "NOM",
+    score_column: "MOD",
+    decision_column: "KR",
+    track_column: null,
+    total_rows: 0,
+    created_at: new Date().toISOString(),
+  };
+}
+
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const client = url.searchParams.get("client");
+  const nativeClient = request.headers.get("x-mauriresults-client");
+  const legacyMobile = client === "mobile" && nativeClient !== "flutter-native";
+
+  if (legacyMobile) {
+    return NextResponse.json(
+      {
+        exams: [legacyUpdateExam()],
+        updateRequired: true,
+        minimumSupportedVersion: REQUIRED_APP_VERSION,
+        downloadUrl: "https://mauriresults.vercel.app/Apk/",
+        message: "هذا الإصدار متوقف. نزّل التحديث الجديد.",
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+          "CDN-Cache-Control": "no-store",
+          Vary: "X-MauriResults-Client, Accept-Encoding",
+        },
+      }
+    );
+  }
+
   const result = await fetchPublishedExams();
-  const client = new URL(request.url).searchParams.get("client");
   const exams = client === "mobile" ? mobileCatalog(result.rows) : result.rows;
-  return NextResponse.json({ exams }, { status: 200, headers: { "Cache-Control": PUBLIC_CACHE, "CDN-Cache-Control": PUBLIC_CACHE, Vary: "Accept-Encoding" } });
+  return NextResponse.json(
+    { exams },
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": PUBLIC_CACHE,
+        "CDN-Cache-Control": PUBLIC_CACHE,
+        Vary: "X-MauriResults-Client, Accept-Encoding",
+      },
+    }
+  );
 }
