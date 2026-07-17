@@ -1,4 +1,4 @@
-const siteUrl = "https://mauriresults.vercel.app";
+const siteUrl = "https://mauri-results.vercel.app";
 
 export default function robots() {
   return {
