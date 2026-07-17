@@ -87,6 +87,11 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/apk",
+        destination: "/Apk/",
+        permanent: false,
+      },
+      {
         source: "/apk/MauriResults.apk",
         destination: "https://raw.githubusercontent.com/ahmed26999814/nejahi-mobile/main/release/MauriResults.apk",
         permanent: false,
