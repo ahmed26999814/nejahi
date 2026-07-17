@@ -1,0 +1,113 @@
+# Supabase environment references
+
+./next.config.mjs:12:const supabaseHost = resolveSupabaseHost(process.env.NEXT_PUBLIC_SUPABASE_URL);
+./.env.example:1:NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+./.env.example:2:NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_or_publishable_key
+./.github/workflows/fix-sensitive-env-prebuilt.yml:68:          required = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']
+./.github/workflows/fix-sensitive-env-prebuilt.yml:72:          if not selected['NEXT_PUBLIC_SUPABASE_URL'].startswith('https://'):
+./.github/workflows/fix-sensitive-env-prebuilt.yml:73:              raise SystemExit('NEXT_PUBLIC_SUPABASE_URL is invalid')
+./.github/workflows/audit-supabase-env-usage.yml:26:              -E 'NEXT_PUBLIC_SUPABASE_URL|SUPABASE_URL|NEXT_PUBLIC_SUPABASE_ANON_KEY|SUPABASE_ANON_KEY' . \
+./.github/workflows/security-audit.yml:49:          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+./.github/workflows/security-audit.yml:50:          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+./components/home/HomeApplication.jsx:22:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+./components/home/HomeApplication.jsx:23:const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+./components/home/HomeApplication.jsx:591:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./components/home/HomeApplication.jsx:595:  const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+./app/api/forgot-number/route.ts:6:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/forgot-number/route.ts:7:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/forgot-number/route.ts:14:  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
+./app/api/forgot-number/route.ts:31:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/public-exams/route.ts:8:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/public-exams/route.ts:9:const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+./app/api/public-exams/route.ts:95:  if (!SUPABASE_URL || !SUPABASE_KEY) return { rows: [], error: "Missing Supabase environment variables" };
+./app/api/public-exams/route.ts:96:  const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+./app/api/search/route.ts:7:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/search/route.ts:8:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/search/route.ts:61:  if (!SUPABASE_URL || !SUPABASE_KEY) return { error: "Missing Supabase environment variables", status: 500 } as const;
+./app/api/search/route.ts:62:  const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+./app/api/search/route.ts:75:  if (!SUPABASE_URL || !SUPABASE_KEY) return { error: "Missing Supabase environment variables", status: 500 } as const;
+./app/api/search/route.ts:77:    const response = await timedFetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
+./app/api/public-data/route.ts:7:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/public-data/route.ts:8:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/public-data/route.ts:44:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/public-data/route.ts:51:  const url = new URL(`${SUPABASE_URL}/rest/v1/${resource}`);
+./app/api/health/route.ts:3:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/health/route.ts:4:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/health/route.ts:33:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/health/route.ts:44:  const url = new URL(`${SUPABASE_URL}/rest/v1/${check.view}`);
+./app/api/health/route.ts:103:  const ok = Boolean(SUPABASE_URL && SUPABASE_KEY) && checks.every((check) => check.ok);
+./app/api/health/route.ts:112:        hasSupabaseUrl: Boolean(SUPABASE_URL),
+./app/api/admin/publish-exam/route.ts:6:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/admin/publish-exam/route.ts:49:  const rankUrl = new URL(`${SUPABASE_URL}/rest/v1/${rankedView}`);
+./app/api/admin/publish-exam/route.ts:86:  const tableUrl = new URL(`${SUPABASE_URL}/rest/v1/${tableName}`);
+./app/api/admin/publish-exam/route.ts:101:  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/get_published_exam_dashboard`);
+./app/api/admin/publish-exam/route.ts:111:  if (!SUPABASE_URL || !SUPABASE_KEY) return json(500, { ok: false, error: "Missing Supabase service role environment variables" });
+./app/api/admin/publish-exam/route.ts:164:  const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+./app/api/admin/publish-exam/route.ts:187:  const activateUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+./app/api/admin/results-upload/route.ts:7:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/admin/results-upload/route.ts:88:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/admin/results-upload/route.ts:92:  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/create_results_upload_table`);
+./app/api/admin/results-upload/route.ts:118:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/admin/results-upload/route.ts:122:  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/prepare_results_table_speed`);
+./app/api/admin/results-upload/route.ts:148:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/admin/results-upload/route.ts:152:  const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+./app/api/admin/results-upload/route.ts:173:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/admin/results-upload/route.ts:177:  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/insert_results_upload_rows`);
+./app/api/admin/upload/route.js:3:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+./app/api/admin/upload/route.js:17:  if (!SUPABASE_URL || !SERVICE_KEY) return { error: json({ error: "Supabase server credentials are not configured." }, 503) };
+./app/api/admin/upload/route.js:22:  const response = await fetch(`${SUPABASE_URL}${path}`, {
+./app/api/admin/upload/route.js:37:  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+./app/api/admin/results-prepare/route.ts:7:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/admin/results-prepare/route.ts:29:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/admin/results-prepare/route.ts:48:  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/prepare_results_table_speed`, {
+./app/api/admin/results-reset/route.ts:7:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/admin/results-reset/route.ts:24:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/admin/results-reset/route.ts:35:  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/reset_results_upload_table`, {
+./app/api/admin/content/route.js:3:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+./app/api/admin/content/route.js:16:  if (!SUPABASE_URL || !SERVICE_KEY) return { error: json({ error: "Supabase server credentials are not configured." }, 503) };
+./app/api/admin/content/route.js:21:  const response = await fetch(`${SUPABASE_URL}${path}`, {
+./app/api/admin/published-exams/route.ts:6:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/admin/published-exams/route.ts:24:  const response = await fetch(`${SUPABASE_URL}${path}`, {
+./app/api/admin/published-exams/route.ts:41:  if (!SUPABASE_URL || !SUPABASE_KEY) return json(500, { ok: false, error: "Missing Supabase service credentials" });
+./app/api/admin/published-exams/route.ts:58:  if (!SUPABASE_URL || !SUPABASE_KEY) return json(500, { ok: false, error: "Missing Supabase service credentials" });
+./app/api/uploaded-concours-search/route.ts:6:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/uploaded-concours-search/route.ts:7:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/uploaded-concours-search/route.ts:18:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/uploaded-concours-search/route.ts:36:  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
+./app/api/published-exam-analytics/route.ts:6:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/published-exam-analytics/route.ts:7:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/published-exam-analytics/route.ts:77:  if (!viewName || !SUPABASE_URL) return [];
+./app/api/published-exam-analytics/route.ts:78:  const url = new URL(`${SUPABASE_URL}/rest/v1/${viewName}`);
+./app/api/published-exam-analytics/route.ts:85:  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error("Missing Supabase environment variables");
+./app/api/published-exam-analytics/route.ts:86:  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/get_published_exam_dashboard`);
+./app/api/ranking/route.ts:3:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/ranking/route.ts:4:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/ranking/route.ts:31:  if (!source.startsWith("upload:") || !SUPABASE_URL || !SUPABASE_KEY) return null;
+./app/api/ranking/route.ts:32:  const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+./app/api/ranking/route.ts:103:  if (!SUPABASE_URL || !SUPABASE_KEY) {
+./app/api/ranking/route.ts:107:  const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+./app/api/online/route.ts:7:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/online/route.ts:17:  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+./app/api/online/route.ts:37:    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/touch_site_active_session`, {
+./app/api/site-controls/route.ts:6:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/site-controls/route.ts:7:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/site-controls/route.ts:27:  if (!SUPABASE_URL || !SUPABASE_KEY) return { ...DEFAULTS };
+./app/api/site-controls/route.ts:29:  const url = new URL(`${SUPABASE_URL}/rest/v1/site_content`);
+./app/api/content/route.js:3:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+./app/api/content/route.js:9:    if (!SUPABASE_URL || !SERVICE_KEY) {
+./app/api/content/route.js:18:    const response = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?${params}`, {
+./app/api/uploaded-concours-locations/route.ts:6:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/uploaded-concours-locations/route.ts:7:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/uploaded-concours-locations/route.ts:12:  if (!SUPABASE_URL || !SUPABASE_KEY) return { options: [], status: 500, error: "Missing Supabase environment variables" };
+./app/api/uploaded-concours-locations/route.ts:13:  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_concours_2026_location_options`, {
+./app/api/uploaded-concours-locations/route.ts:31:  if (!SUPABASE_URL || !SUPABASE_KEY) return NextResponse.json({ options: [], error: "Missing Supabase environment variables" }, { status: 500 });
+./app/api/uploaded-concours-locations/route.ts:50:  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_uploaded_exam_location_options`, {
+./app/api/visitors/route.ts:7:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/visitors/route.ts:19:  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+./app/api/visitors/route.ts:45:    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_site_visit`, {
+./app/api/apk-download/route.ts:6:const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+./app/api/apk-download/route.ts:7:const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+./app/api/apk-download/route.ts:11:  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+./app/api/apk-download/route.ts:12:  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+./app/api/debug/route.js:12:  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+./app/api/debug/route.js:13:  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
