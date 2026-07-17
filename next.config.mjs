@@ -91,15 +91,18 @@ const nextConfig = {
         destination: "/Apk/",
         permanent: false,
       },
-      {
-        source: "/apk/MauriResults.apk",
-        destination: "https://raw.githubusercontent.com/ahmed26999814/nejahi-mobile/main/release/MauriResults.apk",
-        permanent: false,
-      },
     ];
   },
   async headers() {
     return [
+      {
+        source: "/apk/MauriResults.apk",
+        headers: [
+          { key: "Content-Type", value: "application/vnd.android.package-archive" },
+          { key: "Content-Disposition", value: 'attachment; filename="MauriResults-3.0.0.apk"' },
+          { key: "Cache-Control", value: "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400" },
+        ],
+      },
       {
         source: "/:all*(svg|jpg|jpeg|png|webp|avif|ico|woff|woff2)",
         headers: [
