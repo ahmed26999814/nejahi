@@ -37,7 +37,6 @@ async function loadControls(signal) {
   try {
     const response = await fetch("/api/site-controls", {
       headers: { Accept: "application/json" },
-      cache: "no-store",
       signal,
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
