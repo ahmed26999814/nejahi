@@ -8,6 +8,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABAS
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const VISITOR_COOKIE = "mauriresults_visitor_id";
 const ONE_YEAR = 60 * 60 * 24 * 365;
+const REQUEST_TIMEOUT_MS = 5_000;
 
 function hashValue(prefix: string, value: string) {
   const salt = process.env.ADMIN_SECRET || "mauriresults-visitors";
@@ -37,36 +38,46 @@ export async function POST(request: Request) {
   const visitorId = /^[0-9a-f-]{36}$/i.test(existingId) ? existingId : randomUUID();
   const visitorHash = hashValue("visitor", visitorId);
   const sessionHash = hashValue("session", `${visitorId}:${sessionId}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_site_visit`, {
-    method: "POST",
-    cache: "no-store",
-    headers: {
-      apikey: SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      p_visitor_hash: visitorHash,
-      p_session_hash: sessionHash,
-    }),
-  });
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_site_visit`, {
+      method: "POST",
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        p_visitor_hash: visitorHash,
+        p_session_hash: sessionHash,
+      }),
+    });
 
-  const text = await response.text();
-  if (!response.ok) {
-    return NextResponse.json({ count: 0, error: text.slice(0, 500) }, { status: response.status });
+    const text = await response.text();
+    if (!response.ok) {
+      return NextResponse.json({ count: 0, error: text.slice(0, 500) }, { status: response.status });
+    }
+
+    const parsed = text ? JSON.parse(text) : 0;
+    const count = Number(Array.isArray(parsed) ? parsed[0] : parsed) || 0;
+    const result = NextResponse.json({ count }, { headers: { "Cache-Control": "no-store" } });
+    result.cookies.set(VISITOR_COOKIE, visitorId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+      maxAge: ONE_YEAR,
+      path: "/",
+    });
+    return result;
+  } catch (error) {
+    const timedOut = error instanceof Error && error.name === "AbortError";
+    return NextResponse.json({ count: 0, error: timedOut ? "Visitor counter timeout" : "Visitor counter unavailable" }, { status: 503 });
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const parsed = text ? JSON.parse(text) : 0;
-  const count = Number(Array.isArray(parsed) ? parsed[0] : parsed) || 0;
-  const result = NextResponse.json({ count }, { headers: { "Cache-Control": "no-store" } });
-  result.cookies.set(VISITOR_COOKIE, visitorId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: true,
-    maxAge: ONE_YEAR,
-    path: "/",
-  });
-  return result;
 }
