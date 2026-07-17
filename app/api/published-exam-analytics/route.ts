@@ -9,6 +9,7 @@ const FRESH_MS = 60 * 60 * 1000;
 const STALE_MS = 24 * 60 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 8_000;
 const CACHE_CONTROL = "public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=86400";
+const REQUIRED_APP_VERSION = "3.0.0";
 
 type Dashboard = Record<string, unknown>;
 type CacheEntry = { data: Dashboard; createdAt: number };
@@ -112,10 +113,28 @@ function loadDashboard(source: string) {
 }
 
 function json(data: Dashboard, cacheStatus: string) {
-  return NextResponse.json(data, { headers: { "Cache-Control": CACHE_CONTROL, "CDN-Cache-Control": CACHE_CONTROL, "Vercel-CDN-Cache-Control": CACHE_CONTROL, "X-Mauri-Cache": cacheStatus, Vary: "Accept-Encoding" } });
+  return NextResponse.json(data, { headers: { "Cache-Control": CACHE_CONTROL, "CDN-Cache-Control": CACHE_CONTROL, "Vercel-CDN-Cache-Control": CACHE_CONTROL, "X-Mauri-Cache": cacheStatus, Vary: "X-MauriResults-Client, Accept-Encoding" } });
+}
+
+function isLegacyNativeRequest(request: Request) {
+  if (request.headers.get("x-mauriresults-client") === "flutter-native") return false;
+  const userAgent = String(request.headers.get("user-agent") || "").toLowerCase();
+  return userAgent.includes("okhttp") || userAgent.includes("expo") || userAgent.includes("reactnative") || userAgent.includes("react-native");
 }
 
 export async function GET(request: Request) {
+  if (isLegacyNativeRequest(request)) {
+    return NextResponse.json(
+      {
+        error: "هذا الإصدار متوقف. نزّل تحديث MauriResults الجديد 3.0.0.",
+        updateRequired: true,
+        minimumSupportedVersion: REQUIRED_APP_VERSION,
+        downloadUrl: "https://mauriresults.vercel.app/Apk/",
+      },
+      { status: 426, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   const source = String(new URL(request.url).searchParams.get("source") || "").trim();
   if (!source.startsWith("upload:") && !LEGACY_VIEWS[source]) return NextResponse.json({ error: "Invalid source" }, { status: 400, headers: { "Cache-Control": "no-store" } });
 
