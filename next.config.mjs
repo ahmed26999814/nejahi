@@ -1,3 +1,4 @@
+// Production rebuild trigger: guided search, canonical domain, and ابريفه terminology.
 const DEFAULT_SUPABASE_URL = "https://nxizqnlemsbjmsfyuevg.supabase.co";
 
 function usableEnvironmentValue(value) {
