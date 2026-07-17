@@ -1,0 +1,201 @@
+status=failure
+        "githubCommitMessage": "Restore MauriResults production aliases",
+        "githubCommitOrg": "ahmed26999814",
+        "githubCommitRef": "main",
+        "githubCommitRepo": "nejahi",
+        "githubCommitSha": "7311cebb16c1ed2dfc31c9445200080f1e37261d",
+        "githubDeployment": "1",
+        "githubOrg": "ahmed26999814",
+        "githubRepo": "nejahi",
+        "githubRepoOwnerType": "User",
+        "githubCommitRepoId": "1289023705",
+        "githubRepoId": "1289023705",
+        "githubRepoVisibility": "public",
+        "githubHost": "github.com",
+        "githubCommitAuthorLogin": "ahmed26999814",
+        "githubCommitVerification": "unverified",
+        "repoPushedAt": "1784248715000",
+        "branchAlias": "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      },
+      "name": "mauriresults",
+      "plan": "hobby",
+      "private": true,
+      "readyState": "READY",
+      "readySubstate": "PROMOTED",
+      "target": "production",
+      "teamId": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+      "type": "LAMBDAS",
+      "url": "mauriresults-ih4ch869p-ahmed-abdellahi-madys-projects.vercel.app",
+      "userId": "qzK1JlUfNaHzNrorxYbtC4of",
+      "withCache": false,
+      "buildingAt": 1784248719370,
+      "readyAt": 1784248726023,
+      "previewCommentsEnabled": true,
+      "oidcTokenClaims": {
+        "sub": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "iss": "https://oidc.vercel.com/ahmed-abdellahi-madys-projects",
+        "scope": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "aud": "https://vercel.com/ahmed-abdellahi-madys-projects",
+        "owner": "ahmed-abdellahi-madys-projects",
+        "owner_id": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+        "project": "mauriresults",
+        "project_id": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+        "environment": "production",
+        "plan": "hobby"
+      }
+    }
+  ],
+  "targets": {
+    "production": {
+      "alias": [
+        "mauriresults.vercel.app",
+        "mauri-results.vercel.app",
+        "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+        "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "aliasAssigned": 1784255566347,
+      "aliasError": null,
+      "automaticAliases": [
+        "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+        "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "builds": [],
+      "createdAt": 1784246150770,
+      "createdIn": "sfo1",
+      "creator": {
+        "uid": "qzK1JlUfNaHzNrorxYbtC4of",
+        "email": "ahmedmouftahlestar@gmail.com",
+        "username": "ahmedmouftahlestar-3951",
+        "githubLogin": "github-actions[bot]"
+      },
+      "deploymentHostname": "mauriresults-3jw622429-ahmed-abdellahi-madys-projects",
+      "forced": false,
+      "id": "dpl_EHqKvVWE7MW63D1nBwejbpEWh4sc",
+      "meta": {
+        "githubCommitAuthorName": "github-actions[bot]",
+        "githubCommitAuthorEmail": "41898282+github-actions[bot]@users.noreply.github.com",
+        "githubCommitMessage": "Record fixed production deployment [skip ci]",
+        "githubCommitOrg": "ahmed26999814",
+        "githubCommitRef": "main",
+        "githubCommitRepo": "nejahi",
+        "githubCommitSha": "89cf9c102fe05f899151d2fe9ad54b202f52d7df",
+        "githubDeployment": "1",
+        "githubOrg": "ahmed26999814",
+        "githubRepo": "nejahi",
+        "githubRepoOwnerType": "User",
+        "githubCommitRepoId": "1289023705",
+        "githubRepoId": "1289023705",
+        "githubRepoVisibility": "public",
+        "githubHost": "github.com",
+        "githubCommitAuthorLogin": "github-actions[bot]",
+        "githubCommitVerification": "unverified",
+        "repoPushedAt": "1784245886000",
+        "branchAlias": "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      },
+      "name": "mauriresults",
+      "plan": "hobby",
+      "private": true,
+      "readyState": "READY",
+      "readySubstate": "PROMOTED",
+      "target": "production",
+      "teamId": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+      "type": "LAMBDAS",
+      "url": "mauriresults-3jw622429-ahmed-abdellahi-madys-projects.vercel.app",
+      "userId": "qzK1JlUfNaHzNrorxYbtC4of",
+      "withCache": false,
+      "buildingAt": 1784246960865,
+      "readyAt": 1784246972889,
+      "previewCommentsEnabled": true,
+      "oidcTokenClaims": {
+        "sub": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "iss": "https://oidc.vercel.com/ahmed-abdellahi-madys-projects",
+        "scope": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "aud": "https://vercel.com/ahmed-abdellahi-madys-projects",
+        "owner": "ahmed-abdellahi-madys-projects",
+        "owner_id": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+        "project": "mauriresults",
+        "project_id": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+        "environment": "production",
+        "plan": "hobby"
+      }
+    },
+    "preview": {
+      "alias": [
+        "mauriresults-git-seo-scal-3760d7-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "aliasAssigned": 1784247540576,
+      "aliasError": null,
+      "automaticAliases": [
+        "mauriresults-git-seo-scal-3760d7-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "builds": [],
+      "createdAt": 1784247513068,
+      "createdIn": "sfo1",
+      "creator": {
+        "uid": "qzK1JlUfNaHzNrorxYbtC4of",
+        "email": "ahmedmouftahlestar@gmail.com",
+        "username": "ahmedmouftahlestar-3951",
+        "githubLogin": "ahmed26999814"
+      },
+      "deploymentHostname": "mauriresults-42eqptvsr-ahmed-abdellahi-madys-projects",
+      "forced": false,
+      "id": "dpl_7Jzz8wv8yvGLW2jp6Ln1yaaMAoZz",
+      "meta": {
+        "githubCommitAuthorName": "ahmed26999814",
+        "githubCommitAuthorEmail": "ahmedabdellahi2699@gmail.com",
+        "githubCommitMessage": "Add lightweight SEO feature page component",
+        "githubCommitOrg": "ahmed26999814",
+        "githubCommitRef": "seo-scale-whatsapp-20260717",
+        "githubCommitRepo": "nejahi",
+        "githubCommitSha": "f0c41137bee3ef0ea0834f2d8ed279fd6777c6d7",
+        "githubDeployment": "1",
+        "githubOrg": "ahmed26999814",
+        "githubRepo": "nejahi",
+        "githubRepoOwnerType": "User",
+        "githubCommitRepoId": "1289023705",
+        "githubRepoId": "1289023705",
+        "githubRepoVisibility": "public",
+        "githubHost": "github.com",
+        "githubCommitAuthorLogin": "ahmed26999814",
+        "githubCommitVerification": "unverified",
+        "repoPushedAt": "1784247510000",
+        "branchAlias": "mauriresults-git-seo-scal-3760d7-ahmed-abdellahi-madys-projects.vercel.app",
+        "githubPrId": "11"
+      },
+      "name": "mauriresults",
+      "plan": "hobby",
+      "private": true,
+      "readyState": "READY",
+      "readySubstate": "STAGED",
+      "target": null,
+      "teamId": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+      "type": "LAMBDAS",
+      "url": "mauriresults-42eqptvsr-ahmed-abdellahi-madys-projects.vercel.app",
+      "userId": "qzK1JlUfNaHzNrorxYbtC4of",
+      "withCache": false,
+      "buildingAt": 1784247529751,
+      "readyAt": 1784247540349,
+      "previewCommentsEnabled": true,
+      "oidcTokenClaims": {
+        "sub": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:preview",
+        "iss": "https://oidc.vercel.com/ahmed-abdellahi-madys-projects",
+        "scope": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:preview",
+        "aud": "https://vercel.com/ahmed-abdellahi-madys-projects",
+        "owner": "ahmed-abdellahi-madys-projects",
+        "owner_id": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+        "project": "mauriresults",
+        "project_id": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+        "environment": "preview",
+        "plan": "hobby"
+      }
+    }
+  }
+}
+mauri-results.vercel.app=404
+mauriresults.vercel.app=404
+The page could not be found
+
+NOT_FOUND
+
+sfo1::tdbw7-1784255584776-4ed275d565b4
+
