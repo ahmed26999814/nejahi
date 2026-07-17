@@ -31,7 +31,7 @@ export default function ApkDownload() {
   return (
     <div className="apk-action-area">
       {info ? (
-        <a href="/api/apk-download" className="apk-download" aria-label="تحميل تطبيق MauriResults للأندرويد">
+        <a href="/api/apk-download" className="apk-download" aria-label="تنزيل تحديث MauriResults الجديد للأندرويد">
           <span className="apk-download-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M12 3v11m0 0 4-4m-4 4-4-4" />
@@ -39,22 +39,22 @@ export default function ApkDownload() {
             </svg>
           </span>
           <span className="apk-download-copy">
-            <strong>تحميل التطبيق</strong>
-            <small>APK مباشر · {info.sizeMB || "-"} MB</small>
+            <strong>تنزيل التحديث الجديد</strong>
+            <small>الإصدار {info.version || "3.0.0"} · APK مباشر · {info.sizeMB || "-"} MB</small>
           </span>
         </a>
       ) : (
         <div className="apk-download apk-download-disabled" role="status" aria-live="polite">
           <span className="apk-download-icon" aria-hidden="true">…</span>
           <span className="apk-download-copy">
-            <strong>{checking ? "جاري تجهيز التحميل" : "النسخة غير متاحة الآن"}</strong>
-            <small>سنحاول إظهارها تلقائيًا</small>
+            <strong>{checking ? "جاري تجهيز التحديث" : "التحديث غير متاح الآن"}</strong>
+            <small>سنحاول إظهاره تلقائيًا</small>
           </span>
         </div>
       )}
 
       <div className="apk-trust-row" aria-label="معلومات التطبيق">
-        <span>الإصدار {info?.version || "2.1.0"}</span>
+        <span>الإصدار {info?.version || "3.0.0"}</span>
         <span>Android {info?.minimumAndroid || "7.0"}+</span>
         <span>{downloads === null ? "جاري حساب التحميلات" : `${formatCount(downloads)} تحميل`}</span>
       </div>
