@@ -1,0 +1,425 @@
+== project keys ==
+accountId
+alias
+autoAssignCustomDomains
+autoAssignCustomDomainsUpdatedBy
+autoExposeSystemEnvs
+buildCommand
+createdAt
+crons
+defaultResourceConfig
+deploymentExpiration
+devCommand
+directoryListing
+enableAffectedProjectsDeployments
+enableExternalRewriteCaching
+env
+features
+framework
+gitComments
+gitForkProtection
+gitLFS
+gitProviderOptions
+hasDeployments
+id
+installCommand
+lastAliasRequest
+lastRollbackTarget
+latestDeployments
+link
+live
+name
+nodeVersion
+oidcTokenConfig
+outputDirectory
+passwordProtection
+paused
+productionDeploymentsFastLane
+protectedSourcemaps
+resourceConfig
+rootDirectory
+serverlessFunctionRegion
+sourceFilesOutsideRootDirectory
+speedInsights
+ssoProtection
+targets
+updatedAt
+webAnalytics
+== project state ==
+{
+  "id": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+  "name": "mauriresults",
+  "live": false,
+  "paused": false,
+  "softBlock": null,
+  "blocked": null,
+  "disabled": null,
+  "abuse": null,
+  "ssoProtection": null,
+  "passwordProtection": null,
+  "trustedIps": null,
+  "security": null,
+  "protectionBypass": null,
+  "targets": {
+    "production": {
+      "alias": [
+        "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+        "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "aliasAssigned": null,
+      "automaticAliases": [
+        "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+        "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "builds": [],
+      "createdAt": 1784255776350,
+      "createdIn": "sfo1",
+      "creator": {
+        "uid": "qzK1JlUfNaHzNrorxYbtC4of",
+        "email": "ahmedmouftahlestar@gmail.com",
+        "username": "ahmedmouftahlestar-3951",
+        "githubLogin": "ahmed26999814"
+      },
+      "deploymentHostname": "mauriresults-uz0bwevk2-ahmed-abdellahi-madys-projects",
+      "forced": false,
+      "id": "dpl_4bYG72XVrUpRDWBbD7Rs8GjZvNr5",
+      "meta": {
+        "githubCommitAuthorName": "ahmed26999814",
+        "githubCommitAuthorEmail": "ahmedabdellahi2699@gmail.com",
+        "githubCommitMessage": "Diagnose Vercel live state",
+        "githubCommitOrg": "ahmed26999814",
+        "githubCommitRef": "main",
+        "githubCommitRepo": "nejahi",
+        "githubCommitSha": "3f7d76da6440a4129dd106c128ca06a7a35f0881",
+        "githubDeployment": "1",
+        "githubOrg": "ahmed26999814",
+        "githubRepo": "nejahi",
+        "githubRepoOwnerType": "User",
+        "githubCommitRepoId": "1289023705",
+        "githubRepoId": "1289023705",
+        "githubRepoVisibility": "public",
+        "githubHost": "github.com",
+        "githubCommitAuthorLogin": "ahmed26999814",
+        "githubCommitVerification": "unverified",
+        "repoPushedAt": "1784255773000",
+        "branchAlias": "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      },
+      "name": "mauriresults",
+      "plan": "hobby",
+      "private": true,
+      "readyState": "READY",
+      "readySubstate": "STAGED",
+      "target": "production",
+      "teamId": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+      "type": "LAMBDAS",
+      "url": "mauriresults-uz0bwevk2-ahmed-abdellahi-madys-projects.vercel.app",
+      "userId": "qzK1JlUfNaHzNrorxYbtC4of",
+      "withCache": false,
+      "buildingAt": 1784255777495,
+      "readyAt": 1784255784825,
+      "previewCommentsEnabled": true,
+      "oidcTokenClaims": {
+        "sub": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "iss": "https://oidc.vercel.com/ahmed-abdellahi-madys-projects",
+        "scope": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "aud": "https://vercel.com/ahmed-abdellahi-madys-projects",
+        "owner": "ahmed-abdellahi-madys-projects",
+        "owner_id": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+        "project": "mauriresults",
+        "project_id": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+        "environment": "production",
+        "plan": "hobby"
+      }
+    },
+    "preview": {
+      "alias": [
+        "mauriresults-git-seo-scal-3760d7-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "aliasAssigned": 1784247540576,
+      "aliasError": null,
+      "automaticAliases": [
+        "mauriresults-git-seo-scal-3760d7-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "builds": [],
+      "createdAt": 1784247513068,
+      "createdIn": "sfo1",
+      "creator": {
+        "uid": "qzK1JlUfNaHzNrorxYbtC4of",
+        "email": "ahmedmouftahlestar@gmail.com",
+        "username": "ahmedmouftahlestar-3951",
+        "githubLogin": "ahmed26999814"
+      },
+      "deploymentHostname": "mauriresults-42eqptvsr-ahmed-abdellahi-madys-projects",
+      "forced": false,
+      "id": "dpl_7Jzz8wv8yvGLW2jp6Ln1yaaMAoZz",
+      "meta": {
+        "githubCommitAuthorName": "ahmed26999814",
+        "githubCommitAuthorEmail": "ahmedabdellahi2699@gmail.com",
+        "githubCommitMessage": "Add lightweight SEO feature page component",
+        "githubCommitOrg": "ahmed26999814",
+        "githubCommitRef": "seo-scale-whatsapp-20260717",
+        "githubCommitRepo": "nejahi",
+        "githubCommitSha": "f0c41137bee3ef0ea0834f2d8ed279fd6777c6d7",
+        "githubDeployment": "1",
+        "githubOrg": "ahmed26999814",
+        "githubRepo": "nejahi",
+        "githubRepoOwnerType": "User",
+        "githubCommitRepoId": "1289023705",
+        "githubRepoId": "1289023705",
+        "githubRepoVisibility": "public",
+        "githubHost": "github.com",
+        "githubCommitAuthorLogin": "ahmed26999814",
+        "githubCommitVerification": "unverified",
+        "repoPushedAt": "1784247510000",
+        "branchAlias": "mauriresults-git-seo-scal-3760d7-ahmed-abdellahi-madys-projects.vercel.app",
+        "githubPrId": "11"
+      },
+      "name": "mauriresults",
+      "plan": "hobby",
+      "private": true,
+      "readyState": "READY",
+      "readySubstate": "STAGED",
+      "target": null,
+      "teamId": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+      "type": "LAMBDAS",
+      "url": "mauriresults-42eqptvsr-ahmed-abdellahi-madys-projects.vercel.app",
+      "userId": "qzK1JlUfNaHzNrorxYbtC4of",
+      "withCache": false,
+      "buildingAt": 1784247529751,
+      "readyAt": 1784247540349,
+      "previewCommentsEnabled": true,
+      "oidcTokenClaims": {
+        "sub": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:preview",
+        "iss": "https://oidc.vercel.com/ahmed-abdellahi-madys-projects",
+        "scope": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:preview",
+        "aud": "https://vercel.com/ahmed-abdellahi-madys-projects",
+        "owner": "ahmed-abdellahi-madys-projects",
+        "owner_id": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+        "project": "mauriresults",
+        "project_id": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+        "environment": "preview",
+        "plan": "hobby"
+      }
+    }
+  },
+  "latestDeployments": [
+    {
+      "alias": [
+        "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+        "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "aliasAssigned": null,
+      "automaticAliases": [
+        "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+        "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "builds": [],
+      "createdAt": 1784255776350,
+      "createdIn": "sfo1",
+      "creator": {
+        "uid": "qzK1JlUfNaHzNrorxYbtC4of",
+        "email": "ahmedmouftahlestar@gmail.com",
+        "username": "ahmedmouftahlestar-3951",
+        "githubLogin": "ahmed26999814"
+      },
+      "deploymentHostname": "mauriresults-uz0bwevk2-ahmed-abdellahi-madys-projects",
+      "forced": false,
+      "id": "dpl_4bYG72XVrUpRDWBbD7Rs8GjZvNr5",
+      "meta": {
+        "githubCommitAuthorName": "ahmed26999814",
+        "githubCommitAuthorEmail": "ahmedabdellahi2699@gmail.com",
+        "githubCommitMessage": "Diagnose Vercel live state",
+        "githubCommitOrg": "ahmed26999814",
+        "githubCommitRef": "main",
+        "githubCommitRepo": "nejahi",
+        "githubCommitSha": "3f7d76da6440a4129dd106c128ca06a7a35f0881",
+        "githubDeployment": "1",
+        "githubOrg": "ahmed26999814",
+        "githubRepo": "nejahi",
+        "githubRepoOwnerType": "User",
+        "githubCommitRepoId": "1289023705",
+        "githubRepoId": "1289023705",
+        "githubRepoVisibility": "public",
+        "githubHost": "github.com",
+        "githubCommitAuthorLogin": "ahmed26999814",
+        "githubCommitVerification": "unverified",
+        "repoPushedAt": "1784255773000",
+        "branchAlias": "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      },
+      "name": "mauriresults",
+      "plan": "hobby",
+      "private": true,
+      "readyState": "READY",
+      "readySubstate": "STAGED",
+      "target": "production",
+      "teamId": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+      "type": "LAMBDAS",
+      "url": "mauriresults-uz0bwevk2-ahmed-abdellahi-madys-projects.vercel.app",
+      "userId": "qzK1JlUfNaHzNrorxYbtC4of",
+      "withCache": false,
+      "buildingAt": 1784255777495,
+      "readyAt": 1784255784825,
+      "previewCommentsEnabled": true,
+      "oidcTokenClaims": {
+        "sub": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "iss": "https://oidc.vercel.com/ahmed-abdellahi-madys-projects",
+        "scope": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "aud": "https://vercel.com/ahmed-abdellahi-madys-projects",
+        "owner": "ahmed-abdellahi-madys-projects",
+        "owner_id": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+        "project": "mauriresults",
+        "project_id": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+        "environment": "production",
+        "plan": "hobby"
+      }
+    },
+    {
+      "alias": [
+        "mauriresults.vercel.app",
+        "mauri-results.vercel.app",
+        "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+        "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "aliasAssigned": 1784255597583,
+      "aliasError": null,
+      "automaticAliases": [
+        "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+        "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      ],
+      "builds": [],
+      "createdAt": 1784255587963,
+      "createdIn": "sfo1",
+      "creator": {
+        "uid": "qzK1JlUfNaHzNrorxYbtC4of",
+        "email": "ahmedmouftahlestar@gmail.com",
+        "username": "ahmedmouftahlestar-3951",
+        "githubLogin": "github-actions[bot]"
+      },
+      "deploymentHostname": "mauriresults-chih8yrpg-ahmed-abdellahi-madys-projects",
+      "forced": false,
+      "id": "dpl_5zNGRsRDJcFJAMQZ4B5MGZJy5uhk",
+      "meta": {
+        "githubCommitAuthorName": "github-actions[bot]",
+        "githubCommitAuthorEmail": "41898282+github-actions[bot]@users.noreply.github.com",
+        "githubCommitMessage": "Record Vercel live service repair [skip ci]",
+        "githubCommitOrg": "ahmed26999814",
+        "githubCommitRef": "main",
+        "githubCommitRepo": "nejahi",
+        "githubCommitSha": "a70c78cacc882ac288560a534385af7c6724cb83",
+        "githubDeployment": "1",
+        "githubOrg": "ahmed26999814",
+        "githubRepo": "nejahi",
+        "githubRepoOwnerType": "User",
+        "githubCommitRepoId": "1289023705",
+        "githubRepoId": "1289023705",
+        "githubRepoVisibility": "public",
+        "githubHost": "github.com",
+        "githubCommitAuthorLogin": "github-actions[bot]",
+        "githubCommitVerification": "unverified",
+        "repoPushedAt": "1784255585000",
+        "branchAlias": "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+      },
+      "name": "mauriresults",
+      "plan": "hobby",
+      "private": true,
+      "readyState": "READY",
+      "readySubstate": "PROMOTED",
+      "target": "production",
+      "teamId": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+      "type": "LAMBDAS",
+      "url": "mauriresults-chih8yrpg-ahmed-abdellahi-madys-projects.vercel.app",
+      "userId": "qzK1JlUfNaHzNrorxYbtC4of",
+      "withCache": false,
+      "buildingAt": 1784255589065,
+      "readyAt": 1784255597098,
+      "previewCommentsEnabled": true,
+      "oidcTokenClaims": {
+        "sub": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "iss": "https://oidc.vercel.com/ahmed-abdellahi-madys-projects",
+        "scope": "owner:ahmed-abdellahi-madys-projects:project:mauriresults:environment:production",
+        "aud": "https://vercel.com/ahmed-abdellahi-madys-projects",
+        "owner": "ahmed-abdellahi-madys-projects",
+        "owner_id": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+        "project": "mauriresults",
+        "project_id": "prj_gakC4aJHh0P8f3exGw7xsygjxlaC",
+        "environment": "production",
+        "plan": "hobby"
+      }
+    }
+  ]
+}
+== team state ==
+{
+  "id": "team_Hs9izwrJBXYbv6mC5FxhcyNy",
+  "name": "Ahmed Abdellahi Mady's projects",
+  "slug": "ahmed-abdellahi-madys-projects",
+  "plan": null,
+  "softBlock": null,
+  "blocked": null,
+  "disabled": null,
+  "abuse": null,
+  "billing": {
+    "address": null,
+    "cancelation": null,
+    "email": "ahmedmouftahlestar@gmail.com",
+    "language": null,
+    "name": "Ahmed Abdellahi Mady's projects",
+    "platform": "stripe",
+    "period": null,
+    "plan": "hobby",
+    "tax": null,
+    "currency": "usd",
+    "trial": null,
+    "invoiceItems": null,
+    "status": "active",
+    "planIteration": "legacy",
+    "billingVersion": 2,
+    "plusMigrationEnabled": true
+  },
+  "status": null,
+  "resourceConfig": {
+    "concurrentBuilds": 1,
+    "elasticConcurrencyEnabled": false
+  },
+  "features": null
+}
+== deployment state ==
+{
+  "id": "dpl_5zNGRsRDJcFJAMQZ4B5MGZJy5uhk",
+  "url": "mauriresults-chih8yrpg-ahmed-abdellahi-madys-projects.vercel.app",
+  "readyState": "READY",
+  "readySubstate": "PROMOTED",
+  "target": "production",
+  "private": null,
+  "alias": [
+    "mauriresults.vercel.app",
+    "mauri-results.vercel.app",
+    "mauriresults-ahmed-abdellahi-madys-projects.vercel.app",
+    "mauriresults-git-main-ahmed-abdellahi-madys-projects.vercel.app"
+  ],
+  "aliasError": null,
+  "blocked": null,
+  "softBlock": null,
+  "protectionBypass": null,
+  "projectSettings": {
+    "buildCommand": null,
+    "devCommand": null,
+    "framework": "nextjs",
+    "commandForIgnoringBuildStep": null,
+    "installCommand": null,
+    "outputDirectory": null,
+    "speedInsights": {
+      "id": "CloFEAluI6zwaPzx0GMAkxXgLVy",
+      "hasData": false
+    },
+    "webAnalytics": {
+      "id": "6bBqLmTbSEiuL3F150ICWX0UM",
+      "enabledAt": 1783882022806,
+      "hasData": true
+    },
+    "nodeVersion": "24.x"
+  }
+}
+== unpause response ==
+
+HTTP=200
