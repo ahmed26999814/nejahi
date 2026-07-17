@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import { LEGACY_2025_EXAMS } from "../../../lib/legacyExamCatalog";
 
@@ -6,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-const PUBLIC_CACHE = "no-store";
+const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=3600";
 
 function isAdminPlaceholder(value: unknown) {
   const text = String(value || "").trim().toLowerCase();
@@ -90,7 +91,7 @@ function sortExams(rows: ReadonlyArray<Record<string, unknown>>) {
   });
 }
 
-async function fetchPublishedExams(): Promise<{ rows: Array<Record<string, unknown>>; error?: string }> {
+async function fetchPublishedExamsUncached(): Promise<{ rows: Array<Record<string, unknown>>; error?: string }> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return { rows: [], error: "Missing Supabase environment variables" };
   const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
   url.searchParams.set("select", "source_key,table_name,title_ar,title_fr,description_ar,description_fr,year,tone,search_mode,number_column,name_column,score_column,decision_column,track_column,wilaya_column,moughataa_column,school_column,centre_column,birth_place_column,birth_date_column,ranked_view,total_rows,created_at");
@@ -107,6 +108,12 @@ async function fetchPublishedExams(): Promise<{ rows: Array<Record<string, unkno
     .map(cleanExam);
   return { rows: sortExams(rows) };
 }
+
+const fetchPublishedExams = unstable_cache(
+  fetchPublishedExamsUncached,
+  ["mauriresults-public-exams-v2"],
+  { revalidate: 60 }
+);
 
 function mobileCatalog(uploadedRows: ReadonlyArray<Record<string, unknown>>) {
   const bySource = new Map<string, Record<string, unknown>>();
