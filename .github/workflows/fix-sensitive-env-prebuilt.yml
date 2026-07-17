@@ -5,19 +5,26 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/fix-sensitive-env-prebuilt.yml"
+      - "next.config.mjs"
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: mauriresults-production-prebuilt
+  cancel-in-progress: true
+
 env:
   VERCEL_ORG_ID: team_Hs9izwrJBXYbv6mC5FxhcyNy
   VERCEL_PROJECT_ID: prj_gakC4aJHh0P8f3exGw7xsygjxlaC
+  PUBLIC_SUPABASE_FALLBACK: https://nxizqnlemsbjmsfyuevg.supabase.co
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+
     steps:
       - uses: actions/checkout@v4
 
@@ -36,63 +43,85 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
 
-      - name: Restore decrypted production environment
+      - name: Write trusted build environment
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL \
-            -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/env?teamId=$VERCEL_ORG_ID&decrypt=true" \
-            -o /tmp/vercel-env.json
+          rm -f .env.local .env.production.local
 
           python3 - <<'PY'
           import json
+          import os
           from pathlib import Path
 
-          payload = json.loads(Path('/tmp/vercel-env.json').read_text())
-          rows = payload.get('envs') or payload.get('env') or []
-          selected = {}
-          for row in rows:
-              targets = row.get('target') or []
-              if isinstance(targets, str):
-                  targets = [targets]
-              if targets and 'production' not in targets:
-                  continue
-              key = str(row.get('key') or '').strip()
-              value = row.get('value')
-              if key and value is not None:
-                  selected[key] = str(value)
+          def clean(name, fallback=""):
+              value = str(os.environ.get(name, "") or "").strip()
+              if value in {"[SENSITIVE]", "[REDACTED]"}:
+                  value = ""
+              return value or fallback
 
-          required = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']
-          missing = [key for key in required if not selected.get(key) or selected[key] == '[SENSITIVE]']
+          values = {
+              "NEXT_PUBLIC_SUPABASE_URL": clean(
+                  "NEXT_PUBLIC_SUPABASE_URL",
+                  clean("PUBLIC_SUPABASE_FALLBACK", "https://nxizqnlemsbjmsfyuevg.supabase.co"),
+              ),
+              "NEXT_PUBLIC_SUPABASE_ANON_KEY": clean("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+              "SUPABASE_URL": clean(
+                  "NEXT_PUBLIC_SUPABASE_URL",
+                  clean("PUBLIC_SUPABASE_FALLBACK", "https://nxizqnlemsbjmsfyuevg.supabase.co"),
+              ),
+              "SUPABASE_SERVICE_ROLE_KEY": clean("SUPABASE_SERVICE_ROLE_KEY"),
+              "ADMIN_SECRET": clean("ADMIN_SECRET"),
+          }
+
+          missing = [
+              key for key in (
+                  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+                  "SUPABASE_SERVICE_ROLE_KEY",
+                  "ADMIN_SECRET",
+              )
+              if not values[key]
+          ]
           if missing:
-              raise SystemExit('Missing decrypted environment keys: ' + ', '.join(missing))
-          if not selected['NEXT_PUBLIC_SUPABASE_URL'].startswith('https://'):
-              raise SystemExit('NEXT_PUBLIC_SUPABASE_URL is invalid')
+              raise SystemExit("Missing required GitHub secrets: " + ", ".join(missing))
 
-          def quote(value: str) -> str:
-              return json.dumps(value, ensure_ascii=False)
+          if not values["NEXT_PUBLIC_SUPABASE_URL"].startswith("https://"):
+              raise SystemExit("Invalid Supabase URL")
 
-          Path('.env.production.local').write_text(
-              ''.join(f'{key}={quote(value)}\n' for key, value in sorted(selected.items())),
-              encoding='utf-8'
+          Path(".env.production.local").write_text(
+              "".join(
+                  f"{key}={json.dumps(value, ensure_ascii=False)}\n"
+                  for key, value in values.items()
+              ),
+              encoding="utf-8",
           )
-          print(f'Restored {len(selected)} production environment variables safely')
+          print("Trusted production environment prepared")
           PY
 
       - name: Build clean production output
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
         run: vercel build --prod --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
 
-      - name: Reject redacted public variables
+      - name: Reject redacted environment values
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RIl --exclude='*.map' '\[SENSITIVE\]' .vercel/output/static .vercel/output/functions 2>/dev/null | grep -q .; then
+          if grep -RIl --exclude='*.map' '\[SENSITIVE\]' .vercel/output 2>/dev/null | grep -q .; then
             echo 'Build contains redacted [SENSITIVE] values' >&2
+            exit 1
+          fi
+          if grep -RIl --exclude='*.map' '\[REDACTED\]' .vercel/output 2>/dev/null | grep -q .; then
+            echo 'Build contains redacted [REDACTED] values' >&2
             exit 1
           fi
 
@@ -101,21 +130,41 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
 
-      - name: Verify site and admin bundle
+      - name: Verify public and admin services
+        env:
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in 1 2 3 4 5 6 7 8; do
             home_code=$(curl -sS -L -o /tmp/home.html -w '%{http_code}' https://mauri-results.vercel.app/)
-            admin_code=$(curl -sS -L -o /tmp/admin.html -w '%{http_code}' https://mauri-results.vercel.app/admin)
+            health_code=$(curl -sS -L -o /tmp/health.json -w '%{http_code}' https://mauri-results.vercel.app/api/health)
             exams_code=$(curl -sS -L -o /tmp/exams.json -w '%{http_code}' https://mauri-results.vercel.app/api/public-exams)
-            if [ "$home_code" = "200" ] && [ "$admin_code" = "200" ] && [ "$exams_code" = "200" ] \
+            search_code=$(curl -sS -L -o /tmp/search.json -w '%{http_code}' 'https://mauri-results.vercel.app/api/search?source=brevet&q=75457')
+            admin_code=$(curl -sS -L -o /tmp/admin.html -w '%{http_code}' https://mauri-results.vercel.app/admin)
+            admin_api_code=$(curl -sS -L -o /tmp/admin-content.json -w '%{http_code}' \
+              -H "x-admin-secret: $ADMIN_SECRET" \
+              https://mauri-results.vercel.app/api/admin/content)
+
+            if [ "$home_code" = "200" ] \
+              && [ "$health_code" = "200" ] \
+              && [ "$exams_code" = "200" ] \
+              && [ "$search_code" = "200" ] \
+              && [ "$admin_code" = "200" ] \
+              && [ "$admin_api_code" = "200" ] \
               && grep -q 'مجموعة الموقع على واتساب' /tmp/home.html \
-              && ! grep -q '\[SENSITIVE\]' /tmp/admin.html; then
-              echo 'Production environment and admin route are healthy'
+              && grep -q '"ok":true' /tmp/health.json \
+              && grep -q '"exams"' /tmp/exams.json \
+              && grep -q '"items"' /tmp/admin-content.json \
+              && ! grep -R '\[SENSITIVE\]\|\[REDACTED\]' /tmp/home.html /tmp/health.json /tmp/exams.json /tmp/search.json /tmp/admin.html /tmp/admin-content.json; then
+              echo 'Production site, search, and admin APIs are healthy'
               exit 0
             fi
+
+            echo "Verification attempt $attempt is not healthy yet"
             sleep 10
           done
+
           echo 'Production verification failed' >&2
+          echo "home=$home_code health=$health_code exams=$exams_code search=$search_code admin=$admin_code admin_api=$admin_api_code" >&2
           exit 1
