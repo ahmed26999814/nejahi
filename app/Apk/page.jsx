@@ -4,15 +4,15 @@ import "./apk.css";
 import "./apk-state.css";
 
 export const metadata = {
-  title: "تحميل تطبيق MauriResults للأندرويد",
-  description: "حمّل تطبيق MauriResults للنتائج وحساب المعدل والدروس.",
+  title: "تحديث MauriResults 3.0.0 للأندرويد",
+  description: "نزّل تحديث MauriResults الجديد المبني بـ Flutter. تم إيقاف النسخ القديمة.",
   alternates: { canonical: "https://mauriresults.vercel.app/Apk/" },
 };
 
 const HIGHLIGHTS = [
-  { icon: "⌕", title: "النتائج", text: "ابحث بالرقم أو الاسم بسرعة" },
-  { icon: "∑", title: "حساب المعدل", text: "حاسبة بسيطة تحفظ موادك" },
-  { icon: "▤", title: "الدروس", text: "ملخصات مفيدة تعمل دون اتصال" },
+  { icon: "⚡", title: "أسرع وأخف", text: "تطبيق Flutter أصلي بواجهة سريعة للهاتف" },
+  { icon: "⌕", title: "بحث محسن", text: "ابحث بالرقم أو الاسم وجزء من الاسم" },
+  { icon: "◉", title: "يعمل دون إنترنت", text: "المحفوظات والدروس وآخر عمليات البحث" },
 ];
 
 export default function ApkDownloadPage() {
@@ -26,20 +26,20 @@ export default function ApkDownloadPage() {
 
         <section className="apk-hero">
           <div className="apk-hero-copy">
-            <span className="apk-kicker">تطبيق النتائج على هاتفك</span>
-            <h1>كل ما تحتاجه للدراسة والنتائج في تطبيق واحد</h1>
-            <p>واجهة بسيطة وسريعة للبحث عن النتائج، حساب المعدل، ومراجعة الدروس دون تعقيد.</p>
+            <span className="apk-kicker">تحديث إجباري جديد · الإصدار 3.0.0</span>
+            <h1>نزّل تطبيق MauriResults الجديد</h1>
+            <p>أعدنا بناء التطبيق بالكامل باستخدام Flutter ليصبح أسرع وأسهل وأكثر استقرارًا. تم إيقاف النسخ القديمة، ويجب تنزيل هذا التحديث لمتابعة استخدام النتائج.</p>
             <ApkDownload />
-            <p className="apk-safe-note">تحميل مباشر وآمن من الموقع الرسمي</p>
+            <p className="apk-safe-note">تحميل مباشر وآمن من الموقع الرسمي · لا يمكن متابعة النسخة القديمة</p>
           </div>
 
           <div className="apk-phone" aria-hidden="true">
             <div className="apk-phone-top"><span>13:54</span><span>● ● ●</span></div>
             <div className="apk-phone-body">
-              <div className="apk-mini-brand"><img src="/logo.png" alt="" /><div><b>MauriResults</b><small>نتائجك أقرب</small></div></div>
-              <div className="apk-mini-search">ابحث عن نتيجتك</div>
+              <div className="apk-mini-brand"><img src="/logo.png" alt="" /><div><b>MauriResults</b><small>الإصدار الجديد 3.0</small></div></div>
+              <div className="apk-mini-search">ابحث عن نتيجتك بسرعة</div>
               <div className="apk-mini-grid"><span>النتائج</span><span>المعدل</span><span>الدروس</span><span>المحفوظات</span></div>
-              <div className="apk-mini-card"><b>نتائج 2025</b><small>متاحة الآن</small></div>
+              <div className="apk-mini-card"><b>تحديث جديد</b><small>Flutter · أسرع وأكثر استقرارًا</small></div>
             </div>
           </div>
         </section>
@@ -54,7 +54,7 @@ export default function ApkDownloadPage() {
         </section>
 
         <section className="apk-install-help">
-          <div><strong>التثبيت سهل</strong><p>بعد اكتمال التحميل افتح الملف واضغط تثبيت. قد يطلب Android السماح بالتثبيت من المتصفح لأول مرة.</p></div>
+          <div><strong>طريقة التحديث</strong><p>نزّل الملف وافتحه ثم اضغط تثبيت. عند ظهور تعارض مع النسخة القديمة، احذفها وثبّت الإصدار الجديد.</p></div>
           <span aria-hidden="true">1 — 2 — 3</span>
         </section>
 
