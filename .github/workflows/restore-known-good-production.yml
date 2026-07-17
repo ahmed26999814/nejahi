@@ -1,0 +1,65 @@
+name: Restore Known Good Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/restore-known-good-production.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: team_Hs9izwrJBXYbv6mC5FxhcyNy
+  VERCEL_PROJECT_ID: prj_gakC4aJHh0P8f3exGw7xsygjxlaC
+  GOOD_DEPLOYMENT: https://mauriresults-ga6gqfwgx-ahmed-abdellahi-madys-projects.vercel.app
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Promote verified clean Next.js deployment
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$VERCEL_TOKEN"
+
+          npm install --global vercel@56.3.0
+
+          # Let any Git integration attempt for this workflow commit finish first.
+          sleep 30
+
+          vercel promote "$GOOD_DEPLOYMENT" \
+            --yes \
+            --token="$VERCEL_TOKEN" \
+            --scope=ahmed-abdellahi-madys-projects
+
+          vercel alias set "$GOOD_DEPLOYMENT" mauri-results.vercel.app \
+            --token="$VERCEL_TOKEN" \
+            --scope=ahmed-abdellahi-madys-projects
+
+          vercel alias set "$GOOD_DEPLOYMENT" mauriresults.vercel.app \
+            --token="$VERCEL_TOKEN" \
+            --scope=ahmed-abdellahi-madys-projects
+
+          for attempt in 1 2 3 4 5 6; do
+            code_a=$(curl -sS -L -o /tmp/mauri-a.html -w '%{http_code}' https://mauri-results.vercel.app/)
+            code_b=$(curl -sS -L -o /tmp/mauri-b.html -w '%{http_code}' https://mauriresults.vercel.app/)
+            echo "Attempt $attempt: mauri-results=$code_a mauriresults=$code_b"
+            if [ "$code_a" = "200" ] && [ "$code_b" = "200" ]; then
+              grep -q "MauriResults" /tmp/mauri-a.html
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "Production aliases did not become healthy" >&2
+          exit 1
