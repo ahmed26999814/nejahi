@@ -1,0 +1,95 @@
+name: Deploy After Vercel Reset
+
+on:
+  schedule:
+    - cron: "5 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mauriresults-after-vercel-reset
+  cancel-in-progress: false
+
+env:
+  VERCEL_ORG_ID: team_Hs9izwrJBXYbv6mC5FxhcyNy
+  VERCEL_PROJECT_ID: prj_gakC4aJHh0P8f3exGw7xsygjxlaC
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies and Vercel CLI
+        run: |
+          npm ci
+          npm install --global vercel@56.3.0
+
+      - name: Link production project
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
+
+      - name: Build verified production output
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          vercel build --prod --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
+          ! grep -RIl --exclude='*.map' '\[SENSITIVE\]\|\[REDACTED\]' .vercel/output 2>/dev/null | grep -q .
+          grep -RIl --exclude='*.map' 'البحث بالخيارات' .vercel/output | grep -q .
+          grep -RIl --exclude='*.map' 'تم فتح نتائج ابريفه وكونكور 2026' .vercel/output | grep -q .
+
+      - name: Deploy prebuilt output
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
+
+      - name: Verify production
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8; do
+            old_headers=$(curl -sS -I https://mauri-results.vercel.app/ || true)
+            home=$(curl -fsSL https://mauriresults.vercel.app/ || true)
+            robots=$(curl -fsSL https://mauriresults.vercel.app/robots.txt || true)
+            sitemap=$(curl -fsSL https://mauriresults.vercel.app/sitemap.xml || true)
+            options=$(curl -fsSL 'https://mauriresults.vercel.app/api/uploaded-concours-locations?source=upload%3Aconcour_2026&level=wilaya' || true)
+
+            if printf '%s' "$old_headers" | grep -qiE '^location: https://mauriresults\.vercel\.app/' \
+              && printf '%s' "$home" | grep -q 'تم فتح نتائج ابريفه وكونكور 2026' \
+              && printf '%s' "$home" | grep -q '<link rel="canonical" href="https://mauriresults.vercel.app' \
+              && printf '%s' "$robots" | grep -q 'https://mauriresults.vercel.app/sitemap.xml' \
+              && printf '%s' "$sitemap" | grep -q '<loc>https://mauriresults.vercel.app' \
+              && printf '%s' "$options" | grep -q '"options"'; then
+              echo "Production verification passed"
+              exit 0
+            fi
+            sleep 12
+          done
+          exit 1
+
+      - name: Remove completed scheduled workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/deploy-after-vercel-reset.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Complete guided search production deployment [skip ci]"
+          git push
