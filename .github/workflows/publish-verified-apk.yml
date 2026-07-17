@@ -1,0 +1,66 @@
+name: Publish verified Flutter APK
+
+on:
+  push:
+    branches: [agent/fix-apk-404]
+    paths:
+      - ".github/workflows/publish-verified-apk.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/fix-apk-404
+
+      - name: Download verified private build artifact
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 --retry-delay 2 \
+            'https://sdmntprnortheu.oaiusercontent.com/files/00000000-242c-71f4-adc3-3a77a6c7986d/raw?se=2026-07-17T19:36:45Z&sp=r&sv=2026-02-06&sr=b&scid=94673c59-62d6-5a2b-b58b-8175315831ff&skoid=56822d8b-6cfd-42ed-a00d-1452dca42036&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-07-17T18:30:03Z&ske=2026-07-19T18:30:03Z&sks=b&skv=2026-02-06&sig=j0N5/A6hRU6dG0a9HRw2pCNzgH5RY/EmYM3oEr51YK0%3D' \
+            --output /tmp/mauriresults-apk.zip
+          echo 'f782d37f750c4ab96a53cc11aa00916e26b292c5857f1ca331bf8c4676091fdc  /tmp/mauriresults-apk.zip' | sha256sum --check --strict
+
+      - name: Publish APK and metadata
+        shell: bash
+        run: |
+          mkdir -p public/apk
+          unzip -p /tmp/mauriresults-apk.zip app-release.apk > public/apk/MauriResults.apk
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          apk = Path('public/apk/MauriResults.apk')
+          data = apk.read_bytes()
+          metadata = {
+              'name': 'MauriResults',
+              'package': 'com.mauriresults.app',
+              'version': '3.0.0',
+              'versionCode': 300,
+              'minimumAndroid': '7.0',
+              'sizeBytes': len(data),
+              'sizeMB': round(len(data) / 1024 / 1024, 2),
+              'sha256': hashlib.sha256(data).hexdigest(),
+              'publishedAt': datetime.now(timezone.utc).isoformat(),
+              'download': '/api/apk-download',
+              'native': True,
+              'framework': 'Flutter + Dart',
+          }
+          Path('public/apk/version.json').write_text(
+              json.dumps(metadata, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+          rm -f .github/workflows/publish-verified-apk.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish verified Flutter APK 3.0.0"
+          git push origin HEAD:agent/fix-apk-404
