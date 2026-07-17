@@ -1,4 +1,4 @@
-// Production rebuild trigger: guided search, canonical domain, and ابريفه terminology.
+// Production rebuild trigger: Flutter 3.0.0 mandatory update release.
 const DEFAULT_SUPABASE_URL = "https://nxizqnlemsbjmsfyuevg.supabase.co";
 
 function usableEnvironmentValue(value) {
@@ -83,6 +83,15 @@ const nextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/apk/MauriResults.apk",
+        destination: "https://raw.githubusercontent.com/ahmed26999814/nejahi-mobile/main/release/MauriResults.apk",
+        permanent: false,
+      },
+    ];
   },
   async headers() {
     return [
