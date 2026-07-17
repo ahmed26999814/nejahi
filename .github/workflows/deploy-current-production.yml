@@ -1,0 +1,77 @@
+name: Deploy Current Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-current-production.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  VERCEL_ORG_ID: team_Hs9izwrJBXYbv6mC5FxhcyNy
+  VERCEL_PROJECT_ID: prj_gakC4aJHh0P8f3exGw7xsygjxlaC
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Deploy source to Vercel production
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set +e
+          LOG=/tmp/vercel-deploy.log
+          : > "$LOG"
+          STATUS=failure
+          PHASE=token
+          DEPLOYMENT_URL=""
+
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN secret is missing" >> "$LOG"
+          else
+            PHASE=install_cli
+            npm install --global vercel@56.3.0 >> "$LOG" 2>&1
+            CODE=$?
+
+            if [ "$CODE" -eq 0 ]; then
+              PHASE=remote_deploy
+              DEPLOYMENT_URL=$(vercel deploy --prod --yes --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects 2>> "$LOG")
+              CODE=$?
+            fi
+
+            if [ "$CODE" -eq 0 ]; then
+              STATUS=success
+              PHASE=complete
+            fi
+          fi
+
+          {
+            printf 'status=%s\n' "$STATUS"
+            printf 'vercel_token_available=%s\n' "$([ -n "$VERCEL_TOKEN" ] && echo true || echo false)"
+            printf 'phase=%s\n' "$PHASE"
+            printf 'deployment_url=%s\n' "$DEPLOYMENT_URL"
+            printf 'commit=%s\n' "$GITHUB_SHA"
+            printf '%s\n' '--- log tail ---'
+            tail -n 120 "$LOG"
+          } > VERCEL_DEPLOYMENT_STATUS.txt
+
+          rm -f .github/workflows/deploy-current-production.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Record SEO and scaling production deployment [skip ci]" || true
+          git push || true
+
+          test "$STATUS" = "success"
