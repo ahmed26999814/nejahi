@@ -52,7 +52,8 @@ export default function InstallAppCard() {
       && dismissedAt > 0
       && Date.now() - dismissedAt < DISMISS_TTL_MS;
 
-    setVisible(!dismissedRecently);
+    // The Android 3.0.0 update is mandatory, so its card cannot be dismissed.
+    setVisible(isAndroid || !dismissedRecently);
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -66,7 +67,7 @@ export default function InstallAppCard() {
     const handleInstalled = () => {
       setInstallPrompt(null);
       setMessage("تم تثبيت MauriResults بنجاح.");
-      setVisible(false);
+      if (!isAndroid) setVisible(false);
     };
 
     window.addEventListener("beforeinstallprompt", handleInstallPrompt);
@@ -79,13 +80,14 @@ export default function InstallAppCard() {
   }, []);
 
   const actionLabel = useMemo(() => {
+    if (androidDevice) return "تحديث الآن";
     if (installPrompt) return "تثبيت";
     if (iosDevice) return "طريقة التثبيت";
-    if (androidDevice) return "تحميل التطبيق";
     return "تثبيت";
   }, [androidDevice, installPrompt, iosDevice]);
 
   function dismissPromotion() {
+    if (androidDevice) return;
     window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
     setVisible(false);
   }
@@ -93,6 +95,11 @@ export default function InstallAppCard() {
   async function installApp() {
     if (shouldHideInstallPromotion()) {
       setVisible(false);
+      return;
+    }
+
+    if (androidDevice) {
+      window.location.assign("/Apk/");
       return;
     }
 
@@ -111,19 +118,22 @@ export default function InstallAppCard() {
       return;
     }
 
-    if (androidDevice) {
-      window.location.assign("/Apk/");
-      return;
-    }
-
     setMessage("افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». ");
   }
 
   if (!visible) return null;
 
+  const title = androidDevice ? "تحديث MauriResults الجديد 3.0.0" : "ثبّت MauriResults على هاتفك";
+  const description = androidDevice
+    ? "تم إيقاف النسخة القديمة. نزّل تطبيق Flutter الجديد للمتابعة."
+    : "وصول أسرع للنتائج من الشاشة الرئيسية.";
+
   return (
     <>
-      <aside className="relative flex items-center gap-3 overflow-hidden rounded-[20px] border border-emerald-200/80 bg-white/90 px-3 py-2.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/90 md:hidden" aria-label="اقتراح تثبيت التطبيق">
+      <aside
+        className="relative flex items-center gap-3 overflow-hidden rounded-[20px] border border-emerald-200/80 bg-white/90 px-3 py-2.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/90 md:hidden"
+        aria-label={androidDevice ? "تحديث تطبيق MauriResults الإجباري" : "اقتراح تثبيت التطبيق"}
+      >
         <span className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-emerald-500/10 to-transparent" aria-hidden="true" />
         <img
           src="/logo.png"
@@ -134,9 +144,9 @@ export default function InstallAppCard() {
         />
 
         <div className="relative min-w-0 flex-1">
-          <strong className="block text-sm font-black text-slate-950 dark:text-white">ثبّت MauriResults على هاتفك</strong>
+          <strong className="block text-sm font-black text-slate-950 dark:text-white">{title}</strong>
           <span className="mt-0.5 block text-[11px] font-bold leading-4 text-slate-500 dark:text-slate-300">
-            وصول أسرع للنتائج من الشاشة الرئيسية.
+            {description}
           </span>
           {message && <span className="mt-1 block text-[10px] font-black text-emerald-700 dark:text-emerald-300" aria-live="polite">{message}</span>}
         </div>
@@ -149,14 +159,16 @@ export default function InstallAppCard() {
           {actionLabel}
         </button>
 
-        <button
-          type="button"
-          onClick={dismissPromotion}
-          className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg font-bold text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
-          aria-label="إخفاء اقتراح التثبيت"
-        >
-          ×
-        </button>
+        {!androidDevice && (
+          <button
+            type="button"
+            onClick={dismissPromotion}
+            className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg font-bold text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
+            aria-label="إخفاء اقتراح التثبيت"
+          >
+            ×
+          </button>
+        )}
       </aside>
 
       {showIosHelp && (
