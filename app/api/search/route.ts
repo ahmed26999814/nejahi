@@ -10,6 +10,7 @@ const REQUEST_TIMEOUT_MS = 8_000;
 const NUMBER_RESULT_LIMIT = "10";
 const NAME_RESULT_LIMIT = "20";
 const MAX_QUERY_LENGTH = 120;
+const REQUIRED_APP_VERSION = "3.0.0";
 
 const SOURCE_ALIASES: Record<string, string> = {
   bac_2026: "bac",
@@ -125,13 +126,53 @@ async function executeSearch(source: string, query: string) {
 const cachedSearch = unstable_cache(async (source: string, query: string) => executeSearch(source, query), ["mauriresults-public-search-v5"], { revalidate: 60 });
 function responseHeaders(numeric: boolean) {
   const cache = numeric ? "public, s-maxage=300, stale-while-revalidate=21600" : "public, s-maxage=60, stale-while-revalidate=3600";
-  return { "Cache-Control": cache, "CDN-Cache-Control": cache, Vary: "Accept-Encoding" };
+  return { "Cache-Control": cache, "CDN-Cache-Control": cache, Vary: "X-MauriResults-Client, Accept-Encoding" };
+}
+
+function isLegacyNativeRequest(request: Request) {
+  if (request.headers.get("x-mauriresults-client") === "flutter-native") return false;
+  const userAgent = String(request.headers.get("user-agent") || "").toLowerCase();
+  return userAgent.includes("okhttp") || userAgent.includes("expo") || userAgent.includes("reactnative") || userAgent.includes("react-native");
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const source = String(searchParams.get("source") || "").trim();
   const query = normalizeQuery(String(searchParams.get("q") || ""));
+
+  if (source === "update_required_v3") {
+    return NextResponse.json(
+      {
+        rows: [{
+          Numero: "3.0.0",
+          NOM: "هذا الإصدار متوقف — نزّل التحديث الجديد",
+          MOD: "3.0.0",
+          KR: "افتح mauriresults.vercel.app/Apk ونزّل النسخة الجديدة",
+          WL: "تحديث إجباري",
+          MS: "MauriResults",
+          MD: "لا يمكن متابعة النسخة القديمة",
+        }],
+        updateRequired: true,
+        minimumSupportedVersion: REQUIRED_APP_VERSION,
+        downloadUrl: "https://mauriresults.vercel.app/Apk/",
+      },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
+  if (isLegacyNativeRequest(request)) {
+    return NextResponse.json(
+      {
+        rows: [],
+        error: "هذا الإصدار متوقف. نزّل تحديث MauriResults الجديد 3.0.0.",
+        updateRequired: true,
+        minimumSupportedVersion: REQUIRED_APP_VERSION,
+        downloadUrl: "https://mauriresults.vercel.app/Apk/",
+      },
+      { status: 426, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   const numeric = isNumberSearch(query);
   const canonicalSource = SOURCE_ALIASES[source] || source;
   if ((numeric && query.length < 1) || (!numeric && query.length < 2)) {
