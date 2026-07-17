@@ -1,0 +1,71 @@
+name: Deploy Latest Prebuilt
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-latest-prebuilt.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: team_Hs9izwrJBXYbv6mC5FxhcyNy
+  VERCEL_PROJECT_ID: prj_gakC4aJHh0P8f3exGw7xsygjxlaC
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@56.3.0
+
+      - name: Pull production environment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
+
+      - name: Build latest source locally
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
+
+      - name: Deploy prebuilt output to production
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: bash
+        run: |
+          url=$(vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed $url"
+
+      - name: Verify visible latest changes
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            html=$(curl -fsSL https://mauri-results.vercel.app/ || true)
+            toppers=$(curl -sS -o /tmp/toppers.html -w '%{http_code}' https://mauri-results.vercel.app/toppers)
+            statistics=$(curl -sS -o /tmp/statistics.html -w '%{http_code}' https://mauri-results.vercel.app/statistics)
+            if printf '%s' "$html" | grep -q 'مجموعة الموقع على واتساب' \
+              && [ "$toppers" = "200" ] \
+              && [ "$statistics" = "200" ]; then
+              echo "Latest changes are live"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Latest visible changes were not found" >&2
+          exit 1
