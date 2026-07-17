@@ -18,7 +18,7 @@ import ForgotCandidateNumber from "../components/ui/ForgotCandidateNumber";
 import BacTopperTrackOrder from "../components/ui/BacTopperTrackOrder";
 import MotivationalVisibility from "../components/ui/MotivationalVisibility";
 
-const siteUrl = "https://mauriresults.vercel.app";
+const siteUrl = "https://mauri-results.vercel.app";
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
