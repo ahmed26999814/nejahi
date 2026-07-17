@@ -1,0 +1,121 @@
+name: Fix Sensitive Env Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fix-sensitive-env-prebuilt.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: team_Hs9izwrJBXYbv6mC5FxhcyNy
+  VERCEL_PROJECT_ID: prj_gakC4aJHh0P8f3exGw7xsygjxlaC
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies and Vercel CLI
+        run: |
+          npm ci
+          npm install --global vercel@56.3.0
+
+      - name: Link Vercel project
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
+
+      - name: Restore decrypted production environment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/env?teamId=$VERCEL_ORG_ID&decrypt=true" \
+            -o /tmp/vercel-env.json
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('/tmp/vercel-env.json').read_text())
+          rows = payload.get('envs') or payload.get('env') or []
+          selected = {}
+          for row in rows:
+              targets = row.get('target') or []
+              if isinstance(targets, str):
+                  targets = [targets]
+              if targets and 'production' not in targets:
+                  continue
+              key = str(row.get('key') or '').strip()
+              value = row.get('value')
+              if key and value is not None:
+                  selected[key] = str(value)
+
+          required = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']
+          missing = [key for key in required if not selected.get(key) or selected[key] == '[SENSITIVE]']
+          if missing:
+              raise SystemExit('Missing decrypted environment keys: ' + ', '.join(missing))
+          if not selected['NEXT_PUBLIC_SUPABASE_URL'].startswith('https://'):
+              raise SystemExit('NEXT_PUBLIC_SUPABASE_URL is invalid')
+
+          def quote(value: str) -> str:
+              return json.dumps(value, ensure_ascii=False)
+
+          Path('.env.production.local').write_text(
+              ''.join(f'{key}={quote(value)}\n' for key, value in sorted(selected.items())),
+              encoding='utf-8'
+          )
+          print(f'Restored {len(selected)} production environment variables safely')
+          PY
+
+      - name: Build clean production output
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
+
+      - name: Reject redacted public variables
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RIl --exclude='*.map' '\[SENSITIVE\]' .vercel/output/static .vercel/output/functions 2>/dev/null | grep -q .; then
+            echo 'Build contains redacted [SENSITIVE] values' >&2
+            exit 1
+          fi
+
+      - name: Deploy prebuilt production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN" --scope=ahmed-abdellahi-madys-projects
+
+      - name: Verify site and admin bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6; do
+            home_code=$(curl -sS -L -o /tmp/home.html -w '%{http_code}' https://mauri-results.vercel.app/)
+            admin_code=$(curl -sS -L -o /tmp/admin.html -w '%{http_code}' https://mauri-results.vercel.app/admin)
+            exams_code=$(curl -sS -L -o /tmp/exams.json -w '%{http_code}' https://mauri-results.vercel.app/api/public-exams)
+            if [ "$home_code" = "200" ] && [ "$admin_code" = "200" ] && [ "$exams_code" = "200" ] \
+              && grep -q 'مجموعة الموقع على واتساب' /tmp/home.html \
+              && ! grep -q '\[SENSITIVE\]' /tmp/admin.html; then
+              echo 'Production environment and admin route are healthy'
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Production verification failed' >&2
+          exit 1
