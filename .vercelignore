@@ -2,3 +2,5 @@ mobile-app
 mobile-app/**
 .bootstrap
 .bootstrap/**
+.vercel
+.vercel/**
