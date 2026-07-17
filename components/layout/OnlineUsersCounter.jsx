@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SESSION_KEY = "mauriresults_online_session";
-const HEARTBEAT_MS = 30_000;
+const HEARTBEAT_MS = 120_000;
 
 function getSessionId() {
   const stored = sessionStorage.getItem(SESSION_KEY);
@@ -24,9 +24,30 @@ function OnlineIcon() {
 }
 
 export default function OnlineUsersCounter() {
+  const rootRef = useRef(null);
+  const [active, setActive] = useState(false);
   const [online, setOnline] = useState(null);
 
   useEffect(() => {
+    const element = rootRef.current;
+    if (!element) return undefined;
+    if (!("IntersectionObserver" in window)) {
+      setActive(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setActive(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "300px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!active) return undefined;
     let stopped = false;
     const sessionId = getSessionId();
 
@@ -59,16 +80,19 @@ export default function OnlineUsersCounter() {
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, []);
-
-  if (online === null) return null;
+  }, [active]);
 
   return (
-    <div className="online-users-counter" aria-label={`النشطون الآن ${online}`}>
+    <div
+      ref={rootRef}
+      className={`online-users-counter ${online === null ? "counter-pending" : ""}`}
+      aria-hidden={online === null ? "true" : undefined}
+      aria-label={online === null ? undefined : `النشطون الآن ${online}`}
+    >
       <span className="online-users-dot" aria-hidden="true" />
       <span className="online-users-icon"><OnlineIcon /></span>
       <span className="online-users-label">النشطون الآن</span>
-      <strong>{online.toLocaleString("ar-MR")}</strong>
+      <strong>{online === null ? "—" : online.toLocaleString("ar-MR")}</strong>
     </div>
   );
 }
