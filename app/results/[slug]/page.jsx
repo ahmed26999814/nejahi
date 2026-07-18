@@ -1,32 +1,32 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-const siteUrl = "https://mauriresults.vercel.app";
+const siteUrl = "https://mauri-results.vercel.app";
 
 const pages = {
   "bac-mauritanie": {
-    title: "نتائج البكالوريا في موريتانيا | MauriResults",
+    title: "نتائج البكالوريا في موريتانيا",
     heading: "نتائج البكالوريا في موريتانيا",
     description: "البحث عن نتائج البكالوريا في موريتانيا بالاسم أو رقم المترشح، مع عرض المعدل والقرار والمؤسسة والولاية بشكل واضح ومناسب للهاتف.",
     keywords: ["نتائج البكالوريا موريتانيا", "نتائج باكالوريا موريتانيا", "Bac Mauritanie", "Résultats Bac Mauritanie"],
     hash: "year-2025",
   },
   "brevet-mauritanie": {
-    title: "نتائج ابريفه في موريتانيا | MauriResults",
-    heading: "نتائج ابريفه في موريتانيا",
-    description: "الوصول بسرعة إلى نتائج ابريفه في موريتانيا عبر رقم المترشح أو الاسم، مع بطاقة نتيجة واضحة ومهيأة للهاتف.",
-    keywords: ["نتائج ابريفه موريتانيا", "نتائج BEPC موريتانيا", "Brevet Mauritanie", "Résultats BEPC Mauritanie"],
+    title: "أبريفه في موريتانيا",
+    heading: "أبريفه في موريتانيا",
+    description: "الوصول بسرعة إلى أبريفه في موريتانيا عبر رقم المترشح أو الاسم، مع بطاقة نتيجة واضحة ومهيأة للهاتف.",
+    keywords: ["أبريفه موريتانيا", "نتائج BEPC موريتانيا", "Brevet Mauritanie", "Résultats BEPC Mauritanie"],
     hash: "year-2025",
   },
   "concours-mauritanie": {
-    title: "نتائج الكونكور في موريتانيا | MauriResults",
+    title: "نتائج الكونكور في موريتانيا",
     heading: "نتائج الكونكور في موريتانيا",
     description: "البحث عن نتائج الكونكور في موريتانيا حسب الولاية والمقاطعة والمركز ورقم المترشح من خلال واجهة سريعة وواضحة.",
     keywords: ["نتائج الكونكور موريتانيا", "Concours Mauritanie", "نتائج دخول السنة الأولى إعدادية", "Résultats Concours Mauritanie"],
     hash: "year-2025",
   },
   "excellence-mauritanie": {
-    title: "نتائج مسابقة الامتياز في موريتانيا | MauriResults",
+    title: "نتائج مسابقة الامتياز في موريتانيا",
     heading: "نتائج مسابقة الامتياز في موريتانيا",
     description: "نتائج مسابقة الامتياز الأولى إعدادية في موريتانيا، مع عرض بيانات المترشح والدرجات والقرار بشكل منظم.",
     keywords: ["نتائج الامتياز موريتانيا", "مسابقة الامتياز الأولى إعدادية", "Excellence 1AS Mauritanie"],

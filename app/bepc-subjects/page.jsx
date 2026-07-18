@@ -1,8 +1,11 @@
 import BepcSubjectsPageClient from "../../components/results/BepcSubjectsPageClient";
 
+const url = "https://mauri-results.vercel.app/bepc-subjects";
+
 export const metadata = {
-  title: "تفاصيل مواد ابريفه | MauriResults",
-  description: "البحث عن درجات مواد ابريفه وعرض الكشف الرسمي في صفحة واحدة متوافقة مع الهاتف.",
+  title: "تفاصيل مواد أبريفه",
+  description: "البحث عن درجات مواد أبريفه وعرض الكشف الرسمي في صفحة واحدة متوافقة مع الهاتف.",
+  alternates: { canonical: url },
 };
 
 export default async function BepcSubjectsPage({ searchParams }) {
