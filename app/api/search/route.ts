@@ -29,8 +29,6 @@ type SearchConfig = {
   order?: string;
 };
 
-// Candidate lookup stays on indexed base tables. Rank is persisted while results
-// are prepared, so a request never ranks the entire exam table at runtime.
 const SEARCH_CONFIG: Record<string, SearchConfig> = {
   bac: { table: "bac_results", select: "Numero,NOM,TS,MOD,KR,WL,MS,MD,rank", numberColumns: ["Numero"], nameColumns: ["NOM"], order: "rank.asc" },
   brevet: { table: "brevet_results", select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS,rank", numberColumns: ["Num_Bepc"], nameColumns: ["NOM"], order: "rank.asc" },
@@ -60,10 +58,20 @@ function normalizeQuery(query: string) {
   return query.trim().replace(/\s+/g, " ").slice(0, MAX_QUERY_LENGTH);
 }
 
+function publicRow(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>).filter(([key]) => !key.startsWith("__")));
+}
+
+function publicRows(rows: unknown) {
+  return (Array.isArray(rows) ? rows : []).map(publicRow);
+}
+
 function unwrapRpcRows(rows: unknown[]) {
   return (Array.isArray(rows) ? rows : [])
     .map((row: any) => row?.search_uploaded_exam_rows ?? row)
-    .filter(Boolean);
+    .filter(Boolean)
+    .map(publicRow);
 }
 
 async function timedFetch(url: string | URL, init: RequestInit) {
@@ -94,7 +102,7 @@ async function supabaseSearch(table: string, params: URLSearchParams) {
     });
     const text = await response.text();
     if (!response.ok) return { error: text, status: response.status } as const;
-    return { rows: text ? JSON.parse(text) : [], status: 200 } as const;
+    return { rows: publicRows(text ? JSON.parse(text) : []), status: 200 } as const;
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error), status: 504 } as const;
   }
@@ -152,7 +160,7 @@ async function executeSearch(source: string, query: string) {
 
 const cachedSearch = unstable_cache(
   async (source: string, query: string) => executeSearch(source, query),
-  ["mauriresults-public-search-v6"],
+  ["mauriresults-public-search-v7"],
   { revalidate: 60 }
 );
 
