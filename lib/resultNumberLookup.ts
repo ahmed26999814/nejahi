@@ -12,6 +12,11 @@ const BUILTIN_SOURCES = new Set([
   "excellence_1as",
 ]);
 
+type LookupEntry = {
+  payload?: unknown;
+  rank?: unknown;
+};
+
 export type NumberLookupResult =
   | { rows: Array<Record<string, unknown>>; status: 200 }
   | { error: string; status: number };
@@ -62,11 +67,13 @@ function publicPayload(value: unknown) {
 
 function rowsFromEntries(entries: unknown) {
   return (Array.isArray(entries) ? entries : [])
-    .map((entry) => {
-      const payload = publicPayload(entry?.payload);
+    .map((rawEntry) => {
+      const entry = rawEntry as LookupEntry;
+      const payload = publicPayload(entry.payload);
       if (!payload) return null;
-      return payload.rank == null && entry?.rank != null
-        ? { ...payload, rank: entry.rank }
+      const rank = Number(entry.rank);
+      return payload.rank == null && Number.isFinite(rank) && rank > 0
+        ? { ...payload, rank }
         : payload;
     })
     .filter(Boolean) as Array<Record<string, unknown>>;
