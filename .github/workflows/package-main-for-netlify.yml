@@ -1,0 +1,26 @@
+name: Package main for Netlify
+
+on:
+  push:
+    branches:
+      - agent/package-main-for-netlify
+    paths:
+      - .github/workflows/package-main-for-netlify.yml
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Create source archive
+        run: tar --exclude=.git -czf nejahi-main-source.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nejahi-main-source
+          path: nejahi-main-source.tar.gz
+          retention-days: 1
