@@ -1,6 +1,6 @@
 import ExamSeoPage from "../../../components/seo/ExamSeoPage";
 
-const url = "https://mauriresults.vercel.app/results/bac-mauritanie";
+const url = "https://mauri-results.vercel.app/results/bac-mauritanie";
 
 export const metadata = {
   title: "نتائج البكالوريا موريتانيا 2026",
@@ -24,14 +24,8 @@ export default function BacMauritaniePage() {
       intro="توفر منصة MauriResults وصولًا سريعًا إلى نتائج البكالوريا في موريتانيا عند نشر البيانات الرسمية، مع واجهة مناسبة للهاتف وسهولة الوصول إلى معلومات المترشح."
       searchHint="يمكنك الانتقال إلى صفحة البحث الرئيسية واختيار البكالوريا، ثم إدخال رقم المترشح أو استخدام خيارات البحث المتاحة."
       faq={[
-        {
-          question: "كيف أبحث عن نتيجة البكالوريا؟",
-          answer: "انتقل إلى البحث في MauriResults، اختر البكالوريا، ثم أدخل رقم المترشح أو بيانات البحث المطلوبة.",
-        },
-        {
-          question: "هل نتائج MauriResults رسمية؟",
-          answer: "تعرض المنصة البيانات المنشورة للنتائج، ويبقى المرجع النهائي هو الجهة الرسمية المسؤولة عن الامتحانات في موريتانيا.",
-        },
+        { question: "كيف أبحث عن نتيجة البكالوريا؟", answer: "انتقل إلى البحث في MauriResults، اختر البكالوريا، ثم أدخل رقم المترشح أو بيانات البحث المطلوبة." },
+        { question: "هل نتائج MauriResults رسمية؟", answer: "تعرض المنصة البيانات المنشورة للنتائج، ويبقى المرجع النهائي هو الجهة الرسمية المسؤولة عن الامتحانات في موريتانيا." },
       ]}
     />
   );
