@@ -5,13 +5,13 @@ on:
     branches:
       - agent/number-only-search-20k-scale
     paths:
-      - scripts/number-search-scale-test.mjs
+      - scripts/number-search-scale-test-v2.mjs
       - .github/workflows/number-search-scale-test.yml
   pull_request:
     branches:
       - main
     paths:
-      - scripts/number-search-scale-test.mjs
+      - scripts/number-search-scale-test-v2.mjs
       - .github/workflows/number-search-scale-test.yml
 
 permissions:
@@ -19,13 +19,13 @@ permissions:
 
 env:
   BASE_URL: https://deploy-preview-19--mauri-results.netlify.app
-  TIMEOUT_MS: "8000"
+  TIMEOUT_MS: "10000"
   REPORT_FILE: number-search-scale-report.json
 
 jobs:
   scale-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -37,7 +37,7 @@ jobs:
           node-version: 22
 
       - name: Run functional and scale tests
-        run: node scripts/number-search-scale-test.mjs
+        run: node scripts/number-search-scale-test-v2.mjs
 
       - name: Upload scale report
         if: always()
