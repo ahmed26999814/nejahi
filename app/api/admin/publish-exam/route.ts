@@ -1,13 +1,16 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const REQUEST_TIMEOUT_MS = 15_000;
+const LOOKUP_TIMEOUT_MS = 240_000;
+const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
 
 function json(status: number, body: Record<string, unknown>) {
   return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -130,6 +133,34 @@ async function refreshDashboard(sourceKey: string) {
   return { ok: true, dashboard } as const;
 }
 
+async function refreshNumberLookup(sourceKey: string) {
+  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/refresh_result_number_lookup`);
+  const response = await fetch(url, {
+    method: "POST",
+    cache: "no-store",
+    signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
+    headers: {
+      apikey: SUPABASE_KEY!,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ p_source_key: sourceKey }),
+  });
+
+  const text = await response.text();
+  if (!response.ok) {
+    return { ok: false, error: `Number lookup failed: ${text.slice(0, 700)}` } as const;
+  }
+
+  const lookup = text ? JSON.parse(text) : null;
+  if (!lookup?.ok || Number(lookup?.lookup_rows || 0) <= 0) {
+    return { ok: false, error: "Number lookup failed: no searchable candidate rows were prepared." } as const;
+  }
+
+  return { ok: true, lookup } as const;
+}
+
 export async function POST(request: Request) {
   if (!isAdmin(request)) return json(401, { ok: false, error: "Unauthorized admin publish" });
   if (!SUPABASE_URL || !SUPABASE_KEY) return json(500, { ok: false, error: "Missing Supabase service role environment variables" });
@@ -207,6 +238,16 @@ export async function POST(request: Request) {
       });
     }
 
+    const numberLookup = await refreshNumberLookup(String(row.source_key));
+    if (!numberLookup.ok) {
+      return json(422, {
+        ok: false,
+        error: numberLookup.error,
+        published: false,
+        hint: "The exam remains inactive. Build its candidate-number lookup before activation.",
+      });
+    }
+
     const activateUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
     activateUrl.searchParams.set("table_name", `eq.${tableName}`);
     const activateResponse = await supabaseFetch(activateUrl, {
@@ -217,13 +258,21 @@ export async function POST(request: Request) {
     const activateText = await activateResponse.text();
     if (!activateResponse.ok) return json(activateResponse.status, { ok: false, error: `Activation failed: ${activateText.slice(0, 600)}`, published: false });
 
+    revalidateTag(SEARCH_CACHE_TAG);
+
     return json(200, {
       ok: true,
       exam: activateText ? JSON.parse(activateText)?.[0] : { ...row, is_active: true },
-      validation: { rows: prepared.actualRows, analytics: true, rankedView: tableName },
+      validation: {
+        rows: prepared.actualRows,
+        analytics: true,
+        numberLookup: true,
+        lookupRows: numberLookup.lookup.lookup_rows,
+        rankedView: tableName,
+      },
     });
   } catch (error) {
-    const timedOut = error instanceof Error && error.name === "TimeoutError";
+    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
     return json(timedOut ? 504 : 500, { ok: false, error: timedOut ? "Publishing timed out safely" : String(error), published: false });
   }
 }

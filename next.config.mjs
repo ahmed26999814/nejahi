@@ -51,6 +51,9 @@ if (publicSupabaseAnonKey) {
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = publicSupabaseAnonKey;
 }
 
+const RESULT_CACHE = "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=604800";
+const NO_STORE = "no-store, max-age=0";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compress: true,
@@ -130,7 +133,31 @@ const nextConfig = {
       {
         source: "/api/search",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=120, stale-while-revalidate=600" },
+          { key: "Cache-Control", value: NO_STORE },
+          { key: "CDN-Cache-Control", value: "no-store" },
+          { key: "Vercel-CDN-Cache-Control", value: "no-store" },
+          { key: "Netlify-CDN-Cache-Control", value: "no-store" },
+        ],
+      },
+      {
+        source: "/api/uploaded-concours-search",
+        headers: [
+          { key: "Cache-Control", value: NO_STORE },
+          { key: "CDN-Cache-Control", value: "no-store" },
+          { key: "Vercel-CDN-Cache-Control", value: "no-store" },
+          { key: "Netlify-CDN-Cache-Control", value: "no-store" },
+        ],
+      },
+      {
+        source: "/api/result-number/:path*",
+        headers: [
+          { key: "Cache-Control", value: RESULT_CACHE },
+        ],
+      },
+      {
+        source: "/api/concours-number/:path*",
+        headers: [
+          { key: "Cache-Control", value: RESULT_CACHE },
         ],
       },
       {

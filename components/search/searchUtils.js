@@ -3,6 +3,18 @@ export function parseAverageValue(value) {
   return Number.isFinite(number) ? number : 0;
 }
 
-export function getSearchInputMode(query) {
-  return /^\d*$/.test(String(query || "")) ? "numeric" : "text";
+const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+
+export function sanitizeCandidateNumber(value, maxLength = 20) {
+  const normalized = String(value || "")
+    .replace(/[٠-٩]/g, (digit) => String(ARABIC_DIGITS.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String(PERSIAN_DIGITS.indexOf(digit)))
+    .replace(/\D/g, "");
+
+  return normalized.slice(0, maxLength);
+}
+
+export function getSearchInputMode() {
+  return "numeric";
 }

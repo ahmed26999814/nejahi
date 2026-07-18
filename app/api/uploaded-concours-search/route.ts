@@ -1,86 +1,74 @@
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const REQUEST_TIMEOUT_MS = 5_000;
-const CACHE_CONTROL = "public, s-maxage=600, stale-while-revalidate=86400, stale-if-error=86400";
-
-function clean(value: unknown) {
-  return String(value || "").replace(/\u0000/g, "").trim().slice(0, 160);
+function clean(value: unknown, maxLength = 160) {
+  return String(value || "").replace(/\u0000/g, "").trim().slice(0, maxLength);
 }
 
-function publicRow(value: unknown) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
-  return Object.fromEntries(Object.entries(value as Record<string, unknown>).filter(([key]) => !key.startsWith("__")));
+function asciiDigits(value: string) {
+  const arabic = "٠١٢٣٤٥٦٧٨٩";
+  const persian = "۰۱۲۳۴۵۶۷۸۹";
+  return String(value || "")
+    .replace(/[٠-٩]/g, (digit) => String(arabic.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String(persian.indexOf(digit)));
 }
 
-function unwrapRpcRows(rows: unknown[]) {
-  return (Array.isArray(rows) ? rows : [])
-    .map((row: any) => row?.search_uploaded_exam_rows ?? row)
-    .filter(Boolean)
-    .map(publicRow);
+function candidateKey(value: string) {
+  const digits = asciiDigits(clean(value, 20));
+  if (!/^\d{1,20}$/.test(digits)) return "";
+  return digits.replace(/^0+(?=\d)/, "");
+}
+
+function sourceToToken(source: string) {
+  return source.startsWith("upload:")
+    ? `upload--${source.slice("upload:".length)}`
+    : "";
+}
+
+function noStoreHeaders() {
+  return {
+    "Cache-Control": "no-store, max-age=0",
+    "CDN-Cache-Control": "no-store",
+    "Vercel-CDN-Cache-Control": "no-store",
+    "Netlify-CDN-Cache-Control": "no-store",
+  };
 }
 
 export async function GET(request: Request) {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return NextResponse.json({ rows: [], error: "Missing Supabase environment variables" }, { status: 500 });
-  }
-
   const { searchParams } = new URL(request.url);
-  const source = clean(searchParams.get("source"));
+  const source = clean(searchParams.get("source"), 80);
   const wilaya = clean(searchParams.get("wilaya"));
   const moughataa = clean(searchParams.get("moughataa"));
   const centre = clean(searchParams.get("centre"));
-  const number = clean(searchParams.get("number"));
+  const key = candidateKey(clean(searchParams.get("number"), 20));
 
-  if (!source.startsWith("upload:")) {
-    return NextResponse.json({ rows: [], error: "Invalid source" }, { status: 400 });
-  }
-  if (![wilaya, moughataa, centre, number].every(Boolean)) {
-    return NextResponse.json({ rows: [], error: "All location fields and candidate number are required" }, { status: 400 });
-  }
-  if (!/^\d{1,20}$/.test(number)) {
-    return NextResponse.json({ rows: [], error: "Invalid candidate number" }, { status: 400 });
-  }
-
-  try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
-      method: "POST",
-      cache: "no-store",
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        p_source_key: source,
-        p_query: number,
-        p_wilaya: wilaya,
-        p_moughataa: moughataa,
-        p_centre: centre,
-      }),
-    });
-
-    const text = await response.text();
-    if (!response.ok) {
-      return NextResponse.json({ rows: [], error: text.slice(0, 900) }, { status: response.status, headers: { "Cache-Control": "no-store" } });
-    }
-
-    const rows = unwrapRpcRows(text ? JSON.parse(text) : []);
+  if (!/^upload:[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(source)) {
     return NextResponse.json(
-      { rows },
-      { headers: { "Cache-Control": CACHE_CONTROL, "CDN-Cache-Control": CACHE_CONTROL, "Vercel-CDN-Cache-Control": CACHE_CONTROL } }
-    );
-  } catch (error) {
-    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-    return NextResponse.json(
-      { rows: [], error: timedOut ? "Search timeout" : "Search unavailable" },
-      { status: timedOut ? 504 : 503, headers: { "Cache-Control": "no-store", "Retry-After": "3" } }
+      { rows: [], error: "Invalid source" },
+      { status: 400, headers: noStoreHeaders() },
     );
   }
+
+  if (![wilaya, moughataa, centre, key].every(Boolean)) {
+    return NextResponse.json(
+      { rows: [], error: "All location fields and candidate number are required" },
+      { status: 400, headers: noStoreHeaders() },
+    );
+  }
+
+  const path = [
+    "/api/concours-number",
+    encodeURIComponent(sourceToToken(source)),
+    encodeURIComponent(wilaya),
+    encodeURIComponent(moughataa),
+    encodeURIComponent(centre),
+    encodeURIComponent(key),
+  ].join("/");
+
+  const response = NextResponse.redirect(new URL(path, request.url), 307);
+  Object.entries(noStoreHeaders()).forEach(([header, value]) => response.headers.set(header, value));
+  response.headers.set("X-Mauri-Search", "NUMBER-REDIRECT");
+  return response;
 }
