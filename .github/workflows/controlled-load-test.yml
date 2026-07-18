@@ -1,0 +1,40 @@
+name: Controlled Production Load Test
+
+on:
+  push:
+    branches:
+      - agent/controlled-load-test-20260718
+    paths:
+      - scripts/controlled-load-test.mjs
+      - .github/workflows/controlled-load-test.yml
+
+permissions:
+  contents: read
+
+env:
+  BASE_URL: https://mauri-results.vercel.app
+  TIMEOUT_MS: "8000"
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show runtime
+        run: node --version
+
+      - name: Run controlled read-only load test
+        run: node scripts/controlled-load-test.mjs
+
+      - name: Upload load-test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mauriresults-load-test-report
+          path: load-test-report.json
+          if-no-files-found: warn
+          retention-days: 7
