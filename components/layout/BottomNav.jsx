@@ -69,7 +69,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
 
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-0 z-50 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden" aria-label={isFrench ? "Navigation principale" : "التنقل الرئيسي"}>
+      <nav className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-50 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden" aria-label={isFrench ? "Navigation principale" : "التنقل الرئيسي"}>
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1 rounded-[26px] border border-white/75 bg-white/[.94] p-1.5 shadow-[0_-16px_46px_rgba(15,23,42,.13)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.94]">
           {items.map((item) => {
             const active = item.action === "more"
