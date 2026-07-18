@@ -1,6 +1,6 @@
 import ExamSeoPage from "../../../components/seo/ExamSeoPage";
 
-const url = "https://mauriresults.vercel.app/results/excellence-mauritanie";
+const url = "https://mauri-results.vercel.app/results/excellence-mauritanie";
 
 export const metadata = {
   title: "نتائج الامتياز موريتانيا 2026",
@@ -24,14 +24,8 @@ export default function ExcellenceMauritaniePage() {
       intro="توفر منصة MauriResults وصولًا سريعًا إلى نتائج مدارس الامتياز في موريتانيا عند نشر البيانات الرسمية، مع تجربة واضحة ومناسبة للهاتف."
       searchHint="انتقل إلى صفحة البحث الرئيسية، اختر الامتياز، ثم أدخل رقم المترشح أو بيانات البحث المطلوبة."
       faq={[
-        {
-          question: "كيف أبحث عن نتيجة الامتياز؟",
-          answer: "انتقل إلى البحث في MauriResults، اختر الامتياز، ثم أدخل رقم المترشح أو بيانات البحث المطلوبة.",
-        },
-        {
-          question: "هل تعمل صفحة النتائج على الهاتف؟",
-          answer: "نعم، يمكن استخدام MauriResults من الهاتف للوصول إلى النتائج بسهولة.",
-        },
+        { question: "كيف أبحث عن نتيجة الامتياز؟", answer: "انتقل إلى البحث في MauriResults، اختر الامتياز، ثم أدخل رقم المترشح أو بيانات البحث المطلوبة." },
+        { question: "هل تعمل صفحة النتائج على الهاتف؟", answer: "نعم، يمكن استخدام MauriResults من الهاتف للوصول إلى النتائج بسهولة." },
       ]}
     />
   );
