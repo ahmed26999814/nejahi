@@ -12,8 +12,16 @@ function clean(value: unknown) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, 160);
 }
 
+function publicRow(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>).filter(([key]) => !key.startsWith("__")));
+}
+
 function unwrapRpcRows(rows: unknown[]) {
-  return (Array.isArray(rows) ? rows : []).map((row: any) => row?.search_uploaded_exam_rows ?? row).filter(Boolean);
+  return (Array.isArray(rows) ? rows : [])
+    .map((row: any) => row?.search_uploaded_exam_rows ?? row)
+    .filter(Boolean)
+    .map(publicRow);
 }
 
 export async function GET(request: Request) {
