@@ -42,6 +42,26 @@ async function requestSupabase(path: string, options: RequestInit = {}, timeoutM
   return text ? JSON.parse(text) : null;
 }
 
+async function getExam(tableName: string) {
+  const params = new URLSearchParams({
+    table_name: `eq.${tableName}`,
+    select: "table_name,source_key,title_ar,title_fr,year,total_rows,is_active,created_at,description_ar,description_fr",
+    limit: "1",
+  });
+  const rows = await requestSupabase(`/rest/v1/published_exams?${params}`);
+  return rows?.[0] || null;
+}
+
+async function setExamActive(tableName: string, isActive: boolean) {
+  const params = new URLSearchParams({ table_name: `eq.${tableName}` });
+  const rows = await requestSupabase(`/rest/v1/published_exams?${params}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+    body: JSON.stringify({ is_active: isActive, description_ar: "", description_fr: "" }),
+  });
+  return rows?.[0] || null;
+}
+
 async function syncPublicCaches(sourceKey: string, isActive: boolean) {
   if (!sourceKey) return;
 
@@ -108,15 +128,19 @@ export async function PATCH(request: Request) {
 
   const isActive = body.isActive === true;
   try {
-    const params = new URLSearchParams({ table_name: `eq.${tableName}` });
-    const rows = await requestSupabase(`/rest/v1/published_exams?${params}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", Prefer: "return=representation" },
-      body: JSON.stringify({ is_active: isActive, description_ar: "", description_fr: "" }),
-    });
+    const currentExam = await getExam(tableName);
+    if (!currentExam) return json(404, { ok: false, error: "Published exam not found" });
 
-    const exam = rows?.[0] || null;
-    if (exam?.source_key) await syncPublicCaches(String(exam.source_key), isActive);
+    let exam;
+    if (isActive) {
+      // Prepare every public dependency before exposing the exam. A failed
+      // refresh therefore leaves the exam safely inactive.
+      await syncPublicCaches(String(currentExam.source_key), true);
+      exam = await setExamActive(tableName, true);
+    } else {
+      exam = await setExamActive(tableName, false);
+      await syncPublicCaches(String(currentExam.source_key), false);
+    }
 
     return json(200, {
       ok: true,
