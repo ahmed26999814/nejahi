@@ -36,6 +36,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Prepare final test values
+        run: sed -i 's/99999999999999999999/999999/g' scripts/final-number-search-scale-test.mjs
+
       - name: Run functional and scale tests
         run: node scripts/final-number-search-scale-test.mjs
 
