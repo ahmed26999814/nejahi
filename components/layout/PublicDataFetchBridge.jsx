@@ -28,6 +28,7 @@ const PUBLIC_RESOURCES = new Set([
 ]);
 
 const BUILTIN_SOURCES = new Set(["bac", "brevet", "concours", "bac_session", "excellence_1as"]);
+const RETRYABLE_STATUS = new Set([429, 502, 503, 504]);
 
 function resolveUrl(input) {
   try {
@@ -135,6 +136,25 @@ function rememberRows(request, response) {
   }).catch(() => {});
 }
 
+function pause(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+async function fetchResultWithRetry(originalFetch, target, init) {
+  let lastResponse;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    if (init?.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    try {
+      lastResponse = await originalFetch(target, init);
+      if (!RETRYABLE_STATUS.has(lastResponse.status) || attempt === 1) return lastResponse;
+    } catch (error) {
+      if (attempt === 1 || init?.signal?.aborted) throw error;
+    }
+    await pause(180 + Math.floor(Math.random() * 180));
+  }
+  return lastResponse;
+}
+
 export default function PublicDataFetchBridge() {
   useLayoutEffect(() => {
     if (window.location.pathname.startsWith("/admin")) return undefined;
@@ -160,7 +180,9 @@ export default function PublicDataFetchBridge() {
       }
 
       const directPath = cacheSafeResultPath(trackedResult);
-      const promise = originalFetch(directPath || input, init);
+      const promise = directPath
+        ? fetchResultWithRetry(originalFetch, directPath, init)
+        : originalFetch(input, init);
       if (!trackedResult) return promise;
       return promise.then((response) => {
         rememberRows(trackedResult, response);
