@@ -5,6 +5,7 @@ const BASE_URL = (process.env.BASE_URL || "https://deploy-preview-19--mauri-resu
 const TIMEOUT_MS = Number(process.env.TIMEOUT_MS || 8_000);
 const REPORT_FILE = process.env.REPORT_FILE || "number-search-scale-report.json";
 const TEST_ID = `number-search-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+const BREVET_PATH = "/api/result-number/upload--brevet_2026";
 
 function percentile(sorted, value) {
   if (!sorted.length) return 0;
@@ -31,7 +32,7 @@ async function request(path, { noCache = false, validate = () => true } = {}) {
       signal: controller.signal,
       headers: {
         Accept: "application/json",
-        "User-Agent": `MauriResults-Number-Scale-Test/1.0 (${TEST_ID})`,
+        "User-Agent": `MauriResults-Number-Scale-Test/2.0 (${TEST_ID})`,
         "X-MauriResults-Load-Test": TEST_ID,
         ...(noCache ? { "Cache-Control": "no-cache" } : {}),
       },
@@ -44,15 +45,17 @@ async function request(path, { noCache = false, validate = () => true } = {}) {
     return {
       status: response.status,
       durationMs,
+      finalUrl: response.url,
       cache: response.headers.get("x-vercel-cache") || response.headers.get("cache-status") || "none",
       searchMode: response.headers.get("x-mauri-search") || "",
       valid,
-      error: valid ? null : `status=${response.status}, body=${body.slice(0, 180)}`,
+      error: valid ? null : `status=${response.status}, url=${response.url}, body=${body.slice(0, 220)}`,
     };
   } catch (error) {
     return {
       status: 0,
       durationMs: performance.now() - started,
+      finalUrl: "",
       cache: "none",
       searchMode: "",
       valid: false,
@@ -63,55 +66,82 @@ async function request(path, { noCache = false, validate = () => true } = {}) {
   }
 }
 
+function candidateNumber(row) {
+  return String(row?.["Numéro"] ?? row?.Num_Bepc ?? row?.Numero ?? row?.NODOSS ?? "").trim();
+}
+
 async function waitForLatestPreview() {
-  const deadline = Date.now() + 6 * 60 * 1000;
+  const deadline = Date.now() + 8 * 60 * 1000;
   while (Date.now() < deadline) {
-    const result = await request("/api/search?source=upload%3Abrevet_2026&q=75457", {
+    const result = await request(`${BREVET_PATH}/75457`, {
       validate: ({ response, parsed }) =>
         response.status === 200
         && response.headers.get("x-mauri-search") === "NUMBER-LOOKUP"
         && Array.isArray(parsed?.rows)
-        && parsed.rows.length === 1,
+        && parsed.rows.length === 1
+        && candidateNumber(parsed.rows[0]).replace(/^0+/, "") === "75457",
     });
     if (result.valid) return result;
     console.log(`Preview not ready yet: ${result.error || result.status}`);
     await new Promise((resolve) => setTimeout(resolve, 10_000));
   }
-  throw new Error("Latest preview did not become ready with NUMBER-LOOKUP mode");
+  throw new Error("Latest preview did not become ready with the path-based NUMBER-LOOKUP route");
 }
 
 async function functionalChecks() {
   const checks = [];
 
   checks.push({
-    name: "brevet_exact_number",
-    result: await request("/api/search?source=upload%3Abrevet_2026&q=75457", {
+    name: "path_brevet_exact_number",
+    result: await request(`${BREVET_PATH}/75457`, {
       validate: ({ response, parsed }) =>
         response.status === 200
         && response.headers.get("x-mauri-search") === "NUMBER-LOOKUP"
         && Array.isArray(parsed?.rows)
-        && parsed.rows.length === 1,
+        && parsed.rows.length === 1
+        && candidateNumber(parsed.rows[0]).replace(/^0+/, "") === "75457",
+    }),
+  });
+
+  checks.push({
+    name: "legacy_query_redirect",
+    result: await request("/api/search?source=upload%3Abrevet_2026&q=75457", {
+      validate: ({ response, parsed }) =>
+        response.status === 200
+        && response.url.includes("/api/result-number/upload--brevet_2026/75457")
+        && Array.isArray(parsed?.rows)
+        && candidateNumber(parsed.rows[0]).replace(/^0+/, "") === "75457",
     }),
   });
 
   checks.push({
     name: "brevet_leading_zeros",
     result: await request("/api/search?source=upload%3Abrevet_2026&q=00075457", {
-      validate: ({ response, parsed }) => response.status === 200 && Array.isArray(parsed?.rows) && parsed.rows.length === 1,
+      validate: ({ response, parsed }) =>
+        response.status === 200
+        && response.url.endsWith("/api/result-number/upload--brevet_2026/75457")
+        && Array.isArray(parsed?.rows)
+        && candidateNumber(parsed.rows[0]).replace(/^0+/, "") === "75457",
     }),
   });
 
   checks.push({
     name: "arabic_digits",
     result: await request(`/api/search?source=upload%3Abrevet_2026&q=${encodeURIComponent("٧٥٤٥٧")}`, {
-      validate: ({ response, parsed }) => response.status === 200 && Array.isArray(parsed?.rows) && parsed.rows.length === 1,
+      validate: ({ response, parsed }) =>
+        response.status === 200
+        && Array.isArray(parsed?.rows)
+        && candidateNumber(parsed.rows[0]).replace(/^0+/, "") === "75457",
     }),
   });
 
   checks.push({
     name: "name_search_rejected",
     result: await request("/api/search?source=upload%3Abrevet_2026&q=Mokhtar", {
-      validate: ({ response, parsed }) => response.status === 400 && Array.isArray(parsed?.rows) && parsed.rows.length === 0,
+      validate: ({ response, parsed }) =>
+        response.status === 400
+        && Array.isArray(parsed?.rows)
+        && parsed.rows.length === 0,
     }),
   });
 
@@ -123,9 +153,24 @@ async function functionalChecks() {
   });
 
   checks.push({
-    name: "legacy_bac_number",
+    name: "legacy_bac_number_isolated",
     result: await request("/api/search?source=bac&q=00001", {
-      validate: ({ response, parsed }) => response.status === 200 && Array.isArray(parsed?.rows) && parsed.rows.length >= 1,
+      validate: ({ response, parsed }) =>
+        response.status === 200
+        && response.url.endsWith("/api/result-number/bac/1")
+        && Array.isArray(parsed?.rows)
+        && parsed.rows.length >= 1
+        && candidateNumber(parsed.rows[0]).replace(/^0+/, "") === "1",
+    }),
+  });
+
+  checks.push({
+    name: "empty_number_does_not_reuse_cache",
+    result: await request(`${BREVET_PATH}/75695`, {
+      validate: ({ response, parsed }) =>
+        response.status === 200
+        && Array.isArray(parsed?.rows)
+        && parsed.rows.length === 0,
     }),
   });
 
@@ -139,7 +184,12 @@ async function functionalChecks() {
   checks.push({
     name: "concours_guided_number",
     result: await request(`/api/uploaded-concours-search?${concoursParams}`, {
-      validate: ({ response, parsed }) => response.status === 200 && Array.isArray(parsed?.rows),
+      validate: ({ response, parsed }) =>
+        response.status === 200
+        && response.url.includes("/api/concours-number/upload--concour_2026/")
+        && Array.isArray(parsed?.rows)
+        && parsed.rows.length === 1
+        && candidateNumber(parsed.rows[0]).replace(/^0+/, "") === "106",
     }),
   });
 
@@ -205,7 +255,7 @@ async function runStage(stage, stageIndex) {
       if (index >= stage.total) return;
       const candidate = stage.cached ? "75457" : uniqueCandidate(stageIndex, index);
       results[index] = await request(
-        `/api/search?source=upload%3Abrevet_2026&q=${candidate}`,
+        `${BREVET_PATH}/${candidate}`,
         {
           noCache: !stage.cached,
           validate: ({ response, parsed }) =>
@@ -251,13 +301,14 @@ for (let index = 0; index < originStages.length; index += 1) {
 }
 
 const cachedSpike = await runStage(
-  { name: "cached_20k_spike", total: 20_000, concurrency: 2_000, cached: true },
+  { name: "cached_20k_spike", total: 20_000, concurrency: 5_000, cached: true },
   originStages.length,
 );
 stages.push(cachedSpike);
 
 const totalRequests = stages.reduce((sum, item) => sum + item.requests, 0);
 const totalFailures = stages.reduce((sum, item) => sum + item.failures, 0);
+const uniqueStages = stages.filter((item) => item.name.startsWith("unique_"));
 const report = {
   testId: TEST_ID,
   baseUrl: BASE_URL,
@@ -268,7 +319,7 @@ const report = {
   totalRequests,
   totalFailures,
   overallErrorRate: round(totalFailures / Math.max(totalRequests, 1), 5),
-  highestUniqueConcurrency: Math.max(...stages.filter((item) => item.name.startsWith("unique_")).map((item) => item.concurrency)),
+  highestUniqueConcurrency: uniqueStages.length ? Math.max(...uniqueStages.map((item) => item.concurrency)) : 0,
   cachedSpikeRequests: cachedSpike.requests,
   cachedSpikeConcurrency: cachedSpike.concurrency,
   verdict: stopReason || cachedSpike.errorRate > 0.01 ? "limit_or_warning" : "pass",
