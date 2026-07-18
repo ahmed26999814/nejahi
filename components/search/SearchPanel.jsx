@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { SearchIcon } from "../common/icons";
 import SearchFeedback from "./SearchFeedback";
-import SearchSuggestions from "./SearchSuggestions";
-import { getSearchInputMode } from "./searchUtils";
+import { sanitizeCandidateNumber } from "./searchUtils";
 
 export default function SearchPanel(props) {
   const {
@@ -13,29 +11,16 @@ export default function SearchPanel(props) {
     handleSubmit,
     loading,
     message,
-    onPickSuggestion,
     query,
     setQuery,
-    suggestions = [],
     text,
   } = props;
 
-  const [focused, setFocused] = useState(false);
-  const visibleSuggestions = focused && suggestions.length > 0;
-
-  function submit(event) {
-    setFocused(false);
-    handleSubmit(event);
-  }
-
-  function pickSuggestion(student) {
-    setFocused(false);
-    onPickSuggestion(student);
-  }
+  const isFrench = text?.searchButton === "Rechercher";
 
   return (
     <form
-      onSubmit={submit}
+      onSubmit={handleSubmit}
       className="search-card animate-slide-up"
       aria-busy={loading}
     >
@@ -44,7 +29,7 @@ export default function SearchPanel(props) {
           {examTitle}
         </span>
         <span className="w-fit rounded-full border border-mauri-green/15 bg-mauri-green/10 px-3 py-1.5 text-[11px] font-black text-mauri-green dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-300">
-          البحث عن طريق الرقم أو الاسم
+          {isFrench ? "Recherche par numéro uniquement" : "البحث برقم المترشح فقط"}
         </span>
       </div>
 
@@ -59,23 +44,21 @@ export default function SearchPanel(props) {
           <input
             className="search-input"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onBlur={() => setTimeout(() => setFocused(false), 140)}
-            onFocus={() => setFocused(true)}
-            placeholder={text?.searchPlaceholder || "أدخل رقم المترشح أو الاسم الكامل"}
-            inputMode={getSearchInputMode(query)}
+            onChange={(event) => setQuery(sanitizeCandidateNumber(event.target.value))}
+            placeholder={isFrench ? "Entrez le numéro du candidat" : "أدخل رقم المترشح"}
+            inputMode="numeric"
+            pattern="[0-9]*"
             enterKeyHint="search"
             autoComplete="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            maxLength={20}
+            minLength={2}
+            required
+            aria-label={isFrench ? "Numéro du candidat" : "رقم المترشح"}
             aria-describedby={(error || message) ? "search-feedback" : undefined}
           />
         </label>
-
-        {visibleSuggestions && (
-          <SearchSuggestions
-            suggestions={suggestions}
-            onPick={pickSuggestion}
-          />
-        )}
       </div>
 
       <button
