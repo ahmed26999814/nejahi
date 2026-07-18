@@ -118,10 +118,13 @@ function hideOldSubjectTiles(labels) {
 function repairAbrevaLabels() {
   const replacements = new Map([
     ["نتائج ابريفه 2025", "أبريفه 2025"],
+    ["نتائج ابريفه 2026", "أبريفه 2026"],
     ["ابريفه 2025", "أبريفه 2025"],
+    ["ابريفه 2026", "أبريفه 2026"],
     ["نتائج البريفيه 2026", "أبريفه 2026"],
     ["نتائج البريفيه", "أبريفه"],
     ["البريفيه", "أبريفه"],
+    ["ابريفه", "أبريفه"],
   ]);
 
   document.querySelectorAll("h1,h2,h3,strong,p,span,small").forEach((element) => {
