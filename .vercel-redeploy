@@ -1,1 +1,3 @@
-Trigger production redeployment for the completed speed, rank, and native app experience release.
+Trigger production redeployment after Vercel service recovery.
+Includes the latest main-branch SEO, statistics, toppers, and canonical-domain updates.
+Requested: 2026-07-18.
