@@ -5,13 +5,23 @@ export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const REQUEST_TIMEOUT_MS = 5_000;
+const CACHE_CONTROL = "public, s-maxage=600, stale-while-revalidate=86400, stale-if-error=86400";
 
 function clean(value: unknown) {
-  return String(value || "").replace(/\u0000/g, "").trim();
+  return String(value || "").replace(/\u0000/g, "").trim().slice(0, 160);
+}
+
+function publicRow(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>).filter(([key]) => !key.startsWith("__")));
 }
 
 function unwrapRpcRows(rows: unknown[]) {
-  return (Array.isArray(rows) ? rows : []).map((row: any) => row?.search_uploaded_exam_rows ?? row).filter(Boolean);
+  return (Array.isArray(rows) ? rows : [])
+    .map((row: any) => row?.search_uploaded_exam_rows ?? row)
+    .filter(Boolean)
+    .map(publicRow);
 }
 
 export async function GET(request: Request) {
@@ -32,33 +42,45 @@ export async function GET(request: Request) {
   if (![wilaya, moughataa, centre, number].every(Boolean)) {
     return NextResponse.json({ rows: [], error: "All location fields and candidate number are required" }, { status: 400 });
   }
-
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
-    method: "POST",
-    cache: "no-store",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      p_source_key: source,
-      p_query: number,
-      p_wilaya: wilaya,
-      p_moughataa: moughataa,
-      p_centre: centre,
-    }),
-  });
-
-  const text = await response.text();
-  if (!response.ok) {
-    return NextResponse.json({ rows: [], error: text.slice(0, 900) }, { status: response.status, headers: { "Cache-Control": "no-store" } });
+  if (!/^\d{1,20}$/.test(number)) {
+    return NextResponse.json({ rows: [], error: "Invalid candidate number" }, { status: 400 });
   }
 
-  const rows = unwrapRpcRows(text ? JSON.parse(text) : []);
-  return NextResponse.json(
-    { rows },
-    { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400" } }
-  );
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_uploaded_exam_rows`, {
+      method: "POST",
+      cache: "no-store",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        p_source_key: source,
+        p_query: number,
+        p_wilaya: wilaya,
+        p_moughataa: moughataa,
+        p_centre: centre,
+      }),
+    });
+
+    const text = await response.text();
+    if (!response.ok) {
+      return NextResponse.json({ rows: [], error: text.slice(0, 900) }, { status: response.status, headers: { "Cache-Control": "no-store" } });
+    }
+
+    const rows = unwrapRpcRows(text ? JSON.parse(text) : []);
+    return NextResponse.json(
+      { rows },
+      { headers: { "Cache-Control": CACHE_CONTROL, "CDN-Cache-Control": CACHE_CONTROL, "Vercel-CDN-Cache-Control": CACHE_CONTROL } }
+    );
+  } catch (error) {
+    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+    return NextResponse.json(
+      { rows: [], error: timedOut ? "Search timeout" : "Search unavailable" },
+      { status: timedOut ? 504 : 503, headers: { "Cache-Control": "no-store", "Retry-After": "3" } }
+    );
+  }
 }

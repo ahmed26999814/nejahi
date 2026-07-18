@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const SESSION_KEY = "mauriresults_visit_session";
+const SESSION_KEY = "mauriresults_visit_session_v2";
+const LAST_SENT_KEY = "mauriresults_visit_last_sent";
+const CACHED_COUNT_KEY = "mauriresults_visit_cached_count";
+const SEND_INTERVAL_MS = 12 * 60 * 60 * 1000;
 
 function VisitorsIcon() {
   return (
@@ -16,11 +19,16 @@ function VisitorsIcon() {
 }
 
 function getSessionId() {
-  const stored = sessionStorage.getItem(SESSION_KEY);
+  const stored = localStorage.getItem(SESSION_KEY);
   if (stored) return stored;
   const created = crypto.randomUUID();
-  sessionStorage.setItem(SESSION_KEY, created);
+  localStorage.setItem(SESSION_KEY, created);
   return created;
+}
+
+function cachedCount() {
+  const value = Number(localStorage.getItem(CACHED_COUNT_KEY));
+  return Number.isFinite(value) && value > 0 ? value : null;
 }
 
 export default function VisitorCounter() {
@@ -29,6 +37,7 @@ export default function VisitorCounter() {
   const [count, setCount] = useState(null);
 
   useEffect(() => {
+    setCount(cachedCount());
     const element = rootRef.current;
     if (!element) return undefined;
     if (!("IntersectionObserver" in window)) {
@@ -41,7 +50,7 @@ export default function VisitorCounter() {
         setActive(true);
         observer.disconnect();
       }
-    }, { rootMargin: "300px" });
+    }, { rootMargin: "200px" });
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
@@ -49,22 +58,36 @@ export default function VisitorCounter() {
   useEffect(() => {
     if (!active) return undefined;
     let cancelled = false;
+    const lastSent = Number(localStorage.getItem(LAST_SENT_KEY)) || 0;
+    if (Date.now() - lastSent < SEND_INTERVAL_MS) return undefined;
+
     const sessionId = getSessionId();
+    localStorage.setItem(LAST_SENT_KEY, String(Date.now()));
+    const controller = new AbortController();
 
     fetch("/api/visitors", {
       method: "POST",
       cache: "no-store",
+      signal: controller.signal,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId }),
     })
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Visitor counter failed");
-        if (!cancelled) setCount(Number(data.count) || 0);
+        const nextCount = Number(data.count) || 0;
+        if (nextCount > 0) localStorage.setItem(CACHED_COUNT_KEY, String(nextCount));
+        if (!cancelled) setCount(nextCount);
       })
-      .catch((error) => console.warn("[MauriResults Visits]", error));
+      .catch((error) => {
+        localStorage.removeItem(LAST_SENT_KEY);
+        if (error?.name !== "AbortError") console.warn("[MauriResults Visits]", error);
+      });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [active]);
 
   return (

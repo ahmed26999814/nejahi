@@ -2,14 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const SESSION_KEY = "mauriresults_online_session";
-const HEARTBEAT_MS = 120_000;
+const SESSION_KEY = "mauriresults_online_session_v2";
+const LAST_HEARTBEAT_KEY = "mauriresults_online_last_heartbeat";
+const CACHED_ONLINE_KEY = "mauriresults_online_cached_count";
+const HEARTBEAT_MS = 5 * 60 * 1000;
+const SHARED_THROTTLE_MS = 90 * 1000;
 
 function getSessionId() {
-  const stored = sessionStorage.getItem(SESSION_KEY);
+  const stored = localStorage.getItem(SESSION_KEY);
   if (stored) return stored;
   const created = crypto.randomUUID();
-  sessionStorage.setItem(SESSION_KEY, created);
+  localStorage.setItem(SESSION_KEY, created);
   return created;
 }
 
@@ -23,12 +26,18 @@ function OnlineIcon() {
   );
 }
 
+function cachedOnline() {
+  const value = Number(localStorage.getItem(CACHED_ONLINE_KEY));
+  return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
 export default function OnlineUsersCounter() {
   const rootRef = useRef(null);
   const [active, setActive] = useState(false);
   const [online, setOnline] = useState(null);
 
   useEffect(() => {
+    setOnline(cachedOnline());
     const element = rootRef.current;
     if (!element) return undefined;
     if (!("IntersectionObserver" in window)) {
@@ -41,7 +50,7 @@ export default function OnlineUsersCounter() {
         setActive(true);
         observer.disconnect();
       }
-    }, { rootMargin: "300px" });
+    }, { rootMargin: "200px" });
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
@@ -53,6 +62,14 @@ export default function OnlineUsersCounter() {
 
     async function heartbeat() {
       if (document.visibilityState === "hidden") return;
+      const lastHeartbeat = Number(localStorage.getItem(LAST_HEARTBEAT_KEY)) || 0;
+      if (Date.now() - lastHeartbeat < SHARED_THROTTLE_MS) {
+        const cached = cachedOnline();
+        if (!stopped && cached !== null) setOnline(cached);
+        return;
+      }
+
+      localStorage.setItem(LAST_HEARTBEAT_KEY, String(Date.now()));
       try {
         const response = await fetch("/api/online", {
           method: "POST",
@@ -62,8 +79,11 @@ export default function OnlineUsersCounter() {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Online counter failed");
-        if (!stopped) setOnline(Number(data.online) || 0);
+        const nextOnline = Number(data.online) || 0;
+        localStorage.setItem(CACHED_ONLINE_KEY, String(nextOnline));
+        if (!stopped) setOnline(nextOnline);
       } catch (error) {
+        localStorage.removeItem(LAST_HEARTBEAT_KEY);
         console.warn("[MauriResults Online]", error);
       }
     }
@@ -73,12 +93,21 @@ export default function OnlineUsersCounter() {
     const onVisibility = () => {
       if (document.visibilityState === "visible") heartbeat();
     };
+    const onStorage = (event) => {
+      if (event.key === CACHED_ONLINE_KEY) {
+        const cached = cachedOnline();
+        if (!stopped && cached !== null) setOnline(cached);
+      }
+    };
+
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("storage", onStorage);
 
     return () => {
       stopped = true;
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("storage", onStorage);
     };
   }, [active]);
 

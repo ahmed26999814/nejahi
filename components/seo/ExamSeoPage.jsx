@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const SITE_URL = "https://mauriresults.vercel.app";
+const SITE_URL = "https://mauri-results.vercel.app";
 
 export default function ExamSeoPage({
   slug,
@@ -84,7 +84,7 @@ export default function ExamSeoPage({
           <h2 className="text-xl font-bold">نتائج أخرى في موريتانيا</h2>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
             <Link href="/results/bac-mauritanie" className="rounded-full border px-4 py-2">البكالوريا</Link>
-            <Link href="/results/brevet-mauritanie" className="rounded-full border px-4 py-2">ابريفه</Link>
+            <Link href="/results/brevet-mauritanie" className="rounded-full border px-4 py-2">البريفيه</Link>
             <Link href="/results/concours-mauritanie" className="rounded-full border px-4 py-2">الكونكور</Link>
             <Link href="/results/excellence-mauritanie" className="rounded-full border px-4 py-2">الامتياز</Link>
           </div>

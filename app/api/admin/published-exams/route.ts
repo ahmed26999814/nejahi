@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const REQUEST_TIMEOUT_MS = 10_000;
 
 function json(status: number, body: Record<string, unknown>) {
   return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -23,6 +24,7 @@ function safeTable(value: unknown) {
 async function requestSupabase(path: string, options: RequestInit = {}) {
   const response = await fetch(`${SUPABASE_URL}${path}`, {
     ...options,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     headers: {
       apikey: SUPABASE_KEY!,
       Authorization: `Bearer ${SUPABASE_KEY}`,
@@ -34,6 +36,23 @@ async function requestSupabase(path: string, options: RequestInit = {}) {
   const text = await response.text();
   if (!response.ok) throw new Error(text || `HTTP ${response.status}`);
   return text ? JSON.parse(text) : null;
+}
+
+async function syncDashboardCache(sourceKey: string, isActive: boolean) {
+  if (!sourceKey) return;
+  if (isActive) {
+    await requestSupabase("/rest/v1/rpc/refresh_published_exam_dashboard_cache", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ p_source_key: sourceKey }),
+    });
+    return;
+  }
+  const params = new URLSearchParams({ source_key: `eq.${sourceKey}` });
+  await requestSupabase(`/rest/v1/published_exam_dashboard_cache?${params}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=minimal" },
+  });
 }
 
 export async function GET(request: Request) {
@@ -49,7 +68,8 @@ export async function GET(request: Request) {
     const exams = await requestSupabase(`/rest/v1/published_exams?${params}`);
     return json(200, { ok: true, exams: exams || [] });
   } catch (error) {
-    return json(500, { ok: false, error: String(error) });
+    const timedOut = error instanceof Error && error.name === "TimeoutError";
+    return json(timedOut ? 504 : 500, { ok: false, error: timedOut ? "Request timed out safely" : String(error) });
   }
 }
 
@@ -72,23 +92,20 @@ export async function PATCH(request: Request) {
     const params = new URLSearchParams({ table_name: `eq.${tableName}` });
     const rows = await requestSupabase(`/rest/v1/published_exams?${params}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify({
-        is_active: isActive,
-        description_ar: "",
-        description_fr: "",
-      }),
+      headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+      body: JSON.stringify({ is_active: isActive, description_ar: "", description_fr: "" }),
     });
+
+    const exam = rows?.[0] || null;
+    if (exam?.source_key) await syncDashboardCache(String(exam.source_key), isActive);
 
     return json(200, {
       ok: true,
-      exam: rows?.[0] || null,
+      exam,
       message: isActive ? "تمت إعادة النتيجة إلى الموقع" : "تمت إزالة النتيجة من الموقع",
     });
   } catch (error) {
-    return json(500, { ok: false, error: String(error) });
+    const timedOut = error instanceof Error && error.name === "TimeoutError";
+    return json(timedOut ? 504 : 500, { ok: false, error: timedOut ? "Update timed out safely" : String(error) });
   }
 }

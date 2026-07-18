@@ -1,6 +1,6 @@
 import ExamSeoPage from "../../../components/seo/ExamSeoPage";
 
-const url = "https://mauriresults.vercel.app/results/concours-mauritanie";
+const url = "https://mauri-results.vercel.app/results/concours-mauritanie";
 
 export const metadata = {
   title: "نتائج الكونكور موريتانيا 2026",
@@ -24,14 +24,8 @@ export default function ConcoursMauritaniePage() {
       intro="تساعد منصة MauriResults التلاميذ وأولياء الأمور على الوصول إلى نتائج الكونكور في موريتانيا عند نشر البيانات الرسمية، من خلال بحث واضح ومناسب للهاتف."
       searchHint="انتقل إلى البحث الرئيسي، اختر الكونكور، ثم حدد الولاية والمقاطعة والمركز وأدخل رقم المترشح."
       faq={[
-        {
-          question: "كيف أبحث عن نتيجة الكونكور؟",
-          answer: "اختر الكونكور في MauriResults، ثم حدد الولاية والمقاطعة والمركز وأدخل رقم المترشح.",
-        },
-        {
-          question: "هل يمكن البحث من الهاتف؟",
-          answer: "نعم، صُممت منصة MauriResults لتكون سهلة الاستخدام على الهواتف والأجهزة المختلفة.",
-        },
+        { question: "كيف أبحث عن نتيجة الكونكور؟", answer: "اختر الكونكور في MauriResults، ثم حدد الولاية والمقاطعة والمركز وأدخل رقم المترشح." },
+        { question: "هل يمكن البحث من الهاتف؟", answer: "نعم، صُممت منصة MauriResults لتكون سهلة الاستخدام على الهواتف والأجهزة المختلفة." },
       ]}
     />
   );
