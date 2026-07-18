@@ -107,6 +107,21 @@ function isAbrevaStudent(student) {
   return identity === "brevet" || identity.includes("brevet") || identity.includes("bepc") || identity.includes("أبريفه") || identity.includes("ابريفه") || identity.includes("البريفيه");
 }
 
+function hasExistingSubjectDetailsAction(mount) {
+  const modal = document.querySelector(".result-modal");
+  if (!modal) return false;
+
+  const arabicLabel = normalizeKey("تفاصيل المواد");
+  const frenchLabel = normalizeKey("Détails des matières");
+
+  return [...modal.querySelectorAll("a, button")].some((element) => {
+    if (mount?.contains(element)) return false;
+    const href = element.getAttribute("href") || "";
+    const text = normalizeKey(element.textContent || "");
+    return href.includes("/bepc-subjects") || text.includes(arabicLabel) || text.includes(frenchLabel);
+  });
+}
+
 function hideOldSubjectTiles(labels) {
   const normalized = new Set(labels.map(normalizeKey));
   document.querySelectorAll(".result-details-grid > *").forEach((tile) => {
@@ -166,7 +181,8 @@ export default function ResultSubjectDetailsBridge() {
         const nextLang = localStorage.getItem("mauriresults-lang") === "fr" ? "fr" : "ar";
         const student = currentStudent();
         const nextDetails = subjectDetails(student, rawStudent(student), nextLang);
-        const number = isAbrevaStudent(student) ? candidateIds(student)[0] || "" : "";
+        const alreadyHasAction = hasExistingSubjectDetailsAction(mount);
+        const number = isAbrevaStudent(student) && !alreadyHasAction ? candidateIds(student)[0] || "" : "";
         hideOldSubjectTiles(nextDetails.map((item) => item.label));
         setLang(nextLang);
         setTarget(mount);
