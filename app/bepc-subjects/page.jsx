@@ -1,8 +1,8 @@
 import BepcSubjectsPageClient from "../../components/results/BepcSubjectsPageClient";
 
 export const metadata = {
-  title: "تفاصيل مواد ابريفه | MauriResults",
-  description: "البحث عن درجات مواد ابريفه وعرض الكشف الرسمي في صفحة واحدة متوافقة مع الهاتف.",
+  title: "تفاصيل مواد أبريفه | MauriResults",
+  description: "البحث عن درجات مواد أبريفه وعرض الكشف الرسمي في صفحة واحدة متوافقة مع الهاتف.",
 };
 
 export default async function BepcSubjectsPage({ searchParams }) {
