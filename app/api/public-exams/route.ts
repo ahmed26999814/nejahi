@@ -5,6 +5,7 @@ import { LEGACY_2025_EXAMS } from "../../../lib/legacyExamCatalog";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const SITE_URL = "https://mauri-results.vercel.app";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=3600";
@@ -26,7 +27,7 @@ function yearNumber(value: unknown) {
 function examKind(exam: Record<string, unknown>) {
   const identity = `${exam.table_name || ""} ${exam.title_ar || ""} ${exam.title_fr || ""}`.toLowerCase();
   if (/concours|c1as|كونكور|دخول السنة الأولى/.test(identity)) return "concours";
-  if (/bepc|brevet|بريف|ابريفه|ابريفه/.test(identity)) return "brevet";
+  if (/bepc|brevet|بريف|ابريفه|البريفيه/.test(identity)) return "brevet";
   if (/excellence|امتياز/.test(identity)) return "excellence";
   if (/session|complémentaire|complementaire|تكميلية|sc/.test(identity)) return "session";
   if (/bac|baccalaureat|baccalauréat|باكالوريا/.test(identity)) return "bac";
@@ -112,7 +113,7 @@ async function fetchPublishedExamsUncached(): Promise<{ rows: Array<Record<strin
 
 const fetchPublishedExams = unstable_cache(
   fetchPublishedExamsUncached,
-  ["mauriresults-public-exams-v2"],
+  ["mauriresults-public-exams-v3"],
   { revalidate: 60 }
 );
 
@@ -129,8 +130,8 @@ function legacyUpdateExam(): Record<string, unknown> {
     table_name: "update_required_v3",
     title_ar: "هذا الإصدار متوقف",
     title_fr: "Cette version est arrêtée",
-    description_ar: `نزّل تحديث MauriResults الجديد ${REQUIRED_APP_VERSION} من mauriresults.vercel.app/Apk للمتابعة.`,
-    description_fr: `Téléchargez la nouvelle version MauriResults ${REQUIRED_APP_VERSION} depuis mauriresults.vercel.app/Apk.`,
+    description_ar: `نزّل تحديث MauriResults الجديد ${REQUIRED_APP_VERSION} من ${SITE_URL.replace("https://", "")}/Apk للمتابعة.`,
+    description_fr: `Téléchargez la nouvelle version MauriResults ${REQUIRED_APP_VERSION} depuis ${SITE_URL.replace("https://", "")}/Apk.`,
     year: "2026",
     tone: "amber",
     search_mode: "number",
@@ -156,7 +157,7 @@ export async function GET(request: Request) {
         exams: [legacyUpdateExam()],
         updateRequired: true,
         minimumSupportedVersion: REQUIRED_APP_VERSION,
-        downloadUrl: "https://mauriresults.vercel.app/Apk/",
+        downloadUrl: `${SITE_URL}/Apk/`,
         message: "هذا الإصدار متوقف. نزّل التحديث الجديد.",
       },
       {
@@ -179,6 +180,7 @@ export async function GET(request: Request) {
       headers: {
         "Cache-Control": PUBLIC_CACHE,
         "CDN-Cache-Control": PUBLIC_CACHE,
+        "Vercel-CDN-Cache-Control": PUBLIC_CACHE,
         Vary: "X-MauriResults-Client, Accept-Encoding",
       },
     }
