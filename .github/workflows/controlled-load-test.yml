@@ -7,6 +7,12 @@ on:
     paths:
       - scripts/controlled-load-test.mjs
       - .github/workflows/controlled-load-test.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/controlled-load-test.mjs
+      - .github/workflows/controlled-load-test.yml
 
 permissions:
   contents: read
