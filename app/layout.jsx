@@ -7,14 +7,12 @@ import "./navigation-topper-fixes.css";
 import "./footer-dark-fix.css";
 import "./exam-card-polish.css";
 import "./online-counter.css";
-import "./forgot-number.css";
 import "./dashboard-reference.css";
 import "./dashboard-mobile.css";
 import "./results-notice.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import PublicDataFetchBridge from "../components/layout/PublicDataFetchBridge";
 import UiEnhancements from "../components/ui/UiEnhancements";
-import ForgotCandidateNumber from "../components/ui/ForgotCandidateNumber";
 import BacTopperTrackOrder from "../components/ui/BacTopperTrackOrder";
 import MotivationalVisibility from "../components/ui/MotivationalVisibility";
 import ResultSubjectDetailsBridge from "../components/results/ResultSubjectDetailsBridge";
@@ -29,7 +27,7 @@ export const metadata = {
     template: "%s | MauriResults",
   },
   description:
-    "MauriResults منصة موريتانية سريعة للبحث عن نتائج البكالوريا وأبريفه والكونكور والامتياز 2026 بالاسم أو رقم المترشح، ومتابعة نتائج Mauri Bac في موريتانيا.",
+    "MauriResults منصة موريتانية سريعة للبحث عن نتائج البكالوريا وأبريفه والكونكور والامتياز 2026 برقم المترشح، ومتابعة نتائج Mauri Bac في موريتانيا.",
   keywords: [
     "MauriResults",
     "Mauri Results",
@@ -77,7 +75,7 @@ export const metadata = {
     siteName: "MauriResults",
     title: "نتائج البكالوريا وأبريفه والكونكور في موريتانيا | MauriResults",
     description:
-      "ابحث بسرعة عن نتائج البكالوريا وأبريفه والكونكور والامتياز في موريتانيا عبر MauriResults.",
+      "ابحث بسرعة برقم المترشح عن نتائج البكالوريا وأبريفه والكونكور والامتياز في موريتانيا عبر MauriResults.",
     images: [
       {
         url: "/logo.png",
@@ -90,7 +88,7 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "نتائج البكالوريا وأبريفه والكونكور في موريتانيا | MauriResults",
-    description: "بحث سريع عن نتائج المسابقات الوطنية في موريتانيا.",
+    description: "بحث سريع برقم المترشح عن نتائج المسابقات الوطنية في موريتانيا.",
     images: ["/logo.png"],
   },
   appleWebApp: {
@@ -125,7 +123,7 @@ export default function RootLayout({ children }) {
     operatingSystem: "Web, Android, iOS",
     inLanguage: ["ar-MR", "fr-MR"],
     description:
-      "منصة موريتانية للبحث عن نتائج البكالوريا وأبريفه والكونكور والامتياز.",
+      "منصة موريتانية للبحث برقم المترشح عن نتائج البكالوريا وأبريفه والكونكور والامتياز.",
     creator: {
       "@type": "Person",
       name: "Ahmed abdellahi mady",
@@ -139,13 +137,12 @@ export default function RootLayout({ children }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="results-notice" role="status" aria-live="polite">
           <span className="results-notice-dot" aria-hidden="true" />
-          <span>تم فتح أبريفه والكونكور 2026 — ابحث الآن عن نتيجتك</span>
+          <span>تم فتح أبريفه والكونكور 2026 — ابحث الآن برقم المترشح</span>
         </div>
         <PublicDataFetchBridge />
         <AppRuntimeShell />
         <UiEnhancements />
         <MotivationalVisibility />
-        <ForgotCandidateNumber />
         <BacTopperTrackOrder />
         <ResultSubjectDetailsBridge />
         {children}
