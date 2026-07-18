@@ -129,11 +129,6 @@ export default function RootLayout({ children }) {
       "@type": "Person",
       name: "Ahmed abdellahi mady",
     },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${siteUrl}/?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
   };
 
   return (
