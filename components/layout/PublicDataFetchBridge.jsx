@@ -27,17 +27,59 @@ const PUBLIC_RESOURCES = new Set([
   "bac_session2_top_students",
 ]);
 
-function publicResource(input) {
+function resolveUrl(input) {
   try {
     const raw = typeof input === "string" || input instanceof URL ? input : input?.url;
-    if (!raw) return "";
-    const url = new URL(raw, window.location.origin);
-    if (!url.hostname.endsWith(".supabase.co") || !url.pathname.startsWith("/rest/v1/")) return "";
-    const resource = decodeURIComponent(url.pathname.slice("/rest/v1/".length)).split("/")[0];
-    return PUBLIC_RESOURCES.has(resource) ? resource : "";
+    return raw ? new URL(raw, window.location.origin) : null;
   } catch {
-    return "";
+    return null;
   }
+}
+
+function publicResource(input) {
+  const url = resolveUrl(input);
+  if (!url || !url.hostname.endsWith(".supabase.co") || !url.pathname.startsWith("/rest/v1/")) return "";
+  const resource = decodeURIComponent(url.pathname.slice("/rest/v1/".length)).split("/")[0];
+  return PUBLIC_RESOURCES.has(resource) ? resource : "";
+}
+
+function resultRequest(input) {
+  const url = resolveUrl(input);
+  if (!url || url.origin !== window.location.origin) return null;
+  if (!["/api/search", "/api/uploaded-concours-search"].includes(url.pathname)) return null;
+  return {
+    source: String(url.searchParams.get("source") || ""),
+    url,
+  };
+}
+
+function rowIds(row) {
+  return [
+    row?.id,
+    row?.Numero,
+    row?.["Numéro"],
+    row?.Num_Bepc,
+    row?.Num_Excellence_1AS,
+    row?.["Numéro_C1AS"],
+    row?.Numero_C1AS,
+    row?.NODOSS,
+  ].map((value) => String(value || "").trim()).filter(Boolean);
+}
+
+function rememberRows(request, response) {
+  if (!request || !response?.ok) return;
+  response.clone().json().then((data) => {
+    const rows = Array.isArray(data?.rows) ? data.rows : [];
+    if (!rows.length) return;
+    if (!(window.__mauriResultRows instanceof Map)) window.__mauriResultRows = new Map();
+    rows.forEach((row) => {
+      rowIds(row).forEach((id) => {
+        window.__mauriResultRows.set(`${request.source}:${id}`, row);
+        window.__mauriResultRows.set(`*:${id}`, row);
+      });
+    });
+    window.dispatchEvent(new CustomEvent("mauriresults:raw-result", { detail: { source: request.source, count: rows.length } }));
+  }).catch(() => {});
 }
 
 export default function PublicDataFetchBridge() {
@@ -49,17 +91,26 @@ export default function PublicDataFetchBridge() {
     window.fetch = (input, init = {}) => {
       const method = String(init?.method || (typeof input === "object" && input?.method) || "GET").toUpperCase();
       const resource = method === "GET" ? publicResource(input) : "";
-      if (!resource) return originalFetch(input, init);
+      const trackedResult = method === "GET" ? resultRequest(input) : null;
 
-      const headers = new Headers(init?.headers || (typeof input === "object" ? input?.headers : undefined));
-      headers.delete("apikey");
-      headers.delete("authorization");
-      headers.set("Accept", "application/json");
+      if (resource) {
+        const headers = new Headers(init?.headers || (typeof input === "object" ? input?.headers : undefined));
+        headers.delete("apikey");
+        headers.delete("authorization");
+        headers.set("Accept", "application/json");
 
-      return originalFetch(`/api/public-data?resource=${encodeURIComponent(resource)}`, {
-        ...init,
-        method: "GET",
-        headers,
+        return originalFetch(`/api/public-data?resource=${encodeURIComponent(resource)}`, {
+          ...init,
+          method: "GET",
+          headers,
+        });
+      }
+
+      const promise = originalFetch(input, init);
+      if (!trackedResult) return promise;
+      return promise.then((response) => {
+        rememberRows(trackedResult, response);
+        return response;
       });
     };
 
