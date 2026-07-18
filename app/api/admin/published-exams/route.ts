@@ -1,12 +1,16 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 300;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const REQUEST_TIMEOUT_MS = 10_000;
+const LOOKUP_TIMEOUT_MS = 240_000;
+const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
 
 function json(status: number, body: Record<string, unknown>) {
   return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -21,10 +25,10 @@ function safeTable(value: unknown) {
   return /^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(table) ? table : "";
 }
 
-async function requestSupabase(path: string, options: RequestInit = {}) {
+async function requestSupabase(path: string, options: RequestInit = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
   const response = await fetch(`${SUPABASE_URL}${path}`, {
     ...options,
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
     headers: {
       apikey: SUPABASE_KEY!,
       Authorization: `Bearer ${SUPABASE_KEY}`,
@@ -38,21 +42,36 @@ async function requestSupabase(path: string, options: RequestInit = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-async function syncDashboardCache(sourceKey: string, isActive: boolean) {
+async function syncPublicCaches(sourceKey: string, isActive: boolean) {
   if (!sourceKey) return;
+
   if (isActive) {
     await requestSupabase("/rest/v1/rpc/refresh_published_exam_dashboard_cache", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ p_source_key: sourceKey }),
     });
+    await requestSupabase("/rest/v1/rpc/refresh_result_number_lookup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ p_source_key: sourceKey }),
+    }, LOOKUP_TIMEOUT_MS);
+    revalidateTag(SEARCH_CACHE_TAG);
     return;
   }
-  const params = new URLSearchParams({ source_key: `eq.${sourceKey}` });
-  await requestSupabase(`/rest/v1/published_exam_dashboard_cache?${params}`, {
+
+  const dashboardParams = new URLSearchParams({ source_key: `eq.${sourceKey}` });
+  await requestSupabase(`/rest/v1/published_exam_dashboard_cache?${dashboardParams}`, {
     method: "DELETE",
     headers: { Prefer: "return=minimal" },
   });
+
+  const lookupParams = new URLSearchParams({ source_key: `eq.${sourceKey}` });
+  await requestSupabase(`/rest/v1/result_number_lookup?${lookupParams}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=minimal" },
+  }, LOOKUP_TIMEOUT_MS);
+  revalidateTag(SEARCH_CACHE_TAG);
 }
 
 export async function GET(request: Request) {
@@ -68,7 +87,7 @@ export async function GET(request: Request) {
     const exams = await requestSupabase(`/rest/v1/published_exams?${params}`);
     return json(200, { ok: true, exams: exams || [] });
   } catch (error) {
-    const timedOut = error instanceof Error && error.name === "TimeoutError";
+    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
     return json(timedOut ? 504 : 500, { ok: false, error: timedOut ? "Request timed out safely" : String(error) });
   }
 }
@@ -97,15 +116,16 @@ export async function PATCH(request: Request) {
     });
 
     const exam = rows?.[0] || null;
-    if (exam?.source_key) await syncDashboardCache(String(exam.source_key), isActive);
+    if (exam?.source_key) await syncPublicCaches(String(exam.source_key), isActive);
 
     return json(200, {
       ok: true,
       exam,
+      numberLookupReady: isActive,
       message: isActive ? "تمت إعادة النتيجة إلى الموقع" : "تمت إزالة النتيجة من الموقع",
     });
   } catch (error) {
-    const timedOut = error instanceof Error && error.name === "TimeoutError";
+    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
     return json(timedOut ? 504 : 500, { ok: false, error: timedOut ? "Update timed out safely" : String(error) });
   }
 }
