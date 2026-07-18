@@ -27,6 +27,8 @@ const PUBLIC_RESOURCES = new Set([
   "bac_session2_top_students",
 ]);
 
+const BUILTIN_SOURCES = new Set(["bac", "brevet", "concours", "bac_session", "excellence_1as"]);
+
 function resolveUrl(input) {
   try {
     const raw = typeof input === "string" || input instanceof URL ? input : input?.url;
@@ -43,6 +45,29 @@ function publicResource(input) {
   return PUBLIC_RESOURCES.has(resource) ? resource : "";
 }
 
+function asciiDigits(value) {
+  const arabic = "٠١٢٣٤٥٦٧٨٩";
+  const persian = "۰۱۲۳۴۵۶۷۸۹";
+  return String(value || "")
+    .replace(/[٠-٩]/g, (digit) => String(arabic.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String(persian.indexOf(digit)));
+}
+
+function candidateNumber(value) {
+  const digits = asciiDigits(value).trim().slice(0, 20);
+  if (!/^\d{1,20}$/.test(digits)) return "";
+  return digits.replace(/^0+(?=\d)/, "");
+}
+
+function sourceToken(value) {
+  const source = String(value || "").trim();
+  if (BUILTIN_SOURCES.has(source)) return source;
+  if (/^upload:[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(source)) {
+    return `upload--${source.slice("upload:".length)}`;
+  }
+  return "";
+}
+
 function resultRequest(input) {
   const url = resolveUrl(input);
   if (!url || url.origin !== window.location.origin) return null;
@@ -51,6 +76,34 @@ function resultRequest(input) {
     source: String(url.searchParams.get("source") || ""),
     url,
   };
+}
+
+function cacheSafeResultPath(request) {
+  if (!request) return "";
+  const token = sourceToken(request.source);
+  if (!token) return "";
+
+  if (request.url.pathname === "/api/search") {
+    const number = candidateNumber(request.url.searchParams.get("q"));
+    return number
+      ? `/api/result-number/${encodeURIComponent(token)}/${encodeURIComponent(number)}`
+      : "";
+  }
+
+  const number = candidateNumber(request.url.searchParams.get("number"));
+  const wilaya = String(request.url.searchParams.get("wilaya") || "").trim();
+  const moughataa = String(request.url.searchParams.get("moughataa") || "").trim();
+  const centre = String(request.url.searchParams.get("centre") || "").trim();
+  if (![number, wilaya, moughataa, centre].every(Boolean)) return "";
+
+  return [
+    "/api/concours-number",
+    encodeURIComponent(token),
+    encodeURIComponent(wilaya),
+    encodeURIComponent(moughataa),
+    encodeURIComponent(centre),
+    encodeURIComponent(number),
+  ].join("/");
 }
 
 function rowIds(row) {
@@ -106,7 +159,8 @@ export default function PublicDataFetchBridge() {
         });
       }
 
-      const promise = originalFetch(input, init);
+      const directPath = cacheSafeResultPath(trackedResult);
+      const promise = originalFetch(directPath || input, init);
       if (!trackedResult) return promise;
       return promise.then((response) => {
         rememberRows(trackedResult, response);
