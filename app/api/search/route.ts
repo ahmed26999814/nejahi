@@ -1,19 +1,10 @@
-import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
-export const maxDuration = 5;
-export const preferredRegion = ["cdg1"];
 
 const SITE_URL = "https://mauri-results.vercel.app";
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const REQUEST_TIMEOUT_MS = 3_000;
-const MAX_QUERY_LENGTH = 20;
 const REQUIRED_APP_VERSION = "3.0.0";
-const CACHE_CONTROL = "public, max-age=120, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=604800";
-const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
 
 const SOURCE_ALIASES: Record<string, string> = {
   bac_2026: "bac",
@@ -34,13 +25,13 @@ const BUILTIN_SOURCES = new Set([
 function asciiDigits(value: string) {
   const arabic = "٠١٢٣٤٥٦٧٨٩";
   const persian = "۰۱۲۳۴۵۶۷۸۹";
-  return value
+  return String(value || "")
     .replace(/[٠-٩]/g, (digit) => String(arabic.indexOf(digit)))
     .replace(/[۰-۹]/g, (digit) => String(persian.indexOf(digit)));
 }
 
 function normalizeCandidateNumber(value: string) {
-  const digits = asciiDigits(String(value || "").trim()).slice(0, MAX_QUERY_LENGTH);
+  const digits = asciiDigits(String(value || "").trim()).slice(0, 20);
   if (!/^\d{1,20}$/.test(digits)) return "";
   return digits.replace(/^0+(?=\d)/, "");
 }
@@ -52,74 +43,18 @@ function normalizeSource(value: string) {
   return /^upload:[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(canonical) ? canonical : "";
 }
 
-function publicPayload(value: unknown) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).filter(([key]) => !key.startsWith("__")),
-  );
+function sourceToToken(source: string) {
+  return source.startsWith("upload:")
+    ? `upload--${source.slice("upload:".length)}`
+    : source;
 }
 
-async function fetchNumberResult(source: string, candidateKey: string) {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return { error: "Missing Supabase service credentials", status: 500 } as const;
-  }
-
-  const url = new URL(`${SUPABASE_URL}/rest/v1/result_number_lookup`);
-  url.searchParams.set("select", "payload,rank");
-  url.searchParams.set("source_key", `eq.${source}`);
-  url.searchParams.set("candidate_key", `eq.${candidateKey}`);
-  url.searchParams.set("order", "rank.asc.nullslast");
-  url.searchParams.set("limit", "20");
-
-  try {
-    const response = await fetch(url, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        Accept: "application/json",
-        Prefer: "count=none",
-      },
-    });
-
-    const text = await response.text();
-    if (!response.ok) return { error: text.slice(0, 700), status: response.status } as const;
-
-    const entries = text ? JSON.parse(text) : [];
-    const rows = (Array.isArray(entries) ? entries : [])
-      .map((entry) => {
-        const payload = publicPayload(entry?.payload);
-        if (!payload) return null;
-        return payload.rank == null && entry?.rank != null
-          ? { ...payload, rank: entry.rank }
-          : payload;
-      })
-      .filter(Boolean);
-
-    return { rows, status: 200 } as const;
-  } catch (error) {
-    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-    return {
-      error: timedOut ? "Search timeout" : "Search unavailable",
-      status: timedOut ? 504 : 503,
-    } as const;
-  }
-}
-
-const cachedNumberResult = unstable_cache(
-  async (source: string, candidateKey: string) => fetchNumberResult(source, candidateKey),
-  ["mauriresults-number-search-v1"],
-  { revalidate: 86_400, tags: [SEARCH_CACHE_TAG] },
-);
-
-function responseHeaders() {
+function noStoreHeaders() {
   return {
-    "Cache-Control": CACHE_CONTROL,
-    "CDN-Cache-Control": CACHE_CONTROL,
-    "Vercel-CDN-Cache-Control": CACHE_CONTROL,
-    "X-Mauri-Search": "NUMBER-LOOKUP",
-    Vary: "Accept-Encoding",
+    "Cache-Control": "no-store, max-age=0",
+    "CDN-Cache-Control": "no-store",
+    "Vercel-CDN-Cache-Control": "no-store",
+    "Netlify-CDN-Cache-Control": "no-store",
   };
 }
 
@@ -133,8 +68,8 @@ function isLegacyNativeRequest(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const sourceInput = String(searchParams.get("source") || "").trim();
+  const url = new URL(request.url);
+  const sourceInput = String(url.searchParams.get("source") || "").trim();
 
   if (sourceInput === "update_required_v3") {
     return NextResponse.json(
@@ -152,7 +87,7 @@ export async function GET(request: Request) {
         minimumSupportedVersion: REQUIRED_APP_VERSION,
         downloadUrl: `${SITE_URL}/Apk/`,
       },
-      { status: 200, headers: { "Cache-Control": "no-store" } },
+      { status: 200, headers: noStoreHeaders() },
     );
   }
 
@@ -165,7 +100,7 @@ export async function GET(request: Request) {
         minimumSupportedVersion: REQUIRED_APP_VERSION,
         downloadUrl: `${SITE_URL}/Apk/`,
       },
-      { status: 426, headers: { "Cache-Control": "no-store" } },
+      { status: 426, headers: noStoreHeaders() },
     );
   }
 
@@ -173,31 +108,24 @@ export async function GET(request: Request) {
   if (!source) {
     return NextResponse.json(
       { rows: [], error: "Unknown source" },
-      { status: 400, headers: { "Cache-Control": "no-store" } },
+      { status: 400, headers: noStoreHeaders() },
     );
   }
 
-  const candidateKey = normalizeCandidateNumber(String(searchParams.get("q") || ""));
+  const candidateKey = normalizeCandidateNumber(String(url.searchParams.get("q") || ""));
   if (!candidateKey) {
     return NextResponse.json(
       { rows: [], error: "Candidate number must contain digits only" },
-      { status: 400, headers: { "Cache-Control": "no-store" } },
+      { status: 400, headers: noStoreHeaders() },
     );
   }
 
-  const result = await cachedNumberResult(source, candidateKey);
-  if ("error" in result) {
-    return NextResponse.json(
-      { rows: [], error: result.error },
-      {
-        status: result.status,
-        headers: {
-          "Cache-Control": "no-store",
-          "Retry-After": result.status === 504 || result.status === 503 ? "2" : "1",
-        },
-      },
-    );
-  }
-
-  return NextResponse.json({ rows: result.rows }, { headers: responseHeaders() });
+  const target = new URL(
+    `/api/result-number/${encodeURIComponent(sourceToToken(source))}/${encodeURIComponent(candidateKey)}`,
+    request.url,
+  );
+  const response = NextResponse.redirect(target, 307);
+  Object.entries(noStoreHeaders()).forEach(([key, value]) => response.headers.set(key, value));
+  response.headers.set("X-Mauri-Search", "NUMBER-REDIRECT");
+  return response;
 }
