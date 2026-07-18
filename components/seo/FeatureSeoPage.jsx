@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const SITE_URL = "https://mauriresults.vercel.app";
+const SITE_URL = "https://mauri-results.vercel.app";
 
 export default function FeatureSeoPage({ slug, title, eyebrow, intro, ctaLabel, ctaHash, sections }) {
   const pageUrl = `${SITE_URL}/${slug}`;
