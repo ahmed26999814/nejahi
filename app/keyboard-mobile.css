@@ -1,0 +1,38 @@
+:root {
+  --keyboard-visible-height: 0px;
+}
+
+.mobile-bottom-nav {
+  transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+}
+
+@media (max-width: 767px) {
+  html.keyboard-visible {
+    scroll-padding-bottom: 1rem;
+  }
+
+  html.keyboard-visible .mobile-bottom-nav {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(120%);
+  }
+
+  html.keyboard-visible .mobile-sticky-search {
+    position: static;
+    bottom: auto;
+    z-index: auto;
+  }
+
+  html.keyboard-visible .search-card,
+  html.keyboard-visible .candidate-filter-box {
+    scroll-margin-top: 5rem;
+    scroll-margin-bottom: calc(var(--keyboard-visible-height) + 2rem);
+  }
+
+  html.keyboard-visible .search-input,
+  html.keyboard-visible .candidate-filter-select {
+    scroll-margin-top: 6rem;
+    scroll-margin-bottom: calc(var(--keyboard-visible-height) + 4rem);
+  }
+}
