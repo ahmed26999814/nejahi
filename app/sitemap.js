@@ -1,15 +1,24 @@
 const siteUrl = "https://mauri-results.vercel.app";
 
+const routes = [
+  { path: "", changeFrequency: "daily", priority: 1 },
+  { path: "/toppers", changeFrequency: "daily", priority: 0.9 },
+  { path: "/statistics", changeFrequency: "daily", priority: 0.9 },
+  { path: "/results/bac-mauritanie", changeFrequency: "daily", priority: 0.95 },
+  { path: "/results/brevet-mauritanie", changeFrequency: "daily", priority: 0.95 },
+  { path: "/results/concours-mauritanie", changeFrequency: "daily", priority: 0.95 },
+  { path: "/results/excellence-mauritanie", changeFrequency: "daily", priority: 0.9 },
+  { path: "/lessons", changeFrequency: "weekly", priority: 0.7 },
+  { path: "/calculator", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/Apk/", changeFrequency: "weekly", priority: 0.7 },
+];
+
 export default function sitemap() {
-  return [
-    { url: siteUrl },
-    { url: `${siteUrl}/toppers` },
-    { url: `${siteUrl}/statistics` },
-    { url: `${siteUrl}/lessons` },
-    { url: `${siteUrl}/calculator` },
-    { url: `${siteUrl}/results/bac-mauritanie` },
-    { url: `${siteUrl}/results/brevet-mauritanie` },
-    { url: `${siteUrl}/results/concours-mauritanie` },
-    { url: `${siteUrl}/results/excellence-mauritanie` },
-  ];
+  const lastModified = new Date();
+  return routes.map(({ path, changeFrequency, priority }) => ({
+    url: `${siteUrl}${path}`,
+    lastModified,
+    changeFrequency,
+    priority,
+  }));
 }
