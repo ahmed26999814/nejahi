@@ -1,6 +1,6 @@
 import FeatureSeoPage from "../../components/seo/FeatureSeoPage";
 
-const url = "https://mauriresults.vercel.app/toppers";
+const url = "https://mauri-results.vercel.app/toppers";
 
 export const metadata = {
   title: "أوائل البكالوريا وابريفه والكونكور في موريتانيا 2026",
