@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isPublicResultSource } from "../../../../../lib/publishedSourceAccess";
 import {
   candidateShardKey,
   normalizeCandidateNumber,
@@ -46,6 +47,13 @@ export async function GET(
     return NextResponse.json(
       { rows: [], error: "Candidate number must contain digits only" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  if (!(await isPublicResultSource(source))) {
+    return NextResponse.json(
+      { rows: [], error: "Result source is not published" },
+      { status: 404, headers: { "Cache-Control": "no-store" } },
     );
   }
 
