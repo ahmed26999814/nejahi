@@ -1,4 +1,10 @@
+import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
+import {
+  DASHBOARD_CACHE_TAG,
+  dashboardSourceTag,
+} from "../../../lib/cacheTags";
+import { isPublicResultSource } from "../../../lib/publishedSourceAccess";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,7 +15,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_P
 const FRESH_MS = 5 * 60 * 1000;
 const STALE_MS = 24 * 60 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 5_000;
-const CACHE_CONTROL = "public, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
+const CACHE_CONTROL = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
 const REQUIRED_APP_VERSION = "3.0.0";
 
 type Dashboard = Record<string, unknown>;
@@ -136,10 +142,21 @@ async function getLegacyDashboard(source: string) {
   };
 }
 
+function cachedDashboard(source: string) {
+  return unstable_cache(
+    () => source.startsWith("upload:") ? getUploadedDashboard(source) : getLegacyDashboard(source),
+    ["mauriresults-published-dashboard-v2", source],
+    {
+      revalidate: 300,
+      tags: [DASHBOARD_CACHE_TAG, dashboardSourceTag(source)],
+    },
+  )();
+}
+
 function loadDashboard(source: string) {
   const existing = inFlight.get(source);
   if (existing) return existing;
-  const request = (source.startsWith("upload:") ? getUploadedDashboard(source) : getLegacyDashboard(source))
+  const request = cachedDashboard(source)
     .then((data) => {
       memoryCache.set(source, { data, createdAt: Date.now() });
       return data;
@@ -155,6 +172,7 @@ function json(data: Dashboard, cacheStatus: string) {
       "Cache-Control": CACHE_CONTROL,
       "CDN-Cache-Control": CACHE_CONTROL,
       "Vercel-CDN-Cache-Control": CACHE_CONTROL,
+      "Netlify-CDN-Cache-Control": CACHE_CONTROL,
       "X-Mauri-Cache": cacheStatus,
       Vary: "X-MauriResults-Client, Accept-Encoding",
     },
@@ -184,17 +202,20 @@ export async function GET(request: Request) {
   if (!source.startsWith("upload:") && !LEGACY_VIEWS[source]) {
     return NextResponse.json({ error: "Invalid source" }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
+  if (!(await isPublicResultSource(source))) {
+    return NextResponse.json({ error: "Result source is not published" }, { status: 404, headers: { "Cache-Control": "no-store" } });
+  }
 
   const cached = memoryCache.get(source);
   const age = cached ? Date.now() - cached.createdAt : Infinity;
-  if (cached && age < FRESH_MS) return json(cached.data, "HIT");
+  if (cached && age < FRESH_MS) return json(cached.data, "MEMORY-HIT");
   if (cached && age < STALE_MS) {
     void loadDashboard(source).catch(() => undefined);
-    return json(cached.data, "STALE");
+    return json(cached.data, "MEMORY-STALE");
   }
 
   try {
-    return json(await loadDashboard(source), "MISS");
+    return json(await loadDashboard(source), "DATA-CACHE");
   } catch {
     if (cached) return json(cached.data, "STALE-IF-ERROR");
     return NextResponse.json(
