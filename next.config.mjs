@@ -53,6 +53,7 @@ if (publicSupabaseAnonKey) {
 
 const RESULT_CACHE = "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=604800";
 const NO_STORE = "no-store, max-age=0";
+const PRIVATE_RESULT_ROBOTS = "noindex, nofollow, noarchive";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -98,6 +99,16 @@ const nextConfig = {
   },
   async headers() {
     return [
+      {
+        source: "/",
+        has: [{ type: "query", key: "candidate" }],
+        headers: [{ key: "X-Robots-Tag", value: PRIVATE_RESULT_ROBOTS }],
+      },
+      {
+        source: "/",
+        has: [{ type: "query", key: "source" }],
+        headers: [{ key: "X-Robots-Tag", value: PRIVATE_RESULT_ROBOTS }],
+      },
       {
         source: "/apk/MauriResults.apk",
         headers: [
