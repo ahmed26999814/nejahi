@@ -5,8 +5,15 @@ import { useEffect, useRef, useState } from "react";
 const SESSION_KEY = "mauriresults_online_session_v2";
 const LAST_HEARTBEAT_KEY = "mauriresults_online_last_heartbeat";
 const CACHED_ONLINE_KEY = "mauriresults_online_cached_count";
-const HEARTBEAT_MS = 5 * 60 * 1000;
-const SHARED_THROTTLE_MS = 90 * 1000;
+const INITIAL_DELAY_MIN_MS = 60 * 1000;
+const INITIAL_DELAY_MAX_MS = 8 * 60 * 1000;
+const HEARTBEAT_MIN_MS = 7.5 * 60 * 1000;
+const HEARTBEAT_MAX_MS = 8.5 * 60 * 1000;
+const SHARED_THROTTLE_MS = 7 * 60 * 1000;
+
+function randomBetween(minimum, maximum) {
+  return minimum + Math.floor(Math.random() * Math.max(1, maximum - minimum));
+}
 
 function getSessionId() {
   const stored = localStorage.getItem(SESSION_KEY);
@@ -29,6 +36,12 @@ function OnlineIcon() {
 function cachedOnline() {
   const value = Number(localStorage.getItem(CACHED_ONLINE_KEY));
   return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+function rememberOnline(value) {
+  const nextOnline = Number(value) || 0;
+  localStorage.setItem(CACHED_ONLINE_KEY, String(nextOnline));
+  return nextOnline;
 }
 
 export default function OnlineUsersCounter() {
@@ -57,15 +70,49 @@ export default function OnlineUsersCounter() {
 
   useEffect(() => {
     if (!active) return undefined;
+
     let stopped = false;
+    let heartbeatTimer;
+    const countController = new AbortController();
     const sessionId = getSessionId();
 
+    function updateOnline(value) {
+      const nextOnline = rememberOnline(value);
+      if (!stopped) setOnline(nextOnline);
+    }
+
+    fetch("/api/online", {
+      method: "GET",
+      signal: countController.signal,
+      headers: { Accept: "application/json" },
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Online counter failed");
+        updateOnline(data.online);
+      })
+      .catch((error) => {
+        if (error?.name !== "AbortError") console.warn("[MauriResults Online Count]", error);
+      });
+
+    function scheduleHeartbeat(delay) {
+      window.clearTimeout(heartbeatTimer);
+      heartbeatTimer = window.setTimeout(heartbeat, Math.max(1_000, delay));
+    }
+
     async function heartbeat() {
-      if (document.visibilityState === "hidden") return;
+      if (stopped) return;
+      if (document.visibilityState !== "visible") {
+        scheduleHeartbeat(60 * 1000);
+        return;
+      }
+
       const lastHeartbeat = Number(localStorage.getItem(LAST_HEARTBEAT_KEY)) || 0;
-      if (Date.now() - lastHeartbeat < SHARED_THROTTLE_MS) {
-        const cached = cachedOnline();
-        if (!stopped && cached !== null) setOnline(cached);
+      const elapsed = Date.now() - lastHeartbeat;
+      if (elapsed < SHARED_THROTTLE_MS) {
+        scheduleHeartbeat(
+          SHARED_THROTTLE_MS - elapsed + randomBetween(15 * 1000, 45 * 1000),
+        );
         return;
       }
 
@@ -74,39 +121,42 @@ export default function OnlineUsersCounter() {
         const response = await fetch("/api/online", {
           method: "POST",
           cache: "no-store",
+          keepalive: true,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sessionId }),
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Online counter failed");
-        const nextOnline = Number(data.online) || 0;
-        localStorage.setItem(CACHED_ONLINE_KEY, String(nextOnline));
-        if (!stopped) setOnline(nextOnline);
+        if (!response.ok) throw new Error(data.error || "Online heartbeat failed");
+        updateOnline(data.online);
       } catch (error) {
         localStorage.removeItem(LAST_HEARTBEAT_KEY);
-        console.warn("[MauriResults Online]", error);
+        if (!stopped) console.warn("[MauriResults Online Heartbeat]", error);
+      } finally {
+        if (!stopped) {
+          scheduleHeartbeat(randomBetween(HEARTBEAT_MIN_MS, HEARTBEAT_MAX_MS));
+        }
       }
     }
 
-    heartbeat();
-    const interval = window.setInterval(heartbeat, HEARTBEAT_MS);
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") heartbeat();
-    };
+    const lastHeartbeat = Number(localStorage.getItem(LAST_HEARTBEAT_KEY)) || 0;
+    const elapsed = Date.now() - lastHeartbeat;
+    const initialDelay = elapsed < SHARED_THROTTLE_MS
+      ? SHARED_THROTTLE_MS - elapsed + randomBetween(15 * 1000, 45 * 1000)
+      : randomBetween(INITIAL_DELAY_MIN_MS, INITIAL_DELAY_MAX_MS);
+    scheduleHeartbeat(initialDelay);
+
     const onStorage = (event) => {
       if (event.key === CACHED_ONLINE_KEY) {
         const cached = cachedOnline();
         if (!stopped && cached !== null) setOnline(cached);
       }
     };
-
-    document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("storage", onStorage);
 
     return () => {
       stopped = true;
-      window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisibility);
+      countController.abort();
+      window.clearTimeout(heartbeatTimer);
       window.removeEventListener("storage", onStorage);
     };
   }, [active]);
