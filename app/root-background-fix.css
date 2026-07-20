@@ -1,0 +1,20 @@
+html,
+body {
+  min-height: 100%;
+  background-color: #fbfdf8;
+}
+
+html.dark,
+html.dark body,
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+  background-color: #06120c;
+}
+
+@media (max-width: 767px) {
+  html,
+  body {
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+  }
+}
