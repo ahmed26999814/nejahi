@@ -110,7 +110,7 @@
   font-weight:950;
   text-decoration:none;
   white-space:nowrap;
-  transition:transform .18s ease,background .18s ease
+  transition:transform .18s ease,background .18s ease,box-shadow .18s ease
 }
 
 .bac-release-notice-link:hover{
@@ -119,6 +119,25 @@
 
 .bac-release-notice-link:active{
   transform:scale(.97)
+}
+
+.bac-release-notice-link-alert{
+  min-height:36px;
+  border-color:rgba(254,240,138,.86);
+  background:linear-gradient(135deg,#fde047 0%,#fbbf24 52%,#f59e0b 100%);
+  color:#3f2500;
+  font-size:11px;
+  box-shadow:0 8px 22px rgba(245,158,11,.34),inset 0 1px 0 rgba(255,255,255,.62)
+}
+
+.bac-release-notice-link-alert:hover{
+  background:linear-gradient(135deg,#fef08a 0%,#facc15 52%,#f59e0b 100%);
+  box-shadow:0 10px 26px rgba(245,158,11,.44),inset 0 1px 0 rgba(255,255,255,.72)
+}
+
+.bac-release-notice-link-alert:focus-visible{
+  outline:3px solid rgba(254,240,138,.42);
+  outline-offset:2px
 }
 
 .bac-release-notice-live{
@@ -182,6 +201,12 @@
     min-height:32px;
     padding:0 10px;
     font-size:9px
+  }
+
+  .bac-release-notice-link-alert{
+    min-height:34px;
+    padding:0 12px;
+    font-size:10px
   }
 
   .bac-release-countdown-finished{
