@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 5;
 export const preferredRegion = ["cdg1"];
 
-const CACHE_CONTROL = "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=604800";
+const CACHE_CONTROL = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
 const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
 
 function clean(value: string, maxLength = 160) {
@@ -22,7 +22,7 @@ const cachedCentreShard = unstable_cache(
   async (source: string, wilaya: string, moughataa: string, centre: string) =>
     fetchCentreShard(source, wilaya, moughataa, centre),
   ["mauriresults-centre-shard-v1"],
-  { revalidate: 86_400, tags: [SEARCH_CACHE_TAG] },
+  { revalidate: 300, tags: [SEARCH_CACHE_TAG] },
 );
 
 export async function GET(
