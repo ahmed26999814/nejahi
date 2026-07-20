@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
+import { PUBLIC_EXAMS_CACHE_TAG } from "../../../lib/cacheTags";
 import { LEGACY_2025_EXAMS } from "../../../lib/legacyExamCatalog";
 
 export const runtime = "nodejs";
@@ -113,8 +114,8 @@ async function fetchPublishedExamsUncached(): Promise<{ rows: Array<Record<strin
 
 const fetchPublishedExams = unstable_cache(
   fetchPublishedExamsUncached,
-  ["mauriresults-public-exams-v3"],
-  { revalidate: 60 }
+  ["mauriresults-public-exams-v4"],
+  { revalidate: 60, tags: [PUBLIC_EXAMS_CACHE_TAG] }
 );
 
 function mobileCatalog(uploadedRows: ReadonlyArray<Record<string, unknown>>) {
