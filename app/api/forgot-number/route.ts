@@ -1,4 +1,9 @@
+import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
+import {
+  FILTER_CACHE_TAG,
+  filterSourceTag,
+} from "../../../lib/cacheTags";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -6,7 +11,8 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const REQUEST_TIMEOUT_MS = 5_000;
-const OPTIONS_CACHE = "public, s-maxage=1800, stale-while-revalidate=86400, stale-if-error=86400";
+const OPTIONS_CACHE = "public, max-age=60, s-maxage=1800, stale-while-revalidate=86400, stale-if-error=86400";
+const CANDIDATES_CACHE = "public, max-age=30, s-maxage=300, stale-while-revalidate=3600, stale-if-error=86400";
 
 function clean(value: unknown, maxLength = 160) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, maxLength);
@@ -36,6 +42,66 @@ function isAllowedSource(source: string) {
     || /^upload:[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(source);
 }
 
+function cachedFilterOptions(
+  source: string,
+  level: string,
+  track: string,
+  wilaya: string,
+  centre: string,
+) {
+  return unstable_cache(
+    () => rpc("get_exam_filter_options", {
+      p_source_key: source,
+      p_level: level,
+      p_track: track || null,
+      p_wilaya: wilaya || null,
+      p_centre: centre || null,
+    }),
+    ["mauriresults-exam-filter-options-v2", source, level, track, wilaya, centre],
+    {
+      revalidate: 1800,
+      tags: [FILTER_CACHE_TAG, filterSourceTag(source)],
+    },
+  )();
+}
+
+function cachedCandidates(
+  source: string,
+  track: string,
+  wilaya: string,
+  centre: string,
+  school: string,
+) {
+  return unstable_cache(
+    async () => {
+      const rows = await rpc("find_exam_candidates_by_filters", {
+        p_source_key: source,
+        p_track: track || null,
+        p_wilaya: wilaya || null,
+        p_centre: centre || null,
+        p_school: school || null,
+        p_name: null,
+      });
+      return Array.isArray(rows) ? rows.slice(0, 250) : [];
+    },
+    ["mauriresults-exam-filter-candidates-v2", source, track, wilaya, centre, school],
+    {
+      revalidate: 300,
+      tags: [FILTER_CACHE_TAG, filterSourceTag(source)],
+    },
+  )();
+}
+
+function publicHeaders(cacheControl: string) {
+  return {
+    "Cache-Control": cacheControl,
+    "CDN-Cache-Control": cacheControl,
+    "Vercel-CDN-Cache-Control": cacheControl,
+    "Netlify-CDN-Cache-Control": cacheControl,
+    Vary: "Accept-Encoding",
+  };
+}
+
 export async function GET(request: Request) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return NextResponse.json({ error: "Missing Supabase variables" }, { status: 500 });
@@ -60,17 +126,10 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Invalid level" }, { status: 400, headers: { "Cache-Control": "no-store" } });
       }
 
-      const rows = await rpc("get_exam_filter_options", {
-        p_source_key: source,
-        p_level: level,
-        p_track: track || null,
-        p_wilaya: wilaya || null,
-        p_centre: centre || null,
-      });
-
+      const rows = await cachedFilterOptions(source, level, track, wilaya, centre);
       return NextResponse.json(
         { options: Array.isArray(rows) ? rows : [] },
-        { headers: { "Cache-Control": OPTIONS_CACHE, "CDN-Cache-Control": OPTIONS_CACHE, "Vercel-CDN-Cache-Control": OPTIONS_CACHE } },
+        { headers: publicHeaders(OPTIONS_CACHE) },
       );
     }
 
@@ -81,18 +140,10 @@ export async function GET(request: Request) {
       );
     }
 
-    const rows = await rpc("find_exam_candidates_by_filters", {
-      p_source_key: source,
-      p_track: track || null,
-      p_wilaya: wilaya || null,
-      p_centre: centre || null,
-      p_school: school || null,
-      p_name: null,
-    });
-
+    const rows = await cachedCandidates(source, track, wilaya, centre, school);
     return NextResponse.json(
-      { candidates: Array.isArray(rows) ? rows.slice(0, 250) : [] },
-      { headers: { "Cache-Control": "no-store" } },
+      { candidates: rows },
+      { headers: publicHeaders(CANDIDATES_CACHE) },
     );
   } catch (error) {
     const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
