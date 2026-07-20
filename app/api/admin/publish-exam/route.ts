@@ -2,6 +2,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import {
   PUBLIC_EXAMS_CACHE_TAG,
+  dashboardSourceTag,
   filterSourceTag,
   searchSourceTag,
 } from "../../../../lib/cacheTags";
@@ -51,6 +52,13 @@ function wait(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+function invalidateSourceCaches(sourceKey: string) {
+  revalidateTag(PUBLIC_EXAMS_CACHE_TAG);
+  revalidateTag(searchSourceTag(sourceKey));
+  revalidateTag(filterSourceTag(sourceKey));
+  revalidateTag(dashboardSourceTag(sourceKey));
+}
+
 async function supabaseFetch(url: URL, init: RequestInit = {}) {
   return fetch(url, {
     ...init,
@@ -77,6 +85,25 @@ async function getExistingPublication(tableName: string) {
   return Array.isArray(rows) && rows.length ? rows[0] as Record<string, unknown> : null;
 }
 
+async function deletePreparedSource(tableName: string, sourceKey: string) {
+  const metadataUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+  metadataUrl.searchParams.set("table_name", `eq.${tableName}`);
+  const metadataResponse = await supabaseFetch(metadataUrl, { method: "DELETE" });
+  if (!metadataResponse.ok) throw new Error((await metadataResponse.text()).slice(0, 500));
+
+  const lookupUrl = new URL(`${SUPABASE_URL}/rest/v1/result_number_lookup`);
+  lookupUrl.searchParams.set("source_key", `eq.${sourceKey}`);
+  const lookupResponse = await supabaseFetch(lookupUrl, { method: "DELETE" });
+  if (!lookupResponse.ok) throw new Error((await lookupResponse.text()).slice(0, 500));
+
+  const dashboardUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exam_dashboard_cache`);
+  dashboardUrl.searchParams.set("source_key", `eq.${sourceKey}`);
+  const dashboardResponse = await supabaseFetch(dashboardUrl, { method: "DELETE" });
+  if (!dashboardResponse.ok && dashboardResponse.status !== 404) {
+    throw new Error((await dashboardResponse.text()).slice(0, 500));
+  }
+}
+
 async function rollbackPublication(
   tableName: string,
   sourceKey: string,
@@ -91,25 +118,36 @@ async function rollbackPublication(
         headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" },
         body: JSON.stringify(existing),
       });
-      if (!response.ok) return { ok: false, error: (await response.text()).slice(0, 500) };
-    } else {
-      const metadataUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
-      metadataUrl.searchParams.set("table_name", `eq.${tableName}`);
-      const metadataResponse = await supabaseFetch(metadataUrl, { method: "DELETE" });
-      if (!metadataResponse.ok) return { ok: false, error: (await metadataResponse.text()).slice(0, 500) };
+      if (!response.ok) throw new Error((await response.text()).slice(0, 500));
 
-      const lookupUrl = new URL(`${SUPABASE_URL}/rest/v1/result_number_lookup`);
-      lookupUrl.searchParams.set("source_key", `eq.${sourceKey}`);
-      const lookupResponse = await supabaseFetch(lookupUrl, { method: "DELETE" });
-      if (!lookupResponse.ok) return { ok: false, error: (await lookupResponse.text()).slice(0, 500) };
+      const analytics = await refreshDashboard(sourceKey);
+      if (!analytics.ok) throw new Error(analytics.error);
+      const lookup = await refreshNumberLookup(sourceKey);
+      if (!lookup.ok) throw new Error(lookup.error);
+
+      invalidateSourceCaches(sourceKey);
+      if (existing.is_active) {
+        const restoredWarmup = await warmExamSearchCache(
+          sourceKey,
+          safeSearchMode(existing.search_mode),
+          60_000,
+        );
+        if (!restoredWarmup.ok) {
+          return { ok: false, restored: true, error: "Previous publication was restored but its cache warmup was incomplete.", warmup: restoredWarmup };
+        }
+      }
+    } else {
+      await deletePreparedSource(tableName, sourceKey);
+      invalidateSourceCaches(sourceKey);
     }
 
-    revalidateTag(PUBLIC_EXAMS_CACHE_TAG);
-    revalidateTag(searchSourceTag(sourceKey));
-    revalidateTag(filterSourceTag(sourceKey));
-    return { ok: true };
+    revalidatePath("/");
+    revalidatePath("/statistics");
+    revalidatePath("/toppers");
+    return { ok: true, restored: Boolean(existing) };
   } catch (error) {
-    return { ok: false, error: String(error).slice(0, 500) };
+    invalidateSourceCaches(sourceKey);
+    return { ok: false, error: String(error).slice(0, 700) };
   }
 }
 
@@ -272,7 +310,7 @@ export async function POST(request: Request) {
       birth_date_column: safeColumn(body.birthDateColumn),
       ranked_view: tableName,
       total_rows: expectedRows,
-      is_active: Boolean(existingPublication?.is_active),
+      is_active: false,
     };
 
     const prepared = await validatePreparedExam(row, expectedRows);
@@ -289,6 +327,8 @@ export async function POST(request: Request) {
     const text = await response.text();
     if (!response.ok) return json(response.status, { ok: false, error: text.replace(/\s+/g, " ").slice(0, 700) });
     staged = true;
+    invalidateSourceCaches(sourceKey);
+    revalidatePath("/");
 
     const analytics = await refreshDashboard(sourceKey);
     if (!analytics.ok) {
@@ -315,6 +355,7 @@ export async function POST(request: Request) {
     }
 
     revalidateTag(searchSourceTag(sourceKey));
+    revalidateTag(dashboardSourceTag(sourceKey));
     const elapsedBeforeWarmup = Date.now() - publishStarted;
     const warmupBudget = SAFE_FUNCTION_BUDGET_MS - elapsedBeforeWarmup;
     if (warmupBudget < 15_000) {
@@ -359,8 +400,7 @@ export async function POST(request: Request) {
       });
     }
 
-    revalidateTag(PUBLIC_EXAMS_CACHE_TAG);
-    revalidateTag(filterSourceTag(sourceKey));
+    invalidateSourceCaches(sourceKey);
     revalidatePath("/");
     revalidatePath("/statistics");
     revalidatePath("/toppers");
