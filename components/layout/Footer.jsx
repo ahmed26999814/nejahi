@@ -16,6 +16,8 @@ export default function Footer({ content = {}, onNavigate, text }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
   const [appMode, setAppMode] = useState(null);
   const footerBanner = contentValue(content, "footer_banner");
+  const developerLabel = contentValue(content, "ui_label_developer", "الإعداد والتطوير");
+  const developerName = contentValue(content, "developer_name", "Ahmed abdellahi mady");
   const showVisitors = contentValue(content, "ui_show_visitors", "true") !== "false";
   const showOnline = contentValue(content, "ui_show_online", "true") !== "false";
   const isApp = appMode === true;
@@ -34,8 +36,8 @@ export default function Footer({ content = {}, onNavigate, text }) {
           <button className="footer-action-card footer-action-developer active:scale-[.98]" onClick={() => setDeveloperOpen(true)} type="button" data-control-key="developer" data-haptic>
             <span className="footer-action-icon"><CodeIcon /></span>
             <span className="min-w-0 text-start">
-              <strong data-control-label>الإعداد والتطوير</strong>
-              {isWeb && <small>معلومات مطوّر المنصة</small>}
+              <strong data-control-label>{developerLabel}</strong>
+              <small>{developerName}</small>
             </span>
             {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
           </button>
