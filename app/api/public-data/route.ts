@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const REQUEST_TIMEOUT_MS = 8_000;
-const PUBLIC_CACHE = "public, s-maxage=300, stale-while-revalidate=86400";
-const LIVE_CONTENT_CACHE = "private, no-store, max-age=0";
+const PUBLIC_CACHE = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
+const SITE_CONTENT_CACHE = "public, max-age=30, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400";
 
 const RESOURCE_LIMITS: Record<string, number> = {
   site_content: 1000,
@@ -78,8 +78,14 @@ async function fetchResource(resource: string) {
 
 const cachedResource = unstable_cache(
   async (resource: string) => fetchResource(resource),
-  ["mauriresults-public-data-v1"],
+  ["mauriresults-public-data-v2"],
   { revalidate: 300 }
+);
+
+const cachedSiteContent = unstable_cache(
+  async () => fetchResource("site_content"),
+  ["mauriresults-site-content-v1"],
+  { revalidate: 60 }
 );
 
 export async function GET(request: Request) {
@@ -89,16 +95,17 @@ export async function GET(request: Request) {
   }
 
   try {
-    const isLiveSiteContent = resource === "site_content";
-    const rows = isLiveSiteContent
-      ? await fetchResource(resource)
+    const isSiteContent = resource === "site_content";
+    const rows = isSiteContent
+      ? await cachedSiteContent()
       : await cachedResource(resource);
-    const cacheControl = isLiveSiteContent ? LIVE_CONTENT_CACHE : PUBLIC_CACHE;
+    const cacheControl = isSiteContent ? SITE_CONTENT_CACHE : PUBLIC_CACHE;
 
     return NextResponse.json(rows, {
       headers: {
         "Cache-Control": cacheControl,
         "CDN-Cache-Control": cacheControl,
+        "Vercel-CDN-Cache-Control": cacheControl,
         Vary: "Accept-Encoding",
       },
     });
