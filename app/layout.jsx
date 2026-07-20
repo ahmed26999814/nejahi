@@ -23,48 +23,44 @@ export const metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: "MauriResults",
   title: {
-    default: "نتائج البكالوريا موريتانيا 2026 برقم المترشح | MauriResults",
+    default: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
     template: "%s | MauriResults",
   },
   description:
-    "نتائج البكالوريا والبريفيه والكونكور في موريتانيا 2026 برقم المترشح عبر MauriResults، مع الأوائل ونسبة النجاح وأعلى معدل والنتائج حسب الولاية والشعبة.",
+    "تابع نتائج باكالوريا 2026 فور صدورها الرسمية، وابحث عن نتائج ابريفه وكونكور وبقية المسابقات الوطنية في موريتانيا بسرعة عبر MauriResults.",
   keywords: [
     "MauriResults",
     "Mauri Results",
     "Mauri Bac",
-    "MauriBAC",
     "موري باك",
     "نتائج موريتانيا",
     "نتائج المسابقات الوطنية موريتانيا 2026",
-    "نتائج البكالوريا موريتانيا",
-    "نتائج البكالوريا موريتانيا 2026",
-    "نتائج البكالوريا 2026 برقم المترشح",
     "نتائج باكالوريا موريتانيا 2026",
+    "نتائج باكالوريا 2026 برقم المترشح",
+    "نتائج البكالوريا موريتانيا 2026",
     "نتائج الباك موريتانيا 2026",
-    "رابط نتائج البكالوريا موريتانيا 2026",
-    "موعد نتائج البكالوريا موريتانيا 2026",
-    "لوائح البكالوريا موريتانيا 2026",
-    "أوائل البكالوريا موريتانيا 2026",
-    "نسبة النجاح في البكالوريا 2026",
-    "أعلى معدل في البكالوريا موريتانيا",
-    "نتائج البكالوريا حسب الولاية",
-    "نتائج البكالوريا حسب الشعبة",
-    "لوائح الناجحين PDF",
-    "البكالوريا الدورة التكميلية 2026",
-    "نتائج أبريفه موريتانيا",
-    "أبريفه 2026",
-    "نتائج البريفيه موريتانيا",
-    "نتائج البريفيه 2026",
+    "رابط نتائج باكالوريا موريتانيا 2026",
+    "موعد نتائج باكالوريا موريتانيا 2026",
+    "لوائح باكالوريا موريتانيا 2026",
+    "أوائل باكالوريا موريتانيا 2026",
+    "نسبة النجاح في باكالوريا 2026",
+    "أعلى معدل في باكالوريا موريتانيا",
+    "نتائج باكالوريا حسب الولاية",
+    "نتائج باكالوريا حسب الشعبة",
+    "باكالوريا الدورة التكميلية 2026",
+    "نتائج ابريفه موريتانيا",
+    "نتائج ابريفه 2026",
+    "ابريفه 2026",
     "نتائج كونكور موريتانيا",
-    "نتائج الكونكور 2026",
+    "نتائج كونكور 2026",
     "نتائج الامتياز موريتانيا",
     "نتائج دخول أولى إعدادية موريتانيا",
     "Resultats Bac Mauritanie 2026",
     "Résultats Bac Mauritanie 2026",
     "Résultats Bac Mauritanie par numéro",
-    "Résultats BEPC Mauritanie 2026",
+    "Résultats Brevet Mauritanie 2026",
+    "Brevet Mauritanie 2026",
     "Résultats Concours Mauritanie 2026",
-    "Bac Mauritanie 2026",
     "Concours Mauritanie 2026",
   ],
   authors: [{ name: "Ahmed abdellahi mady" }],
@@ -90,22 +86,22 @@ export const metadata = {
     locale: "ar_MR",
     url: siteUrl,
     siteName: "MauriResults",
-    title: "نتائج البكالوريا موريتانيا 2026 برقم المترشح | MauriResults",
+    title: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
     description:
-      "ابحث بسرعة عن نتائج البكالوريا والبريفيه والكونكور 2026، وتابع الأوائل ونسبة النجاح وأعلى معدل في موريتانيا.",
+      "نتائج باكالوريا 2026 فور صدورها، مع البحث السريع عن نتائج ابريفه وكونكور وبقية المسابقات الوطنية في موريتانيا.",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 1200,
-        alt: "MauriResults - نتائج موريتانيا 2026",
+        alt: "MauriResults - نتائج المسابقات الوطنية في موريتانيا",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "نتائج البكالوريا موريتانيا 2026 برقم المترشح | MauriResults",
-    description: "بحث سريع برقم المترشح عن نتائج المسابقات الوطنية في موريتانيا 2026.",
+    title: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
+    description: "تابع نتائج باكالوريا 2026 وابحث عن نتائج المسابقات الوطنية بسرعة.",
     images: ["/logo.png"],
   },
   appleWebApp: {
@@ -132,19 +128,40 @@ const themeInitializer = `(function(){try{var key="mauriresults-theme";var saved
 export default function RootLayout({ children }) {
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    name: "MauriResults",
-    alternateName: ["Mauri Results", "Mauri Bac", "موري باك"],
-    url: siteUrl,
-    applicationCategory: "EducationalApplication",
-    operatingSystem: "Web, Android, iOS",
-    inLanguage: ["ar-MR", "fr-MR"],
-    description:
-      "منصة موريتانية للبحث برقم المترشح عن نتائج البكالوريا والبريفيه والكونكور والامتياز 2026، ومتابعة الأوائل والإحصائيات.",
-    creator: {
-      "@type": "Person",
-      name: "Ahmed abdellahi mady",
-    },
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${siteUrl}/#organization`,
+        name: "MauriResults",
+        alternateName: ["Mauri Results", "Mauri Bac", "موري باك"],
+        url: siteUrl,
+        logo: {
+          "@type": "ImageObject",
+          url: `${siteUrl}/logo.png`,
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl}/#website`,
+        name: "MauriResults",
+        alternateName: "Mauri Results",
+        url: siteUrl,
+        publisher: { "@id": `${siteUrl}/#organization` },
+        inLanguage: ["ar-MR", "fr-MR"],
+      },
+      {
+        "@type": "WebApplication",
+        "@id": `${siteUrl}/#webapp`,
+        name: "MauriResults",
+        url: siteUrl,
+        applicationCategory: "EducationalApplication",
+        operatingSystem: "Web, Android, iOS",
+        inLanguage: ["ar-MR", "fr-MR"],
+        description:
+          "منصة موريتانية لمتابعة نتائج باكالوريا والبحث عن نتائج ابريفه وكونكور والامتياز، مع الأوائل والإحصائيات.",
+        publisher: { "@id": `${siteUrl}/#organization` },
+      },
+    ],
   };
 
   return (
@@ -154,7 +171,7 @@ export default function RootLayout({ children }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="results-notice" role="status" aria-live="polite">
           <span className="results-notice-dot" aria-hidden="true" />
-          <span>تم فتح أبريفه والكونكور 2026 — ابحث الآن برقم المترشح</span>
+          <a href="/results/bac/2026">نتائج باكالوريا 2026 قريباً — تابع الصفحة المخصصة</a>
         </div>
         <PublicDataFetchBridge />
         <AppRuntimeShell />
