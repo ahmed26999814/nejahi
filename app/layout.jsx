@@ -14,6 +14,7 @@ import "./bottom-nav-expanded.css";
 import "./root-background-fix.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import PublicDataFetchBridge from "../components/layout/PublicDataFetchBridge";
+import Bac2026CountdownNotice from "../components/layout/Bac2026CountdownNotice";
 import UiEnhancements from "../components/ui/UiEnhancements";
 import BacTopperTrackOrder from "../components/ui/BacTopperTrackOrder";
 import MotivationalVisibility from "../components/ui/MotivationalVisibility";
@@ -171,10 +172,7 @@ export default function RootLayout({ children }) {
       <body className="font-arabic antialiased" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <div className="results-notice" role="status" aria-live="polite">
-          <span className="results-notice-dot" aria-hidden="true" />
-          <a href="/notify/bac-2026">نتائج باكالوريا 2026 قريباً — أخبرني فور صدورها</a>
-        </div>
+        <Bac2026CountdownNotice />
         <PublicDataFetchBridge />
         <AppRuntimeShell />
         <UiEnhancements />
