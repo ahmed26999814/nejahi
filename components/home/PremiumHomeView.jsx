@@ -3,7 +3,6 @@
 import PremiumHero from "../hero/Hero";
 import BackToTopButton from "../ui/BackToTopButton";
 import { contentValue } from "../common/content";
-import InstallAppCard from "./InstallAppCard";
 import PremiumSiteBanner from "./PremiumSiteBanner";
 import YearChoiceCards from "./YearChoiceCards";
 
@@ -19,8 +18,6 @@ export default function PremiumHomeView({
 
   return (
     <section className="app-shell grid gap-5 py-3 md:gap-10 md:py-8">
-      <InstallAppCard />
-
       <PremiumHero
         eyebrow="MauriResults"
         title={text.heroTitle}
