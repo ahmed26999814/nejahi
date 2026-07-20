@@ -1,5 +1,10 @@
+import AdminSecretStorageBridge from "../../components/admin/AdminSecretStorageBridge";
 import ContentAdminApplication from "../../components/admin/ContentAdminApplication";
 
 export default function AdminPage() {
-  return <ContentAdminApplication />;
+  return (
+    <AdminSecretStorageBridge>
+      <ContentAdminApplication />
+    </AdminSecretStorageBridge>
+  );
 }

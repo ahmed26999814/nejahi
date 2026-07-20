@@ -19,13 +19,27 @@ export async function compressAdminImage(file) {
 }
 
 export async function adminFetch(path, secret, options = {}) {
-  const response = await fetch(path, {
-    ...options,
-    headers: { "x-admin-secret": secret, ...(options.headers || {}) },
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+
+  try {
+    const response = await fetch(path, {
+      ...options,
+      cache: "no-store",
+      signal: options.signal || controller.signal,
+      headers: { "x-admin-secret": secret, ...(options.headers || {}) },
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Request failed");
+    return data;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("انتهت مهلة الاتصال. أعد المحاولة.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function uploadAdminImage({ file, item, previousPath, secret, onProgress }) {
@@ -37,6 +51,7 @@ export function uploadAdminImage({ file, item, previousPath, secret, onProgress 
     if (previousPath) form.append("previous_path", previousPath);
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/admin/upload");
+    xhr.timeout = 60_000;
     xhr.setRequestHeader("x-admin-secret", secret);
     xhr.upload.onprogress = (event) => event.lengthComputable && onProgress(Math.round((event.loaded / event.total) * 100));
     xhr.onload = () => {
@@ -47,6 +62,7 @@ export function uploadAdminImage({ file, item, previousPath, secret, onProgress 
       } catch (error) { reject(error); }
     };
     xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.ontimeout = () => reject(new Error("انتهت مهلة رفع الصورة. أعد المحاولة."));
     xhr.send(form);
   });
 }
