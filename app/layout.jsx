@@ -10,6 +10,7 @@ import "./online-counter.css";
 import "./dashboard-reference.css";
 import "./dashboard-mobile.css";
 import "./results-notice.css";
+import "./bottom-nav-expanded.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import PublicDataFetchBridge from "../components/layout/PublicDataFetchBridge";
 import UiEnhancements from "../components/ui/UiEnhancements";
@@ -171,7 +172,7 @@ export default function RootLayout({ children }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="results-notice" role="status" aria-live="polite">
           <span className="results-notice-dot" aria-hidden="true" />
-          <a href="/results/bac/2026">نتائج باكالوريا 2026 قريباً — تابع الصفحة المخصصة</a>
+          <a href="/notify/bac-2026">نتائج باكالوريا 2026 قريباً — أخبرني فور صدورها</a>
         </div>
         <PublicDataFetchBridge />
         <AppRuntimeShell />
