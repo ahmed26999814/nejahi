@@ -160,7 +160,7 @@ export default function Bac2026CountdownNotice() {
           </span>
         )}
 
-        <Link href="/notify/bac-2026" className="bac-release-notice-link">
+        <Link href="/notify/bac-2026" className="bac-release-notice-link bac-release-notice-link-alert">
           أخبرني
         </Link>
       </div>
