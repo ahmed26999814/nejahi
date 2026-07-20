@@ -21,6 +21,12 @@ const DEFAULTS = {
   ui_label_developer: "الإعداد والتطوير",
 };
 
+const TERMINOLOGY_REPLACEMENTS = [
+  ["البريفيه", "ابريفه"],
+  ["أبريفه", "ابريفه"],
+  ["BEPC", "Brevet"],
+];
+
 function cachedControls() {
   try {
     const parsed = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
@@ -60,6 +66,18 @@ function labelFor(key, controls) {
   return controls[`ui_label_${key}`] || DEFAULTS[`ui_label_${key}`] || "";
 }
 
+function applyTerminology() {
+  document.querySelectorAll("strong, small, h1, h2, h3, p, span, a, button").forEach((element) => {
+    if (element.childElementCount > 0) return;
+    const current = element.textContent || "";
+    const next = TERMINOLOGY_REPLACEMENTS.reduce(
+      (value, [from, to]) => value.replaceAll(from, to),
+      current,
+    );
+    if (next !== current) element.textContent = next;
+  });
+}
+
 function applyControls(controls) {
   const keys = ["search", "toppers", "analytics", "calculator", "contact", "developer"];
   for (const key of keys) {
@@ -75,6 +93,7 @@ function applyControls(controls) {
   document.querySelectorAll(".footer-action-contact").forEach((element) => setVisible(element, controls.ui_show_contact !== "false"));
   document.querySelectorAll(".footer-action-developer").forEach((element) => setVisible(element, controls.ui_show_developer !== "false"));
   document.querySelectorAll("footer").forEach((element) => setVisible(element, controls.ui_show_footer !== "false"));
+  applyTerminology();
   document.documentElement.dataset.siteControlsReady = "true";
 }
 
