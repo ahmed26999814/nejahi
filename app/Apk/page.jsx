@@ -4,15 +4,15 @@ import "./apk.css";
 import "./apk-state.css";
 
 export const metadata = {
-  title: "تحديث MauriResults 3.0.0 للأندرويد",
-  description: "نزّل تحديث MauriResults الجديد المبني بـ Flutter. تم إيقاف النسخ القديمة.",
-  alternates: { canonical: "https://mauriresults.vercel.app/Apk/" },
+  title: "تحديث MauriResults 3.1.0 للأندرويد",
+  description: "نزّل النسخة الجديدة من تطبيق MauriResults. تم إيقاف الإصدار 3.0.0 وجميع النسخ الأقدم.",
+  alternates: { canonical: "https://mauri-results.vercel.app/Apk/" },
 };
 
 const HIGHLIGHTS = [
-  { icon: "⚡", title: "أسرع وأخف", text: "تطبيق Flutter أصلي بواجهة سريعة للهاتف" },
-  { icon: "⌕", title: "بحث محسن", text: "ابحث بالرقم أو الاسم وجزء من الاسم" },
-  { icon: "◉", title: "يعمل دون إنترنت", text: "المحفوظات والدروس وآخر عمليات البحث" },
+  { icon: "✨", title: "واجهة جديدة", text: "تصميم أجمل وأوضح مع أيقونات وانتقالات خفيفة" },
+  { icon: "✓", title: "تمييز الناجح", text: "بطاقة خاصة وتأثير تهنئة واضح عند النجاح" },
+  { icon: "⚡", title: "سريع وخفيف", text: "تحسينات بصرية دون إضافة مكتبات أو طلبات ثقيلة" },
 ];
 
 export default function ApkDownloadPage() {
@@ -26,20 +26,20 @@ export default function ApkDownloadPage() {
 
         <section className="apk-hero">
           <div className="apk-hero-copy">
-            <span className="apk-kicker">تحديث إجباري جديد · الإصدار 3.0.0</span>
-            <h1>نزّل تطبيق MauriResults الجديد</h1>
-            <p>أعدنا بناء التطبيق بالكامل باستخدام Flutter ليصبح أسرع وأسهل وأكثر استقرارًا. تم إيقاف النسخ القديمة، ويجب تنزيل هذا التحديث لمتابعة استخدام النتائج.</p>
+            <span className="apk-kicker">النسخة الرسمية الجديدة · الإصدار 3.1.0</span>
+            <h1>لديك نسخة قديمة؟ حمّل النسخة الجديدة الآن</h1>
+            <p>تم إيقاف الإصدار 3.0.0 وجميع النسخ الأقدم. نزّل MauriResults 3.1.0 لمتابعة استخدام التطبيق والاستفادة من الواجهة الجديدة وتأثير النجاح المميز.</p>
             <ApkDownload />
-            <p className="apk-safe-note">تحميل مباشر وآمن من الموقع الرسمي · لا يمكن متابعة النسخة القديمة</p>
+            <p className="apk-safe-note">تحميل مباشر وآمن من الموقع الرسمي · جميع الروابط القديمة تحوّلك إلى أحدث نسخة</p>
           </div>
 
           <div className="apk-phone" aria-hidden="true">
             <div className="apk-phone-top"><span>13:54</span><span>● ● ●</span></div>
             <div className="apk-phone-body">
-              <div className="apk-mini-brand"><img src="/logo.png" alt="" /><div><b>MauriResults</b><small>الإصدار الجديد 3.0</small></div></div>
+              <div className="apk-mini-brand"><img src="/logo.png" alt="" /><div><b>MauriResults</b><small>الإصدار الجديد 3.1</small></div></div>
               <div className="apk-mini-search">ابحث عن نتيجتك بسرعة</div>
-              <div className="apk-mini-grid"><span>النتائج</span><span>المعدل</span><span>الدروس</span><span>المحفوظات</span></div>
-              <div className="apk-mini-card"><b>تحديث جديد</b><small>Flutter · أسرع وأكثر استقرارًا</small></div>
+              <div className="apk-mini-grid"><span>النتائج</span><span>الدروس</span><span>المحفوظات</span><span>الإحصائيات</span></div>
+              <div className="apk-mini-card"><b>مبروك النجاح</b><small>واجهة جديدة وتأثير خاص للناجحين</small></div>
             </div>
           </div>
         </section>
@@ -54,7 +54,7 @@ export default function ApkDownloadPage() {
         </section>
 
         <section className="apk-install-help">
-          <div><strong>طريقة التحديث</strong><p>نزّل الملف وافتحه ثم اضغط تثبيت. عند ظهور تعارض مع النسخة القديمة، احذفها وثبّت الإصدار الجديد.</p></div>
+          <div><strong>طريقة التحديث</strong><p>اضغط زر التحميل ثم افتح الملف واضغط تثبيت. إذا طلب Android تأكيد استبدال النسخة القديمة فوافق على التحديث.</p></div>
           <span aria-hidden="true">1 — 2 — 3</span>
         </section>
 

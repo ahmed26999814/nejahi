@@ -1,14 +1,21 @@
 {
   "name": "MauriResults",
   "package": "com.mauriresults.app",
-  "version": "3.0.0",
-  "versionCode": 300,
+  "version": "3.1.0",
+  "versionCode": 310,
+  "minimumSupportedVersion": "3.1.0",
+  "forceUpdate": true,
+  "blockedVersions": ["2.0.0", "2.1.0", "3.0.0"],
   "minimumAndroid": "7.0",
-  "sizeBytes": 57082129,
-  "sizeMB": 54.44,
-  "sha256": "d6501c095a9a6d3978f7602aed9352f5606e758a2aaad066c119b1080194dbf4",
-  "publishedAt": "2026-07-17T19:33:45.935751+00:00",
+  "sizeBytes": 57099525,
+  "sizeMB": 54.45,
+  "sha256": "2ba464b488c7b4ecd39c6b33ee975ef70bc68991c77e926f64fd6a58c9174ea1",
+  "publishedAt": "2026-07-20T14:23:07Z",
   "download": "/api/apk-download",
+  "downloadUrl": "https://mauri-results.vercel.app/api/apk-download",
   "native": true,
-  "framework": "Flutter + Dart"
+  "framework": "Flutter + Dart",
+  "releaseRequired": true,
+  "messageAr": "نسختك قديمة وتم إيقافها. حمّل MauriResults 3.1.0 للمتابعة.",
+  "messageFr": "Votre version est arrêtée. Téléchargez MauriResults 3.1.0 pour continuer."
 }
