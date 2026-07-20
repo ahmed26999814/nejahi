@@ -17,4 +17,17 @@ html[data-theme="dark"] body {
     min-height: 100dvh;
     overscroll-behavior-y: none;
   }
+
+  html.dark body,
+  html[data-theme="dark"] body,
+  html.dark body.has-expanded-bottom-nav,
+  html[data-theme="dark"] body.has-expanded-bottom-nav {
+    background-color: #06120c;
+  }
+
+  html:not(.dark) body,
+  html[data-theme="light"] body,
+  html[data-theme="light"] body.has-expanded-bottom-nav {
+    background-color: #fbfdf8;
+  }
 }
