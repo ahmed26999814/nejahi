@@ -1,5 +1,11 @@
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
+import {
+  PUBLIC_EXAMS_CACHE_TAG,
+  filterSourceTag,
+  searchSourceTag,
+} from "../../../../lib/cacheTags";
+import { warmExamSearchCache } from "../../../../lib/examCacheWarmup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,7 +16,7 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const REQUEST_TIMEOUT_MS = 15_000;
 const LOOKUP_TIMEOUT_MS = 240_000;
-const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
+const SAFE_FUNCTION_BUDGET_MS = 270_000;
 
 function json(status: number, body: Record<string, unknown>) {
   return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -57,6 +63,54 @@ async function supabaseFetch(url: URL, init: RequestInit = {}) {
       ...(init.headers || {}),
     },
   });
+}
+
+async function getExistingPublication(tableName: string) {
+  const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+  url.searchParams.set("select", "*");
+  url.searchParams.set("table_name", `eq.${tableName}`);
+  url.searchParams.set("limit", "1");
+  const response = await supabaseFetch(url, { headers: { Prefer: "count=none" } });
+  const text = await response.text();
+  if (!response.ok) throw new Error(`Unable to inspect current publication: ${text.slice(0, 600)}`);
+  const rows = text ? JSON.parse(text) : [];
+  return Array.isArray(rows) && rows.length ? rows[0] as Record<string, unknown> : null;
+}
+
+async function rollbackPublication(
+  tableName: string,
+  sourceKey: string,
+  existing: Record<string, unknown> | null,
+) {
+  try {
+    if (existing) {
+      const restoreUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+      restoreUrl.searchParams.set("on_conflict", "table_name");
+      const response = await supabaseFetch(restoreUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify(existing),
+      });
+      if (!response.ok) return { ok: false, error: (await response.text()).slice(0, 500) };
+    } else {
+      const metadataUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
+      metadataUrl.searchParams.set("table_name", `eq.${tableName}`);
+      const metadataResponse = await supabaseFetch(metadataUrl, { method: "DELETE" });
+      if (!metadataResponse.ok) return { ok: false, error: (await metadataResponse.text()).slice(0, 500) };
+
+      const lookupUrl = new URL(`${SUPABASE_URL}/rest/v1/result_number_lookup`);
+      lookupUrl.searchParams.set("source_key", `eq.${sourceKey}`);
+      const lookupResponse = await supabaseFetch(lookupUrl, { method: "DELETE" });
+      if (!lookupResponse.ok) return { ok: false, error: (await lookupResponse.text()).slice(0, 500) };
+    }
+
+    revalidateTag(PUBLIC_EXAMS_CACHE_TAG);
+    revalidateTag(searchSourceTag(sourceKey));
+    revalidateTag(filterSourceTag(sourceKey));
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: String(error).slice(0, 500) };
+  }
 }
 
 async function validateRankedTable(row: Record<string, unknown>) {
@@ -162,6 +216,7 @@ async function refreshNumberLookup(sourceKey: string) {
 }
 
 export async function POST(request: Request) {
+  const publishStarted = Date.now();
   if (!isAdmin(request)) return json(401, { ok: false, error: "Unauthorized admin publish" });
   if (!SUPABASE_URL || !SUPABASE_KEY) return json(500, { ok: false, error: "Missing Supabase service role environment variables" });
 
@@ -185,38 +240,44 @@ export async function POST(request: Request) {
 
   const titleAr = safeText(body.titleAr, `نتائج ${tableName}`);
   const year = safeText(body.year, "2026");
-  const row = {
-    table_name: tableName,
-    source_key: `upload:${tableName}`,
-    title_ar: titleAr,
-    title_fr: safeText(body.titleFr, titleAr),
-    description_ar: safeText(body.descriptionAr, ""),
-    description_fr: safeText(body.descriptionFr, ""),
-    year,
-    tone: safeText(body.tone, searchMode === "concours" ? "amber" : "green"),
-    search_mode: searchMode,
-    number_column: numberColumn,
-    name_column: nameColumn,
-    score_column: scoreColumn,
-    decision_column: safeColumn(body.decisionColumn),
-    track_column: safeColumn(body.trackColumn),
-    wilaya_column: safeColumn(body.wilayaColumn),
-    moughataa_column: safeColumn(body.moughataaColumn),
-    school_column: safeColumn(body.schoolColumn),
-    centre_column: safeColumn(body.centreColumn),
-    birth_place_column: safeColumn(body.birthPlaceColumn),
-    birth_date_column: safeColumn(body.birthDateColumn),
-    ranked_view: tableName,
-    total_rows: Number(body.totalRows || 0) || 0,
-    is_active: false,
-  };
-
+  const sourceKey = `upload:${tableName}`;
   const expectedRows = Number(body.totalRows || 0);
   if (!Number.isInteger(expectedRows) || expectedRows <= 0) return json(400, { ok: false, error: "A positive totalRows value is required" });
-  const prepared = await validatePreparedExam(row, expectedRows);
-  if (!prepared.ok) return json(422, { ok: false, error: prepared.error, published: false });
+
+  let existingPublication: Record<string, unknown> | null = null;
+  let staged = false;
 
   try {
+    existingPublication = await getExistingPublication(tableName);
+    const row = {
+      table_name: tableName,
+      source_key: sourceKey,
+      title_ar: titleAr,
+      title_fr: safeText(body.titleFr, titleAr),
+      description_ar: safeText(body.descriptionAr, ""),
+      description_fr: safeText(body.descriptionFr, ""),
+      year,
+      tone: safeText(body.tone, searchMode === "concours" ? "amber" : "green"),
+      search_mode: searchMode,
+      number_column: numberColumn,
+      name_column: nameColumn,
+      score_column: scoreColumn,
+      decision_column: safeColumn(body.decisionColumn),
+      track_column: safeColumn(body.trackColumn),
+      wilaya_column: safeColumn(body.wilayaColumn),
+      moughataa_column: safeColumn(body.moughataaColumn),
+      school_column: safeColumn(body.schoolColumn),
+      centre_column: safeColumn(body.centreColumn),
+      birth_place_column: safeColumn(body.birthPlaceColumn),
+      birth_date_column: safeColumn(body.birthDateColumn),
+      ranked_view: tableName,
+      total_rows: expectedRows,
+      is_active: Boolean(existingPublication?.is_active),
+    };
+
+    const prepared = await validatePreparedExam(row, expectedRows);
+    if (!prepared.ok) return json(422, { ok: false, error: prepared.error, published: false });
+
     const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
     url.searchParams.set("on_conflict", "table_name");
     const response = await supabaseFetch(url, {
@@ -227,24 +288,56 @@ export async function POST(request: Request) {
 
     const text = await response.text();
     if (!response.ok) return json(response.status, { ok: false, error: text.replace(/\s+/g, " ").slice(0, 700) });
+    staged = true;
 
-    const analytics = await refreshDashboard(String(row.source_key));
+    const analytics = await refreshDashboard(sourceKey);
     if (!analytics.ok) {
+      const rollback = await rollbackPublication(tableName, sourceKey, existingPublication);
       return json(422, {
         ok: false,
         error: analytics.error,
         published: false,
-        hint: "The exam remains inactive. Rebuild its analytics cache before activation.",
+        rollback,
+        hint: "The exam was not released. Rebuild its analytics cache and publish again.",
       });
     }
 
-    const numberLookup = await refreshNumberLookup(String(row.source_key));
+    const numberLookup = await refreshNumberLookup(sourceKey);
     if (!numberLookup.ok) {
+      const rollback = await rollbackPublication(tableName, sourceKey, existingPublication);
       return json(422, {
         ok: false,
         error: numberLookup.error,
         published: false,
-        hint: "The exam remains inactive. Build its candidate-number lookup before activation.",
+        rollback,
+        hint: "The exam was not released. Build its candidate-number lookup and publish again.",
+      });
+    }
+
+    revalidateTag(searchSourceTag(sourceKey));
+    const elapsedBeforeWarmup = Date.now() - publishStarted;
+    const warmupBudget = SAFE_FUNCTION_BUDGET_MS - elapsedBeforeWarmup;
+    if (warmupBudget < 15_000) {
+      const rollback = await rollbackPublication(tableName, sourceKey, existingPublication);
+      return json(503, {
+        ok: false,
+        error: "Publishing preparation completed, but there was not enough safe execution time to warm the result cache.",
+        published: false,
+        rollback,
+        hint: "Publish again. The prepared lookup remains ready, so the retry should complete faster.",
+      });
+    }
+
+    const warmup = await warmExamSearchCache(sourceKey, searchMode, Math.min(180_000, warmupBudget));
+    if (!warmup.ok || warmup.total === 0) {
+      const rollback = await rollbackPublication(tableName, sourceKey, existingPublication);
+      return json(503, {
+        ok: false,
+        error: "Result cache warmup did not complete safely.",
+        published: false,
+        warmup,
+        rollback,
+        hint: "The exam was kept private. Publish again after checking Supabase health.",
       });
     }
 
@@ -256,12 +349,25 @@ export async function POST(request: Request) {
       body: JSON.stringify({ is_active: true }),
     });
     const activateText = await activateResponse.text();
-    if (!activateResponse.ok) return json(activateResponse.status, { ok: false, error: `Activation failed: ${activateText.slice(0, 600)}`, published: false });
+    if (!activateResponse.ok) {
+      const rollback = await rollbackPublication(tableName, sourceKey, existingPublication);
+      return json(activateResponse.status, {
+        ok: false,
+        error: `Activation failed: ${activateText.slice(0, 600)}`,
+        published: false,
+        rollback,
+      });
+    }
 
-    revalidateTag(SEARCH_CACHE_TAG);
+    revalidateTag(PUBLIC_EXAMS_CACHE_TAG);
+    revalidateTag(filterSourceTag(sourceKey));
+    revalidatePath("/");
+    revalidatePath("/statistics");
+    revalidatePath("/toppers");
 
     return json(200, {
       ok: true,
+      published: true,
       exam: activateText ? JSON.parse(activateText)?.[0] : { ...row, is_active: true },
       validation: {
         rows: prepared.actualRows,
@@ -269,10 +375,21 @@ export async function POST(request: Request) {
         numberLookup: true,
         lookupRows: numberLookup.lookup.lookup_rows,
         rankedView: tableName,
+        cacheWarmed: true,
       },
+      warmup,
+      elapsedMs: Date.now() - publishStarted,
     });
   } catch (error) {
+    const rollback = staged
+      ? await rollbackPublication(tableName, sourceKey, existingPublication)
+      : { ok: true, skipped: true };
     const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-    return json(timedOut ? 504 : 500, { ok: false, error: timedOut ? "Publishing timed out safely" : String(error), published: false });
+    return json(timedOut ? 504 : 500, {
+      ok: false,
+      error: timedOut ? "Publishing timed out safely" : String(error),
+      published: false,
+      rollback,
+    });
   }
 }
