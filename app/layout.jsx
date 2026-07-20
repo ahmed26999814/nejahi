@@ -11,6 +11,7 @@ import "./dashboard-reference.css";
 import "./dashboard-mobile.css";
 import "./results-notice.css";
 import "./bottom-nav-expanded.css";
+import "./root-background-fix.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import PublicDataFetchBridge from "../components/layout/PublicDataFetchBridge";
 import UiEnhancements from "../components/ui/UiEnhancements";
