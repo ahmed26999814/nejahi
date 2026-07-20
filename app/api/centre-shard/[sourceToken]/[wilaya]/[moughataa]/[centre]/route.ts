@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isPublicResultSource } from "../../../../../../../lib/publishedSourceAccess";
 import { tokenToSource } from "../../../../../../../lib/resultNumberLookup";
 import { cachedCentreShard } from "../../../../../../../lib/resultShardCache";
 
@@ -45,6 +46,13 @@ export async function GET(
     return NextResponse.json(
       { candidates: {}, error: "Invalid centre shard" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  if (!(await isPublicResultSource(source))) {
+    return NextResponse.json(
+      { candidates: {}, error: "Result source is not published" },
+      { status: 404, headers: { "Cache-Control": "no-store" } },
     );
   }
 
