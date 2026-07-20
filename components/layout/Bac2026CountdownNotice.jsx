@@ -48,9 +48,11 @@ function getRemainingParts(remainingMs) {
 }
 
 function CountdownUnit({ label, value }) {
+  const displayValue = value === null || value === undefined ? "--" : String(value).padStart(2, "0");
+
   return (
     <span className="bac-release-countdown-unit">
-      <strong>{String(value).padStart(2, "0")}</strong>
+      <strong>{displayValue}</strong>
       <small>{label}</small>
     </span>
   );
@@ -151,10 +153,10 @@ export default function Bac2026CountdownNotice() {
           <span className="bac-release-countdown-finished">بانتظار النشر</span>
         ) : (
           <span className="bac-release-countdown" aria-label="الوقت المتبقي">
-            <CountdownUnit label="يوم" value={countdown?.days ?? 0} />
-            <CountdownUnit label="ساعة" value={countdown?.hours ?? 0} />
-            <CountdownUnit label="دقيقة" value={countdown?.minutes ?? 0} />
-            <CountdownUnit label="ثانية" value={countdown?.seconds ?? 0} />
+            <CountdownUnit label="يوم" value={countdown?.days} />
+            <CountdownUnit label="ساعة" value={countdown?.hours} />
+            <CountdownUnit label="دقيقة" value={countdown?.minutes} />
+            <CountdownUnit label="ثانية" value={countdown?.seconds} />
           </span>
         )}
 
