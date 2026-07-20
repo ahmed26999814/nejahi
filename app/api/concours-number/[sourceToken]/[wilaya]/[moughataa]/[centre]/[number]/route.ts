@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import {
-  fetchExactConcoursResult,
+  fetchCentreShard,
   normalizeCandidateNumber,
   tokenToSource,
 } from "../../../../../../../../lib/resultNumberLookup";
@@ -18,10 +18,10 @@ function clean(value: string, maxLength = 160) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, maxLength);
 }
 
-const cachedConcoursResult = unstable_cache(
-  async (source: string, candidateKey: string, wilaya: string, moughataa: string, centre: string) =>
-    fetchExactConcoursResult(source, candidateKey, wilaya, moughataa, centre),
-  ["mauriresults-path-concours-search-v1"],
+const cachedCentreShard = unstable_cache(
+  async (source: string, wilaya: string, moughataa: string, centre: string) =>
+    fetchCentreShard(source, wilaya, moughataa, centre),
+  ["mauriresults-centre-shard-v1"],
   { revalidate: 86_400, tags: [SEARCH_CACHE_TAG] },
 );
 
@@ -58,7 +58,7 @@ export async function GET(
     );
   }
 
-  const result = await cachedConcoursResult(source, candidateKey, wilaya, moughataa, centre);
+  const result = await cachedCentreShard(source, wilaya, moughataa, centre);
   if ("error" in result) {
     return NextResponse.json(
       { rows: [], error: result.error },
@@ -73,14 +73,14 @@ export async function GET(
   }
 
   return NextResponse.json(
-    { rows: result.rows },
+    { rows: result.candidates[candidateKey] || [] },
     {
       headers: {
         "Cache-Control": CACHE_CONTROL,
         "CDN-Cache-Control": CACHE_CONTROL,
         "Vercel-CDN-Cache-Control": CACHE_CONTROL,
         "Netlify-CDN-Cache-Control": CACHE_CONTROL,
-        "X-Mauri-Search": "NUMBER-LOOKUP",
+        "X-Mauri-Search": "CENTRE-SHARD-LOOKUP",
         Vary: "Accept-Encoding",
       },
     },
