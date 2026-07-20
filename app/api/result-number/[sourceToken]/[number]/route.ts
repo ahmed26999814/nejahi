@@ -1,7 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import {
+  candidateShardKey,
   fetchExactNumberResult,
+  fetchNumberShard,
   normalizeCandidateNumber,
   tokenToSource,
 } from "../../../../../lib/resultNumberLookup";
@@ -14,9 +16,15 @@ export const preferredRegion = ["cdg1"];
 const CACHE_CONTROL = "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=604800";
 const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
 
-const cachedNumberResult = unstable_cache(
+const cachedNumberShard = unstable_cache(
+  async (source: string, shard: string) => fetchNumberShard(source, shard),
+  ["mauriresults-number-shard-v1"],
+  { revalidate: 86_400, tags: [SEARCH_CACHE_TAG] },
+);
+
+const cachedLegacyConcoursResult = unstable_cache(
   async (source: string, candidateKey: string) => fetchExactNumberResult(source, candidateKey),
-  ["mauriresults-path-number-search-v1"],
+  ["mauriresults-legacy-concours-number-v1"],
   { revalidate: 86_400, tags: [SEARCH_CACHE_TAG] },
 );
 
@@ -26,7 +34,7 @@ function publicHeaders() {
     "CDN-Cache-Control": CACHE_CONTROL,
     "Vercel-CDN-Cache-Control": CACHE_CONTROL,
     "Netlify-CDN-Cache-Control": CACHE_CONTROL,
-    "X-Mauri-Search": "NUMBER-LOOKUP",
+    "X-Mauri-Search": "NUMBER-LOOKUP-SHARED",
     Vary: "Accept-Encoding",
   };
 }
@@ -53,7 +61,10 @@ export async function GET(
     );
   }
 
-  const result = await cachedNumberResult(source, candidateKey);
+  const result = source === "concours"
+    ? await cachedLegacyConcoursResult(source, candidateKey)
+    : await cachedNumberShard(source, candidateShardKey(candidateKey));
+
   if ("error" in result) {
     return NextResponse.json(
       { rows: [], error: result.error },
@@ -67,5 +78,9 @@ export async function GET(
     );
   }
 
-  return NextResponse.json({ rows: result.rows }, { headers: publicHeaders() });
+  const rows = "candidates" in result
+    ? result.candidates[candidateKey] || []
+    : result.rows;
+
+  return NextResponse.json({ rows }, { headers: publicHeaders() });
 }
