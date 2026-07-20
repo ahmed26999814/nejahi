@@ -11,10 +11,6 @@ function CalculatorIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2.5" width="16" height="19" rx="3" /><path d="M8 6.5h8M8 11h1M12 11h1M16 11h1M8 15h1M12 15h1M16 15h1M8 18h1M12 18h5" /></svg>;
 }
 
-function MessageIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" /></svg>;
-}
-
 function DownloadIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5" /><path d="M5 21h14" /></svg>;
 }
@@ -22,17 +18,13 @@ function DownloadIcon() {
 export default function BottomNav({ activeView, onNavigate, text }) {
   const isFrench = text?.home === "Accueil";
 
-  const primaryItems = [
+  const items = [
     { key: "home", label: text.home, view: "home", icon: <HomeIcon /> },
     { key: "search", label: text.search, view: "search", icon: <SearchIcon /> },
     { key: "toppers", label: text.toppers, view: "toppers", icon: <AwardIcon /> },
     { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
-  ];
-
-  const serviceItems = [
     { key: "lessons", label: isFrench ? "Cours" : "الدروس", href: "/lessons", icon: <BookIcon /> },
-    { key: "calculator", label: isFrench ? "Calculateur" : "الحاسبة", href: "/calculator", icon: <CalculatorIcon /> },
-    { key: "contact", label: isFrench ? "Contact" : "اتصل بنا", view: "contact", icon: <MessageIcon /> },
+    { key: "calculator", label: isFrench ? "Calcul" : "الحاسبة", href: "/calculator", icon: <CalculatorIcon /> },
     { key: "download", label: isFrench ? "Application" : "التطبيق", href: "/Apk/", icon: <DownloadIcon /> },
   ];
 
@@ -54,33 +46,27 @@ export default function BottomNav({ activeView, onNavigate, text }) {
     return item.view === activeView;
   }
 
-  function NavButton({ item, compact = false }) {
-    const active = isActive(item);
-    return (
-      <button
-        className={`relative grid justify-items-center content-center rounded-[16px] px-1 font-black leading-tight transition duration-200 active:scale-[.94] ${compact ? "min-h-10 gap-0 text-[8px]" : "min-h-12 gap-0.5 text-[9px]"} ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
-        onClick={() => activate(item)}
-        type="button"
-        aria-current={active ? "page" : undefined}
-        data-control-key={item.key}
-        data-haptic
-      >
-        <span className={`grid place-items-center ${compact ? "h-4 w-4 [&>svg]:h-4 [&>svg]:w-4" : "h-5 w-5 [&>svg]:h-5 [&>svg]:w-5"}`}>{item.icon}</span>
-        <span className="max-w-full truncate" data-control-label>{item.label}</span>
-        {active && <span className="absolute -bottom-0.5 h-1 w-5 rounded-full bg-white/85" aria-hidden="true" />}
-      </button>
-    );
-  }
-
   return (
     <nav className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-50 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden" aria-label={isFrench ? "Navigation principale" : "التنقل الرئيسي"}>
-      <div className="mx-auto max-w-md rounded-[26px] border border-white/75 bg-white/[.94] p-1.5 shadow-[0_-16px_46px_rgba(15,23,42,.13)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.96]">
-        <div className="grid grid-cols-4 gap-1 border-b border-slate-200/80 pb-1 dark:border-white/10">
-          {serviceItems.map((item) => <NavButton item={item} compact key={item.key} />)}
-        </div>
-        <div className="grid grid-cols-4 gap-1 pt-1">
-          {primaryItems.map((item) => <NavButton item={item} key={item.key} />)}
-        </div>
+      <div className="mx-auto grid max-w-md grid-cols-7 gap-0.5 rounded-[24px] border border-white/75 bg-white/[.94] p-1.5 shadow-[0_-16px_46px_rgba(15,23,42,.13)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.96]">
+        {items.map((item) => {
+          const active = isActive(item);
+          return (
+            <button
+              className={`relative grid min-w-0 min-h-12 justify-items-center content-center gap-0.5 rounded-[14px] px-0.5 text-[7px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
+              onClick={() => activate(item)}
+              type="button"
+              key={item.key}
+              aria-current={active ? "page" : undefined}
+              data-control-key={item.key}
+              data-haptic
+            >
+              <span className="grid h-[18px] w-[18px] place-items-center [&>svg]:h-[18px] [&>svg]:w-[18px]">{item.icon}</span>
+              <span className="block w-full truncate text-center" data-control-label>{item.label}</span>
+              {active && <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-white/85" aria-hidden="true" />}
+            </button>
+          );
+        })}
       </div>
     </nav>
   );
