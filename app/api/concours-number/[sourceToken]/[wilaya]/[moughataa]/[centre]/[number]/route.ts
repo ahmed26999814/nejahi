@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isPublicResultSource } from "../../../../../../../../lib/publishedSourceAccess";
 import {
   normalizeCandidateNumber,
   tokenToSource,
@@ -46,6 +47,13 @@ export async function GET(
     return NextResponse.json(
       { rows: [], error: "All location fields and candidate number are required" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  if (!(await isPublicResultSource(source))) {
+    return NextResponse.json(
+      { rows: [], error: "Result source is not published" },
+      { status: 404, headers: { "Cache-Control": "no-store" } },
     );
   }
 
