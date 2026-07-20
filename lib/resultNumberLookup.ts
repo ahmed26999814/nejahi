@@ -19,6 +19,9 @@ type LookupEntry = {
 };
 
 type PublicRow = Record<string, unknown>;
+type JsonRequestResult =
+  | { data: unknown; status: 200 }
+  | { error: string; status: number };
 
 export type NumberLookupResult =
   | { rows: PublicRow[]; status: 200 }
@@ -104,18 +107,18 @@ function candidatesFromEntries(entries: unknown) {
   return candidates;
 }
 
-function requestError(error: unknown) {
+function requestError(error: unknown): JsonRequestResult {
   const timedOut = error instanceof Error
     && (error.name === "TimeoutError" || error.name === "AbortError");
   return {
     error: timedOut ? "Search timeout" : "Search unavailable",
     status: timedOut ? 504 : 503,
-  } as const;
+  };
 }
 
-async function requestJson(url: URL, options: RequestInit = {}) {
+async function requestJson(url: URL, options: RequestInit = {}): Promise<JsonRequestResult> {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return { error: "Missing Supabase service credentials", status: 500 } as const;
+    return { error: "Missing Supabase service credentials", status: 500 };
   }
 
   try {
@@ -134,9 +137,9 @@ async function requestJson(url: URL, options: RequestInit = {}) {
 
     const text = await response.text();
     if (!response.ok) {
-      return { error: text.slice(0, 700) || `HTTP ${response.status}`, status: response.status } as const;
+      return { error: text.slice(0, 700) || `HTTP ${response.status}`, status: response.status };
     }
-    return { data: text ? JSON.parse(text) : [], status: 200 } as const;
+    return { data: text ? JSON.parse(text) : [], status: 200 };
   } catch (error) {
     return requestError(error);
   }
@@ -144,7 +147,7 @@ async function requestJson(url: URL, options: RequestInit = {}) {
 
 async function requestLookup(url: URL): Promise<NumberLookupResult> {
   const result = await requestJson(url);
-  if ("error" in result) return result;
+  if ("error" in result) return { error: result.error, status: result.status };
   return { rows: rowsFromEntries(result.data), status: 200 };
 }
 
@@ -156,7 +159,7 @@ async function requestShard(rpcName: string, body: Record<string, string>): Prom
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if ("error" in result) return result;
+  if ("error" in result) return { error: result.error, status: result.status };
   return { candidates: candidatesFromEntries(result.data), status: 200 };
 }
 
