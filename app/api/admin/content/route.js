@@ -4,6 +4,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 const TABLE = "site_content";
+const REQUEST_TIMEOUT_MS = 12_000;
 
 function json(data, status = 200) {
   return NextResponse.json(data, { status });
@@ -18,18 +19,33 @@ function assertAdmin(request) {
 }
 
 async function supabase(path, options = {}) {
-  const response = await fetch(`${SUPABASE_URL}${path}`, {
-    ...options,
-    headers: {
-      apikey: SERVICE_KEY,
-      Authorization: `Bearer ${SERVICE_KEY}`,
-      ...(options.headers || {}),
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const { signal, ...fetchOptions } = options;
 
-  const text = await response.text();
-  if (!response.ok) throw new Error(text || response.statusText);
-  return text ? JSON.parse(text) : null;
+  try {
+    const response = await fetch(`${SUPABASE_URL}${path}`, {
+      ...fetchOptions,
+      cache: "no-store",
+      signal: signal || controller.signal,
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        ...(options.headers || {}),
+      },
+    });
+
+    const text = await response.text();
+    if (!response.ok) throw new Error(text || response.statusText);
+    return text ? JSON.parse(text) : null;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error("Supabase request timed out. Please retry.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function GET(request) {
@@ -38,7 +54,7 @@ export async function GET(request) {
 
   try {
     const params = new URLSearchParams({
-      select: "content_key,title,value,type,updated_at",
+      select: "content_key,title,value,type,storage_path,updated_at",
       order: "content_key.asc",
     });
     const rows = await supabase(`/rest/v1/${TABLE}?${params}`);
