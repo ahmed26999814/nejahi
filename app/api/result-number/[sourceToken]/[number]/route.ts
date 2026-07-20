@@ -1,12 +1,14 @@
-import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
+import { isPublicResultSource } from "../../../../../lib/publishedSourceAccess";
 import {
   candidateShardKey,
-  fetchExactNumberResult,
-  fetchNumberShard,
   normalizeCandidateNumber,
   tokenToSource,
 } from "../../../../../lib/resultNumberLookup";
+import {
+  cachedLegacyConcoursResult,
+  cachedNumberShard,
+} from "../../../../../lib/resultShardCache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,19 +16,6 @@ export const maxDuration = 5;
 export const preferredRegion = ["cdg1"];
 
 const CACHE_CONTROL = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
-const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
-
-const cachedNumberShard = unstable_cache(
-  async (source: string, shard: string) => fetchNumberShard(source, shard),
-  ["mauriresults-number-shard-v1"],
-  { revalidate: 300, tags: [SEARCH_CACHE_TAG] },
-);
-
-const cachedLegacyConcoursResult = unstable_cache(
-  async (source: string, candidateKey: string) => fetchExactNumberResult(source, candidateKey),
-  ["mauriresults-legacy-concours-number-v1"],
-  { revalidate: 300, tags: [SEARCH_CACHE_TAG] },
-);
 
 function publicHeaders() {
   return {
@@ -58,6 +47,13 @@ export async function GET(
     return NextResponse.json(
       { rows: [], error: "Candidate number must contain digits only" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  if (!(await isPublicResultSource(source))) {
+    return NextResponse.json(
+      { rows: [], error: "Result source is not published" },
+      { status: 404, headers: { "Cache-Control": "no-store" } },
     );
   }
 

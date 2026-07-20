@@ -1,10 +1,10 @@
-import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
+import { isPublicResultSource } from "../../../../../../../../lib/publishedSourceAccess";
 import {
-  fetchCentreShard,
   normalizeCandidateNumber,
   tokenToSource,
 } from "../../../../../../../../lib/resultNumberLookup";
+import { cachedCentreShard } from "../../../../../../../../lib/resultShardCache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,18 +12,10 @@ export const maxDuration = 5;
 export const preferredRegion = ["cdg1"];
 
 const CACHE_CONTROL = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
-const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
 
 function clean(value: string, maxLength = 160) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, maxLength);
 }
-
-const cachedCentreShard = unstable_cache(
-  async (source: string, wilaya: string, moughataa: string, centre: string) =>
-    fetchCentreShard(source, wilaya, moughataa, centre),
-  ["mauriresults-centre-shard-v1"],
-  { revalidate: 300, tags: [SEARCH_CACHE_TAG] },
-);
 
 export async function GET(
   _request: Request,
@@ -55,6 +47,13 @@ export async function GET(
     return NextResponse.json(
       { rows: [], error: "All location fields and candidate number are required" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  if (!(await isPublicResultSource(source))) {
+    return NextResponse.json(
+      { rows: [], error: "Result source is not published" },
+      { status: 404, headers: { "Cache-Control": "no-store" } },
     );
   }
 
