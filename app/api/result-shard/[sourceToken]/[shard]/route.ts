@@ -1,12 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
-import {
-  candidateShardKey,
-  fetchExactNumberResult,
-  fetchNumberShard,
-  normalizeCandidateNumber,
-  tokenToSource,
-} from "../../../../../lib/resultNumberLookup";
+import { fetchNumberShard, tokenToSource } from "../../../../../lib/resultNumberLookup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,52 +16,36 @@ const cachedNumberShard = unstable_cache(
   { revalidate: 86_400, tags: [SEARCH_CACHE_TAG] },
 );
 
-const cachedLegacyConcoursResult = unstable_cache(
-  async (source: string, candidateKey: string) => fetchExactNumberResult(source, candidateKey),
-  ["mauriresults-legacy-concours-number-v1"],
-  { revalidate: 86_400, tags: [SEARCH_CACHE_TAG] },
-);
-
 function publicHeaders() {
   return {
     "Cache-Control": CACHE_CONTROL,
     "CDN-Cache-Control": CACHE_CONTROL,
     "Vercel-CDN-Cache-Control": CACHE_CONTROL,
     "Netlify-CDN-Cache-Control": CACHE_CONTROL,
-    "X-Mauri-Search": "NUMBER-LOOKUP-SHARED",
+    "X-Mauri-Search": "CDN-NUMBER-SHARD",
     Vary: "Accept-Encoding",
   };
 }
 
 export async function GET(
   _request: Request,
-  context: { params: Promise<{ sourceToken: string; number: string }> },
+  context: { params: Promise<{ sourceToken: string; shard: string }> },
 ) {
-  const { sourceToken, number } = await context.params;
+  const { sourceToken, shard } = await context.params;
   const source = tokenToSource(sourceToken);
-  const candidateKey = normalizeCandidateNumber(number);
+  const shardKey = String(shard || "").trim();
 
-  if (!source) {
+  if (!source || source === "concours" || !/^\d{3}$/.test(shardKey)) {
     return NextResponse.json(
-      { rows: [], error: "Unknown source" },
+      { candidates: {}, error: "Invalid result shard" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
     );
   }
 
-  if (!candidateKey) {
-    return NextResponse.json(
-      { rows: [], error: "Candidate number must contain digits only" },
-      { status: 400, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
-  const result = source === "concours"
-    ? await cachedLegacyConcoursResult(source, candidateKey)
-    : await cachedNumberShard(source, candidateShardKey(candidateKey));
-
+  const result = await cachedNumberShard(source, shardKey);
   if ("error" in result) {
     return NextResponse.json(
-      { rows: [], error: result.error },
+      { candidates: {}, error: result.error },
       {
         status: result.status,
         headers: {
@@ -78,9 +56,8 @@ export async function GET(
     );
   }
 
-  const rows = "candidates" in result
-    ? result.candidates[candidateKey] || []
-    : result.rows;
-
-  return NextResponse.json({ rows }, { headers: publicHeaders() });
+  return NextResponse.json(
+    { candidates: result.candidates },
+    { headers: publicHeaders() },
+  );
 }

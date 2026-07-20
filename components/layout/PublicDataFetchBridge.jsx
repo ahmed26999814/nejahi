@@ -60,6 +60,11 @@ function candidateNumber(value) {
   return digits.replace(/^0+(?=\d)/, "");
 }
 
+function numberShard(value) {
+  const number = candidateNumber(value);
+  return number ? number.padStart(3, "0").slice(-3) : "";
+}
+
 function sourceToken(value) {
   const source = String(value || "").trim();
   if (BUILTIN_SOURCES.has(source)) return source;
@@ -79,32 +84,37 @@ function resultRequest(input) {
   };
 }
 
-function cacheSafeResultPath(request) {
-  if (!request) return "";
+function cacheSafeShardRequest(request) {
+  if (!request) return null;
   const token = sourceToken(request.source);
-  if (!token) return "";
+  if (!token) return null;
 
   if (request.url.pathname === "/api/search") {
-    const number = candidateNumber(request.url.searchParams.get("q"));
-    return number
-      ? `/api/result-number/${encodeURIComponent(token)}/${encodeURIComponent(number)}`
-      : "";
+    const candidateKey = candidateNumber(request.url.searchParams.get("q"));
+    const shard = numberShard(candidateKey);
+    if (!candidateKey || !shard || request.source === "concours") return null;
+    return {
+      candidateKey,
+      path: `/api/result-shard/${encodeURIComponent(token)}/${encodeURIComponent(shard)}`,
+    };
   }
 
-  const number = candidateNumber(request.url.searchParams.get("number"));
+  const candidateKey = candidateNumber(request.url.searchParams.get("number"));
   const wilaya = String(request.url.searchParams.get("wilaya") || "").trim();
   const moughataa = String(request.url.searchParams.get("moughataa") || "").trim();
   const centre = String(request.url.searchParams.get("centre") || "").trim();
-  if (![number, wilaya, moughataa, centre].every(Boolean)) return "";
+  if (![candidateKey, wilaya, moughataa, centre].every(Boolean)) return null;
 
-  return [
-    "/api/concours-number",
-    encodeURIComponent(token),
-    encodeURIComponent(wilaya),
-    encodeURIComponent(moughataa),
-    encodeURIComponent(centre),
-    encodeURIComponent(number),
-  ].join("/");
+  return {
+    candidateKey,
+    path: [
+      "/api/centre-shard",
+      encodeURIComponent(token),
+      encodeURIComponent(wilaya),
+      encodeURIComponent(moughataa),
+      encodeURIComponent(centre),
+    ].join("/"),
+  };
 }
 
 function rowIds(row) {
@@ -155,6 +165,26 @@ async function fetchResultWithRetry(originalFetch, target, init) {
   return lastResponse;
 }
 
+async function selectCandidateFromShard(response, candidateKey) {
+  if (!response?.ok) return response;
+  try {
+    const data = await response.clone().json();
+    const rows = Array.isArray(data?.candidates?.[candidateKey])
+      ? data.candidates[candidateKey]
+      : [];
+    const headers = new Headers(response.headers);
+    headers.set("Content-Type", "application/json; charset=utf-8");
+    headers.set("X-Mauri-Search", "CDN-SHARD-HIT");
+    return new Response(JSON.stringify({ rows }), {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  } catch {
+    return response;
+  }
+}
+
 export default function PublicDataFetchBridge() {
   useLayoutEffect(() => {
     if (window.location.pathname.startsWith("/admin")) return undefined;
@@ -179,14 +209,18 @@ export default function PublicDataFetchBridge() {
         });
       }
 
-      const directPath = cacheSafeResultPath(trackedResult);
-      const promise = directPath
-        ? fetchResultWithRetry(originalFetch, directPath, init)
+      const shardRequest = cacheSafeShardRequest(trackedResult);
+      const promise = shardRequest
+        ? fetchResultWithRetry(originalFetch, shardRequest.path, init)
         : originalFetch(input, init);
       if (!trackedResult) return promise;
-      return promise.then((response) => {
-        rememberRows(trackedResult, response);
-        return response;
+
+      return promise.then(async (response) => {
+        const resultResponse = shardRequest
+          ? await selectCandidateFromShard(response, shardRequest.candidateKey)
+          : response;
+        rememberRows(trackedResult, resultResponse);
+        return resultResponse;
       });
     };
 

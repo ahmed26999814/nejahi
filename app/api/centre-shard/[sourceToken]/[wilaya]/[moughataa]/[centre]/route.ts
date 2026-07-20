@@ -1,10 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
-import {
-  fetchCentreShard,
-  normalizeCandidateNumber,
-  tokenToSource,
-} from "../../../../../../../../lib/resultNumberLookup";
+import { fetchCentreShard, tokenToSource } from "../../../../../../../lib/resultNumberLookup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,8 +10,8 @@ export const preferredRegion = ["cdg1"];
 const CACHE_CONTROL = "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=604800";
 const SEARCH_CACHE_TAG = "mauriresults-number-search-v1";
 
-function clean(value: string, maxLength = 160) {
-  return String(value || "").replace(/\u0000/g, "").trim().slice(0, maxLength);
+function clean(value: string) {
+  return String(value || "").replace(/\u0000/g, "").trim().slice(0, 160);
 }
 
 const cachedCentreShard = unstable_cache(
@@ -25,6 +21,17 @@ const cachedCentreShard = unstable_cache(
   { revalidate: 86_400, tags: [SEARCH_CACHE_TAG] },
 );
 
+function publicHeaders() {
+  return {
+    "Cache-Control": CACHE_CONTROL,
+    "CDN-Cache-Control": CACHE_CONTROL,
+    "Vercel-CDN-Cache-Control": CACHE_CONTROL,
+    "Netlify-CDN-Cache-Control": CACHE_CONTROL,
+    "X-Mauri-Search": "CDN-CENTRE-SHARD",
+    Vary: "Accept-Encoding",
+  };
+}
+
 export async function GET(
   _request: Request,
   context: {
@@ -33,27 +40,18 @@ export async function GET(
       wilaya: string;
       moughataa: string;
       centre: string;
-      number: string;
     }>;
   },
 ) {
   const params = await context.params;
   const source = tokenToSource(params.sourceToken);
-  const candidateKey = normalizeCandidateNumber(params.number);
   const wilaya = clean(params.wilaya);
   const moughataa = clean(params.moughataa);
   const centre = clean(params.centre);
 
-  if (!source.startsWith("upload:")) {
+  if (!source.startsWith("upload:") || !wilaya || !moughataa || !centre) {
     return NextResponse.json(
-      { rows: [], error: "Invalid source" },
-      { status: 400, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
-  if (![candidateKey, wilaya, moughataa, centre].every(Boolean)) {
-    return NextResponse.json(
-      { rows: [], error: "All location fields and candidate number are required" },
+      { candidates: {}, error: "Invalid centre shard" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
     );
   }
@@ -61,7 +59,7 @@ export async function GET(
   const result = await cachedCentreShard(source, wilaya, moughataa, centre);
   if ("error" in result) {
     return NextResponse.json(
-      { rows: [], error: result.error },
+      { candidates: {}, error: result.error },
       {
         status: result.status,
         headers: {
@@ -73,16 +71,7 @@ export async function GET(
   }
 
   return NextResponse.json(
-    { rows: result.candidates[candidateKey] || [] },
-    {
-      headers: {
-        "Cache-Control": CACHE_CONTROL,
-        "CDN-Cache-Control": CACHE_CONTROL,
-        "Vercel-CDN-Cache-Control": CACHE_CONTROL,
-        "Netlify-CDN-Cache-Control": CACHE_CONTROL,
-        "X-Mauri-Search": "CENTRE-SHARD-LOOKUP",
-        Vary: "Accept-Encoding",
-      },
-    },
+    { candidates: result.candidates },
+    { headers: publicHeaders() },
   );
 }
