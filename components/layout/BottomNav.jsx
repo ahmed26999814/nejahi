@@ -24,18 +24,18 @@ export default function BottomNav({ activeView, onNavigate, text }) {
     { key: "home", label: text.home, view: "home", icon: <HomeIcon /> },
     { key: "search", label: text.search, view: "search", icon: <SearchIcon /> },
     { key: "toppers", label: text.toppers, view: "toppers", icon: <AwardIcon /> },
+    { key: "lessons", label: isFrench ? "Cours" : "الدروس", href: "/lessons", icon: <BookIcon /> },
+    { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
+  ];
+
+  const secondaryItems = [
+    { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
     {
       key: "orientation",
       label: isFrench ? "Orientation" : "التوجيه",
       href: "/orientation",
       icon: <GraduationCap strokeWidth={2.2} />,
     },
-    { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
-  ];
-
-  const secondaryItems = [
-    { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
-    { key: "lessons", label: isFrench ? "Cours" : "الدروس", href: "/lessons", icon: <BookIcon /> },
     { key: "calculator", label: isFrench ? "Calculateur" : "الحاسبة", href: "/calculator", icon: <CalculatorIcon /> },
     { key: "download", label: isFrench ? "Application" : "التطبيق", href: "/Apk/", icon: <DownloadIcon /> },
   ];
