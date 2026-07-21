@@ -20,50 +20,78 @@ function parseAverage(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function readDetailValue(card, labels) {
+  const normalizedLabels = labels.map((label) => label.toLocaleLowerCase("fr"));
+  for (const tile of card.querySelectorAll(".info-tile")) {
+    const label = tile.querySelector(":scope > div > span")?.textContent?.trim().toLocaleLowerCase("fr") || "";
+    if (normalizedLabels.some((candidate) => label.includes(candidate))) {
+      return tile.querySelector(":scope > div > strong")?.textContent?.trim() || "";
+    }
+  }
+  return "";
+}
+
+function readBacResultCard() {
+  const card = document.querySelector(".result-modal .result-score")?.closest(".result-modal");
+  if (!card) return null;
+
+  const cardText = card.textContent || "";
+  const isBac = /باكالوريا|بكالوريا|baccalauréat|\bbac\b/i.test(cardText);
+  const average = parseAverage(card.querySelector(".result-score")?.textContent);
+  const rawStream = readDetailValue(card, ["الشعبة", "السلسلة", "série", "filière"]);
+  const stream = STREAM_ALIASES[rawStream] || rawStream;
+
+  if (!isBac || average === null || average < 10 || !stream) return null;
+  return { average, stream };
+}
+
 export default function OrientationResultBridge() {
   const [target, setTarget] = useState(null);
-  const [student, setStudent] = useState(null);
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
     let frame = 0;
+    let observer = null;
 
     function sync() {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const resultCard = document.querySelector(".result-modal");
-        let selected = null;
-        try {
-          selected = JSON.parse(sessionStorage.getItem("mauriresults-selected-result") || "null");
-        } catch {
-          selected = null;
-        }
-
-        const average = parseAverage(selected?.MOD);
-        const isBac = selected?.source === "bac";
-        setTarget(resultCard || null);
-        setStudent(isBac && average !== null && average >= 10 ? selected : null);
+        const resultCard = document.querySelector(".result-modal .result-score")?.closest(".result-modal") || null;
+        const parsed = resultCard ? readBacResultCard() : null;
+        setTarget(parsed ? resultCard : null);
+        setResult(parsed);
       });
     }
 
-    sync();
-    const observer = new MutationObserver(sync);
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("hashchange", sync);
-    window.addEventListener("popstate", sync);
+    function watch() {
+      observer?.disconnect();
+      sync();
+      const root = document.querySelector("main") || document.body;
+      observer = new MutationObserver(sync);
+      observer.observe(root, { childList: true, subtree: true });
+    }
+
+    function handleRouteChange() {
+      setTarget(null);
+      setResult(null);
+      watch();
+    }
+
+    watch();
+    window.addEventListener("hashchange", handleRouteChange);
+    window.addEventListener("popstate", handleRouteChange);
 
     return () => {
       cancelAnimationFrame(frame);
-      observer.disconnect();
-      window.removeEventListener("hashchange", sync);
-      window.removeEventListener("popstate", sync);
+      observer?.disconnect();
+      window.removeEventListener("hashchange", handleRouteChange);
+      window.removeEventListener("popstate", handleRouteChange);
     };
   }, []);
 
-  if (!target || !student) return null;
+  if (!target || !result) return null;
 
-  const average = parseAverage(student.MOD);
-  const stream = STREAM_ALIASES[String(student.track || "").trim()] || String(student.track || "").trim();
-  const href = `/orientation?stream=${encodeURIComponent(stream)}&average=${encodeURIComponent(average.toFixed(2))}`;
+  const href = `/orientation?stream=${encodeURIComponent(result.stream)}&average=${encodeURIComponent(result.average.toFixed(2))}`;
 
   return createPortal(
     <aside className="mt-4 overflow-hidden rounded-[24px] border border-emerald-200 bg-gradient-to-l from-emerald-50 to-white p-4 shadow-soft dark:border-emerald-300/20 dark:from-emerald-300/10 dark:to-white/5">
@@ -78,7 +106,7 @@ export default function OrientationResultBridge() {
           </span>
           <h3 className="mt-1 text-lg font-black text-slate-950 dark:text-white">شاهد التخصصات المناسبة لمعدلك</h3>
           <p className="mt-1 text-xs font-bold leading-5 text-slate-600 dark:text-slate-300">
-            سنستخدم شعبة {stream || "الباكالوريا"} ومعدلك {average.toFixed(2)} لعرض فرص التوجيه الأقرب إليك.
+            سنستخدم شعبة {result.stream} ومعدلك {result.average.toFixed(2)} لعرض فرص التوجيه الأقرب إليك.
           </p>
         </div>
       </div>
