@@ -2,10 +2,6 @@
 
 import dynamic from "next/dynamic";
 
-const Bac2026CountdownNotice = dynamic(
-  () => import("../layout/Bac2026CountdownNotice"),
-  { ssr: false },
-);
 const MotivationalVisibility = dynamic(
   () => import("../ui/MotivationalVisibility"),
   { ssr: false },
@@ -30,7 +26,6 @@ const OrientationResultBridge = dynamic(
 export default function HomeDeferredEnhancements() {
   return (
     <>
-      <Bac2026CountdownNotice />
       <MotivationalVisibility />
       <BacTopperTrackOrder />
       <ResultSubjectDetailsBridge />
