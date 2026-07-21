@@ -28,7 +28,7 @@ export default function ApkDownload() {
     return () => controller.abort();
   }, []);
 
-  const version = info?.version || "3.1.0";
+  const version = info?.version || "3.2.0";
 
   return (
     <div className="apk-action-area">
@@ -42,7 +42,7 @@ export default function ApkDownload() {
           </span>
           <span className="apk-download-copy">
             <strong>تحميل النسخة الجديدة {version}</strong>
-            <small>التحديث مطلوب · APK مباشر · {info.sizeMB || "-"} MB</small>
+            <small>تحديث إجباري · APK مباشر · {info.sizeMB || "-"} MB</small>
           </span>
         </a>
       ) : (

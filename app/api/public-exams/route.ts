@@ -10,7 +10,7 @@ const SITE_URL = "https://mauri-results.vercel.app";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=3600";
-const REQUIRED_APP_VERSION = "3.0.0";
+const REQUIRED_APP_VERSION = "3.2.0";
 
 function isAdminPlaceholder(value: unknown) {
   const text = String(value || "").trim().toLowerCase();
@@ -133,8 +133,8 @@ function legacyUpdateExam(): Record<string, unknown> {
     table_name: "update_required_v3",
     title_ar: "هذا الإصدار متوقف",
     title_fr: "Cette version est arrêtée",
-    description_ar: `نزّل تحديث MauriResults الجديد ${REQUIRED_APP_VERSION} من ${SITE_URL.replace("https://", "")}/Apk للمتابعة.`,
-    description_fr: `Téléchargez la nouvelle version MauriResults ${REQUIRED_APP_VERSION} depuis ${SITE_URL.replace("https://", "")}/Apk.`,
+    description_ar: `نزّل تحديث MauriResults الجديد ${REQUIRED_APP_VERSION} من ${SITE_URL.replace("https://", "")}/apk للمتابعة.`,
+    description_fr: `Téléchargez la nouvelle version MauriResults ${REQUIRED_APP_VERSION} depuis ${SITE_URL.replace("https://", "")}/apk.`,
     year: "2026",
     tone: "amber",
     search_mode: "number",
@@ -160,7 +160,7 @@ export async function GET(request: Request) {
         exams: [legacyUpdateExam()],
         updateRequired: true,
         minimumSupportedVersion: REQUIRED_APP_VERSION,
-        downloadUrl: `${SITE_URL}/Apk/`,
+        downloadUrl: `${SITE_URL}/apk`,
         message: "هذا الإصدار متوقف. نزّل التحديث الجديد.",
       },
       {
