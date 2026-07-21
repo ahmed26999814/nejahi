@@ -74,11 +74,58 @@ function extractAnchors(html, base) {
   return anchors;
 }
 
+function extractEmbeddedUrls(block, base) {
+  const found = new Set();
+  const patterns = [
+    /fileLink\s*:\s*["']([^"']+)["']/gi,
+    /(?:data-file|data-pdf|data-url|data-download)\s*=\s*["']([^"']+)["']/gi,
+    /https?:\/\/[^\s"'<>\\]+\.(?:pdf|docx?|xlsx?|pptx?|zip|rar)(?:\?[^\s"'<>\\]*)?/gi,
+  ];
+
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(block))) {
+      const candidate = match[1] || match[0];
+      const url = safeUrl(candidate, base);
+      if (url) found.add(url);
+    }
+  }
+  return [...found];
+}
+
+function extractTabs(html, base) {
+  const titles = [];
+  const titleRegex = /<button\b([^>]*aria-controls\s*=\s*["']([^"']+)["'][^>]*)>([\s\S]*?)<\/button>/gi;
+  let match;
+  while ((match = titleRegex.exec(html))) {
+    titles.push({
+      title: stripTags(match[3]),
+      contentId: match[2],
+    });
+  }
+
+  return titles.map((tab) => {
+    const marker = `id="${tab.contentId}"`;
+    const singleMarker = `id='${tab.contentId}'`;
+    let start = html.indexOf(marker);
+    if (start < 0) start = html.indexOf(singleMarker);
+    if (start < 0) return { ...tab, files: [] };
+
+    const nextDouble = html.indexOf('id="e-n-tab-content-', start + marker.length);
+    const nextSingle = html.indexOf("id='e-n-tab-content-", start + marker.length);
+    const candidates = [nextDouble, nextSingle].filter((value) => value > start);
+    const end = candidates.length ? Math.min(...candidates) : html.length;
+    return {
+      ...tab,
+      files: extractEmbeddedUrls(html.slice(start, end), base),
+    };
+  });
+}
+
 function rawMatches(html, query) {
   if (!query) return [];
-  const plainNeedle = query.trim();
   const lowerHtml = html.toLowerCase();
-  const needles = [plainNeedle, normalize(plainNeedle)].filter(Boolean);
+  const needles = [query.trim(), normalize(query)].filter(Boolean);
   const positions = new Set();
 
   for (const needle of needles) {
@@ -118,7 +165,8 @@ export async function GET(request) {
     });
     const contentType = response.headers.get("content-type") || "";
     const html = await response.text();
-    const allAnchors = extractAnchors(html, response.url || target);
+    const base = response.url || target;
+    const allAnchors = extractAnchors(html, base);
     const anchors = query
       ? allAnchors.filter((anchor) => normalize(`${anchor.text} ${anchor.context} ${anchor.href}`).includes(query))
       : allAnchors;
@@ -131,6 +179,8 @@ export async function GET(request) {
       anchorCount: allAnchors.length,
       matchedAnchorCount: anchors.length,
       anchors: anchors.slice(0, 80),
+      tabs: extractTabs(html, base),
+      embeddedFiles: extractEmbeddedUrls(html, base),
       rawMatches: rawMatches(html, rawQuery),
       bodyText: stripTags(html).slice(0, 4000),
     });
