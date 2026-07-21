@@ -1209,7 +1209,7 @@ function getExamYear(exam) {
 
 async function fetchPublishedExams() {
   try {
-    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" }, cache: "no-store" });
+    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" } });
     if (!response.ok) return [];
     const data = await response.json();
     return buildPublishedExamCards(data.exams || []);
