@@ -60,20 +60,20 @@ function CountdownUnit({ label, value }) {
 
 export default function Bac2026CountdownNotice() {
   const pathname = usePathname();
-  const isAdminPage = pathname?.startsWith("/admin");
+  const shouldShow = pathname === "/";
   const [now, setNow] = useState(null);
   const [isPublished, setIsPublished] = useState(false);
 
   useEffect(() => {
-    if (isAdminPage) return undefined;
+    if (!shouldShow) return undefined;
 
     setNow(Date.now());
     const timer = window.setInterval(() => setNow(Date.now()), 1_000);
     return () => window.clearInterval(timer);
-  }, [isAdminPage]);
+  }, [shouldShow]);
 
   useEffect(() => {
-    if (isAdminPage) return undefined;
+    if (!shouldShow) return undefined;
 
     let cancelled = false;
     let nextCheckTimer;
@@ -111,15 +111,15 @@ export default function Bac2026CountdownNotice() {
       cancelled = true;
       if (nextCheckTimer) window.clearTimeout(nextCheckTimer);
     };
-  }, [isAdminPage]);
+  }, [shouldShow]);
 
   const remainingMs = now === null ? null : Math.max(0, BAC_2026_TARGET - now);
   const countdown = useMemo(
     () => (remainingMs === null ? null : getRemainingParts(remainingMs)),
-    [remainingMs]
+    [remainingMs],
   );
 
-  if (isAdminPage) return null;
+  if (!shouldShow) return null;
 
   if (isPublished) {
     return (
