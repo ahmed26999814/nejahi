@@ -40,6 +40,10 @@ jobs:
               raise SystemExit('Unable to locate embedded hardening script')
           script = workflow.split(marker, 1)[1].split("\n          PY\n", 1)[0]
           script = textwrap.dedent(script)
+          script = script.replace(
+              'if "EXAM_CARDS" in home or "YEAR_CARDS" in home:\n    raise SystemExit("Static catalog references remain in HomeApplication")',
+              'if "EXAM_CARDS" in home or "YEAR_CARDS" in home:\n    remaining = [(index + 1, line.strip()) for index, line in enumerate(home.splitlines()) if "EXAM_CARDS" in line or "YEAR_CARDS" in line]\n    raise SystemExit(f"Static catalog references remain: {remaining}")',
+          )
           exec(compile(script, '<number-only-hardening>', 'exec'))
           PYEXTRACT
           status=$?
