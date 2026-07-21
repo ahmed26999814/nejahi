@@ -60,9 +60,54 @@ function CountdownUnit({ label, value }) {
 
 export default function Bac2026CountdownNotice() {
   const pathname = usePathname();
-  const shouldShow = pathname === "/";
+  const [isHomeView, setIsHomeView] = useState(false);
   const [now, setNow] = useState(null);
   const [isPublished, setIsPublished] = useState(false);
+
+  useEffect(() => {
+    if (pathname !== "/") {
+      setIsHomeView(false);
+      return undefined;
+    }
+
+    let frame = 0;
+
+    function syncVisibility(routeDetail) {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const routedView = routeDetail?.view;
+        const isHomeRoute = routedView ? routedView === "home" : !window.location.hash;
+        const hasOpenResult = Boolean(document.querySelector(".result-modal"));
+        setIsHomeView(isHomeRoute && !hasOpenResult);
+      });
+    }
+
+    function handleRouteChange(event) {
+      syncVisibility(event.detail);
+    }
+
+    function handleLocationChange() {
+      syncVisibility();
+    }
+
+    const observer = new MutationObserver(() => syncVisibility());
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    syncVisibility();
+    window.addEventListener("mauriresults:routechange", handleRouteChange);
+    window.addEventListener("hashchange", handleLocationChange);
+    window.addEventListener("popstate", handleLocationChange);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("mauriresults:routechange", handleRouteChange);
+      window.removeEventListener("hashchange", handleLocationChange);
+      window.removeEventListener("popstate", handleLocationChange);
+    };
+  }, [pathname]);
+
+  const shouldShow = pathname === "/" && isHomeView;
 
   useEffect(() => {
     if (!shouldShow) return undefined;
