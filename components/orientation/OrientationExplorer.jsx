@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Filter, GraduationCap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -21,7 +22,10 @@ import {
   SAVED_KEY,
 } from "./orientation-utils";
 
-export default function OrientationExplorer({ initialAverage = "", initialStream = "" }) {
+export default function OrientationExplorer() {
+  const searchParams = useSearchParams();
+  const initialAverage = searchParams.get("average") || "";
+  const initialStream = searchParams.get("stream") || "";
   const normalizedInitialStream = normalizeStream(initialStream);
   const parsedInitialAverage = parseScore(initialAverage);
   const validInitialAverage = Number.isFinite(parsedInitialAverage) && parsedInitialAverage >= 0 && parsedInitialAverage <= 20

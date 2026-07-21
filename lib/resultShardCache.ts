@@ -8,7 +8,10 @@ import {
 } from "./resultNumberLookup";
 import { SEARCH_CACHE_TAG, searchSourceTag } from "./cacheTags";
 
-const RESULT_CACHE_SECONDS = 300;
+// Results remain immutable between publication events. Publication and reset routes
+// invalidate these tags explicitly, so a longer warm-cache window greatly reduces
+// Supabase traffic during result-day spikes without keeping stale data after updates.
+const RESULT_CACHE_SECONDS = 3_600;
 
 export function cachedNumberShard(source: string, shard: string) {
   return unstable_cache(
