@@ -27,6 +27,16 @@ function stripTags(value = "") {
     .trim();
 }
 
+function normalize(value = "") {
+  return stripTags(value)
+    .toLowerCase()
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function safeUrl(value, base) {
   if (!value) return null;
   try {
@@ -51,13 +61,14 @@ function extractAnchors(html, base) {
   while ((match = regex.exec(html))) {
     const href = safeUrl(getAttribute(match[1], "href"), base);
     if (!href) continue;
-    const start = Math.max(0, match.index - 700);
-    const end = Math.min(html.length, regex.lastIndex + 700);
+    const start = Math.max(0, match.index - 1200);
+    const end = Math.min(html.length, regex.lastIndex + 1200);
     anchors.push({
       text: stripTags(match[2]),
       href,
-      context: stripTags(html.slice(start, end)).slice(0, 700),
+      context: stripTags(html.slice(start, end)).slice(0, 1600),
       attributes: match[1].slice(0, 500),
+      index: match.index,
     });
   }
   return anchors;
@@ -68,7 +79,9 @@ export async function GET(request) {
     return NextResponse.json({ error: "Not available in production." }, { status: 404 });
   }
 
-  const input = new URL(request.url).searchParams.get("url");
+  const requestUrl = new URL(request.url);
+  const input = requestUrl.searchParams.get("url");
+  const query = normalize(requestUrl.searchParams.get("q") || "");
   const target = safeUrl(input, "https://rimbac.com/");
   if (!target) return NextResponse.json({ error: "Invalid Rimbac URL." }, { status: 400 });
 
@@ -83,16 +96,20 @@ export async function GET(request) {
     });
     const contentType = response.headers.get("content-type") || "";
     const html = await response.text();
-    const anchors = extractAnchors(html, response.url || target);
+    const allAnchors = extractAnchors(html, response.url || target);
+    const anchors = query
+      ? allAnchors.filter((anchor) => normalize(`${anchor.text} ${anchor.context} ${anchor.href}`).includes(query))
+      : allAnchors;
     return NextResponse.json({
       requestedUrl: target,
       finalUrl: response.url,
       status: response.status,
       contentType,
       title: stripTags(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || ""),
-      anchorCount: anchors.length,
-      anchors,
-      bodyText: stripTags(html).slice(0, 3000),
+      anchorCount: allAnchors.length,
+      matchedAnchorCount: anchors.length,
+      anchors: anchors.slice(0, 80),
+      bodyText: stripTags(html).slice(0, 4000),
     });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 502 });
