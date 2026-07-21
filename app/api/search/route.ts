@@ -5,7 +5,7 @@ export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://mauri-results.vercel.app";
-const REQUIRED_APP_VERSION = "3.0.0";
+const REQUIRED_APP_VERSION = "3.2.0";
 
 const SOURCE_ALIASES: Record<string, string> = {
   bac_2026: "bac",
@@ -76,17 +76,17 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         rows: [{
-          Numero: "3.0.0",
+          Numero: REQUIRED_APP_VERSION,
           NOM: "هذا الإصدار متوقف — نزّل التحديث الجديد",
-          MOD: "3.0.0",
-          KR: `افتح ${SITE_URL.replace("https://", "")}/Apk ونزّل النسخة الجديدة`,
+          MOD: REQUIRED_APP_VERSION,
+          KR: `افتح ${SITE_URL.replace("https://", "")}/apk ونزّل النسخة الجديدة`,
           WL: "تحديث إجباري",
           MS: "MauriResults",
           MD: "لا يمكن متابعة النسخة القديمة",
         }],
         updateRequired: true,
         minimumSupportedVersion: REQUIRED_APP_VERSION,
-        downloadUrl: `${SITE_URL}/Apk/`,
+        downloadUrl: `${SITE_URL}/apk`,
       },
       { status: 200, headers: noStoreHeaders() },
     );
@@ -96,10 +96,10 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         rows: [],
-        error: "هذا الإصدار متوقف. نزّل تحديث MauriResults الجديد 3.0.0.",
+        error: `هذا الإصدار متوقف. نزّل تحديث MauriResults الجديد ${REQUIRED_APP_VERSION}.`,
         updateRequired: true,
         minimumSupportedVersion: REQUIRED_APP_VERSION,
-        downloadUrl: `${SITE_URL}/Apk/`,
+        downloadUrl: `${SITE_URL}/apk`,
       },
       { status: 426, headers: noStoreHeaders() },
     );
