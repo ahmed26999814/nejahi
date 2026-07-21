@@ -1,4 +1,4 @@
-// Production rebuild trigger: Flutter 3.1.0 mandatory update release.
+// Production rebuild trigger: Flutter 3.2.0 mandatory update release.
 const DEFAULT_SUPABASE_URL = "https://nxizqnlemsbjmsfyuevg.supabase.co";
 
 function usableEnvironmentValue(value) {
@@ -97,22 +97,27 @@ const nextConfig = {
       },
       {
         source: "/apk/MauriResults.apk",
-        destination: "/apk/MauriResults-3.1.0.apk",
+        destination: "/apk/MauriResults-3.2.0.apk",
+        permanent: false,
+      },
+      {
+        source: "/apk/MauriResults-3.1.0.apk",
+        destination: "/apk/MauriResults-3.2.0.apk",
         permanent: false,
       },
       {
         source: "/apk/MauriResults-3.0.0.apk",
-        destination: "/apk/MauriResults-3.1.0.apk",
+        destination: "/apk/MauriResults-3.2.0.apk",
         permanent: false,
       },
       {
         source: "/apk/MauriResults-2.1.0.apk",
-        destination: "/apk/MauriResults-3.1.0.apk",
+        destination: "/apk/MauriResults-3.2.0.apk",
         permanent: false,
       },
       {
         source: "/apk/MauriResults-2.0.0.apk",
-        destination: "/apk/MauriResults-3.1.0.apk",
+        destination: "/apk/MauriResults-3.2.0.apk",
         permanent: false,
       },
     ];
@@ -146,10 +151,10 @@ const nextConfig = {
         ],
       },
       {
-        source: "/apk/MauriResults-3.1.0.apk",
+        source: "/apk/MauriResults-3.2.0.apk",
         headers: [
           { key: "Content-Type", value: "application/vnd.android.package-archive" },
-          { key: "Content-Disposition", value: 'attachment; filename="MauriResults-3.1.0.apk"' },
+          { key: "Content-Disposition", value: 'attachment; filename="MauriResults-3.2.0.apk"' },
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
