@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Download, FileCheck2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Download, FileCheck2, LibraryBig } from "lucide-react";
 
 export default function ExamLibraryPromo() {
   return (
@@ -12,30 +12,34 @@ export default function ExamLibraryPromo() {
       <div className="relative grid items-center gap-6 lg:grid-cols-[1fr_auto]">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-black text-emerald-100">
-            <BookOpen className="h-4 w-4" aria-hidden="true" />
-            جديد في MauriResults
+            <LibraryBig className="h-4 w-4" aria-hidden="true" />
+            مكتبة MauriResults التعليمية
           </div>
-          <h2 className="mt-4 text-2xl font-black sm:text-3xl">مكتبة مواضيع الامتحانات والتصحيحات</h2>
+          <h2 className="mt-4 text-2xl font-black sm:text-3xl">الدروس ومواضيع الامتحانات</h2>
           <p className="mt-3 max-w-3xl text-sm font-semibold leading-7 text-emerald-50/80">
-            مواضيع باكالوريا وابريفه وكونكور والامتياز، مرتبة حسب السنة والمادة، مع الحلول والمذكرات والمراجع المتوفرة.
+            الكتب والدروس المدرسية، ومواضيع باكالوريا وابريفه وكونكور والامتياز، مرتبة حسب المرحلة والسنة والمادة مع الحلول والمراجع المتوفرة.
           </p>
           <div className="mt-4 flex flex-wrap gap-2 text-xs font-black text-emerald-50/90">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
-              <Download className="h-3.5 w-3.5" aria-hidden="true" />
-              تنزيل مباشر
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              دروس وكتب
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
               <FileCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
               مواضيع وحلول
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              تنزيل مباشر
             </span>
           </div>
         </div>
 
         <Link
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-black text-[#0b3d2a] shadow-xl shadow-black/10 transition hover:-translate-y-0.5 hover:bg-emerald-50 active:translate-y-0"
-          href="/documents"
+          href="/lessons"
         >
-          فتح المكتبة
+          فتح القسم
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
