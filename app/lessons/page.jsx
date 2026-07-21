@@ -1,14 +1,14 @@
-import LessonsExplorer from "./LessonsExplorer";
+import LessonsAndExams from "./LessonsAndExams";
 
 const url = "https://mauriresults.vercel.app/lessons";
 
 export const metadata = {
-  title: "الدروس والملخصات التعليمية في موريتانيا",
-  description: "تصفح الدروس والملخصات والملفات التعليمية للطلاب في موريتانيا عبر MauriResults من الهاتف بسرعة.",
+  title: "الدروس ومواضيع الامتحانات",
+  description: "تصفح الكتب والدروس المدرسية ومواضيع باكالوريا وابريفه وكونكور والامتياز مع الحلول والمذكرات والمراجع عبر MauriResults.",
   alternates: { canonical: url },
   openGraph: {
-    title: "الدروس والملخصات التعليمية | MauriResults",
-    description: "دروس وملخصات تعليمية منظمة للطلاب في موريتانيا.",
+    title: "الدروس ومواضيع الامتحانات | MauriResults",
+    description: "كتب ودروس ومواضيع امتحانات وطنية مع الحلول، منظمة في قسم واحد.",
     url,
     type: "website",
     images: ["/logo.png"],
@@ -16,5 +16,5 @@ export const metadata = {
 };
 
 export default function LessonsPage() {
-  return <LessonsExplorer />;
+  return <LessonsAndExams />;
 }
