@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { GraduationCap, MoreHorizontal, X } from "lucide-react";
 import { AwardIcon, ChartIcon, HomeIcon, SearchIcon } from "../common/icons";
 
 function BookIcon() {
@@ -17,14 +18,25 @@ function DownloadIcon() {
 
 export default function BottomNav({ activeView, onNavigate, text }) {
   const isFrench = text?.home === "Accueil";
+  const [moreOpen, setMoreOpen] = useState(false);
 
-  const items = [
+  const primaryItems = [
     { key: "home", label: text.home, view: "home", icon: <HomeIcon /> },
     { key: "search", label: text.search, view: "search", icon: <SearchIcon /> },
     { key: "toppers", label: text.toppers, view: "toppers", icon: <AwardIcon /> },
+    {
+      key: "orientation",
+      label: isFrench ? "Orientation" : "التوجيه",
+      href: "/orientation",
+      icon: <GraduationCap strokeWidth={2.2} />,
+    },
+    { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
+  ];
+
+  const secondaryItems = [
     { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
     { key: "lessons", label: isFrench ? "Cours" : "الدروس", href: "/lessons", icon: <BookIcon /> },
-    { key: "calculator", label: isFrench ? "Calcul" : "الحاسبة", href: "/calculator", icon: <CalculatorIcon /> },
+    { key: "calculator", label: isFrench ? "Calculateur" : "الحاسبة", href: "/calculator", icon: <CalculatorIcon /> },
     { key: "download", label: isFrench ? "Application" : "التطبيق", href: "/Apk/", icon: <DownloadIcon /> },
   ];
 
@@ -34,6 +46,11 @@ export default function BottomNav({ activeView, onNavigate, text }) {
   }, []);
 
   function activate(item) {
+    if (item.more) {
+      setMoreOpen((value) => !value);
+      return;
+    }
+    setMoreOpen(false);
     if (item.href) {
       window.location.href = item.href;
       return;
@@ -42,32 +59,72 @@ export default function BottomNav({ activeView, onNavigate, text }) {
   }
 
   function isActive(item) {
+    if (item.key === "more") return activeView === "analytics";
     if (item.view === "search") return activeView === "exam" || activeView === "year";
     return item.view === activeView;
   }
 
   return (
-    <nav className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-50 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden" aria-label={isFrench ? "Navigation principale" : "التنقل الرئيسي"}>
-      <div className="mx-auto grid max-w-md grid-cols-7 gap-0.5 rounded-[24px] border border-white/75 bg-white/[.94] p-1.5 shadow-[0_-16px_46px_rgba(15,23,42,.13)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.96]">
-        {items.map((item) => {
-          const active = isActive(item);
-          return (
-            <button
-              className={`relative grid min-w-0 min-h-12 justify-items-center content-center gap-0.5 rounded-[14px] px-0.5 text-[7px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
-              onClick={() => activate(item)}
-              type="button"
-              key={item.key}
-              aria-current={active ? "page" : undefined}
-              data-control-key={item.key}
-              data-haptic
-            >
-              <span className="grid h-[18px] w-[18px] place-items-center [&>svg]:h-[18px] [&>svg]:w-[18px]">{item.icon}</span>
-              <span className="block w-full truncate text-center" data-control-label>{item.label}</span>
-              {active && <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-white/85" aria-hidden="true" />}
-            </button>
-          );
-        })}
-      </div>
-    </nav>
+    <>
+      {moreOpen && (
+        <button
+          className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-[2px] md:hidden"
+          onClick={() => setMoreOpen(false)}
+          type="button"
+          aria-label={isFrench ? "Fermer le menu" : "إغلاق القائمة"}
+        />
+      )}
+
+      <nav className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-50 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden" aria-label={isFrench ? "Navigation principale" : "التنقل الرئيسي"}>
+        {moreOpen && (
+          <section className="absolute inset-x-3 bottom-[calc(100%+.45rem)] mx-auto max-w-md rounded-[24px] border border-white/80 bg-white/95 p-3 shadow-[0_-18px_50px_rgba(15,23,42,.18)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#0a1710]/95">
+            <div className="mb-2 flex items-center justify-between px-1">
+              <strong className="text-sm font-black text-slate-950 dark:text-white">
+                {isFrench ? "Plus de services" : "خدمات أخرى"}
+              </strong>
+              <button className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200" onClick={() => setMoreOpen(false)} type="button" aria-label={isFrench ? "Fermer" : "إغلاق"}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {secondaryItems.map((item) => (
+                <button
+                  className="flex min-h-14 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-right text-sm font-black text-slate-700 transition active:scale-[.97] dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
+                  onClick={() => activate(item)}
+                  type="button"
+                  key={item.key}
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-mauri-green/10 text-mauri-green [&>svg]:h-5 [&>svg]:w-5 dark:text-emerald-300">
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-1 rounded-[24px] border border-white/75 bg-white/[.95] p-1.5 shadow-[0_-16px_46px_rgba(15,23,42,.13)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.97]">
+          {primaryItems.map((item) => {
+            const active = isActive(item);
+            return (
+              <button
+                className={`relative grid min-h-12 min-w-0 content-center justify-items-center gap-1 rounded-[15px] px-1 text-[10px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
+                onClick={() => activate(item)}
+                type="button"
+                key={item.key}
+                aria-current={active ? "page" : undefined}
+                data-control-key={item.key}
+                data-haptic
+              >
+                <span className="grid h-[21px] w-[21px] place-items-center [&>svg]:h-[21px] [&>svg]:w-[21px]">{item.icon}</span>
+                <span className="block w-full truncate text-center" data-control-label>{item.label}</span>
+                {active && <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-white/85" aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }
