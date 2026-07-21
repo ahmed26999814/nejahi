@@ -1,7 +1,7 @@
 "use client";
 
 import PremiumHomeView from "./PremiumHomeView";
-import AnalyticsPage from "../analytics/AnalyticsPage";
+import dynamic from "next/dynamic";
 import SearchPanel from "../search/SearchPanel";
 import BottomNav from "../layout/BottomNav";
 import FloatingActionButton from "../ui/FloatingActionButton";
@@ -18,6 +18,8 @@ import { FaFacebookF, FaTelegram, FaWhatsapp } from "react-icons/fa6";
 import * as Select from "@radix-ui/react-select";
 import { Toaster, toast } from "sonner";
 
+const AnalyticsPage = dynamic(() => import("../analytics/AnalyticsPage"), { ssr: false });
+
 const PAGE_SIZE = 1000;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -30,16 +32,9 @@ const CONCOURS_LOCATIONS_VIEW = "concours_locations_view";
 const EXCELLENCE_1AS_TABLE = "excellence_1as_results";
 const BREVET_TABLE = "brevet_results";
 const SITE_CONTENT_TABLE = "site_content";
-const TABLE_BY_SOURCE = {
-  bac: BAC_TABLE,
-  bac_session: BAC_SESSION_TABLE,
-  brevet: BREVET_TABLE,
-  concours: CONCOURS_VIEW,
-  excellence_1as: EXCELLENCE_1AS_TABLE,
-};
 
 const ANALYTICS_VIEW_LIMIT = 20;
-const BAC_TRACK_PRIORITY = ["SN", "M", "LO", "LM"];
+const BAC_TRACK_PRIORITY = ["SN", "M", "LO", "LM", "TM", "TS", "LA"];
 const ANALYTICS_VIEW_NAMES = {
   bac: { stats: "bac_stats", regionStats: "bac_region_stats", schoolStats: "bac_school_stats", trackStats: "bac_track_stats", topStudents: "bac_top_students" },
   brevet: { stats: "brevet_stats", regionStats: "brevet_region_stats", schoolStats: "brevet_school_stats", topStudents: "brevet_top_students" },
@@ -60,18 +55,6 @@ const actionButtonClass = cva("action-button", {
   },
 });
 
-const EXAM_CARDS = [
-  { id: "bac-2025", title: { ar: "نتائج باكالوريا 2025", fr: "Résultats Bac 2025" }, description: { ar: "النتائج الرسمية للباكالوريا.", fr: "Résultats officiels du baccalauréat." }, tone: "green", available: true, source: "bac", icon: <GraduationIcon /> },
-  { id: "brevet-2025", title: { ar: "نتائج ابريفه 2025", fr: "Résultats BEPC 2025" }, description: { ar: "نتائج ختم الدروس الإعدادية الرسمية.", fr: "Résultats officiels du BEPC." }, tone: "blue", available: true, source: "brevet", icon: <BookIcon /> },
-  { id: "concours-2025", title: { ar: "كونكور 2025", fr: "Concours 2025" }, description: { ar: "بحث خاص بالولاية والمقاطعة والمركز ورقم المترشح.", fr: "Recherche par région, département, centre et numéro." }, tone: "gold", available: true, source: "concours", icon: <SchoolIcon /> },
-  { id: "excellence-1as-2025", title: { ar: "الامتياز الأولى إعدادية 2025", fr: "Excellence 1AS 2025" }, description: { ar: "نتائج مسابقة الامتياز الأولى إعدادية.", fr: "Résultats du concours Excellence 1AS." }, tone: "teal", available: true, source: "excellence_1as", icon: <AwardIcon /> },
-  { id: "bac-session-2025", title: { ar: "الباكالوريا الدورة التكميلية 2025", fr: "Bac session complémentaire 2025" }, description: { ar: "نتائج الدورة التكميلية الرسمية.", fr: "Résultats officiels de la session complémentaire." }, tone: "amber", available: true, source: "bac_session", icon: <AlertIcon /> },
-];
-
-const YEAR_CARDS = [
-  { id: "year-2025", title: { ar: "نتائج مسابقات 2025", fr: "Résultats des concours 2025" }, description: { ar: "كل النتائج المتوفرة الآن في مكان واحد.", fr: "Tous les résultats disponibles au même endroit." }, available: true, tone: "green", icon: <GraduationIcon /> },
-  { id: "year-2026", title: { ar: "نتائج مسابقات 2026", fr: "Résultats des concours 2026" }, description: { ar: "سيتم فتحها عند توفر النتائج.", fr: "Ouverture prochaine." }, available: false, tone: "rose", icon: <AwardIcon /> },
-];
 
 const CONCOURS_WILAYA_ALIASES = {
   "آدرار": ["آدرار"],
@@ -133,7 +116,7 @@ const UI_TEXT = {
     participants: "المشاركون",
     highestScore: "أعلى مجموع",
     averageScore: "متوسط المجموع",
-    searchPlaceholder: "أدخل رقم المترشح أو الاسم الكامل",
+    searchPlaceholder: "أدخل رقم المترشح",
     searchButton: "بحث",
     searching: "بحث...",
     resultCard: "بطاقة النتيجة",
@@ -195,10 +178,11 @@ const UI_TEXT = {
     statusLabels: { admis: "ناجح", sessionnaire: "دورة استدراكية", absent: "غائب", ajourne: "راسب", unknown: "غير محددة" },
     missingEnv: "لم يتم ضبط إعدادات الاتصال في بيئة النشر.",
     statsLoadError: "تعذر تحميل الإحصائيات.",
-    enterQuery: "يرجى إدخال رقم المترشح أو الاسم.",
-    shortQuery: "أدخل رقما أو اسما من حرفين على الأقل.",
-    notFound: "لم يتم العثور على نتيجة بهذا الرقم أو الاسم.",
-    sessionNotFound: "لم يتم العثور على مترشح مؤهل للدورة بهذا الرقم أو الاسم.",
+    enterQuery: "يرجى إدخال رقم المترشح.",
+    shortQuery: "أدخل رقم مترشح صحيحًا من رقمين على الأقل.",
+    invalidCandidateNumber: "رقم المترشح يجب أن يحتوي على أرقام فقط.",
+    notFound: "لم يتم العثور على نتيجة بهذا الرقم.",
+    sessionNotFound: "لم يتم العثور على مترشح مؤهل للدورة بهذا الرقم.",
     connectionError: "حدث خطأ أثناء الاتصال بالخدمة.",
     checkCandidateNumber: "تأكد من كتابة رقم المترشح بصورة صحيحة.",
     checkExam: "تأكد من اختيار المسابقة الصحيحة.",
@@ -252,7 +236,7 @@ const UI_TEXT = {
     participants: "Participants",
     highestScore: "Meilleur total",
     averageScore: "Total moyen",
-    searchPlaceholder: "Entrez le numéro ou le nom complet",
+    searchPlaceholder: "Entrez le numéro du candidat",
     searchButton: "Rechercher",
     searching: "Recherche...",
     resultCard: "Carte du résultat",
@@ -314,10 +298,11 @@ const UI_TEXT = {
     statusLabels: { admis: "Admis", sessionnaire: "Session complémentaire", absent: "Absent", ajourne: "Ajourné", unknown: "Non défini" },
     missingEnv: "La configuration de connexion est incomplète en production.",
     statsLoadError: "Impossible de charger les statistiques.",
-    enterQuery: "Veuillez saisir le numéro ou le nom.",
-    shortQuery: "Saisissez au moins deux caractères.",
-    notFound: "Aucun résultat trouvé avec ce numéro ou ce nom.",
-    sessionNotFound: "Aucun candidat admissible à la session avec ce numéro ou ce nom.",
+    enterQuery: "Veuillez saisir le numéro du candidat.",
+    shortQuery: "Saisissez un numéro valide d’au moins deux chiffres.",
+    invalidCandidateNumber: "Le numéro du candidat doit contenir uniquement des chiffres.",
+    notFound: "Aucun résultat trouvé avec ce numéro.",
+    sessionNotFound: "Aucun candidat admissible à la session avec ce numéro.",
     connectionError: "Erreur lors de la connexion à la base de données.",
     checkCandidateNumber: "Vérifiez le numéro du candidat.",
     checkExam: "Vérifiez le concours sélectionné.",
@@ -340,6 +325,20 @@ function parseAverage(value) {
 
 function cleanText(value) {
   return String(value ?? "").trim();
+}
+
+function normalizedTrackCode(value) {
+  return cleanText(value).toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+function bacTrackPriorityIndex(value) {
+  const index = BAC_TRACK_PRIORITY.indexOf(normalizedTrackCode(value));
+  return index === -1 ? BAC_TRACK_PRIORITY.length : index;
+}
+
+function compareBacTracks(left, right) {
+  const priorityDifference = bacTrackPriorityIndex(left) - bacTrackPriorityIndex(right);
+  return priorityDifference || cleanText(left).localeCompare(cleanText(right), "fr");
 }
 
 function normalizeComparable(value) {
@@ -718,7 +717,7 @@ function groupTopStudentsByTrackFromViews(students, { showTrackGroups = true, se
   }
 
   return [...new Set(pool.map((student) => cleanText(student.track)).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, "ar"))
+    .sort(compareBacTracks)
     .map((track) => ({
       track,
       students: pool
@@ -972,67 +971,6 @@ function prepareBrevetStudents(rows) {
   return [...new Map(sorted.map((student) => [student.id, student])).values()];
 }
 
-async function fetchAllResults() {
-  const rows = [];
-  let from = 0;
-
-  while (true) {
-    const batch = await supabaseRequest({
-      select: "Numero,NOM,TS,MOD,KR,WL,MS,MD",
-      limit: PAGE_SIZE,
-      offset: from,
-    }, BAC_TABLE);
-    rows.push(...batch);
-    if (batch.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return prepareStudents(rows);
-}
-
-async function fetchBrevetResults() {
-  const rows = [];
-  let from = 0;
-
-  while (true) {
-    const batch = await supabaseRequest({
-      select: "Num_Bepc,NOM,Moyenne_Bepc,Decision,Ecole,Centre,WILAYA,LIEU_NAIS,DATE_NAISS",
-      limit: PAGE_SIZE,
-      offset: from,
-    }, BREVET_TABLE);
-    rows.push(...batch);
-    if (batch.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return prepareBrevetStudents(rows);
-}
-
-async function fetchBacSessionResults() {
-  const rows = [];
-  let from = 0;
-
-  while (true) {
-    const batch = await supabaseRequest({ select: "*", limit: PAGE_SIZE, offset: from }, BAC_SESSION_TABLE);
-    rows.push(...batch);
-    if (batch.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return prepareBacSessionStudents(rows);
-}
-
-async function fetchConcoursResults() {
-  const rows = await supabaseRequest({
-    select: "*",
-    order: "total_num.desc.nullslast",
-    limit: 300,
-  }, CONCOURS_VIEW);
-  const students = prepareConcoursStudents(rows);
-  logConcoursRows("top-global", rows, students);
-  return students;
-}
-
 async function fetchConcoursLocations() {
   const rows = [];
   let from = 0;
@@ -1140,20 +1078,6 @@ async function searchConcoursByLocation({ wilaya, wilayaValues = [], moughataa, 
   return students;
 }
 
-async function fetchExcellenceResults() {
-  const rows = [];
-  let from = 0;
-
-  while (true) {
-    const batch = await supabaseRequest({ select: "*", limit: PAGE_SIZE, offset: from }, EXCELLENCE_1AS_TABLE);
-    rows.push(...batch);
-    if (batch.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return prepareExcellenceStudents(rows);
-}
-
 async function searchResults(query, exam) {
    if (!exam?.source) throw new Error("Missing selected exam.");
    const response = await fetch(`/api/search?source=${encodeURIComponent(exam.source)}&q=${encodeURIComponent(query.trim())}`, {
@@ -1203,17 +1127,7 @@ function summarizeStudents(students, field) {
 }
 
 function sortBacTrackStats(rows = []) {
-  const priorityIndex = (label) => {
-    const normalized = cleanText(label).toUpperCase().replace(/[^A-Z0-9]/g, "");
-    const index = BAC_TRACK_PRIORITY.indexOf(normalized);
-    return index === -1 ? BAC_TRACK_PRIORITY.length : index;
-  };
-
-  return [...rows].sort((a, b) => {
-    const priorityDifference = priorityIndex(a.label) - priorityIndex(b.label);
-    if (priorityDifference) return priorityDifference;
-    return cleanText(a.label).localeCompare(cleanText(b.label), "fr");
-  });
+  return [...rows].sort((a, b) => compareBacTracks(a.label, b.label));
 }
 
 function groupStudentsByTrack(students) {
@@ -1229,12 +1143,30 @@ function groupStudentsByTrack(students) {
       track,
       students: [...groupStudents].sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex),
     }))
-    .sort((a, b) => a.track.localeCompare(b.track, "ar"));
+    .sort((a, b) => compareBacTracks(a.track, b.track));
+}
+
+function publishedExamId(row) {
+  const source = cleanText(row?.source_key);
+  const year = String(row?.year || "").match(/20\d{2}/)?.[0] || "results";
+  const builtInIds = {
+    bac: "bac",
+    brevet: "brevet",
+    concours: "concours",
+    excellence_1as: "excellence-1as",
+    bac_session: "bac-session",
+    bac_2026: "bac",
+    brevet_2026: "brevet",
+    concours_2026: "concours",
+    excellence_1as_2026: "excellence-1as",
+    bac_session_2026: "bac-session",
+  };
+  return builtInIds[source] ? `${builtInIds[source]}-${year}` : `upload-${row.table_name}`;
 }
 
 function buildPublishedExamCards(rows = []) {
   return rows
-    .filter((row) => row?.table_name && row?.source_key && row?.number_column && row?.name_column && row?.score_column)
+    .filter((row) => row?.table_name && row?.source_key && row?.number_column && row?.score_column)
     .map((row) => {
       const examIdentity = cleanText(`${row.table_name} ${row.title_ar} ${row.title_fr} ${row.score_column}`).toLowerCase();
       const isClearlyBac = /(^|[^a-z])(bac|baccalaureat|baccalauréat)([^a-z]|$)|باكالوريا/.test(examIdentity)
@@ -1243,7 +1175,7 @@ function buildPublishedExamCards(rows = []) {
       // location-column auto-detection. Future uploads preserve the admin choice.
       const searchMode = isClearlyBac ? "simple" : (row.search_mode || "simple");
       return ({
-      id: "upload-" + row.table_name,
+      id: publishedExamId(row),
       title: { ar: row.title_ar || row.table_name, fr: row.title_fr || row.title_ar || row.table_name },
       description: { ar: row.description_ar || "نتائج منشورة من لوحة الأدمن.", fr: row.description_fr || "Résultats publiés depuis l'administration." },
       tone: row.tone || "green",
@@ -1257,7 +1189,7 @@ function buildPublishedExamCards(rows = []) {
         name: row.name_column,
         score: row.score_column,
         decision: row.decision_column,
-        track: row.track_column,
+        track: /bepc|brevet|concours|c1as|كونكور|ابريف|بريف/i.test(examIdentity) ? null : row.track_column,
         wilaya: row.wilaya_column,
         moughataa: row.moughataa_column,
         school: row.school_column,
@@ -1369,7 +1301,7 @@ export default function HomePage() {
   const [theme, setThemeState] = useState("light");
   const [activeView, setActiveView] = useState("home");
   const [selectedExamId, setSelectedExamId] = useState("");
-  const [selectedYearId, setSelectedYearId] = useState("year-2025");
+  const [selectedYearId, setSelectedYearId] = useState("year-2026");
   const [selectedTopperTrack, setSelectedTopperTrack] = useState("");
   const [analyticsMode, setAnalyticsMode] = useState("");
   const [siteContent, setSiteContent] = useState({});
@@ -1381,23 +1313,17 @@ export default function HomePage() {
   const [publishedExams, setPublishedExams] = useState([]);
   const sharedResultRequestRef = useRef("");
 
-  const examCards = useMemo(() => [...EXAM_CARDS, ...publishedExams], [publishedExams]);
+  const examCards = publishedExams;
   const yearCards = useMemo(() => {
-    const baseByYear = new Map(YEAR_CARDS.map((year) => [year.id.replace("year-", ""), year]));
-    const years = [...new Set(["2025", "2026", ...examCards.map(getExamYear)])]
+    return [...new Set(examCards.map(getExamYear))]
       .filter((year) => /^20\d{2}$/.test(year))
-      .sort((a, b) => Number(a) - Number(b));
-    return years.map((yearValue) => {
-      const base = baseByYear.get(yearValue) || {
+      .sort((a, b) => Number(b) - Number(a))
+      .map((yearValue) => ({
         id: `year-${yearValue}`,
-        title: { ar: `نتائج مسابقات ${yearValue}`, fr: `Résultats des concours ${yearValue}` },
-        description: { ar: `النتائج المنشورة لسنة ${yearValue}.`, fr: `Résultats publiés pour ${yearValue}.` },
-        tone: "green",
-        icon: <GraduationIcon />,
-      };
-      const available = examCards.some((exam) => exam.available && getExamYear(exam) === yearValue);
-      return { ...base, id: `year-${yearValue}`, available };
-    });
+        title: { ar: `نتائج المسابقات ${yearValue}`, fr: `Résultats des concours ${yearValue}` },
+        description: { ar: `النتائج المنشورة والمتاحة لسنة ${yearValue}.`, fr: `Résultats publiés et disponibles pour ${yearValue}.` },
+        available: examCards.some((exam) => exam.available && getExamYear(exam) === yearValue),
+      }));
   }, [examCards]);
   const selectedExam = useMemo(() => examCards.find((exam) => exam.id === selectedExamId), [examCards, selectedExamId]);
 
@@ -1449,12 +1375,10 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    loadAnalyticsSource("bac");
-  }, []);
-
-  useEffect(() => {
-    if (selectedExam?.source) loadAnalyticsSource(selectedExam.source);
-  }, [selectedExam?.source]);
+    if ((activeView === "analytics" || activeView === "toppers") && selectedExam?.source) {
+      loadAnalyticsSource(selectedExam.source);
+    }
+  }, [activeView, selectedExam?.source]);
 
   useEffect(() => {
     const favicon = contentValue(siteContent, "favicon");
@@ -1587,7 +1511,7 @@ export default function HomePage() {
   const showTopperTrackSelector = selectedExam?.source === "bac";
   const topperTrackOptions = useMemo(() => {
     if (!showTopperTrackSelector) return [];
-    return [...new Set(searchPool.map((student) => cleanText(student.track)).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ar"));
+    return [...new Set(searchPool.map((student) => cleanText(student.track)).filter(Boolean))].sort(compareBacTracks);
   }, [searchPool, showTopperTrackSelector]);
   const viewsReady = Object.keys(analyticsViews).length > 0;
   const selectedSourceViewsReady = selectedExam?.source ? !!analyticsViews[selectedExam.source] : viewsReady;
@@ -1627,10 +1551,10 @@ export default function HomePage() {
       ? <SchoolIcon />
       : <MapIcon />;
   const suggestions = useMemo(() => {
-    const value = cleanText(query).toLowerCase();
-    if (!selectedExam?.available || selectedExam.source === "concours" || value.length < 2 || resultPageOpen || matches.length) return [];
+    const value = cleanText(query);
+    if (!selectedExam?.available || selectedExam.source === "concours" || !/^\d{2,20}$/.test(value) || resultPageOpen || matches.length) return [];
     return searchPool
-      .filter((student) => cleanText(student.id).toLowerCase().includes(value) || cleanText(student.name).toLowerCase().includes(value))
+      .filter((student) => cleanText(student.id).includes(value))
       .slice(0, 5);
   }, [matches.length, query, resultPageOpen, searchPool, selectedExam]);
   const topperGroups = useMemo(() => {
@@ -1686,6 +1610,10 @@ export default function HomePage() {
       setError(text.shortQuery);
       return;
     }
+    if (!/^\d{2,20}$/.test(value)) {
+      setError(text.invalidCandidateNumber || text.shortQuery);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -1722,54 +1650,6 @@ export default function HomePage() {
 
   function selectStudent(student) {
     showStudent(student);
-  }
-
-  function isExamDataLoaded(exam) {
-    if (!exam) return false;
-    if (exam.source === "bac") return students.length > 0;
-    if (exam.source === "brevet") return brevetStudents.length > 0;
-    if (exam.source === "bac_session") return bacSessionStudents.length > 0;
-    if (exam.source === "concours") return concoursStudents.length > 0;
-    if (exam.source === "excellence_1as") return excellenceStudents.length > 0;
-    return false;
-  }
-
-  async function loadExamData(exam) {
-    if (!exam) return [];
-    console.log("[MauriResults Load Exam Data]", {
-      examId: exam.id,
-      source: exam.source,
-      table: TABLE_BY_SOURCE[exam.source],
-      alreadyLoaded: isExamDataLoaded(exam),
-    });
-    if (isExamDataLoaded(exam)) {
-      if (exam.source === "bac") return students;
-      if (exam.source === "brevet") return brevetStudents;
-      if (exam.source === "bac_session") return bacSessionStudents;
-      if (exam.source === "concours") return concoursStudents;
-      if (exam.source === "excellence_1as") return excellenceStudents;
-      return [];
-    }
-    const loaders = {
-      bac: { load: fetchAllResults, set: setStudents },
-      brevet: { load: fetchBrevetResults, set: setBrevetStudents },
-      bac_session: { load: fetchBacSessionResults, set: setBacSessionStudents },
-      concours: { load: fetchConcoursResults, set: setConcoursStudents },
-      excellence_1as: { load: fetchExcellenceResults, set: setExcellenceStudents },
-    };
-    const loader = loaders[exam.source];
-    if (!loader) return [];
-    setExamLoading(true);
-    try {
-      const rows = await loader.load();
-      loader.set(rows);
-      return rows;
-    } catch (error) {
-      setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
-      return [];
-    } finally {
-      setExamLoading(false);
-    }
   }
 
   async function openView(view) {
@@ -1817,11 +1697,6 @@ export default function HomePage() {
   }
 
   async function openExam(exam) {
-    console.log("[MauriResults Select Exam]", {
-      examId: exam.id,
-      source: exam.source,
-      table: TABLE_BY_SOURCE[exam.source],
-    });
     setSelectedExamId(exam.id);
     setSelectedYearId(`year-${getExamYear(exam)}`);
     localStorage.setItem("mauriresults-selected-year", `year-${getExamYear(exam)}`);
@@ -1835,7 +1710,6 @@ export default function HomePage() {
     setError("");
     setMessage("");
     setActiveView("exam");
-    loadAnalyticsSource(exam.source);
     writeHashRoute(exam.id, { view: "exam", examId: exam.id, yearId: `year-${exam.year || "2025"}` });
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
 
@@ -1970,31 +1844,8 @@ function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text, ye
       onSelectYear={onSelectYear}
       stats={stats}
       text={text}
-      yearCards={typeof yearCards !== "undefined" ? yearCards : YEAR_CARDS}
+      yearCards={Array.isArray(yearCards) ? yearCards : []}
     />
-  );
-}
-
-function YearCards({ lang, onSelectYear, text }) {
-  return (
-    <section className="grid grid-cols-2 gap-3 md:gap-4">
-      {YEAR_CARDS.map((year) => (
-        <button
-          className={`exam-card exam-card-${year.tone} ${year.available ? "" : "is-locked"}`}
-          disabled={!year.available}
-          key={year.id}
-          onClick={() => onSelectYear(year)}
-          type="button"
-        >
-          <span className="exam-card-icon">{year.icon}</span>
-          <span className="min-w-0 text-start">
-            <strong className="block text-base font-black text-slate-950 dark:text-white">{year.title[lang]}</strong>
-            <small className="mt-1 block text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{year.description[lang]}</small>
-          </span>
-          {!year.available && <span className="soon-badge">{text.soon}</span>}
-        </button>
-      ))}
-    </section>
   );
 }
 
@@ -2028,7 +1879,7 @@ function MobileBackButton({ label, onClick }) {
   );
 }
 
-function YearPage({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onBack, onSelectExam, selectedExamId, text }) {
+function YearPage({ currentYearId = "year-2025", examCards = [], lang, onBack, onSelectExam, selectedExamId, text }) {
   const year = currentYearId.replace("year-", "") || "2025";
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8 animate-slide-up">
@@ -2039,7 +1890,7 @@ function YearPage({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, o
   );
 }
 
-function CompetitionCards({ currentYearId = "year-2025", examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
+function CompetitionCards({ currentYearId = "year-2025", examCards = [], lang, onSelectExam, selectedExamId, text }) {
   const currentYear = currentYearId.replace("year-", "") || "2025";
   const visibleExamCards = examCards.filter((exam) => exam.available && getExamYear(exam) === currentYear);
   if (!visibleExamCards.length) {
@@ -2448,7 +2299,7 @@ function TrackGroupsPreview({ groups, onSelect, text }) {
   );
 }
 
-function ExamSelector({ examCards = EXAM_CARDS, lang, onSelectExam, selectedExamId, text }) {
+function ExamSelector({ examCards = [], lang, onSelectExam, selectedExamId, text }) {
   return (
     <section className="section-toolbar animate-slide-up">
       <Select.Root onValueChange={onSelectExam} value={selectedExamId || undefined}>
@@ -2494,7 +2345,7 @@ function TrackSelector({ onSelectTrack, selectedTrack, text, trackOptions }) {
   );
 }
 
-function ToppersPage({ examCards = EXAM_CARDS, groups, lang, loading, onSelect, onSelectExam, onSelectTrack, selectedExam, selectedExamId, selectedTrack, showTrackGroups, showTrackSelector, text, trackOptions }) {
+function ToppersPage({ examCards = [], groups, lang, loading, onSelect, onSelectExam, onSelectTrack, selectedExam, selectedExamId, selectedTrack, showTrackGroups, showTrackSelector, text, trackOptions }) {
   return (
     <section className="app-shell grid gap-4 py-4 md:gap-6 md:py-8">
       <PageHero eyebrow={text.toppers} title={text.toppersTitle} icon={<AwardIcon />} />

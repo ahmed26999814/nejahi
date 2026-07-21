@@ -7,6 +7,9 @@ const BAC_TRACKS = new Map([
   ["M", { order: 1, meaning: "الرياضيات" }],
   ["LO", { order: 2, meaning: "الآداب الأصلية" }],
   ["LM", { order: 3, meaning: "الآداب العصرية" }],
+  ["TM", { order: 4, meaning: "التقنية" }],
+  ["TS", { order: 5, meaning: "الهندسة الكهربائية" }],
+  ["LA", { order: 6, meaning: "اللغات" }],
 ]);
 
 const NON_TRACK_EXAM_PATTERN = /bepc|brevet|concours|c1as|كونكور|ابريف|أبريف|بريف/i;

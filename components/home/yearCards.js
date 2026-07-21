@@ -55,7 +55,7 @@ export function mergeYearCards(yearCards = []) {
       const propAvailability = Array.isArray(yearCards) && yearCards.length
         ? yearCards.find((item) => normalizeHomeYearId(item) === id)?.available
         : undefined;
-      const available = yearValue === "2025" || propAvailability === true;
+      const available = propAvailability === undefined ? card.available === true : propAvailability === true;
       return { ...card, id, available };
     })
     .sort((a, b) => Number(b.id.replace("year-", "")) - Number(a.id.replace("year-", "")));
