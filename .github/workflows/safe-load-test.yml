@@ -1,0 +1,175 @@
+name: Safe production load test
+
+on:
+  push:
+    branches:
+      - perf/safe-load-test-20260721
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  load-test:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test client
+        run: python -m pip install --disable-pip-version-check aiohttp==3.10.11
+
+      - name: Run staged safe load test
+        shell: bash
+        env:
+          TARGET: https://mauri-results.vercel.app
+        run: |
+          cat > /tmp/load_test.py <<'PY'
+          import asyncio
+          import json
+          import math
+          import os
+          import random
+          import statistics
+          import time
+          from collections import Counter
+          from urllib.parse import urljoin
+
+          import aiohttp
+
+          TARGET = os.environ["TARGET"].rstrip("/") + "/"
+          TIMEOUT = aiohttp.ClientTimeout(total=15, connect=5, sock_read=10)
+          HEADERS = {
+              "User-Agent": "MauriResults-Authorized-Safe-Load-Test/2026-07-21",
+              "Accept": "application/json,text/html;q=0.9,*/*;q=0.8",
+              "Accept-Encoding": "gzip, br",
+          }
+
+          def percentile(values, pct):
+              if not values:
+                  return 0.0
+              ordered = sorted(values)
+              rank = max(0, min(len(ordered) - 1, math.ceil((pct / 100) * len(ordered)) - 1))
+              return ordered[rank]
+
+          async def one(session, semaphore, path):
+              url = urljoin(TARGET, path.lstrip("/"))
+              async with semaphore:
+                  started = time.perf_counter()
+                  status = 0
+                  size = 0
+                  cache = ""
+                  error = ""
+                  try:
+                      async with session.get(url, allow_redirects=True) as response:
+                          body = await response.read()
+                          status = response.status
+                          size = len(body)
+                          cache = response.headers.get("x-vercel-cache", "")
+                  except Exception as exc:
+                      error = type(exc).__name__
+                  elapsed = time.perf_counter() - started
+                  return status, elapsed, size, cache, error
+
+          async def run_stage(session, name, paths, total, concurrency):
+              semaphore = asyncio.Semaphore(concurrency)
+              selected = [paths[i % len(paths)] for i in range(total)]
+              random.Random(20260721 + concurrency + total).shuffle(selected)
+              started = time.perf_counter()
+              results = await asyncio.gather(*(one(session, semaphore, path) for path in selected))
+              wall = time.perf_counter() - started
+              statuses = Counter(item[0] for item in results)
+              errors = Counter(item[4] for item in results if item[4])
+              caches = Counter(item[3] or "NONE" for item in results)
+              latencies = [item[1] * 1000 for item in results]
+              good = sum(count for status, count in statuses.items() if 200 <= status < 400)
+              row = {
+                  "name": name,
+                  "requests": total,
+                  "concurrency": concurrency,
+                  "wall_s": round(wall, 3),
+                  "rps": round(total / wall, 2) if wall else 0,
+                  "success_pct": round(good * 100 / total, 3),
+                  "p50_ms": round(percentile(latencies, 50), 1),
+                  "p95_ms": round(percentile(latencies, 95), 1),
+                  "p99_ms": round(percentile(latencies, 99), 1),
+                  "max_ms": round(max(latencies), 1),
+                  "mean_ms": round(statistics.fmean(latencies), 1),
+                  "statuses": dict(statuses),
+                  "errors": dict(errors),
+                  "cache": dict(caches),
+                  "mb": round(sum(item[2] for item in results) / 1024 / 1024, 2),
+              }
+              print("RESULT " + json.dumps(row, ensure_ascii=False), flush=True)
+              return row
+
+          async def main():
+              connector = aiohttp.TCPConnector(limit=600, limit_per_host=600, ttl_dns_cache=300)
+              results = []
+              async with aiohttp.ClientSession(timeout=TIMEOUT, headers=HEADERS, connector=connector) as session:
+                  # Warm representative cache keys once before the measured warm-cache stages.
+                  warm_paths = [
+                      "/",
+                      "/api/public-exams",
+                      "/api/site-controls",
+                      "/api/public-data?resource=site_content",
+                      "/api/result-shard/bac/541",
+                      "/api/result-shard/upload--brevet_2026/541",
+                      "/api/search?source=bac&q=00541",
+                  ]
+                  for path in warm_paths:
+                      await one(session, asyncio.Semaphore(1), path)
+
+                  plans = [
+                      ("home-cdn", ["/"], [(1000, 100), (1200, 250), (1500, 500)]),
+                      ("public-exams-cache", ["/api/public-exams"], [(500, 50), (700, 100), (900, 200)]),
+                      ("site-content-cache", ["/api/public-data?resource=site_content"], [(400, 50), (600, 100), (800, 200)]),
+                      ("bac-number-shard-warm", ["/api/result-shard/bac/541"], [(600, 50), (900, 100), (1200, 200)]),
+                      ("brevet-2026-shard-warm", ["/api/result-shard/upload--brevet_2026/541"], [(500, 50), (700, 100), (900, 200)]),
+                      ("fallback-indexed-search", ["/api/search?source=bac&q=00541"], [(150, 10), (250, 25), (350, 50)]),
+                  ]
+
+                  # Twenty different shards model users entering diverse candidate numbers.
+                  mixed_shards = [
+                      f"/api/result-shard/bac/{n:03d}"
+                      for n in (17, 41, 63, 88, 104, 127, 159, 203, 246, 288, 327, 369, 411, 458, 503, 541, 627, 714, 833, 947)
+                  ]
+                  plans.append(("bac-20-shard-mix", mixed_shards, [(300, 25), (500, 50), (700, 100)]))
+
+                  for group, paths, stages in plans:
+                      for total, concurrency in stages:
+                          row = await run_stage(session, group, paths, total, concurrency)
+                          results.append(row)
+                          # Safety valve: do not continue escalating a failing endpoint.
+                          if row["success_pct"] < 99.0 or row["p95_ms"] > 5000:
+                              print(f"SAFETY_STOP group={group} success={row['success_pct']} p95={row['p95_ms']}", flush=True)
+                              break
+                          await asyncio.sleep(2)
+
+              with open("load-test-results.json", "w", encoding="utf-8") as handle:
+                  json.dump(results, handle, ensure_ascii=False, indent=2)
+
+              print("\nSUMMARY_TABLE")
+              print("endpoint | req | conc | rps | success | p50 | p95 | p99 | max | cache")
+              for row in results:
+                  print(
+                      f"{row['name']} | {row['requests']} | {row['concurrency']} | {row['rps']} | "
+                      f"{row['success_pct']}% | {row['p50_ms']} | {row['p95_ms']} | {row['p99_ms']} | "
+                      f"{row['max_ms']} | {row['cache']}"
+                  )
+
+          asyncio.run(main())
+          PY
+          python /tmp/load_test.py | tee load-test-results.log
+
+      - name: Upload raw results
+        uses: actions/upload-artifact@v4
+        with:
+          name: mauriresults-safe-load-test
+          path: |
+            load-test-results.json
+            load-test-results.log
+          retention-days: 7
