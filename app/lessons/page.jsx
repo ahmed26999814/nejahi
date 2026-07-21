@@ -15,6 +15,8 @@ export const metadata = {
   },
 };
 
-export default function LessonsPage() {
-  return <LessonsAndExams />;
+export default async function LessonsPage({ searchParams }) {
+  const params = await searchParams;
+  const initialTab = params?.tab === "exams" ? "exams" : "lessons";
+  return <LessonsAndExams initialTab={initialTab} />;
 }
