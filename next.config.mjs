@@ -91,9 +91,9 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: "/apk",
-        destination: "/Apk/",
-        permanent: false,
+        source: "/Apk",
+        destination: "/apk",
+        permanent: true,
       },
       {
         source: "/apk/MauriResults.apk",
@@ -114,6 +114,14 @@ const nextConfig = {
         source: "/apk/MauriResults-2.0.0.apk",
         destination: "/apk/MauriResults-3.1.0.apk",
         permanent: false,
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/apk",
+        destination: "/Apk",
       },
     ];
   },
