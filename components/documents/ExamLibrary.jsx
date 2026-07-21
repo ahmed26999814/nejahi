@@ -128,13 +128,14 @@ export default function ExamLibrary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [competition, setCompetition] = useState(ALL);
-  const [year, setYear] = useState(ALL);
   const [branch, setBranch] = useState(ALL);
+  const [year, setYear] = useState(ALL);
   const [kind, setKind] = useState(ALL);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     let active = true;
+
     async function loadDocuments() {
       try {
         setLoading(true);
@@ -148,6 +149,7 @@ export default function ExamLibrary() {
         if (active) setLoading(false);
       }
     }
+
     loadDocuments();
     return () => {
       active = false;
@@ -162,33 +164,33 @@ export default function ExamLibrary() {
     return [...counts.entries()].sort(([a], [b]) => compareCompetition(a, b));
   }, [documents]);
 
-  const years = useMemo(() => {
-    const values = new Set(
-      documents
-        .filter((document) => competition === ALL || document.competition === competition)
-        .map((document) => document.year)
-        .filter(Boolean)
-    );
-    return [...values].sort((a, b) => b - a);
-  }, [documents, competition]);
-
   const branches = useMemo(() => {
     const values = new Set(
       documents
         .filter((document) => competition === ALL || document.competition === competition)
-        .filter((document) => year === ALL || String(document.year) === year)
         .map((document) => document.branch)
         .filter(Boolean)
     );
     return [...values].sort((a, b) => a.localeCompare(b, "ar"));
-  }, [documents, competition, year]);
+  }, [documents, competition]);
+
+  const years = useMemo(() => {
+    const values = new Set(
+      documents
+        .filter((document) => competition === ALL || document.competition === competition)
+        .filter((document) => branch === ALL || document.branch === branch)
+        .map((document) => document.year)
+        .filter(Boolean)
+    );
+    return [...values].sort((a, b) => b - a);
+  }, [documents, competition, branch]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("ar");
     return documents.filter((document) => {
       if (competition !== ALL && document.competition !== competition) return false;
-      if (year !== ALL && String(document.year) !== year) return false;
       if (branch !== ALL && document.branch !== branch) return false;
+      if (year !== ALL && String(document.year) !== year) return false;
       if (kind !== ALL && document.document_type !== kind) return false;
       if (!needle) return true;
       return [
@@ -204,7 +206,7 @@ export default function ExamLibrary() {
         .toLocaleLowerCase("ar")
         .includes(needle);
     });
-  }, [documents, competition, year, branch, kind, query]);
+  }, [documents, competition, branch, year, kind, query]);
 
   const yearGroups = useMemo(() => {
     const map = new Map();
@@ -239,8 +241,13 @@ export default function ExamLibrary() {
 
   function selectCompetition(value) {
     setCompetition(value);
-    setYear(ALL);
     setBranch(ALL);
+    setYear(ALL);
+  }
+
+  function selectBranch(value) {
+    setBranch(value);
+    setYear(ALL);
   }
 
   if (loading) {
@@ -301,26 +308,23 @@ export default function ExamLibrary() {
           </label>
 
           <select
-            aria-label="السنة"
-            className="h-12 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-black text-slate-800 outline-none focus:border-mauri-green dark:border-white/10 dark:bg-black/20 dark:text-white"
-            onChange={(event) => {
-              setYear(event.target.value);
-              setBranch(ALL);
-            }}
-            value={year}
-          >
-            <option value={ALL}>كل السنوات</option>
-            {years.map((item) => <option key={item} value={String(item)}>{item}</option>)}
-          </select>
-
-          <select
             aria-label="الشعبة أو المستوى"
             className="h-12 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-black text-slate-800 outline-none focus:border-mauri-green dark:border-white/10 dark:bg-black/20 dark:text-white"
-            onChange={(event) => setBranch(event.target.value)}
+            onChange={(event) => selectBranch(event.target.value)}
             value={branch}
           >
             <option value={ALL}>كل الشعب والمستويات</option>
             {branches.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+
+          <select
+            aria-label="السنة"
+            className="h-12 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-black text-slate-800 outline-none focus:border-mauri-green dark:border-white/10 dark:bg-black/20 dark:text-white"
+            onChange={(event) => setYear(event.target.value)}
+            value={year}
+          >
+            <option value={ALL}>كل السنوات</option>
+            {years.map((item) => <option key={item} value={String(item)}>{item}</option>)}
           </select>
 
           <select
@@ -364,7 +368,7 @@ export default function ExamLibrary() {
           <div>
             <BookOpen className="mx-auto h-10 w-10 text-slate-400" aria-hidden="true" />
             <h2 className="mt-3 text-lg font-black text-slate-800 dark:text-white">لا توجد ملفات مطابقة</h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">غيّر السنة أو المسابقة أو كلمات البحث.</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">غيّر الشعبة أو السنة أو المسابقة أو كلمات البحث.</p>
           </div>
         </div>
       )}
