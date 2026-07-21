@@ -273,7 +273,7 @@ async function fetchRemote(url) {
 async function resolveDownload(record) {
   let current = record.direct_url || record.source_url;
   const visited = new Set();
-  let yearResolved = !record.year || normalize(current).includes(String(record.year));
+  let yearResolved = !record.year || Boolean(record.direct_url) || normalize(current).includes(String(record.year));
   let subjectResolved = Boolean(record.direct_url) || aliasesFor(record.subject).length === 0;
   let hintResolved = !record.link_text_hint;
 
@@ -295,15 +295,13 @@ async function resolveDownload(record) {
       throw new Error("The source page is unavailable.");
     }
 
-    if (!yearResolved && normalize(title).includes(String(record.year))) yearResolved = true;
     if (!yearResolved) {
       const yearLink = findYearLink(html, finalUrl, record.year);
+      yearResolved = true;
       if (yearLink && !visited.has(yearLink.url)) {
-        yearResolved = true;
         current = yearLink.url;
         continue;
       }
-      yearResolved = true;
     }
 
     if (!hintResolved) {
