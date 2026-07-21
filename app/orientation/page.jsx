@@ -15,6 +15,16 @@ export const metadata = {
   },
 };
 
-export default function OrientationPage() {
-  return <OrientationExplorer />;
+function firstValue(value) {
+  return Array.isArray(value) ? value[0] || "" : value || "";
+}
+
+export default async function OrientationPage({ searchParams }) {
+  const params = await searchParams;
+  return (
+    <OrientationExplorer
+      initialAverage={firstValue(params?.average)}
+      initialStream={firstValue(params?.stream)}
+    />
+  );
 }
