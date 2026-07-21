@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import PremiumHero from "../hero/Hero";
 import BackToTopButton from "../ui/BackToTopButton";
 import { contentValue } from "../common/content";
@@ -46,6 +47,32 @@ export default function PremiumHomeView({
           yearCards={yearCards}
         />
       </section>
+
+      <Link
+        className="group relative overflow-hidden rounded-[30px] border border-emerald-200/80 bg-gradient-to-l from-emerald-50 via-white to-white p-5 shadow-premium transition hover:-translate-y-1 hover:border-mauri-green/35 hover:shadow-glow dark:border-emerald-300/15 dark:from-emerald-300/10 dark:via-white/[.055] dark:to-white/[.035]"
+        href="/orientation"
+      >
+        <span className="absolute -left-10 -top-14 h-40 w-40 rounded-full bg-emerald-200/40 blur-3xl dark:bg-emerald-400/10" aria-hidden="true" />
+        <span className="relative flex items-center gap-4">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-[20px] bg-mauri-green text-2xl text-white shadow-[0_14px_30px_rgba(21,128,61,.22)]">
+            🎓
+          </span>
+          <span className="min-w-0 flex-1">
+            <small className="font-black text-mauri-green dark:text-mauri-gold">
+              جديد في MauriResults
+            </small>
+            <strong className="mt-1 block text-xl font-black text-slate-950 dark:text-white md:text-2xl">
+              ماذا يمكنني دراسة بمعدلي؟
+            </strong>
+            <span className="mt-1 block text-sm font-bold leading-6 text-slate-600 dark:text-slate-300">
+              اكتشف التخصصات المناسبة لشعبة الباك ومعدلك، واحفظ رغباتك وقارن بينها.
+            </span>
+          </span>
+          <span className="hidden rounded-full bg-mauri-green px-4 py-2 text-xs font-black text-white transition group-hover:bg-emerald-700 sm:inline-flex">
+            فتح الدليل
+          </span>
+        </span>
+      </Link>
 
       <PremiumSiteBanner asset={homepageBanner} />
       <BackToTopButton />
