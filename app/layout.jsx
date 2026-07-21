@@ -13,12 +13,7 @@ import "./results-notice.css";
 import "./bottom-nav-expanded.css";
 import "./root-background-fix.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
-import PublicDataFetchBridge from "../components/layout/PublicDataFetchBridge";
-import Bac2026CountdownNotice from "../components/layout/Bac2026CountdownNotice";
 import UiEnhancements from "../components/ui/UiEnhancements";
-import BacTopperTrackOrder from "../components/ui/BacTopperTrackOrder";
-import MotivationalVisibility from "../components/ui/MotivationalVisibility";
-import ResultSubjectDetailsBridge from "../components/results/ResultSubjectDetailsBridge";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
@@ -172,13 +167,8 @@ export default function RootLayout({ children }) {
       <body className="font-arabic antialiased" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <Bac2026CountdownNotice />
-        <PublicDataFetchBridge />
         <AppRuntimeShell />
         <UiEnhancements />
-        <MotivationalVisibility />
-        <BacTopperTrackOrder />
-        <ResultSubjectDetailsBridge />
         {children}
         <Analytics />
       </body>
