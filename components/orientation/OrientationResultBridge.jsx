@@ -60,15 +60,16 @@ export default function OrientationResultBridge() {
         const parsed = resultCard ? readBacResultCard() : null;
         setTarget(parsed ? resultCard : null);
         setResult(parsed);
+        if (parsed) observer?.disconnect();
       });
     }
 
     function watch() {
       observer?.disconnect();
-      sync();
       const root = document.querySelector("main") || document.body;
       observer = new MutationObserver(sync);
       observer.observe(root, { childList: true, subtree: true });
+      sync();
     }
 
     function handleRouteChange() {
