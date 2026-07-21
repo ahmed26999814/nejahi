@@ -10,7 +10,7 @@ from typing import Iterable
 import aiohttp
 
 BASE_URL = os.getenv("TARGET_URL", "https://mauri-results.vercel.app").rstrip("/")
-TIMEOUT_SECONDS = 15
+TIMEOUT_SECONDS = 20
 
 
 @dataclass
@@ -122,27 +122,27 @@ async def run_stage(
 
 
 async def main() -> int:
-    connector = aiohttp.TCPConnector(limit=220, ttl_dns_cache=300)
+    connector = aiohttp.TCPConnector(limit=650, ttl_dns_cache=300)
     timeout = aiohttp.ClientTimeout(total=TIMEOUT_SECONDS)
     headers = {
-        "User-Agent": "MauriResults-Authorized-Load-Test/1.0",
+        "User-Agent": "MauriResults-Authorized-Load-Test/2.0",
         "Accept": "text/html,application/json;q=0.9,*/*;q=0.8",
         "Accept-Encoding": "gzip, deflate, br",
     }
 
     stages = [
         ("home-warmup", [f"{BASE_URL}/"] * 20, 2, 0.01, 4000),
-        ("home-50", [f"{BASE_URL}/"] * 500, 50, 0.01, 3000),
-        ("home-150", [f"{BASE_URL}/"] * 1200, 150, 0.01, 3500),
-        ("orientation-75", [f"{BASE_URL}/orientation"] * 600, 75, 0.01, 3500),
-        ("public-exams-50", [f"{BASE_URL}/api/public-exams"] * 500, 50, 0.01, 3000),
-        ("search-cached-50", [f"{BASE_URL}/api/search?source=bac&q=1"] * 500, 50, 0.01, 3500),
+        ("home-300", [f"{BASE_URL}/"] * 3000, 300, 0.01, 4000),
+        ("home-500", [f"{BASE_URL}/"] * 5000, 500, 0.01, 4500),
+        ("orientation-200", [f"{BASE_URL}/orientation"] * 2000, 200, 0.01, 4500),
+        ("public-exams-100", [f"{BASE_URL}/api/public-exams"] * 1000, 100, 0.01, 4000),
+        ("search-cached-100", [f"{BASE_URL}/api/search?source=bac&q=1"] * 1000, 100, 0.01, 4500),
         (
-            "search-mixed-12",
-            [f"{BASE_URL}/api/search?source=bac&q={number}" for number in range(1, 121)],
-            12,
+            "search-mixed-25",
+            [f"{BASE_URL}/api/search?source=bac&q={number}" for number in range(1, 301)],
+            25,
             0.02,
-            4500,
+            5000,
         ),
     ]
 
@@ -155,7 +155,7 @@ async def main() -> int:
             if result.stopped:
                 print(f"Stopping after {result.name}: {result.stop_reason}", flush=True)
                 break
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
 
     payload = {
         "target": BASE_URL,
