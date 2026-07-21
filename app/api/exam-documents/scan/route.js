@@ -74,6 +74,27 @@ function extractAnchors(html, base) {
   return anchors;
 }
 
+function rawMatches(html, query) {
+  if (!query) return [];
+  const plainNeedle = query.trim();
+  const lowerHtml = html.toLowerCase();
+  const needles = [plainNeedle, normalize(plainNeedle)].filter(Boolean);
+  const positions = new Set();
+
+  for (const needle of needles) {
+    let index = lowerHtml.indexOf(needle.toLowerCase());
+    while (index >= 0 && positions.size < 20) {
+      positions.add(index);
+      index = lowerHtml.indexOf(needle.toLowerCase(), index + needle.length);
+    }
+  }
+
+  return [...positions]
+    .sort((a, b) => a - b)
+    .slice(0, 12)
+    .map((index) => html.slice(Math.max(0, index - 1800), Math.min(html.length, index + 5000)));
+}
+
 export async function GET(request) {
   if (process.env.VERCEL_ENV === "production") {
     return NextResponse.json({ error: "Not available in production." }, { status: 404 });
@@ -81,7 +102,8 @@ export async function GET(request) {
 
   const requestUrl = new URL(request.url);
   const input = requestUrl.searchParams.get("url");
-  const query = normalize(requestUrl.searchParams.get("q") || "");
+  const rawQuery = requestUrl.searchParams.get("q") || "";
+  const query = normalize(rawQuery);
   const target = safeUrl(input, "https://rimbac.com/");
   if (!target) return NextResponse.json({ error: "Invalid Rimbac URL." }, { status: 400 });
 
@@ -109,6 +131,7 @@ export async function GET(request) {
       anchorCount: allAnchors.length,
       matchedAnchorCount: anchors.length,
       anchors: anchors.slice(0, 80),
+      rawMatches: rawMatches(html, rawQuery),
       bodyText: stripTags(html).slice(0, 4000),
     });
   } catch (error) {
