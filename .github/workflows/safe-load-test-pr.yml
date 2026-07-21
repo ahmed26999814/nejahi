@@ -1,0 +1,80 @@
+name: Measured production load test
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  measured-load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check aiohttp==3.10.11
+      - name: Measure production endpoints
+        env:
+          TARGET: https://mauri-results.vercel.app
+        shell: bash
+        run: |
+          cat > /tmp/test.py <<'PY'
+          import asyncio, json, math, os, statistics, time
+          from collections import Counter
+          from urllib.parse import urljoin
+          import aiohttp
+
+          BASE=os.environ['TARGET'].rstrip('/')+'/'
+          HEADERS={'User-Agent':'MauriResults-Authorized-Load-Test/2026-07-21','Accept-Encoding':'gzip','Accept':'*/*'}
+          TIMEOUT=aiohttp.ClientTimeout(total=20,connect=7,sock_read=12)
+
+          def pct(v,p):
+              v=sorted(v); return v[max(0,min(len(v)-1,math.ceil(len(v)*p/100)-1))]
+
+          async def request(session,sem,path):
+              async with sem:
+                  t=time.perf_counter()
+                  try:
+                      async with session.get(urljoin(BASE,path.lstrip('/')),allow_redirects=True) as r:
+                          body=await r.read()
+                          return r.status,(time.perf_counter()-t)*1000,len(body),r.headers.get('x-vercel-cache','NONE'),''
+                  except Exception as e:
+                      return 0,(time.perf_counter()-t)*1000,0,'NONE',type(e).__name__
+
+          async def run(session,name,paths,n,c):
+              sem=asyncio.Semaphore(c)
+              t=time.perf_counter()
+              rows=await asyncio.gather(*[request(session,sem,paths[i%len(paths)]) for i in range(n)])
+              wall=time.perf_counter()-t
+              lat=[x[1] for x in rows]; statuses=Counter(x[0] for x in rows); caches=Counter(x[3] for x in rows); errors=Counter(x[4] for x in rows if x[4])
+              good=sum(v for k,v in statuses.items() if 200<=k<400)
+              out={'name':name,'requests':n,'concurrency':c,'rps':round(n/wall,2),'success':round(good*100/n,3),'mean_ms':round(statistics.fmean(lat),1),'p50_ms':round(pct(lat,50),1),'p95_ms':round(pct(lat,95),1),'p99_ms':round(pct(lat,99),1),'max_ms':round(max(lat),1),'statuses':dict(statuses),'cache':dict(caches),'errors':dict(errors),'mb':round(sum(x[2] for x in rows)/1048576,2)}
+              print('LOAD_RESULT '+json.dumps(out,ensure_ascii=False),flush=True)
+              return out
+
+          async def main():
+              conn=aiohttp.TCPConnector(limit=500,limit_per_host=500,ttl_dns_cache=300)
+              async with aiohttp.ClientSession(headers=HEADERS,timeout=TIMEOUT,connector=conn) as s:
+                  warm=['/','/api/public-exams','/api/public-data?resource=site_content','/api/result-shard/bac/541','/api/result-shard/upload--brevet_2026/541','/api/search?source=bac&q=00541']
+                  for p in warm: await request(s,asyncio.Semaphore(1),p)
+                  mixed=[f'/api/result-shard/bac/{n:03d}' for n in (17,41,63,88,104,127,159,203,246,288,327,369,411,458,503,541,627,714,833,947)]
+                  plans=[
+                    ('home-cdn',['/'],500,50),('home-cdn',['/'],1200,200),('home-cdn',['/'],1600,350),
+                    ('public-exams',['/api/public-exams'],500,75),('public-exams',['/api/public-exams'],900,180),
+                    ('bac-shard',['/api/result-shard/bac/541'],600,75),('bac-shard',['/api/result-shard/bac/541'],1200,220),
+                    ('brevet-2026-shard',['/api/result-shard/upload--brevet_2026/541'],500,75),('brevet-2026-shard',['/api/result-shard/upload--brevet_2026/541'],900,180),
+                    ('bac-mixed-20-shards',mixed,400,50),('bac-mixed-20-shards',mixed,800,140),
+                    ('fallback-search',['/api/search?source=bac&q=00541'],180,15),('fallback-search',['/api/search?source=bac&q=00541'],360,45),
+                  ]
+                  for args in plans:
+                      out=await run(s,*args)
+                      if out['success']<99 or out['p95_ms']>7000:
+                          print('SAFETY_STOP '+out['name'])
+                          break
+                      await asyncio.sleep(1)
+          asyncio.run(main())
+          PY
+          python /tmp/test.py
