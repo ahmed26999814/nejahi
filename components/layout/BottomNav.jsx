@@ -24,7 +24,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
     { key: "home", label: text.home, view: "home", icon: <HomeIcon /> },
     { key: "search", label: text.search, view: "search", icon: <SearchIcon /> },
     { key: "toppers", label: text.toppers, view: "toppers", icon: <AwardIcon /> },
-    { key: "lessons", label: isFrench ? "Cours" : "الدروس", href: "/lessons", icon: <BookIcon /> },
+    { key: "lessons", label: isFrench ? "Cours et examens" : "الدروس ومواضيع الامتحانات", href: "/lessons", icon: <BookIcon /> },
     { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
   ];
 
@@ -118,7 +118,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
                 data-haptic
               >
                 <span className="grid h-[21px] w-[21px] place-items-center [&>svg]:h-[21px] [&>svg]:w-[21px]">{item.icon}</span>
-                <span className="block w-full truncate text-center" data-control-label>{item.label}</span>
+                <span className={`block w-full text-center ${item.key === "lessons" ? "line-clamp-2 text-[8px] leading-[9px]" : "truncate"}`} data-control-label>{item.label}</span>
                 {active && <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-white/85" aria-hidden="true" />}
               </button>
             );
