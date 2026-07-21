@@ -15,7 +15,6 @@ const COPY = {
     exams: "مواضيع الامتحانات",
     examsDesc: "باكالوريا وابريفه وكونكور والامتياز مع الحلول",
     home: "الرئيسية",
-    source: "ملفات مواضيع الامتحانات مفهرسة من Rimbac بإذن صاحب الموقع، مع الحفاظ على اسم المصدر والحقوق.",
   },
   fr: {
     title: "Cours et sujets d’examens",
@@ -25,7 +24,6 @@ const COPY = {
     exams: "Sujets d’examens",
     examsDesc: "Bac, Brevet, Concours et Excellence avec corrigés",
     home: "Accueil",
-    source: "Les sujets d’examens sont indexés depuis Rimbac avec l’autorisation du propriétaire, tout en conservant la source et les droits.",
   },
 };
 
@@ -107,7 +105,6 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
       ) : (
         <section className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-9 lg:px-8">
           <ExamLibrary />
-          <footer className="mt-8 border-t border-slate-200 py-7 text-center text-xs font-semibold text-slate-500 dark:border-white/10 dark:text-slate-400">{text.source}</footer>
         </section>
       )}
     </div>
