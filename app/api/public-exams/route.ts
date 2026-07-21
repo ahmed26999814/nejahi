@@ -74,8 +74,10 @@ function cleanExam(exam: Record<string, unknown>): Record<string, unknown> {
   const descriptionAr = String(exam.description_ar || "").trim();
   const descriptionFr = String(exam.description_fr || "").trim();
   const uploaded = String(exam.source_key || "").startsWith("upload:");
+  const kind = examKind(exam);
   return {
     ...exam,
+    track_column: kind === "brevet" || kind === "concours" ? null : exam.track_column,
     description_ar: uploaded && (!descriptionAr || isAdminPlaceholder(descriptionAr) || descriptionAr === "\u200B") ? generatedDescription(exam, "ar") : descriptionAr,
     description_fr: uploaded && (!descriptionFr || isAdminPlaceholder(descriptionFr) || descriptionFr === "\u200B") ? generatedDescription(exam, "fr") : descriptionFr,
     tone: String(exam.tone || "").trim() && exam.tone !== "green" ? exam.tone : generatedTone(exam),
@@ -83,13 +85,12 @@ function cleanExam(exam: Record<string, unknown>): Record<string, unknown> {
 }
 
 function sortExams(rows: ReadonlyArray<Record<string, unknown>>) {
-  const sourcePriority = ["bac_2026", "brevet_2026", "concours_2026", "bac", "brevet", "concours", "excellence_1as", "bac_session"];
+  const kindPriority: Record<string, number> = { bac: 0, brevet: 1, concours: 2, excellence: 3, session: 4, results: 5 };
   return [...rows].sort((a, b) => {
     const byYear = yearNumber(b.year) - yearNumber(a.year);
     if (byYear) return byYear;
-    const aPriority = sourcePriority.indexOf(String(a.source_key || ""));
-    const bPriority = sourcePriority.indexOf(String(b.source_key || ""));
-    if (aPriority !== bPriority && (aPriority >= 0 || bPriority >= 0)) return (aPriority < 0 ? 999 : aPriority) - (bPriority < 0 ? 999 : bPriority);
+    const byKind = (kindPriority[examKind(a)] ?? 99) - (kindPriority[examKind(b)] ?? 99);
+    if (byKind) return byKind;
     return String(b.created_at || "").localeCompare(String(a.created_at || ""));
   });
 }
@@ -118,11 +119,12 @@ const fetchPublishedExams = unstable_cache(
   { revalidate: 60, tags: [PUBLIC_EXAMS_CACHE_TAG] }
 );
 
-function mobileCatalog(uploadedRows: ReadonlyArray<Record<string, unknown>>) {
-  const bySource = new Map<string, Record<string, unknown>>();
-  for (const exam of LEGACY_2025_EXAMS.map(cleanExam)) bySource.set(String(exam.source_key), exam);
-  for (const exam of uploadedRows) bySource.set(String(exam.source_key), exam);
-  return sortExams([...bySource.values()]);
+function publicCatalog(uploadedRows: ReadonlyArray<Record<string, unknown>>) {
+  const byIdentity = new Map<string, Record<string, unknown>>();
+  const identity = (exam: Record<string, unknown>) => `${String(exam.source_key || "")}:${String(exam.year || yearNumber(exam.title_ar) || "")}`;
+  for (const exam of LEGACY_2025_EXAMS.map(cleanExam)) byIdentity.set(identity(exam), exam);
+  for (const exam of uploadedRows) byIdentity.set(identity(exam), exam);
+  return sortExams([...byIdentity.values()]);
 }
 
 function legacyUpdateExam(): Record<string, unknown> {
@@ -173,7 +175,7 @@ export async function GET(request: Request) {
   }
 
   const result = await fetchPublishedExams();
-  const exams = client === "mobile" ? mobileCatalog(result.rows) : result.rows;
+  const exams = publicCatalog(result.rows);
   return NextResponse.json(
     { exams },
     {
