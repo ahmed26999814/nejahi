@@ -5,7 +5,6 @@ import BackToTopButton from "../ui/BackToTopButton";
 import { contentValue } from "../common/content";
 import PremiumSiteBanner from "./PremiumSiteBanner";
 import YearChoiceCards from "./YearChoiceCards";
-import ExamLibraryPromo from "./ExamLibraryPromo";
 
 export default function PremiumHomeView({
   content = {},
@@ -48,7 +47,6 @@ export default function PremiumHomeView({
         />
       </section>
 
-      <ExamLibraryPromo />
       <PremiumSiteBanner asset={homepageBanner} />
       <BackToTopButton />
     </section>
