@@ -1,0 +1,41 @@
+name: Import MauriResults APK 3.2.0
+
+on:
+  push:
+    branches: ["agent/mobile-3-2-release-concours"]
+    paths:
+      - ".github/workflows/import-apk-3.2.0.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  import-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/mobile-3-2-release-concours
+
+      - name: Download verified guided-search APK
+        shell: bash
+        env:
+          APK_ZIP_URL: "https://sdmntprcentralus.oaiusercontent.com/files/00000000-7a48-81f5-9068-aa3e1d83288c/raw?se=2026-07-21T15:47:26Z&sp=r&sv=2026-02-06&sr=b&scid=ca492872-9276-52be-9db8-66ac517733bc&skoid=38550de5-1fab-49d1-9ebb-83af5557cc43&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-07-21T07:10:32Z&ske=2026-07-23T07:10:32Z&sks=b&skv=2026-02-06&sig=inBI1tI13B1Fn/9eKQolMEOsgqwN3qoKS5SoGxlkV6Y%3D"
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 "$APK_ZIP_URL" --output /tmp/mauriresults-3.2.0.zip
+          rm -rf /tmp/mauriresults-apk
+          mkdir -p /tmp/mauriresults-apk public/apk
+          unzip -q /tmp/mauriresults-3.2.0.zip -d /tmp/mauriresults-apk
+          cp /tmp/mauriresults-apk/app-release.apk public/apk/MauriResults-3.2.0.apk
+          echo "5a3a4a59dc14e902760318411198b4add505f7d12878daf14c88db93b25306ee  public/apk/MauriResults-3.2.0.apk" | sha256sum --check --strict
+
+      - name: Commit APK to release branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/apk/MauriResults-3.2.0.apk
+          git commit -m "Publish MauriResults APK 3.2.0 [skip ci]" || exit 0
+          git push origin HEAD:agent/mobile-3-2-release-concours
