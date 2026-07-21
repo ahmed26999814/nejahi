@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Filter, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Filter, GraduationCap } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ORIENTATION_SOURCE_URL,
   STREAM_ORDER,
@@ -10,7 +10,6 @@ import {
 } from "../../data/orientation-programs";
 import OrientationComparePanel from "./OrientationComparePanel";
 import OrientationFilters from "./OrientationFilters";
-import OrientationHighlights from "./OrientationHighlights";
 import OrientationProgramCard from "./OrientationProgramCard";
 import {
   COMPARE_KEY,
@@ -24,8 +23,12 @@ import {
 
 export default function OrientationExplorer({ initialAverage = "", initialStream = "" }) {
   const normalizedInitialStream = normalizeStream(initialStream);
-  const validInitialAverage = parseScore(initialAverage) !== null ? String(initialAverage) : "";
+  const parsedInitialAverage = parseScore(initialAverage);
+  const validInitialAverage = Number.isFinite(parsedInitialAverage) && parsedInitialAverage >= 0 && parsedInitialAverage <= 20
+    ? String(initialAverage)
+    : "";
   const validInitialStream = STREAM_ORDER.includes(normalizedInitialStream) ? normalizedInitialStream : "";
+  const hasInitialData = Boolean(validInitialStream && validInitialAverage);
 
   const [averageInput, setAverageInput] = useState(validInitialAverage);
   const [stream, setStream] = useState(validInitialStream);
@@ -39,6 +42,10 @@ export default function OrientationExplorer({ initialAverage = "", initialStream
   const [compareIds, setCompareIds] = useState([]);
   const [page, setPage] = useState(1);
   const [hydrated, setHydrated] = useState(false);
+  const [submitted, setSubmitted] = useState(hasInitialData);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [formError, setFormError] = useState("");
+  const resultsRef = useRef(null);
 
   const average = parseScore(averageInput);
 
@@ -71,9 +78,11 @@ export default function OrientationExplorer({ initialAverage = "", initialStream
   );
 
   const filtered = useMemo(() => {
+    if (!submitted) return [];
+
     const normalizedQuery = query.trim().toLowerCase();
     const rows = orientationPrograms
-      .filter((program) => !stream || program.stream === stream)
+      .filter((program) => program.stream === stream)
       .filter((program) => !studyType || program.studyType === studyType)
       .filter((program) => !institution || program.institution === institution)
       .filter((program) => !category || program.category === category)
@@ -90,30 +99,15 @@ export default function OrientationExplorer({ initialAverage = "", initialStream
       if (sort === "score-desc") return b.lastScore - a.lastScore;
       if (sort === "score-asc") return a.lastScore - b.lastScore;
       if (sort === "name") return a.name.localeCompare(b.name, "ar");
-      if (Number.isFinite(average)) {
-        const fitA = getFit(a, average);
-        const fitB = getFit(b, average);
-        return statusRank[fitA.key] - statusRank[fitB.key] || b.lastScore - a.lastScore;
-      }
-      return STREAM_ORDER.indexOf(a.stream) - STREAM_ORDER.indexOf(b.stream) || b.lastScore - a.lastScore;
+      const fitA = getFit(a, average);
+      const fitB = getFit(b, average);
+      return statusRank[fitA.key] - statusRank[fitB.key] || b.lastScore - a.lastScore;
     });
 
     return rows;
-  }, [average, category, institution, query, savedIds, savedOnly, sort, stream, studyType]);
+  }, [average, category, institution, query, savedIds, savedOnly, sort, stream, studyType, submitted]);
 
   const visiblePrograms = filtered.slice(0, page * PAGE_SIZE);
-  const highCompetition = useMemo(
-    () => [...orientationPrograms].sort((a, b) => b.lastScore - a.lastScore).slice(0, 4),
-    [],
-  );
-  const nouadhibouPrograms = useMemo(
-    () => orientationPrograms.filter((program) => program.institution === "جامعة نواذيبو").slice(0, 4),
-    [],
-  );
-  const uniqueInstitutionCount = useMemo(
-    () => new Set(orientationPrograms.map((program) => program.institution)).size,
-    [],
-  );
 
   function toggleSaved(id) {
     setSavedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
@@ -127,9 +121,7 @@ export default function OrientationExplorer({ initialAverage = "", initialStream
     });
   }
 
-  function resetFilters() {
-    setAverageInput("");
-    setStream("");
+  function resetAdvancedFilters() {
     setStudyType("");
     setInstitution("");
     setCategory("");
@@ -138,63 +130,71 @@ export default function OrientationExplorer({ initialAverage = "", initialStream
     setSavedOnly(false);
   }
 
-  const showHighlights = !stream && !query && !institution && !category && !savedOnly;
+  function submitStudentData(event) {
+    event.preventDefault();
+    const parsedAverage = parseScore(averageInput);
+
+    if (!stream) {
+      setFormError("اختر شعبة الباك أولاً.");
+      return;
+    }
+    if (!Number.isFinite(parsedAverage) || parsedAverage < 0 || parsedAverage > 20) {
+      setFormError("أدخل معدلاً صحيحاً بين 0 و20.");
+      return;
+    }
+
+    setFormError("");
+    setSubmitted(true);
+    setAdvancedOpen(false);
+    window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  }
+
+  function editStudentData() {
+    setSubmitted(false);
+    setAdvancedOpen(false);
+    setFormError("");
+  }
 
   return (
-    <main className="min-h-screen bg-[#f7faf8] pb-28 text-slate-950 dark:bg-[#06110b] dark:text-white">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/90">
-        <div className="app-shell flex min-h-14 items-center justify-between gap-3">
-          <Link className="inline-flex items-center gap-2 text-sm font-black text-mauri-green" href="/">
+    <main className="min-h-screen w-full overflow-x-clip bg-[#f7faf8] pb-16 text-slate-950 dark:bg-[#06110b] dark:text-white">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
+        <div className="app-shell flex min-h-14 min-w-0 items-center justify-between gap-3">
+          <Link className="inline-flex min-w-0 items-center gap-2 text-sm font-black text-mauri-green" href="/">
             <ArrowLeft className="h-4 w-4 rotate-180" />
-            MauriResults
+            <span className="truncate">MauriResults</span>
           </Link>
-          <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-[11px] font-black text-mauri-green dark:text-emerald-300">
-            دليل التوجيه
-          </span>
+          <strong className="text-sm font-black text-slate-700 dark:text-slate-100">دليل التوجيه</strong>
         </div>
       </header>
 
-      <div className="app-shell grid gap-5 py-5 md:gap-8 md:py-10">
-        <section className="relative overflow-hidden rounded-[32px] border border-emerald-200/70 bg-white p-5 shadow-premium dark:border-emerald-300/15 dark:bg-white/[.055] md:p-8">
-          <div className="absolute -left-16 -top-20 h-56 w-56 rounded-full bg-emerald-200/35 blur-3xl dark:bg-emerald-400/10" aria-hidden="true" />
-          <div className="relative grid gap-6 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-mauri-green/10 px-3 py-1.5 text-xs font-black text-mauri-green dark:text-emerald-300">
-                <Sparkles className="h-4 w-4" />
-                ماذا يمكنني دراسة بمعدلي؟
-              </span>
-              <h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight tracking-tight md:text-5xl">
-                دليل التخصصات والتوجيه الجامعي
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm font-bold leading-7 text-slate-600 dark:text-slate-300 md:text-base">
-                اختر شعبة الباكالوريا وأدخل معدلك لعرض التخصصات المناسبة اعتماداً على آخر معدلات التوجيه المسجلة.
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                [orientationPrograms.length, "عرض توجيه"],
-                [STREAM_ORDER.length, "شعب باك"],
-                [uniqueInstitutionCount, "مؤسسة"],
-              ].map(([value, label]) => (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-center dark:border-white/10 dark:bg-white/5" key={label}>
-                  <strong className="block text-xl font-black text-mauri-green dark:text-mauri-gold">{value}</strong>
-                  <span className="text-[10px] font-black text-slate-500 dark:text-slate-300">{label}</span>
-                </div>
-              ))}
-            </div>
+      <div className="app-shell grid w-full min-w-0 gap-4 overflow-hidden py-4 md:gap-6 md:py-8">
+        <section className="flex min-w-0 items-start gap-3 rounded-[24px] border border-emerald-200/70 bg-white p-4 shadow-soft dark:border-emerald-300/15 dark:bg-white/[.055]">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-mauri-green text-white">
+            <GraduationCap className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-xl font-black leading-7 md:text-2xl">التخصصات المناسبة لمعدلك</h1>
+            <p className="mt-1 text-sm font-bold leading-6 text-slate-500 dark:text-slate-300">
+              اختر الشعبة والمعدل، ثم شاهد الخيارات الأقرب إليك.
+            </p>
           </div>
         </section>
 
         <OrientationFilters
+          advancedOpen={advancedOpen}
           averageInput={averageInput}
           categories={categories}
           category={category}
+          formError={formError}
           institution={institution}
           institutions={institutions}
-          onReset={resetFilters}
+          onEdit={editStudentData}
+          onReset={resetAdvancedFilters}
+          onSubmit={submitStudentData}
           query={query}
           savedCount={savedIds.length}
           savedOnly={savedOnly}
+          setAdvancedOpen={setAdvancedOpen}
           setAverageInput={setAverageInput}
           setCategory={setCategory}
           setInstitution={setInstitution}
@@ -206,66 +206,68 @@ export default function OrientationExplorer({ initialAverage = "", initialStream
           sort={sort}
           stream={stream}
           studyType={studyType}
+          submitted={submitted}
         />
 
-        <OrientationComparePanel average={average} compareIds={compareIds} onClear={() => setCompareIds([])} onRemove={toggleCompare} />
+        {submitted && (
+          <div className="grid min-w-0 gap-4" ref={resultsRef}>
+            <OrientationComparePanel average={average} compareIds={compareIds} onClear={() => setCompareIds([])} onRemove={toggleCompare} />
 
-        {showHighlights && (
-          <OrientationHighlights highCompetition={highCompetition} nouadhibouPrograms={nouadhibouPrograms} />
-        )}
-
-        <section className="grid gap-4">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">
-                {Number.isFinite(average) ? "التخصصات حسب فرصتك" : "كل عروض التوجيه"}
-              </p>
-              <h2 className="text-2xl font-black">{filtered.length} تخصصاً متاحاً</h2>
-            </div>
-            {compareIds.length >= 3 && (
-              <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700 dark:bg-amber-300/10 dark:text-amber-200">
-                وصلت للحد الأقصى للمقارنة
-              </span>
-            )}
-          </div>
-
-          {filtered.length ? (
-            <>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {visiblePrograms.map((program) => (
-                  <OrientationProgramCard
-                    average={average}
-                    compareIds={compareIds}
-                    key={program.id}
-                    onCompare={toggleCompare}
-                    onSave={toggleSaved}
-                    program={program}
-                    savedIds={savedIds}
-                  />
-                ))}
+            <section className="grid min-w-0 gap-3">
+              <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <h2 className="text-xl font-black">التخصصات المتاحة</h2>
+                  <p className="mt-0.5 text-sm font-bold text-slate-500 dark:text-slate-300">
+                    {filtered.length} خياراً مرتبة حسب قربها من معدلك
+                  </p>
+                </div>
+                {compareIds.length >= 3 && (
+                  <span className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-black text-amber-700 dark:bg-amber-300/10 dark:text-amber-200">
+                    اخترت 3 للمقارنة
+                  </span>
+                )}
               </div>
-              {visiblePrograms.length < filtered.length && (
-                <button className="mx-auto min-h-12 rounded-2xl border border-mauri-green/25 bg-white px-6 text-sm font-black text-mauri-green shadow-soft transition hover:bg-mauri-green/5 dark:bg-white/5" onClick={() => setPage((value) => value + 1)} type="button">
-                  عرض المزيد
-                </button>
-              )}
-            </>
-          ) : (
-            <div className="rounded-[26px] border border-dashed border-slate-300 bg-white p-8 text-center dark:border-white/15 dark:bg-white/5">
-              <Filter className="mx-auto h-10 w-10 text-slate-400" />
-              <h3 className="mt-3 text-lg font-black">لا توجد تخصصات بهذه الفلاتر</h3>
-              <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-300">جرّب تغيير المؤسسة أو المجال أو إلغاء خيار المحفوظة فقط.</p>
-            </div>
-          )}
-        </section>
 
-        <section className="rounded-[26px] border border-amber-200 bg-amber-50 p-4 text-sm font-bold leading-7 text-amber-900 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
-          <strong className="block font-black">تنبيه مهم</strong>
-          آخر معدل مسجل هو قيمة تاريخية للاستئناس فقط، وقد يتغير التوجيه حسب عدد المقاعد والمترشحين وترتيب الرغبات. تصنيف الفرص في هذه الصفحة تقديري ولا يضمن القبول.
-          <a className="mr-1 font-black underline underline-offset-4" href={ORIENTATION_SOURCE_URL} target="_blank" rel="noopener noreferrer">
-            مصدر الإحصائيات
-          </a>
-        </section>
+              {filtered.length ? (
+                <>
+                  <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {visiblePrograms.map((program) => (
+                      <OrientationProgramCard
+                        average={average}
+                        compareIds={compareIds}
+                        key={program.id}
+                        onCompare={toggleCompare}
+                        onSave={toggleSaved}
+                        program={program}
+                        savedIds={savedIds}
+                      />
+                    ))}
+                  </div>
+                  {visiblePrograms.length < filtered.length && (
+                    <button className="mx-auto min-h-11 rounded-2xl border border-mauri-green/25 bg-white px-6 text-sm font-black text-mauri-green shadow-soft transition hover:bg-mauri-green/5 dark:bg-white/5" onClick={() => setPage((value) => value + 1)} type="button">
+                      عرض المزيد
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="rounded-[24px] border border-dashed border-slate-300 bg-white p-7 text-center dark:border-white/15 dark:bg-white/5">
+                  <Filter className="mx-auto h-9 w-9 text-slate-400" />
+                  <h3 className="mt-3 text-lg font-black">لا توجد تخصصات بهذه الفلاتر</h3>
+                  <button className="mt-3 min-h-10 rounded-xl bg-mauri-green px-4 text-sm font-black text-white" onClick={resetAdvancedFilters} type="button">
+                    مسح الفلاتر
+                  </button>
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-900 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
+              المعدلات السابقة للاستئناس فقط، وتتغير حسب المقاعد والمترشحين وترتيب الرغبات.
+              <a className="mr-1 font-black underline underline-offset-4" href={ORIENTATION_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+                المصدر
+              </a>
+            </section>
+          </div>
+        )}
       </div>
     </main>
   );
