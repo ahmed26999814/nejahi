@@ -109,7 +109,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
             const active = isActive(item);
             return (
               <button
-                className={`relative grid min-h-13 min-w-0 content-center justify-items-center gap-1 rounded-[15px] px-1 text-[10px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
+                className={`relative grid min-h-12 min-w-0 content-center justify-items-center gap-1 rounded-[15px] px-1 text-[10px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
                 onClick={() => activate(item)}
                 type="button"
                 key={item.key}
