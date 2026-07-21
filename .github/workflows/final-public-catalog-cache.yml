@@ -1,0 +1,53 @@
+name: Final public catalog cache validation
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-build-commit:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Allow CDN caching for public catalog
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('components/home/HomeApplication.jsx')
+          text = path.read_text()
+          old = 'fetch("/api/public-exams", { headers: { Accept: "application/json" }, cache: "no-store" })'
+          new = 'fetch("/api/public-exams", { headers: { Accept: "application/json" } })'
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one public catalog fetch, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Commit validated cache fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/final-public-catalog-cache.yml
+          git add components/home/HomeApplication.jsx
+          git commit -m "تفعيل كاش كتالوج المسابقات لتقليل الضغط"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
