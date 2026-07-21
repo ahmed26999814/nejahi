@@ -1,0 +1,444 @@
+[
+  {
+    "group": "home-cdn",
+    "requests": 500,
+    "concurrency": 50,
+    "wall_seconds": 0.442,
+    "rps": 1129.96,
+    "success_percent": 100.0,
+    "mean_ms": 40.2,
+    "p50_ms": 19.7,
+    "p95_ms": 179.5,
+    "p99_ms": 281.3,
+    "max_ms": 293.5,
+    "statuses": {
+      "200": 500
+    },
+    "cache": {
+      "HIT": 500
+    },
+    "errors": {},
+    "download_mb": 20.51
+  },
+  {
+    "group": "home-cdn",
+    "requests": 1000,
+    "concurrency": 150,
+    "wall_seconds": 0.636,
+    "rps": 1573.05,
+    "success_percent": 100.0,
+    "mean_ms": 64.9,
+    "p50_ms": 43.4,
+    "p95_ms": 232.8,
+    "p99_ms": 253.7,
+    "max_ms": 288.0,
+    "statuses": {
+      "200": 1000
+    },
+    "cache": {
+      "HIT": 1000
+    },
+    "errors": {},
+    "download_mb": 41.02
+  },
+  {
+    "group": "home-cdn",
+    "requests": 1500,
+    "concurrency": 300,
+    "wall_seconds": 0.814,
+    "rps": 1843.25,
+    "success_percent": 100.0,
+    "mean_ms": 113.6,
+    "p50_ms": 76.5,
+    "p95_ms": 443.8,
+    "p99_ms": 450.1,
+    "max_ms": 486.5,
+    "statuses": {
+      "200": 1500
+    },
+    "cache": {
+      "HIT": 1500
+    },
+    "errors": {},
+    "download_mb": 61.52
+  },
+  {
+    "group": "public-exams",
+    "requests": 400,
+    "concurrency": 40,
+    "wall_seconds": 1.856,
+    "rps": 215.46,
+    "success_percent": 100.0,
+    "mean_ms": 179.1,
+    "p50_ms": 117.5,
+    "p95_ms": 780.1,
+    "p99_ms": 817.9,
+    "max_ms": 842.7,
+    "statuses": {
+      "200": 400
+    },
+    "cache": {
+      "MISS": 400
+    },
+    "errors": {},
+    "download_mb": 0.31
+  },
+  {
+    "group": "public-exams",
+    "requests": 700,
+    "concurrency": 100,
+    "wall_seconds": 1.511,
+    "rps": 463.35,
+    "success_percent": 100.0,
+    "mean_ms": 185.5,
+    "p50_ms": 211.6,
+    "p95_ms": 241.9,
+    "p99_ms": 302.2,
+    "max_ms": 579.0,
+    "statuses": {
+      "200": 700
+    },
+    "cache": {
+      "MISS": 700
+    },
+    "errors": {},
+    "download_mb": 0.54
+  },
+  {
+    "group": "public-exams",
+    "requests": 1000,
+    "concurrency": 200,
+    "wall_seconds": 1.043,
+    "rps": 958.94,
+    "success_percent": 100.0,
+    "mean_ms": 173.9,
+    "p50_ms": 182.7,
+    "p95_ms": 254.5,
+    "p99_ms": 279.3,
+    "max_ms": 395.8,
+    "statuses": {
+      "200": 1000
+    },
+    "cache": {
+      "MISS": 1000
+    },
+    "errors": {},
+    "download_mb": 0.77
+  },
+  {
+    "group": "site-content",
+    "requests": 300,
+    "concurrency": 30,
+    "wall_seconds": 0.283,
+    "rps": 1061.75,
+    "success_percent": 100.0,
+    "mean_ms": 20.5,
+    "p50_ms": 17.9,
+    "p95_ms": 30.4,
+    "p99_ms": 61.4,
+    "max_ms": 123.2,
+    "statuses": {
+      "200": 300
+    },
+    "cache": {
+      "HIT": 300
+    },
+    "errors": {},
+    "download_mb": 1.63
+  },
+  {
+    "group": "site-content",
+    "requests": 500,
+    "concurrency": 75,
+    "wall_seconds": 0.229,
+    "rps": 2184.37,
+    "success_percent": 100.0,
+    "mean_ms": 20.9,
+    "p50_ms": 19.2,
+    "p95_ms": 29.6,
+    "p99_ms": 38.9,
+    "max_ms": 125.7,
+    "statuses": {
+      "200": 500
+    },
+    "cache": {
+      "HIT": 500
+    },
+    "errors": {},
+    "download_mb": 2.71
+  },
+  {
+    "group": "site-content",
+    "requests": 700,
+    "concurrency": 150,
+    "wall_seconds": 0.329,
+    "rps": 2125.07,
+    "success_percent": 100.0,
+    "mean_ms": 33.3,
+    "p50_ms": 32.5,
+    "p95_ms": 45.9,
+    "p99_ms": 65.1,
+    "max_ms": 270.5,
+    "statuses": {
+      "200": 700
+    },
+    "cache": {
+      "HIT": 700
+    },
+    "errors": {},
+    "download_mb": 3.8
+  },
+  {
+    "group": "bac-shard-warm",
+    "requests": 500,
+    "concurrency": 50,
+    "wall_seconds": 0.409,
+    "rps": 1221.09,
+    "success_percent": 100.0,
+    "mean_ms": 21.5,
+    "p50_ms": 18.3,
+    "p95_ms": 28.6,
+    "p99_ms": 48.6,
+    "max_ms": 407.1,
+    "statuses": {
+      "200": 500
+    },
+    "cache": {
+      "HIT": 500
+    },
+    "errors": {},
+    "download_mb": 7.57
+  },
+  {
+    "group": "bac-shard-warm",
+    "requests": 900,
+    "concurrency": 125,
+    "wall_seconds": 0.372,
+    "rps": 2417.59,
+    "success_percent": 100.0,
+    "mean_ms": 30.9,
+    "p50_ms": 28.4,
+    "p95_ms": 43.1,
+    "p99_ms": 83.4,
+    "max_ms": 328.4,
+    "statuses": {
+      "200": 900
+    },
+    "cache": {
+      "HIT": 900
+    },
+    "errors": {},
+    "download_mb": 13.63
+  },
+  {
+    "group": "bac-shard-warm",
+    "requests": 1300,
+    "concurrency": 250,
+    "wall_seconds": 0.472,
+    "rps": 2753.14,
+    "success_percent": 100.0,
+    "mean_ms": 66.4,
+    "p50_ms": 54.2,
+    "p95_ms": 111.0,
+    "p99_ms": 266.0,
+    "max_ms": 320.1,
+    "statuses": {
+      "200": 1300
+    },
+    "cache": {
+      "HIT": 1300
+    },
+    "errors": {},
+    "download_mb": 19.68
+  },
+  {
+    "group": "brevet-2026-shard-warm",
+    "requests": 400,
+    "concurrency": 40,
+    "wall_seconds": 0.37,
+    "rps": 1080.54,
+    "success_percent": 100.0,
+    "mean_ms": 21.0,
+    "p50_ms": 18.4,
+    "p95_ms": 30.3,
+    "p99_ms": 53.6,
+    "max_ms": 245.7,
+    "statuses": {
+      "200": 400
+    },
+    "cache": {
+      "HIT": 400
+    },
+    "errors": {},
+    "download_mb": 6.56
+  },
+  {
+    "group": "brevet-2026-shard-warm",
+    "requests": 700,
+    "concurrency": 100,
+    "wall_seconds": 0.214,
+    "rps": 3263.98,
+    "success_percent": 100.0,
+    "mean_ms": 25.4,
+    "p50_ms": 24.2,
+    "p95_ms": 35.0,
+    "p99_ms": 48.0,
+    "max_ms": 110.2,
+    "statuses": {
+      "200": 700
+    },
+    "cache": {
+      "HIT": 700
+    },
+    "errors": {},
+    "download_mb": 11.48
+  },
+  {
+    "group": "brevet-2026-shard-warm",
+    "requests": 1000,
+    "concurrency": 200,
+    "wall_seconds": 0.441,
+    "rps": 2267.27,
+    "success_percent": 100.0,
+    "mean_ms": 44.5,
+    "p50_ms": 42.9,
+    "p95_ms": 60.5,
+    "p99_ms": 76.9,
+    "max_ms": 302.9,
+    "statuses": {
+      "200": 1000
+    },
+    "cache": {
+      "HIT": 1000
+    },
+    "errors": {},
+    "download_mb": 16.4
+  },
+  {
+    "group": "fallback-search",
+    "requests": 120,
+    "concurrency": 10,
+    "wall_seconds": 2.903,
+    "rps": 41.33,
+    "success_percent": 100.0,
+    "mean_ms": 224.0,
+    "p50_ms": 63.9,
+    "p95_ms": 1957.5,
+    "p99_ms": 2181.5,
+    "max_ms": 2902.5,
+    "statuses": {
+      "200": 120
+    },
+    "cache": {
+      "HIT": 120
+    },
+    "errors": {},
+    "download_mb": 0.03
+  },
+  {
+    "group": "fallback-search",
+    "requests": 240,
+    "concurrency": 25,
+    "wall_seconds": 2.385,
+    "rps": 100.64,
+    "success_percent": 100.0,
+    "mean_ms": 103.2,
+    "p50_ms": 59.8,
+    "p95_ms": 121.3,
+    "p99_ms": 1776.5,
+    "max_ms": 2018.8,
+    "statuses": {
+      "200": 240
+    },
+    "cache": {
+      "HIT": 240
+    },
+    "errors": {},
+    "download_mb": 0.06
+  },
+  {
+    "group": "fallback-search",
+    "requests": 360,
+    "concurrency": 50,
+    "wall_seconds": 3.127,
+    "rps": 115.14,
+    "success_percent": 100.0,
+    "mean_ms": 128.1,
+    "p50_ms": 61.1,
+    "p95_ms": 194.5,
+    "p99_ms": 1778.3,
+    "max_ms": 2939.2,
+    "statuses": {
+      "200": 360
+    },
+    "cache": {
+      "HIT": 360
+    },
+    "errors": {},
+    "download_mb": 0.1
+  },
+  {
+    "group": "bac-20-shard-mix",
+    "requests": 300,
+    "concurrency": 25,
+    "wall_seconds": 0.481,
+    "rps": 623.83,
+    "success_percent": 100.0,
+    "mean_ms": 38.3,
+    "p50_ms": 21.1,
+    "p95_ms": 139.2,
+    "p99_ms": 162.6,
+    "max_ms": 171.4,
+    "statuses": {
+      "200": 300
+    },
+    "cache": {
+      "MISS": 45,
+      "HIT": 255
+    },
+    "errors": {},
+    "download_mb": 4.55
+  },
+  {
+    "group": "bac-20-shard-mix",
+    "requests": 500,
+    "concurrency": 60,
+    "wall_seconds": 0.552,
+    "rps": 906.22,
+    "success_percent": 100.0,
+    "mean_ms": 29.1,
+    "p50_ms": 22.5,
+    "p95_ms": 53.3,
+    "p99_ms": 110.7,
+    "max_ms": 331.4,
+    "statuses": {
+      "200": 500
+    },
+    "cache": {
+      "HIT": 500
+    },
+    "errors": {},
+    "download_mb": 7.58
+  },
+  {
+    "group": "bac-20-shard-mix",
+    "requests": 800,
+    "concurrency": 120,
+    "wall_seconds": 0.42,
+    "rps": 1906.17,
+    "success_percent": 100.0,
+    "mean_ms": 43.2,
+    "p50_ms": 29.6,
+    "p95_ms": 146.2,
+    "p99_ms": 156.8,
+    "max_ms": 389.7,
+    "statuses": {
+      "200": 800
+    },
+    "cache": {
+      "HIT": 800
+    },
+    "errors": {},
+    "download_mb": 12.14
+  }
+]
