@@ -34,9 +34,9 @@ function tabFromLocation() {
   return new URLSearchParams(window.location.search).get("tab") === "exams" ? "exams" : "lessons";
 }
 
-export default function LessonsAndExams() {
+export default function LessonsAndExams({ initialTab = "lessons" }) {
   const [lang, setLang] = useState("ar");
-  const [tab, setTab] = useState("lessons");
+  const [tab, setTab] = useState(initialTab === "exams" ? "exams" : "lessons");
 
   useEffect(() => {
     const syncLanguage = (event) => {
