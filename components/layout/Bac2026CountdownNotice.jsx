@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-const BAC_2026_TARGET = Date.UTC(2026, 6, 24, 18, 0, 0);
+const BAC_2026_TARGET = Date.UTC(2026, 6, 22, 18, 0, 0);
 const STATUS_RECHECK_MIN_MS = 60_000;
 const STATUS_RECHECK_JITTER_MS = 30_000;
 
@@ -191,7 +191,7 @@ export default function Bac2026CountdownNotice() {
         <span className="bac-release-notice-dot" aria-hidden="true" />
         <p>
           <strong>باكالوريا 2026</strong>
-          <span>{targetReached ? "نترقب النشر الرسمي" : "24 يوليو — الساعة 18:00"}</span>
+          <span>{targetReached ? "نترقب النشر الرسمي" : "الأربعاء 22 يوليو — الساعة 18:00"}</span>
         </p>
 
         {targetReached ? (
