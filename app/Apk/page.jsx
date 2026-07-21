@@ -6,8 +6,8 @@ import "./apk-state.css";
 const canonical = "https://mauri-results.vercel.app/apk";
 
 export const metadata = {
-  title: "تحميل تطبيق MauriResults للأندرويد - الإصدار 3.1.0",
-  description: "حمّل تطبيق MauriResults الرسمي للأندرويد لمتابعة نتائج باكالوريا وابريفه وكونكور في موريتانيا. الإصدار الحالي 3.1.0.",
+  title: "تحميل تطبيق MauriResults للأندرويد - الإصدار 3.2.0",
+  description: "حمّل تطبيق MauriResults الرسمي للأندرويد لمتابعة نتائج باكالوريا وابريفه وكونكور في موريتانيا. الإصدار الحالي 3.2.0.",
   keywords: [
     "تحميل تطبيق MauriResults",
     "تطبيق نتائج موريتانيا",
@@ -21,7 +21,7 @@ export const metadata = {
     locale: "ar_MR",
     url: canonical,
     title: "تحميل تطبيق MauriResults للأندرويد",
-    description: "التطبيق الرسمي لمتابعة نتائج المسابقات الوطنية في موريتانيا بسرعة.",
+    description: "التطبيق الرسمي لمتابعة النتائج والمواضيع والتوجيه بسرعة.",
     siteName: "MauriResults",
     images: [{ url: "/logo.png", width: 1200, height: 1200, alt: "تطبيق MauriResults" }],
   },
@@ -34,9 +34,9 @@ export const metadata = {
 };
 
 const HIGHLIGHTS = [
-  { icon: "✨", title: "واجهة جديدة", text: "تصميم أجمل وأوضح مع أيقونات وانتقالات خفيفة" },
-  { icon: "✓", title: "تمييز الناجح", text: "بطاقة خاصة وتأثير تهنئة واضح عند النجاح" },
-  { icon: "⚡", title: "سريع وخفيف", text: "تحسينات بصرية دون إضافة مكتبات أو طلبات ثقيلة" },
+  { icon: "🧭", title: "بحث كونكور الصحيح", text: "الولاية ثم المقاطعة ثم المركز ثم رقم المترشح" },
+  { icon: "📚", title: "التعلم والتوجيه", text: "دروس وكتب ومواضيع امتحانات ومعلومات توجيه" },
+  { icon: "⚡", title: "بطاقة أوضح وأخف", text: "عرض مباشر للاسم والقرار والمعدل والمركز دون تكرار" },
 ];
 
 export default function ApkDownloadPage() {
@@ -50,9 +50,9 @@ export default function ApkDownloadPage() {
 
         <section className="apk-hero">
           <div className="apk-hero-copy">
-            <span className="apk-kicker">النسخة الرسمية الجديدة · الإصدار 3.1.0</span>
-            <h1>لديك نسخة قديمة؟ حمّل النسخة الجديدة الآن</h1>
-            <p>تم إيقاف الإصدار 3.0.0 وجميع النسخ الأقدم. نزّل MauriResults 3.1.0 لمتابعة استخدام التطبيق والاستفادة من الواجهة الجديدة وتأثير النجاح المميز.</p>
+            <span className="apk-kicker">النسخة الرسمية الجديدة · الإصدار 3.2.0</span>
+            <h1>حدّث التطبيق للاستفادة من البحث الجديد</h1>
+            <p>تم إيقاف جميع الإصدارات السابقة. نزّل MauriResults 3.2.0 للحصول على بحث كونكور المتدرّج، والمواضيع والامتحانات، ومعلومات التوجيه، وبطاقة نتيجة أبسط.</p>
             <ApkDownload />
             <p className="apk-safe-note">تحميل مباشر وآمن من الموقع الرسمي · جميع الروابط القديمة تحوّلك إلى أحدث نسخة</p>
           </div>
@@ -60,10 +60,10 @@ export default function ApkDownloadPage() {
           <div className="apk-phone" aria-hidden="true">
             <div className="apk-phone-top"><span>13:54</span><span>● ● ●</span></div>
             <div className="apk-phone-body">
-              <div className="apk-mini-brand"><img src="/logo.png" alt="" /><div><b>MauriResults</b><small>الإصدار الجديد 3.1</small></div></div>
+              <div className="apk-mini-brand"><img src="/logo.png" alt="" /><div><b>MauriResults</b><small>الإصدار الجديد 3.2</small></div></div>
               <div className="apk-mini-search">ابحث عن نتيجتك بسرعة</div>
-              <div className="apk-mini-grid"><span>النتائج</span><span>الدروس</span><span>المحفوظات</span><span>الإحصائيات</span></div>
-              <div className="apk-mini-card"><b>مبروك النجاح</b><small>واجهة جديدة وتأثير خاص للناجحين</small></div>
+              <div className="apk-mini-grid"><span>النتائج</span><span>التعلم</span><span>المحفوظات</span><span>الإحصائيات</span></div>
+              <div className="apk-mini-card"><b>كونكور</b><small>الولاية ← المقاطعة ← المركز ← الرقم</small></div>
             </div>
           </div>
         </section>
