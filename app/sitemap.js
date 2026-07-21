@@ -10,7 +10,7 @@ const staticRoutes = [
   { path: "/orientation", changeFrequency: "monthly", priority: 0.88 },
   { path: "/lessons", changeFrequency: "weekly", priority: 0.7 },
   { path: "/calculator", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/Apk/", changeFrequency: "weekly", priority: 0.7 },
+  { path: "/apk", changeFrequency: "weekly", priority: 0.7 },
 ];
 
 const examRoutes = Object.entries(examSeoData).flatMap(([exam, details]) =>

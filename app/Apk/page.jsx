@@ -3,10 +3,34 @@ import ApkDownload from "./ApkDownload";
 import "./apk.css";
 import "./apk-state.css";
 
+const canonical = "https://mauri-results.vercel.app/apk";
+
 export const metadata = {
-  title: "تحديث MauriResults 3.1.0 للأندرويد",
-  description: "نزّل النسخة الجديدة من تطبيق MauriResults. تم إيقاف الإصدار 3.0.0 وجميع النسخ الأقدم.",
-  alternates: { canonical: "https://mauri-results.vercel.app/Apk/" },
+  title: "تحميل تطبيق MauriResults للأندرويد - الإصدار 3.1.0",
+  description: "حمّل تطبيق MauriResults الرسمي للأندرويد لمتابعة نتائج باكالوريا وابريفه وكونكور في موريتانيا. الإصدار الحالي 3.1.0.",
+  keywords: [
+    "تحميل تطبيق MauriResults",
+    "تطبيق نتائج موريتانيا",
+    "تطبيق نتائج باكالوريا موريتانيا 2026",
+    "تطبيق ابريفه وكونكور",
+    "MauriResults APK",
+  ],
+  alternates: { canonical },
+  openGraph: {
+    type: "website",
+    locale: "ar_MR",
+    url: canonical,
+    title: "تحميل تطبيق MauriResults للأندرويد",
+    description: "التطبيق الرسمي لمتابعة نتائج المسابقات الوطنية في موريتانيا بسرعة.",
+    siteName: "MauriResults",
+    images: [{ url: "/logo.png", width: 1200, height: 1200, alt: "تطبيق MauriResults" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "تحميل تطبيق MauriResults للأندرويد",
+    description: "حمّل الإصدار الرسمي لمتابعة نتائج باكالوريا وابريفه وكونكور.",
+    images: ["/logo.png"],
+  },
 };
 
 const HIGHLIGHTS = [
