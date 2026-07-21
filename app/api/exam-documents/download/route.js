@@ -5,9 +5,10 @@ export const runtime = "nodejs";
 
 const ALLOWED_HOSTS = new Set(["rimbac.com", "www.rimbac.com"]);
 const FILE_EXTENSION_RE = /\.(pdf|docx?|xlsx?|pptx?|zip|rar|jpe?g|png|webp)(?:$|[?#])/i;
-const DOWNLOAD_WORDS_RE = /(تحميل|download|تنزيل|معاينة|فتح|الامتحان|الإمتحان|الحل|التصحيح|الموضوع|pdf)/i;
-const SOLUTION_WORDS_RE = /(الحل|حل |التصحيح|تصحيح|corrig)/i;
+const DOWNLOAD_WORDS_RE = /(تحميل|download|تنزيل|معاينة|فتح|pdf)/i;
+const SOLUTION_WORDS_RE = /(^|\s)(الحل|حل|التصحيح|تصحيح)(\s|$)|corrig/i;
 const EXAM_WORDS_RE = /(الامتحان|الإمتحان|موضوع|اختبار|epreuve|épreuve)/i;
+const YEAR_CONTEXT_RE = /(بكلوريا|بكالوريا|ابريفه|أبريفه|brevet|bepc|كونكور|concours|الامتياز|الإمتياز|مسابقة|دورة)/i;
 
 const SUBJECT_ALIASES = {
   "اللغة العربية": ["اللغة العربية", "العربية", "arabe"],
@@ -48,7 +49,12 @@ function decodeHtml(value = "") {
 }
 
 function stripTags(value = "") {
-  return decodeHtml(value.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " "))
+  return decodeHtml(
+    value
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+  )
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -74,7 +80,7 @@ function safeUrl(value, base) {
   try {
     decoded = decodeURIComponent(decoded);
   } catch {
-    // Keep the original value when it contains incomplete percent encoding.
+    // Preserve incomplete percent encoding and let URL handle it.
   }
 
   try {
@@ -100,8 +106,8 @@ function unwrapViewerUrl(value, base) {
   if (!url) return null;
   try {
     const parsed = new URL(url);
-    const file = parsed.searchParams.get("file") || parsed.searchParams.get("url") || parsed.searchParams.get("src");
-    return file ? safeUrl(file, url) || url : url;
+    const nested = parsed.searchParams.get("file") || parsed.searchParams.get("url") || parsed.searchParams.get("src");
+    return nested ? safeUrl(nested, url) || url : url;
   } catch {
     return url;
   }
@@ -109,25 +115,44 @@ function unwrapViewerUrl(value, base) {
 
 function extractAnchors(html, base) {
   const anchors = [];
-  const regex = /<a\b([^>]*?)href\s*=\s*["']([^"']+)["']([^>]*)>([\s\S]*?)<\/a>/gi;
+  const regex = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
   let match;
+
   while ((match = regex.exec(html))) {
-    const url = unwrapViewerUrl(match[2], base);
+    const href = match[1].match(/href\s*=\s*["']([^"']+)["']/i)?.[1];
+    const url = unwrapViewerUrl(href, base);
     if (!url) continue;
+    const start = Math.max(0, match.index - 900);
+    const end = Math.min(html.length, regex.lastIndex + 900);
     anchors.push({
       url,
-      text: stripTags(match[4]),
-      raw: match[0],
+      text: stripTags(match[2]),
+      context: stripTags(html.slice(start, end)),
       index: match.index,
     });
   }
+
   return anchors;
+}
+
+function extractTitle(html) {
+  return stripTags(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "");
+}
+
+function fileRank(url) {
+  const path = url.toLowerCase();
+  if (/\.pdf(?:$|[?#])/.test(path)) return 100;
+  if (/\.(docx?|xlsx?|pptx?|zip|rar)(?:$|[?#])/.test(path)) return 80;
+  if (/\.(jpe?g|png|webp)(?:$|[?#])/.test(path)) return 20;
+  if (/\/wp-content\/uploads\//.test(path)) return 10;
+  return 0;
 }
 
 function extractFileCandidates(html, base) {
   const candidates = new Set();
   const attributeRegex = /(?:href|src|data-url|data-src|data-download|data-file|data-pdf)\s*=\s*["']([^"']+)["']/gi;
   let match;
+
   while ((match = attributeRegex.exec(html))) {
     const url = unwrapViewerUrl(match[1], base);
     if (url && (FILE_EXTENSION_RE.test(url) || /\/wp-content\/uploads\//i.test(url))) candidates.add(url);
@@ -139,7 +164,9 @@ function extractFileCandidates(html, base) {
     if (url && (FILE_EXTENSION_RE.test(url) || /\/wp-content\/uploads\//i.test(url))) candidates.add(url);
   }
 
-  return [...candidates].filter((url) => !/(logo|favicon|avatar|analytics|icon|banner|advert|ads)/i.test(url));
+  return [...candidates]
+    .filter((url) => !/(logo|favicon|avatar|analytics|icon|banner|advert|ads|220x150|150x150)/i.test(url))
+    .sort((a, b) => fileRank(b) - fileRank(a));
 }
 
 function aliasesFor(subject) {
@@ -152,22 +179,30 @@ function includesSubject(text, subject) {
   return aliasesFor(subject).some((alias) => haystack.includes(normalize(alias)));
 }
 
-function chooseByType(anchors, documentType) {
-  if (!anchors.length) return null;
-  if (documentType === "solution") {
-    return anchors.find((anchor) => SOLUTION_WORDS_RE.test(anchor.text)) || anchors[1] || anchors[0];
-  }
-  if (documentType === "exam") {
-    return anchors.find((anchor) => EXAM_WORDS_RE.test(anchor.text) && !SOLUTION_WORDS_RE.test(anchor.text)) || anchors[0];
-  }
-  return anchors.find((anchor) => DOWNLOAD_WORDS_RE.test(anchor.text)) || anchors[0];
+function isDesiredType(anchor, documentType) {
+  const text = anchor.text || "";
+  if (documentType === "solution") return SOLUTION_WORDS_RE.test(text);
+  if (documentType === "exam") return EXAM_WORDS_RE.test(text) && !SOLUTION_WORDS_RE.test(text);
+  return DOWNLOAD_WORDS_RE.test(text);
 }
 
 function findYearLink(html, base, year) {
   if (!year) return null;
-  const yearText = String(year);
-  const anchors = extractAnchors(html, base);
-  return anchors.find((anchor) => normalize(anchor.text).includes(yearText)) || null;
+  const target = String(year);
+  const candidates = extractAnchors(html, base)
+    .filter((anchor) => normalize(anchor.text).includes(target))
+    .map((anchor) => {
+      const text = stripTags(anchor.text);
+      let score = 0;
+      if (normalize(text) === target) score += 200;
+      if (YEAR_CONTEXT_RE.test(text)) score += 120;
+      if (YEAR_CONTEXT_RE.test(anchor.context)) score += 30;
+      if (/(منحة|وظيفة|اكتتاب|جامعة|كوريا|تركيا|روسيا)/i.test(text)) score -= 300;
+      return { ...anchor, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  return candidates[0]?.score > 0 ? candidates[0] : null;
 }
 
 function findHintLink(html, base, hint) {
@@ -177,44 +212,49 @@ function findHintLink(html, base, hint) {
 }
 
 function findSubjectLink(html, base, record) {
+  const rows = [];
   const rowRegex = /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
   let row;
-  while ((row = rowRegex.exec(html))) {
-    if (!includesSubject(row[1], record.subject)) continue;
-    const chosen = chooseByType(extractAnchors(row[1], base), record.document_type);
-    if (chosen) return chosen;
+  while ((row = rowRegex.exec(html))) rows.push(row[1]);
+
+  for (const block of rows) {
+    if (!includesSubject(block, record.subject)) continue;
+    const selected = extractAnchors(block, base).find((anchor) => isDesiredType(anchor, record.document_type));
+    if (selected) return selected;
   }
 
-  // Some Rimbac pages use headings/cards instead of a table. Search a bounded block
-  // after the matching subject heading so links from the next subject are not selected.
-  const aliases = aliasesFor(record.subject).map(normalize).filter(Boolean);
-  const blocks = html.split(/(?=<h[1-6]\b|<strong\b|<p\b|<div\b[^>]*(?:elementor|entry-content|wp-block))/gi);
-  for (const block of blocks) {
-    const blockText = normalize(block.slice(0, 1200));
-    if (!aliases.some((alias) => blockText.includes(alias))) continue;
-    const chosen = chooseByType(extractAnchors(block.slice(0, 5000), base), record.document_type);
-    if (chosen) return chosen;
-  }
-
-  // Last fallback: use the nearest anchors following the first subject occurrence.
-  const normalizedHtml = normalize(html);
-  const subjectAlias = aliases.find((alias) => normalizedHtml.includes(alias));
-  if (subjectAlias) {
-    const plainSubject = aliasesFor(record.subject).find((alias) => html.toLowerCase().includes(alias.toLowerCase()));
-    const position = plainSubject ? html.toLowerCase().indexOf(plainSubject.toLowerCase()) : -1;
-    if (position >= 0) {
-      const chosen = chooseByType(extractAnchors(html.slice(position, position + 7000), base), record.document_type);
-      if (chosen) return chosen;
+  const lowerHtml = html.toLowerCase();
+  const candidates = [];
+  for (const alias of aliasesFor(record.subject)) {
+    const needle = alias.toLowerCase();
+    let position = lowerHtml.indexOf(needle);
+    while (position >= 0) {
+      const chunk = html.slice(position, position + 6500);
+      const selected = extractAnchors(chunk, base).find((anchor) => isDesiredType(anchor, record.document_type));
+      if (selected) {
+        let score = 100;
+        if (includesSubject(selected.context, record.subject)) score += 60;
+        if (selected.index < 2500) score += 30;
+        candidates.push({ ...selected, score, subjectPosition: position });
+      }
+      position = lowerHtml.indexOf(needle, position + needle.length);
     }
   }
 
-  return null;
+  candidates.sort((a, b) => b.score - a.score || a.subjectPosition - b.subjectPosition);
+  return candidates[0] || null;
+}
+
+function findDownloadLink(html, base) {
+  return extractAnchors(html, base)
+    .filter((anchor) => DOWNLOAD_WORDS_RE.test(anchor.text))
+    .sort((a, b) => fileRank(b.url) - fileRank(a.url))[0] || null;
 }
 
 async function fetchRemote(url) {
   if (!isAllowedUrl(url)) throw new Error("Remote URL is not allowed.");
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
+  const timeout = setTimeout(() => controller.abort(), 25000);
   try {
     return await fetch(url, {
       redirect: "follow",
@@ -233,8 +273,11 @@ async function fetchRemote(url) {
 async function resolveDownload(record) {
   let current = record.direct_url || record.source_url;
   const visited = new Set();
+  let yearResolved = !record.year || normalize(current).includes(String(record.year));
+  let subjectResolved = Boolean(record.direct_url) || aliasesFor(record.subject).length === 0;
+  let hintResolved = !record.link_text_hint;
 
-  for (let depth = 0; depth < 5; depth += 1) {
+  for (let depth = 0; depth < 8; depth += 1) {
     current = safeUrl(current, record.source_url);
     if (!current || visited.has(current)) break;
     visited.add(current);
@@ -247,36 +290,47 @@ async function resolveDownload(record) {
     if (!contentType.includes("text/html")) return { response, finalUrl };
 
     const html = await response.text();
+    const title = extractTitle(html);
+    if (/(domain is expired|your domain is expired)/i.test(`${title} ${stripTags(html).slice(0, 800)}`)) {
+      throw new Error("The source page is unavailable.");
+    }
 
-    // Collection/index pages first route to the requested year.
-    if (record.year) {
+    if (!yearResolved && normalize(title).includes(String(record.year))) yearResolved = true;
+    if (!yearResolved) {
       const yearLink = findYearLink(html, finalUrl, record.year);
       if (yearLink && !visited.has(yearLink.url)) {
+        yearResolved = true;
         current = yearLink.url;
+        continue;
+      }
+      yearResolved = true;
+    }
+
+    if (!hintResolved) {
+      const hintLink = findHintLink(html, finalUrl, record.link_text_hint);
+      hintResolved = true;
+      if (hintLink && !visited.has(hintLink.url)) {
+        current = hintLink.url;
         continue;
       }
     }
 
-    // References and memo collections often use the full document title as anchor text.
-    const hintLink = findHintLink(html, finalUrl, record.link_text_hint);
-    if (hintLink && !visited.has(hintLink.url)) {
-      current = hintLink.url;
-      continue;
-    }
-
-    const subjectLink = findSubjectLink(html, finalUrl, record);
-    if (subjectLink && !visited.has(subjectLink.url)) {
-      current = subjectLink.url;
-      continue;
+    if (!subjectResolved) {
+      const subjectLink = findSubjectLink(html, finalUrl, record);
+      subjectResolved = true;
+      if (subjectLink && !visited.has(subjectLink.url)) {
+        current = subjectLink.url;
+        continue;
+      }
     }
 
     const files = extractFileCandidates(html, finalUrl);
-    if (files.length) {
+    if (files.length && !visited.has(files[0])) {
       current = files[0];
       continue;
     }
 
-    const downloadLink = extractAnchors(html, finalUrl).find((anchor) => DOWNLOAD_WORDS_RE.test(anchor.text));
+    const downloadLink = findDownloadLink(html, finalUrl);
     if (downloadLink && !visited.has(downloadLink.url)) {
       current = downloadLink.url;
       continue;
@@ -339,9 +393,7 @@ export async function GET(request) {
     if (!record) return NextResponse.json({ error: "الملف غير موجود." }, { status: 404 });
 
     const resolved = await resolveDownload(record);
-    if (!resolved) {
-      return NextResponse.redirect(record.source_url, 302);
-    }
+    if (!resolved) return NextResponse.redirect(record.source_url, 302);
 
     const contentType = resolved.response.headers.get("content-type") || "application/octet-stream";
     const extension = extensionFrom(resolved.finalUrl, contentType);
