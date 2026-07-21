@@ -25,6 +25,14 @@ type ExamSearchConfig = {
 
 type LocationRow = Record<string, unknown>;
 
+type LocationGroup = {
+  wilaya: string;
+  moughataas: Array<{
+    name: string;
+    centres: string[];
+  }>;
+};
+
 function cleanText(value: unknown) {
   return String(value ?? "").replace(/\s+/g, " ").trim();
 }
@@ -87,8 +95,43 @@ async function resolveExam(source: string): Promise<ExamSearchConfig | null> {
   }
 }
 
-async function fetchLocationRows(config: ExamSearchConfig) {
+function locationTableCandidates(table: string) {
+  const candidates: string[] = [];
+  if (table.endsWith("_results_view")) {
+    candidates.push(table.slice(0, -"_results_view".length) + "_locations_view");
+  } else if (table.endsWith("_results")) {
+    candidates.push(table.slice(0, -"_results".length) + "_locations_view");
+  }
+  candidates.push(table);
+  return [...new Set(candidates)].filter(validTable);
+}
+
+async function fetchRowsFromTable(
+  table: string,
+  select: string,
+  maximumRows: number,
+) {
   if (!SUPABASE_URL) throw new Error("Missing Supabase URL");
+  const rows: LocationRow[] = [];
+  const pageSize = 1000;
+
+  for (let offset = 0; offset < maximumRows; offset += pageSize) {
+    const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+    url.searchParams.set("select", select);
+    url.searchParams.set("limit", String(pageSize));
+    url.searchParams.set("offset", String(offset));
+    const page = await supabaseJson(url, {
+      headers: { Prefer: "count=none" },
+    });
+    if (!Array.isArray(page)) break;
+    rows.push(...page);
+    if (page.length < pageSize) break;
+  }
+
+  return rows;
+}
+
+async function fetchLocationRows(config: ExamSearchConfig) {
   const table = cleanText(config.table_name);
   const wilayaColumn = cleanText(config.wilaya_column);
   const moughataaColumn = cleanText(config.moughataa_column);
@@ -104,23 +147,34 @@ async function fetchLocationRows(config: ExamSearchConfig) {
   const select = [wilayaColumn, moughataaColumn, centreColumn]
     .map(selectIdentifier)
     .join(",");
-  const rows: LocationRow[] = [];
-  const pageSize = 1000;
+  const candidates = locationTableCandidates(table);
+  let lastError: unknown;
 
-  for (let offset = 0; offset < 20000; offset += pageSize) {
-    const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
-    url.searchParams.set("select", select);
-    url.searchParams.set("limit", String(pageSize));
-    url.searchParams.set("offset", String(offset));
-    const page = await supabaseJson(url, {
-      headers: { Prefer: "count=none" },
-    });
-    if (!Array.isArray(page)) break;
-    rows.push(...page);
-    if (page.length < pageSize) break;
+  for (const candidate of candidates) {
+    try {
+      const isDedicatedLocationView = candidate !== table;
+      const rows = await fetchRowsFromTable(
+        candidate,
+        select,
+        isDedicatedLocationView ? 20000 : 120000,
+      );
+      if (rows.length > 0) {
+        return {
+          rows,
+          locationTable: candidate,
+          wilayaColumn,
+          moughataaColumn,
+          centreColumn,
+        };
+      }
+    } catch (error) {
+      lastError = error;
+    }
   }
 
-  return { rows, wilayaColumn, moughataaColumn, centreColumn };
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("No concours locations were found");
 }
 
 function buildHierarchy(
@@ -128,7 +182,7 @@ function buildHierarchy(
   wilayaColumn: string,
   moughataaColumn: string,
   centreColumn: string,
-) {
+): LocationGroup[] {
   const hierarchy = new Map<string, Map<string, Set<string>>>();
 
   for (const row of rows) {
@@ -157,6 +211,22 @@ function buildHierarchy(
     }));
 }
 
+function hierarchyStats(locations: LocationGroup[]) {
+  let moughataaCount = 0;
+  let centreCount = 0;
+  for (const wilaya of locations) {
+    moughataaCount += wilaya.moughataas.length;
+    for (const moughataa of wilaya.moughataas) {
+      centreCount += moughataa.centres.length;
+    }
+  }
+  return {
+    wilayaCount: locations.length,
+    moughataaCount,
+    centreCount,
+  };
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const source = cleanText(url.searchParams.get("source") || "concours");
@@ -174,10 +244,21 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { rows, wilayaColumn, moughataaColumn, centreColumn } = await fetchLocationRows(config);
+    const {
+      rows,
+      locationTable,
+      wilayaColumn,
+      moughataaColumn,
+      centreColumn,
+    } = await fetchLocationRows(config);
     const locations = buildHierarchy(rows, wilayaColumn, moughataaColumn, centreColumn);
     return NextResponse.json(
-      { source, locations },
+      {
+        source,
+        locationTable,
+        ...hierarchyStats(locations),
+        locations,
+      },
       { headers: CACHE_HEADERS },
     );
   } catch (error) {
