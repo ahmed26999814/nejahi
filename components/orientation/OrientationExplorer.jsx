@@ -22,9 +22,13 @@ import {
   SAVED_KEY,
 } from "./orientation-utils";
 
-export default function OrientationExplorer() {
-  const [averageInput, setAverageInput] = useState("");
-  const [stream, setStream] = useState("");
+export default function OrientationExplorer({ initialAverage = "", initialStream = "" }) {
+  const normalizedInitialStream = normalizeStream(initialStream);
+  const validInitialAverage = parseScore(initialAverage) !== null ? String(initialAverage) : "";
+  const validInitialStream = STREAM_ORDER.includes(normalizedInitialStream) ? normalizedInitialStream : "";
+
+  const [averageInput, setAverageInput] = useState(validInitialAverage);
+  const [stream, setStream] = useState(validInitialStream);
   const [studyType, setStudyType] = useState("");
   const [institution, setInstitution] = useState("");
   const [category, setCategory] = useState("");
@@ -39,11 +43,6 @@ export default function OrientationExplorer() {
   const average = parseScore(averageInput);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const initialStream = normalizeStream(params.get("stream"));
-    const initialAverage = params.get("average");
-    if (STREAM_ORDER.includes(initialStream)) setStream(initialStream);
-    if (parseScore(initialAverage) !== null) setAverageInput(initialAverage);
     setSavedIds(readStoredIds(SAVED_KEY));
     setCompareIds(readStoredIds(COMPARE_KEY).slice(0, 3));
     setHydrated(true);
