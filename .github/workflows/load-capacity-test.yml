@@ -1,9 +1,11 @@
 name: MauriResults controlled load test
 
 on:
-  push:
+  pull_request:
     branches:
-      - test/load-capacity-20260721
+      - main
+    paths:
+      - .github/load-test-trigger.txt
   workflow_dispatch:
 
 permissions:
