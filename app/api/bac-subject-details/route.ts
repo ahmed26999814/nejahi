@@ -100,7 +100,7 @@ function normalizeSubject(row: Record<string, unknown>) {
   };
 }
 
-function subjectRows(candidate: Record<string, unknown>) {
+function nestedSubjectRows(candidate: Record<string, unknown>) {
   const candidates = [
     candidate.notes,
     candidate.details,
@@ -130,7 +130,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const officialResponse = await fetchOfficialDetails(number);
-    const officialCandidate = safeObject(officialResponse.data);
+    const directRows = safeArray(officialResponse.data);
+    const officialCandidate =
+      safeObject(officialResponse.data) || directRows[0] || null;
 
     if (officialResponse.status === 404 || !officialCandidate) {
       return NextResponse.json(
@@ -159,7 +161,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const subjects = subjectRows(officialCandidate)
+    const rawSubjects = directRows.length
+      ? directRows
+      : nestedSubjectRows(officialCandidate);
+    const subjects = rawSubjects
       .map(normalizeSubject)
       .filter(
         (subject) =>
@@ -197,10 +202,14 @@ export async function GET(request: NextRequest) {
         officialCandidate.serie ?? officialCandidate.series ?? officialCandidate.TS,
       ),
       average: numberValue(
-        officialCandidate.moyenne ?? officialCandidate.MOD ?? officialCandidate.average,
+        officialCandidate.moyenne ??
+          officialCandidate.MOD ??
+          officialCandidate.average,
       ),
       decision: stringValue(
-        officialCandidate.decision ?? officialCandidate.resultat ?? officialCandidate.KR,
+        officialCandidate.decision ??
+          officialCandidate.resultat ??
+          officialCandidate.KR,
       ),
     };
 
