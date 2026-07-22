@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-const BAC_2026_TARGET = Date.UTC(2026, 6, 23, 18, 0, 0);
+const BAC_2026_TARGET = Date.UTC(2026, 6, 22, 18, 0, 0);
 const STATUS_RECHECK_MIN_MS = 60_000;
 const STATUS_RECHECK_JITTER_MS = 30_000;
 
@@ -164,24 +164,7 @@ export default function Bac2026CountdownNotice() {
     [remainingMs],
   );
 
-  if (!shouldShow) return null;
-
-  if (isPublished) {
-    return (
-      <aside className="bac-release-notice bac-release-notice-live" aria-label="نتائج باكالوريا 2026 متاحة">
-        <div className="bac-release-notice-inner">
-          <span className="bac-release-notice-dot" aria-hidden="true" />
-          <p>
-            <strong>تم نشر نتائج باكالوريا 2026</strong>
-            <span>العداد متوقف — البحث متاح الآن.</span>
-          </p>
-          <Link href="/#year-2026" className="bac-release-notice-link">
-            ابحث الآن
-          </Link>
-        </div>
-      </aside>
-    );
-  }
+  if (!shouldShow || isPublished) return null;
 
   const targetReached = remainingMs === 0;
 
@@ -191,7 +174,7 @@ export default function Bac2026CountdownNotice() {
         <span className="bac-release-notice-dot" aria-hidden="true" />
         <p>
           <strong>باكالوريا 2026</strong>
-          <span>{targetReached ? "نترقب النشر الرسمي" : "الخميس 23 يوليو — الساعة 18:00"}</span>
+          <span>{targetReached ? "نترقب النشر الرسمي" : "الأربعاء 22 يوليو — الساعة 18:00"}</span>
         </p>
 
         {targetReached ? (
