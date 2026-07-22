@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const PREPARE_TIMEOUT_MS = 240_000;
 
 function json(status: number, body: Record<string, unknown>) {
   return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -42,39 +43,57 @@ export async function POST(request: Request) {
   const nameColumn = safeColumn(body.nameColumn);
   const scoreColumn = safeColumn(body.scoreColumn);
   if (!tableName || !numberColumn || !nameColumn || !scoreColumn) {
-    return json(400, { ok: false, error: "tableName, numberColumn, nameColumn and scoreColumn are required" });
-  }
-
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/prepare_results_table_speed`, {
-    method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      p_table_name: tableName,
-      p_number_column: numberColumn,
-      p_name_column: nameColumn,
-      p_score_column: scoreColumn,
-      p_wilaya_column: safeColumn(body.wilayaColumn) || null,
-      p_moughataa_column: safeColumn(body.moughataaColumn) || null,
-      p_centre_column: safeColumn(body.centreColumn) || null,
-    }),
-    cache: "no-store",
-  });
-
-  const text = await response.text();
-  if (!response.ok) {
-    return json(response.status, {
+    return json(400, {
       ok: false,
-      error: text.replace(/\s+/g, " ").slice(0, 900),
-      hint: "Run the fast_results_upload SQL migration in Supabase, then try again.",
+      error: "tableName, numberColumn, nameColumn and scoreColumn are required",
     });
   }
 
-  let result: unknown = null;
-  try { result = text ? JSON.parse(text) : null; } catch { result = text; }
-  return json(200, { ok: true, result });
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/prepare_results_table_speed`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        p_table_name: tableName,
+        p_number_column: numberColumn,
+        p_name_column: nameColumn,
+        p_score_column: scoreColumn,
+        p_wilaya_column: safeColumn(body.wilayaColumn) || null,
+        p_moughataa_column: safeColumn(body.moughataaColumn) || null,
+        p_centre_column: safeColumn(body.centreColumn) || null,
+      }),
+      signal: AbortSignal.timeout(PREPARE_TIMEOUT_MS),
+      cache: "no-store",
+    });
+
+    const text = await response.text();
+    if (!response.ok) {
+      return json(response.status, {
+        ok: false,
+        error: text.replace(/\s+/g, " ").slice(0, 900),
+        hint: "Run the fast_results_upload SQL migration in Supabase, then try again.",
+      });
+    }
+
+    let result: unknown = null;
+    try {
+      result = text ? JSON.parse(text) : null;
+    } catch {
+      result = text;
+    }
+    return json(200, { ok: true, result });
+  } catch (error) {
+    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+    return json(timedOut ? 504 : 500, {
+      ok: false,
+      error: timedOut
+        ? "Search preparation timed out safely. Results were not published."
+        : `Search preparation failed: ${String(error).slice(0, 700)}`,
+    });
+  }
 }
