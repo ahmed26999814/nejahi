@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const APK_PATH = "/apk/MauriResults-3.2.0.apk";
+const APK_URL = "https://nxizqnlemsbjmsfyuevg.supabase.co/storage/v1/object/public/app-releases/MauriResults-3.3.0.apk";
 
 async function supabaseRequest(path: string, init?: RequestInit) {
   if (!SUPABASE_URL || !SUPABASE_KEY) return null;
@@ -43,5 +43,5 @@ export async function GET(request: Request) {
     body: JSON.stringify({ p_id: "mauriresults" }),
   });
 
-  return NextResponse.redirect(new URL(APK_PATH, url.origin), 302);
+  return NextResponse.redirect(APK_URL, 302);
 }
