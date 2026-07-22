@@ -26,42 +26,30 @@ function safeArray(value: unknown): Record<string, unknown>[] {
   );
 }
 
-function nestedRows(value: unknown) {
-  const direct = safeArray(value);
-  if (direct.length) return direct;
-
-  const object = safeObject(value);
-  if (!object) return [];
-
-  const candidates = [
-    object.content,
-    object.details,
-    object.notes,
-    object.subjects,
-    object.matieres,
-    object.marks,
-    object.data,
-  ];
-
-  for (const candidate of candidates) {
-    const rows = safeArray(candidate);
-    if (rows.length) return rows;
-  }
-
-  return [];
+function stringValue(value: unknown) {
+  return value === null || value === undefined ? "" : String(value).trim();
 }
 
-async function decJson(path: string) {
-  const response = await fetch(`${DEC_ORIGIN}${path}`, {
-    headers: {
-      accept: "application/json, text/plain, */*",
-      "accept-language": "ar,fr;q=0.9,en;q=0.8",
-      referer: `${DEC_ORIGIN}/list-bac`,
-      "user-agent": "MauriResults/3.3 (+https://mauri-results.vercel.app)",
+function numberValue(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const parsed = Number(String(value ?? "").replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+async function fetchOfficialDetails(number: string) {
+  const response = await fetch(
+    `${DEC_ORIGIN}/_api/details-bac/${encodeURIComponent(number)}`,
+    {
+      headers: {
+        accept: "application/json, text/plain, */*",
+        "accept-language": "ar,fr;q=0.9,en;q=0.8",
+        referer: `${DEC_ORIGIN}/list-bac`,
+        "user-agent": "MauriResults/3.3 (+https://mauri-results.vercel.app)",
+      },
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     },
-    next: { revalidate: 300 },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+  );
 
   const text = await response.text();
   let data: unknown = null;
@@ -74,24 +62,60 @@ async function decJson(path: string) {
   return { ok: response.ok, status: response.status, data };
 }
 
-function candidateFrom(value: unknown) {
-  return safeObject(value) || safeArray(value)[0] || null;
+function normalizeSubject(row: Record<string, unknown>) {
+  const score = numberValue(
+    row.note ??
+      row.noteMatiere ??
+      row.noteRetenue ??
+      row.noteFinale ??
+      row.score ??
+      row.moyenne,
+  );
+  const coefficient = numberValue(
+    row.coef ?? row.coeficient ?? row.coefficient ?? row.coeff,
+  );
+  const nameAr = stringValue(
+    row.lmata ??
+      row.nomMatiereA ??
+      row.matiereAr ??
+      row.libelleAr ??
+      row.matiere ??
+      row.nomMatiere,
+  );
+  const nameFr = stringValue(
+    row.lmatf ??
+      row.nomMatiereF ??
+      row.matiereFr ??
+      row.libelleFr ??
+      row.matiere ??
+      row.nomMatiere,
+  );
+
+  return {
+    nameAr,
+    nameFr,
+    score,
+    coefficient,
+    observation: stringValue(row.observation ?? row.decision),
+  };
 }
 
-function uniqueIdentifiers(candidate: Record<string, unknown>, fallback: string) {
-  const values = [
-    candidate.numDossier,
-    candidate.numeroDossier,
-    candidate.numero,
-    candidate.Numero,
-    candidate.nni,
-    candidate.id,
-    fallback,
-  ]
-    .map((value) => String(value ?? "").trim())
-    .filter(Boolean);
+function subjectRows(candidate: Record<string, unknown>) {
+  const candidates = [
+    candidate.notes,
+    candidate.details,
+    candidate.subjects,
+    candidate.content,
+    candidate.matieres,
+    candidate.marks,
+  ];
 
-  return Array.from(new Set(values)).slice(0, 4);
+  for (const value of candidates) {
+    const rows = safeArray(value);
+    if (rows.length) return rows;
+  }
+
+  return [];
 }
 
 export async function GET(request: NextRequest) {
@@ -105,11 +129,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const candidateResponse = await decJson(
-      `/_api/bac/search/${encodeURIComponent(number)}`,
-    );
+    const officialResponse = await fetchOfficialDetails(number);
+    const officialCandidate = safeObject(officialResponse.data);
 
-    if (!candidateResponse.ok && candidateResponse.status !== 404) {
+    if (officialResponse.status === 404 || !officialCandidate) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "NOT_FOUND",
+          message: "لم يتم العثور على درجات مواد لهذا المترشح في منصة الوزارة.",
+        },
+        {
+          status: 404,
+          headers: {
+            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+          },
+        },
+      );
+    }
+
+    if (!officialResponse.ok) {
       return NextResponse.json(
         {
           ok: false,
@@ -120,27 +159,59 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const candidate = candidateFrom(candidateResponse.data) || { numero: number };
-    let subjects: Record<string, unknown>[] = [];
-    let detailsStatus = 404;
-
-    for (const identifier of uniqueIdentifiers(candidate, number)) {
-      const detailsResponse = await decJson(
-        `/_api/details-bac/${encodeURIComponent(identifier)}`,
+    const subjects = subjectRows(officialCandidate)
+      .map(normalizeSubject)
+      .filter(
+        (subject) =>
+          subject.nameAr || subject.nameFr || subject.score !== null,
       );
-      detailsStatus = detailsResponse.status;
-      subjects = nestedRows(detailsResponse.data);
-      if (subjects.length) break;
-    }
+
+    const candidate = {
+      number: stringValue(
+        officialCandidate.numDossier ??
+          officialCandidate.numeroDossier ??
+          officialCandidate.numero ??
+          number,
+      ),
+      nameAr: stringValue(
+        officialCandidate.nomAr ??
+          officialCandidate.nameAr ??
+          officialCandidate.nomFr,
+      ),
+      nameFr: stringValue(
+        officialCandidate.nomFr ??
+          officialCandidate.nameFr ??
+          officialCandidate.nomAr,
+      ),
+      centreAr: stringValue(
+        officialCandidate.centreExamen ??
+          officialCandidate.centreAr ??
+          officialCandidate.etablissement,
+      ),
+      centreFr: stringValue(
+        officialCandidate.centreFr ??
+          officialCandidate.centreExamen ??
+          officialCandidate.etablissement,
+      ),
+      series: stringValue(
+        officialCandidate.serie ?? officialCandidate.series ?? officialCandidate.TS,
+      ),
+      average: numberValue(
+        officialCandidate.moyenne ?? officialCandidate.MOD ?? officialCandidate.average,
+      ),
+      decision: stringValue(
+        officialCandidate.decision ?? officialCandidate.resultat ?? officialCandidate.KR,
+      ),
+    };
 
     return NextResponse.json(
       {
         ok: true,
         source: "dec.education.gov.mr",
+        sourceUrl: `${DEC_ORIGIN}/list-bac`,
         candidate,
         subjects,
         detailsAvailable: subjects.length > 0,
-        detailsStatus,
       },
       {
         headers: {
