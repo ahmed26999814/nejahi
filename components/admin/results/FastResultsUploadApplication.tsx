@@ -55,6 +55,17 @@ async function parseFile(file: File) {
   return { rows, columns, sheetName };
 }
 
+function friendlyError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/57014|statement timeout|canceling statement/i.test(message)) {
+    return "استغرق تجهيز البحث وقتاً أطول من المهلة. البيانات محفوظة ولم تُنشر؛ اضغط متابعة التجهيز والنشر دون إعادة رفع الملف.";
+  }
+  if (/failed to fetch|networkerror|load failed/i.test(message)) {
+    return "انقطع الاتصال مؤقتاً. البيانات المكتملة محفوظة؛ أعد المحاولة دون إغلاق الصفحة.";
+  }
+  return message.replace(/\s+/g, " ").slice(0, 700);
+}
+
 async function requestJson<T extends Record<string, any> = Record<string, any>>(url: string, init: RequestInit, retries = 0, timeoutMs = UPLOAD_REQUEST_TIMEOUT): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
@@ -65,10 +76,7 @@ async function requestJson<T extends Record<string, any> = Record<string, any>>(
       const text = await response.text();
       let data: Record<string, any> = {};
       try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text }; }
-      if (!response.ok || data.ok === false) {
-        if (response.status >= 500 && attempt < retries) throw new Error(data.error || `HTTP ${response.status}`);
-        throw new Error(data.error || `HTTP ${response.status}`);
-      }
+      if (!response.ok || data.ok === false) throw new Error(data.error || `HTTP ${response.status}`);
       return data as T;
     } catch (error) {
       lastError = error;
@@ -105,18 +113,27 @@ export default function FastResultsUploadApplication() {
   const [status, setStatus] = useState<Status>({ kind: "idle", title: "جاهز" });
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [uploadedTable, setUploadedTable] = useState("");
 
   useEffect(() => { setSecret(sessionStorage.getItem("mauriresults-admin-secret") || localStorage.getItem("mauriresults-admin-secret") || ""); }, []);
   const isCustom = source === "custom";
   const normalizedYear = /^20\d{2}$/.test(year.trim()) ? year.trim() : "";
-  const customKey = normalizeTableName(customTable).replace(/^results_/, "");
+  const rawCustomKey = normalizeTableName(customTable).replace(/^results_/, "");
+  const duplicateYearSuffix = normalizedYear ? `_${normalizedYear}` : "";
+  const customKey = duplicateYearSuffix && rawCustomKey.endsWith(duplicateYearSuffix)
+    ? rawCustomKey.slice(0, -duplicateYearSuffix.length)
+    : rawCustomKey;
   const sourceKey = isCustom ? customKey : source;
   const targetTable = sourceKey && normalizedYear ? normalizeTableName(`results_${sourceKey}_${normalizedYear}`) : "";
   const canPublish = Boolean(!completed && secret.trim() && file && rows.length && targetTable && mapping.number && mapping.name && mapping.score);
-  const updateMapping = (key: keyof Mapping, value: string) => setMapping((current) => ({ ...current, [key]: value }));
+  const canResume = Boolean(uploadedTable && uploadedTable === targetTable);
+  const updateMapping = (key: keyof Mapping, value: string) => {
+    setMapping((current) => ({ ...current, [key]: value }));
+    setCompleted(false);
+  };
 
   async function chooseFile(nextFile: File | null) {
-    setFile(nextFile); setRows([]); setColumns([]); setCompleted(false);
+    setFile(nextFile); setRows([]); setColumns([]); setCompleted(false); setUploadedTable("");
     if (!nextFile) return;
     setStatus({ kind: "working", title: "قراءة الملف", detail: "يتم تحليل ملف Excel داخل الجهاز...", percent: 5 });
     try {
@@ -128,7 +145,7 @@ export default function FastResultsUploadApplication() {
       const detectedYear = `${nextFile.name} ${parsed.sheetName}`.match(/20\d{2}/)?.[0];
       if (detectedYear) { setYear(detectedYear); setTitle((current) => current.replace(/20\d{2}/, detectedYear)); }
       setStatus({ kind: "success", title: "الملف جاهز", detail: `${parsed.rows.length.toLocaleString("ar-MR")} صف و${parsed.columns.length.toLocaleString("ar-MR")} عمود. سيتم رفعه في جدول مستقل ولن يمس أي نتائج سابقة.`, percent: 100 });
-    } catch (error) { setStatus({ kind: "error", title: "تعذر قراءة الملف", detail: String(error) }); }
+    } catch (error) { setStatus({ kind: "error", title: "تعذر قراءة الملف", detail: friendlyError(error) }); }
   }
 
   async function uploadChunk(chunk: Row[], index: number, total: number, createTable: boolean) {
@@ -159,21 +176,26 @@ export default function FastResultsUploadApplication() {
     if (dryRun) return setStatus({ kind: "success", title: "المعاينة صحيحة", detail: `${rows.length.toLocaleString("ar-MR")} صف جاهز. ألغِ وضع المعاينة ثم اضغط نشر.` });
 
     setLoading(true);
-    let dataUploaded = false;
+    let dataUploaded = canResume;
     try {
-      const chunks: Row[][] = [];
-      for (let index = 0; index < rows.length; index += CHUNK_SIZE) chunks.push(rows.slice(index, index + CHUNK_SIZE));
-      setStatus({ kind: "working", title: "إنشاء جدول رفع مستقل", detail: `لن يتم تعديل أي نتائج قديمة. سيتم رفع ${chunks.length.toLocaleString("ar-MR")} دفعة آمنة بالتتابع.`, percent: 1 });
+      if (!canResume) {
+        const chunks: Row[][] = [];
+        for (let index = 0; index < rows.length; index += CHUNK_SIZE) chunks.push(rows.slice(index, index + CHUNK_SIZE));
+        setStatus({ kind: "working", title: "إنشاء جدول رفع مستقل", detail: `لن يتم تعديل أي نتائج قديمة. سيتم رفع ${chunks.length.toLocaleString("ar-MR")} دفعة آمنة بالتتابع.`, percent: 1 });
 
-      await uploadChunk(chunks[0], 0, chunks.length, true);
-      dataUploaded = true;
-      const firstCompleted = Math.min(CHUNK_SIZE, rows.length);
-      setStatus({ kind: "working", title: "رفع النتائج", detail: `تم رفع ${firstCompleted.toLocaleString("ar-MR")} من ${rows.length.toLocaleString("ar-MR")} صف. لا تغلق الصفحة.`, percent: Math.max(2, Math.round((1 / chunks.length) * 84)) });
+        await uploadChunk(chunks[0], 0, chunks.length, true);
+        const firstCompleted = Math.min(CHUNK_SIZE, rows.length);
+        setStatus({ kind: "working", title: "رفع النتائج", detail: `تم رفع ${firstCompleted.toLocaleString("ar-MR")} من ${rows.length.toLocaleString("ar-MR")} صف. لا تغلق الصفحة.`, percent: Math.max(2, Math.round((1 / chunks.length) * 84)) });
 
-      for (let index = 1; index < chunks.length; index += 1) {
-        await uploadChunk(chunks[index], index, chunks.length, false);
-        const completedRows = Math.min((index + 1) * CHUNK_SIZE, rows.length);
-        setStatus({ kind: "working", title: "رفع النتائج", detail: `تم رفع ${completedRows.toLocaleString("ar-MR")} من ${rows.length.toLocaleString("ar-MR")} صف. لا تغلق الصفحة.`, percent: Math.max(2, Math.round(((index + 1) / chunks.length) * 84)) });
+        for (let index = 1; index < chunks.length; index += 1) {
+          await uploadChunk(chunks[index], index, chunks.length, false);
+          const completedRows = Math.min((index + 1) * CHUNK_SIZE, rows.length);
+          setStatus({ kind: "working", title: "رفع النتائج", detail: `تم رفع ${completedRows.toLocaleString("ar-MR")} من ${rows.length.toLocaleString("ar-MR")} صف. لا تغلق الصفحة.`, percent: Math.max(2, Math.round(((index + 1) / chunks.length) * 84)) });
+        }
+        dataUploaded = true;
+        setUploadedTable(targetTable);
+      } else {
+        setStatus({ kind: "working", title: "متابعة التجهيز", detail: "الملف مرفوع بالكامل؛ لن تتم إعادة رفع الصفوف.", percent: 86 });
       }
 
       setStatus({ kind: "working", title: "تجهيز البحث السريع", detail: "إنشاء الفهارس والترتيب. لن يتم النشر إذا لم تنجح هذه الخطوة.", percent: 89 });
@@ -182,20 +204,21 @@ export default function FastResultsUploadApplication() {
       const result = await publishExam();
       const validation = result.validation!;
       setCompleted(true);
+      setUploadedTable("");
       setStatus({ kind: "success", title: "تم النشر والتحقق بنجاح", detail: `تم التحقق من ${Number(validation.rows).toLocaleString("ar-MR")} صف وتجهيز ${Number(validation.lookupRows).toLocaleString("ar-MR")} سجل للبحث السريع، والذاكرة المؤقتة جاهزة للضغط.`, percent: 100 });
       window.dispatchEvent(new Event("mauriresults:exams-updated"));
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setStatus({ kind: "error", title: dataUploaded ? "البيانات التجريبية مرفوعة ولم تُنشر" : "توقف الرفع بأمان", detail: dataUploaded ? `${message} — لم تظهر النتائج للزوار ولم تتأثر أي نتائج سابقة. أعد الضغط وسيبدأ النظام من جدول الرفع المستقل نفسه.` : `${message} — لم يتم إعلان النجاح ولم تتأثر أي نتائج سابقة.` });
+      const message = friendlyError(error);
+      setStatus({ kind: "error", title: dataUploaded ? "البيانات مرفوعة ولم تُنشر" : "توقف الرفع بأمان", detail: dataUploaded ? `${message} لم تظهر النتائج للزوار ولم تتأثر أي نتائج سابقة.` : `${message} لم يتم إعلان النجاح ولم تتأثر أي نتائج سابقة.` });
     } finally { setLoading(false); }
   }
 
   return <main dir="rtl" className="min-h-screen bg-slate-950 px-3 py-4 text-white"><section className="mx-auto grid max-w-3xl gap-3">
     <header className="rounded-[24px] border border-white/10 bg-white/10 p-4"><p className="text-xs font-black text-emerald-300">MauriResults Admin</p><h1 className="mt-1 text-xl font-black">رفع النتائج الآمن والسريع</h1><p className="mt-2 text-xs font-bold leading-6 text-slate-300">كل ملف يُرفع في جدول مستقل، ولا تُلمس النتائج السابقة ولا يتم النشر قبل نجاح البحث والتحقق النهائي.</p></header>
     <form onSubmit={submit} className="grid gap-3 text-slate-950">
-      <section className="grid gap-3 rounded-[22px] bg-white p-4"><h2 className="font-black">1. الملف والمسابقة</h2><input className="min-h-12 rounded-xl border bg-slate-50 px-3" type="password" placeholder="ADMIN_SECRET" value={secret} onChange={(event) => { setSecret(event.target.value); sessionStorage.setItem("mauriresults-admin-secret", event.target.value); localStorage.setItem("mauriresults-admin-secret", event.target.value); }} /><select className="min-h-12 rounded-xl border bg-slate-50 px-3" value={source} onChange={(event) => { const next = event.target.value; setSource(next); setCompleted(false); setSearchMode(next === "concours" ? "concours" : "simple"); }}>{SOURCES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>{isCustom && <input className="min-h-12 rounded-xl border bg-slate-50 px-3" dir="ltr" placeholder="exam_name" value={customTable} onChange={(event) => { setCustomTable(event.target.value); setCompleted(false); }} />}<input className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3 text-sm" type="file" accept=".xlsx,.xls" onChange={(event) => void chooseFile(event.target.files?.[0] || null)} />{file && <div className="rounded-xl bg-slate-100 p-3 text-xs font-bold"><strong>{file.name}</strong><span className="mt-1 block">{rows.length.toLocaleString("ar-MR")} صف · {columns.length.toLocaleString("ar-MR")} عمود</span><span className="mt-1 block text-emerald-700">جدول الرفع الآمن: {targetTable || "حدد السنة"}</span></div>}</section>
+      <section className="grid gap-3 rounded-[22px] bg-white p-4"><h2 className="font-black">1. الملف والمسابقة</h2><input className="min-h-12 rounded-xl border bg-slate-50 px-3" type="password" placeholder="ADMIN_SECRET" value={secret} onChange={(event) => { setSecret(event.target.value); sessionStorage.setItem("mauriresults-admin-secret", event.target.value); localStorage.setItem("mauriresults-admin-secret", event.target.value); }} /><select className="min-h-12 rounded-xl border bg-slate-50 px-3" value={source} onChange={(event) => { const next = event.target.value; setSource(next); setCompleted(false); setUploadedTable(""); setSearchMode(next === "concours" ? "concours" : "simple"); }}>{SOURCES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>{isCustom && <input className="min-h-12 rounded-xl border bg-slate-50 px-3" dir="ltr" placeholder="exam_name" value={customTable} onChange={(event) => { setCustomTable(event.target.value); setCompleted(false); setUploadedTable(""); }} />}<input className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3 text-sm" type="file" accept=".xlsx,.xls" onChange={(event) => void chooseFile(event.target.files?.[0] || null)} />{file && <div className="rounded-xl bg-slate-100 p-3 text-xs font-bold"><strong>{file.name}</strong><span className="mt-1 block">{rows.length.toLocaleString("ar-MR")} صف · {columns.length.toLocaleString("ar-MR")} عمود</span><span className="mt-1 block text-emerald-700">جدول الرفع الآمن: {targetTable || "حدد السنة"}</span></div>}</section>
       <section className="grid gap-3 rounded-[22px] bg-white p-4"><div className="flex justify-between"><h2 className="font-black">2. الأعمدة</h2><button type="button" className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black" onClick={() => setShowAdvanced((value) => !value)}>{showAdvanced ? "إخفاء" : "أعمدة إضافية"}</button></div><div className="grid grid-cols-2 gap-2 sm:grid-cols-3"><SelectColumn required label="رقم المترشح" columns={columns} value={mapping.number} onChange={(value) => updateMapping("number", value)} /><SelectColumn required label="الاسم" columns={columns} value={mapping.name} onChange={(value) => updateMapping("name", value)} /><SelectColumn required label="المعدل/المجموع" columns={columns} value={mapping.score} onChange={(value) => updateMapping("score", value)} /><SelectColumn label="القرار" columns={columns} value={mapping.decision} onChange={(value) => updateMapping("decision", value)} /><SelectColumn label="الشعبة" columns={columns} value={mapping.track} onChange={(value) => updateMapping("track", value)} /><SelectColumn label="الولاية" columns={columns} value={mapping.wilaya} onChange={(value) => updateMapping("wilaya", value)} />{showAdvanced && <><SelectColumn label="المقاطعة" columns={columns} value={mapping.moughataa} onChange={(value) => updateMapping("moughataa", value)} /><SelectColumn label="المؤسسة" columns={columns} value={mapping.school} onChange={(value) => updateMapping("school", value)} /><SelectColumn label="المركز" columns={columns} value={mapping.centre} onChange={(value) => updateMapping("centre", value)} /><SelectColumn label="مكان الميلاد" columns={columns} value={mapping.birthPlace} onChange={(value) => updateMapping("birthPlace", value)} /><SelectColumn label="تاريخ الميلاد" columns={columns} value={mapping.birthDate} onChange={(value) => updateMapping("birthDate", value)} /></>}</div></section>
-      <section className="grid gap-3 rounded-[22px] bg-white p-4"><h2 className="font-black">3. النشر</h2><input className="min-h-12 rounded-xl border bg-slate-50 px-3" value={title} onChange={(event) => { setTitle(event.target.value); setCompleted(false); }} /><input className="min-h-12 rounded-xl border bg-slate-50 px-3" dir="ltr" value={year} onChange={(event) => { setYear(event.target.value); setCompleted(false); }} /><select className="min-h-12 rounded-xl border bg-slate-50 px-3" value={searchMode} onChange={(event) => setSearchMode(event.target.value)}><option value="simple">بحث سريع برقم المترشح</option><option value="concours">كونكور: ولاية ← مقاطعة ← مركز ← رقم</option></select><label className="flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm font-black"><input type="checkbox" checked={dryRun} onChange={(event) => setDryRun(event.target.checked)} />فحص الملف قبل الرفع</label><div className={`rounded-xl p-3 ${status.kind === "error" ? "bg-red-50" : status.kind === "success" ? "bg-emerald-50" : "bg-slate-100"}`}><strong>{status.title}</strong>{status.detail && <p className="mt-1 text-xs leading-5">{status.detail}</p>}{typeof status.percent === "number" && <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-emerald-600 transition-[width] duration-300" style={{ width: `${Math.min(100, Math.max(0, status.percent))}%` }} /></div>}</div><button disabled={!canPublish || loading} className="min-h-14 rounded-xl bg-emerald-600 text-lg font-black text-white disabled:opacity-50">{loading ? "جاري الرفع والتحقق..." : completed ? "تم النشر بنجاح" : dryRun ? "فحص الملف" : "رفع ونشر النتائج"}</button></section>
+      <section className="grid gap-3 rounded-[22px] bg-white p-4"><h2 className="font-black">3. النشر</h2><input className="min-h-12 rounded-xl border bg-slate-50 px-3" value={title} onChange={(event) => { setTitle(event.target.value); setCompleted(false); }} /><input className="min-h-12 rounded-xl border bg-slate-50 px-3" dir="ltr" value={year} onChange={(event) => { setYear(event.target.value); setCompleted(false); setUploadedTable(""); }} /><select className="min-h-12 rounded-xl border bg-slate-50 px-3" value={searchMode} onChange={(event) => setSearchMode(event.target.value)}><option value="simple">بحث سريع برقم المترشح</option><option value="concours">كونكور: ولاية ← مقاطعة ← مركز ← رقم</option></select><label className="flex items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm font-black"><input type="checkbox" checked={dryRun} onChange={(event) => setDryRun(event.target.checked)} />فحص الملف قبل الرفع</label><div className={`rounded-xl p-3 ${status.kind === "error" ? "bg-red-50" : status.kind === "success" ? "bg-emerald-50" : "bg-slate-100"}`}><strong>{status.title}</strong>{status.detail && <p className="mt-1 text-xs leading-5">{status.detail}</p>}{typeof status.percent === "number" && <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-emerald-600 transition-[width] duration-300" style={{ width: `${Math.min(100, Math.max(0, status.percent))}%` }} /></div>}</div><button disabled={!canPublish || loading} className="min-h-14 rounded-xl bg-emerald-600 text-lg font-black text-white disabled:opacity-50">{loading ? "جاري الرفع والتحقق..." : completed ? "تم النشر بنجاح" : dryRun ? "فحص الملف" : canResume ? "متابعة التجهيز والنشر" : "رفع ونشر النتائج"}</button></section>
     </form>
   </section></main>;
 }
