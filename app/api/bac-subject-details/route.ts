@@ -63,7 +63,7 @@ async function fetchOfficialDetails(number: string) {
 }
 
 function normalizeSubject(row: Record<string, unknown>) {
-  const score = numberValue(
+  const rawScore = numberValue(
     row.note ??
       row.noteMatiere ??
       row.noteRetenue ??
@@ -71,6 +71,7 @@ function normalizeSubject(row: Record<string, unknown>) {
       row.score ??
       row.moyenne,
   );
+  const notCounted = rawScore !== null && rawScore < 0;
   const coefficient = numberValue(
     row.coef ?? row.coeficient ?? row.coefficient ?? row.coeff,
   );
@@ -94,8 +95,9 @@ function normalizeSubject(row: Record<string, unknown>) {
   return {
     nameAr,
     nameFr,
-    score,
+    score: notCounted ? null : rawScore,
     coefficient,
+    notCounted,
     observation: stringValue(row.observation ?? row.decision),
   };
 }
@@ -168,7 +170,10 @@ export async function GET(request: NextRequest) {
       .map(normalizeSubject)
       .filter(
         (subject) =>
-          subject.nameAr || subject.nameFr || subject.score !== null,
+          subject.nameAr ||
+          subject.nameFr ||
+          subject.score !== null ||
+          subject.notCounted,
       );
 
     const candidate = {
