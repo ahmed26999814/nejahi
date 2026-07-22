@@ -39,7 +39,7 @@ export default function OrientationFilters({
         <div className="mb-4">
           <h2 className="text-xl font-black text-slate-950 dark:text-white">أدخل بياناتك</h2>
           <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-300">
-            نحتاج الشعبة والمعدل فقط لعرض التخصصات المناسبة.
+            نحتاج الشعبة والمعدل فقط لعرض الكليات والتخصصات المناسبة لك.
           </p>
         </div>
 
@@ -74,7 +74,7 @@ export default function OrientationFilters({
           )}
 
           <button className="col-span-2 min-h-12 rounded-2xl bg-mauri-green px-4 text-sm font-black text-white shadow-[0_12px_28px_rgba(21,128,61,.2)] transition active:scale-[.98]" type="submit">
-            عرض التخصصات المناسبة
+            عرض الكليات المتاحة
           </button>
         </form>
       </section>
@@ -127,10 +127,10 @@ export default function OrientationFilters({
           </label>
 
           <label className="col-span-2 grid min-w-0 gap-1.5">
-            <span className="px-1 text-sm font-black text-slate-600 dark:text-slate-200">البحث عن تخصص</span>
+            <span className="px-1 text-sm font-black text-slate-600 dark:text-slate-200">البحث عن كلية أو تخصص</span>
             <span className="relative min-w-0">
               <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input className={`${fieldClass} pr-10`} placeholder="اسم التخصص أو الجامعة" value={query} onChange={(event) => setQuery(event.target.value)} />
+              <input className={`${fieldClass} pr-10`} placeholder="اسم التخصص أو الكلية أو الجامعة" value={query} onChange={(event) => setQuery(event.target.value)} />
             </span>
           </label>
 
