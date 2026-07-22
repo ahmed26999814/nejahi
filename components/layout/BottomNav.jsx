@@ -23,19 +23,24 @@ export default function BottomNav({ activeView, onNavigate, text }) {
   const primaryItems = [
     { key: "home", label: text.home, view: "home", icon: <HomeIcon /> },
     { key: "search", label: text.search, view: "search", icon: <SearchIcon /> },
-    { key: "toppers", label: text.toppers, view: "toppers", icon: <AwardIcon /> },
-    { key: "lessons", label: isFrench ? "Cours et examens" : "الدروس ومواضيع الامتحانات", href: "/lessons", icon: <BookIcon /> },
-    { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
-  ];
-
-  const secondaryItems = [
-    { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
     {
       key: "orientation",
       label: isFrench ? "Orientation" : "التوجيه",
       href: "/orientation",
       icon: <GraduationCap strokeWidth={2.2} />,
     },
+    { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
+    { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
+  ];
+
+  const secondaryItems = [
+    {
+      key: "lessons",
+      label: isFrench ? "Cours et sujets" : "الدروس والمواضيع",
+      href: "/lessons",
+      icon: <BookIcon />,
+    },
+    { key: "toppers", label: text.toppers, view: "toppers", icon: <AwardIcon /> },
     { key: "calculator", label: isFrench ? "Calculateur" : "الحاسبة", href: "/calculator", icon: <CalculatorIcon /> },
     { key: "download", label: isFrench ? "Application" : "التطبيق", href: "/Apk/", icon: <DownloadIcon /> },
   ];
@@ -59,7 +64,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
   }
 
   function isActive(item) {
-    if (item.key === "more") return activeView === "analytics";
+    if (item.key === "more") return moreOpen;
     if (item.view === "search") return activeView === "exam" || activeView === "year";
     return item.view === activeView;
   }
@@ -118,7 +123,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
                 data-haptic
               >
                 <span className="grid h-[21px] w-[21px] place-items-center [&>svg]:h-[21px] [&>svg]:w-[21px]">{item.icon}</span>
-                <span className={`block w-full text-center ${item.key === "lessons" ? "line-clamp-2 text-[8px] leading-[9px]" : "truncate"}`} data-control-label>{item.label}</span>
+                <span className="block w-full truncate text-center" data-control-label>{item.label}</span>
                 {active && <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-white/85" aria-hidden="true" />}
               </button>
             );
