@@ -28,7 +28,7 @@ export default function ApkDownload() {
     return () => controller.abort();
   }, []);
 
-  const version = info?.version || "3.2.0";
+  const version = info?.version || "3.3.0";
 
   return (
     <div className="apk-action-area">
