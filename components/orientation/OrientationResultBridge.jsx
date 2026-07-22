@@ -15,6 +15,9 @@ const STREAM_ALIASES = {
   LA: "اللغات",
 };
 
+const BAC_PATTERN = /باكالوريا|بكالوريا|baccalaur(?:e|é)at|(^|[^a-z])bac([^a-z]|$)/i;
+const NON_BAC_PATTERN = /ابريفه|بريفه|brevet|bepc|كونكور|concours|c1as|الامتياز|excellence/i;
+
 function parseAverage(value) {
   const parsed = Number.parseFloat(String(value || "").replace(",", "."));
   return Number.isFinite(parsed) ? parsed : null;
@@ -31,17 +34,40 @@ function readDetailValue(card, labels) {
   return "";
 }
 
+function normalizeStream(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  const normalized = raw
+    .toUpperCase()
+    .replace(/[()\[\]{}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const codeMatch = normalized.match(/(?:^|\s|[-–—:/])(SN|LO|LM|TM|TS|LA|M)(?=$|\s|[-–—:/])/);
+  const code = codeMatch?.[1] || (STREAM_ALIASES[normalized] ? normalized : "");
+
+  return STREAM_ALIASES[code] || raw;
+}
+
 function readBacResultCard() {
   const card = document.querySelector(".result-modal .result-score")?.closest(".result-modal");
   if (!card) return null;
 
-  const cardText = card.textContent || "";
-  const isBac = /باكالوريا|بكالوريا|baccalauréat|\bbac\b/i.test(cardText);
   const average = parseAverage(card.querySelector(".result-score")?.textContent);
-  const rawStream = readDetailValue(card, ["الشعبة", "السلسلة", "série", "filière"]);
-  const stream = STREAM_ALIASES[rawStream] || rawStream;
+  const rawStream = readDetailValue(card, ["الشعبة", "السلسلة", "série", "serie", "filière", "filiere"]);
+  const stream = normalizeStream(rawStream);
+  const examLabel = readDetailValue(card, ["المسابقة", "الامتحان", "examen", "concours"]);
+  const activeLabel = document.querySelector('[aria-current="page"]')?.textContent || "";
+  const context = `${window.location.hash} ${activeLabel} ${examLabel} ${card.textContent || ""}`;
 
-  if (!isBac || average === null || average < 10 || !stream) return null;
+  const hasBacLabel = BAC_PATTERN.test(context);
+  const hasKnownBacStream = Object.values(STREAM_ALIASES).includes(stream)
+    || Object.keys(STREAM_ALIASES).some((code) => rawStream.toUpperCase().includes(code));
+  const isClearlyOtherExam = NON_BAC_PATTERN.test(context);
+  const looksLikeBacResult = hasBacLabel
+    || (hasKnownBacStream && !isClearlyOtherExam && average !== null && average <= 20);
+
+  if (!looksLikeBacResult || average === null || average < 10 || average > 20 || !stream) return null;
   return { average, stream };
 }
 
@@ -52,6 +78,7 @@ export default function OrientationResultBridge() {
   useEffect(() => {
     let frame = 0;
     let observer = null;
+    let timers = [];
 
     function sync() {
       cancelAnimationFrame(frame);
@@ -60,16 +87,20 @@ export default function OrientationResultBridge() {
         const parsed = resultCard ? readBacResultCard() : null;
         setTarget(parsed ? resultCard : null);
         setResult(parsed);
-        if (parsed) observer?.disconnect();
       });
+    }
+
+    function scheduleSync() {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers = [0, 80, 240, 600].map((delay) => window.setTimeout(sync, delay));
     }
 
     function watch() {
       observer?.disconnect();
       const root = document.querySelector("main") || document.body;
       observer = new MutationObserver(sync);
-      observer.observe(root, { childList: true, subtree: true });
-      sync();
+      observer.observe(root, { childList: true, subtree: true, characterData: true });
+      scheduleSync();
     }
 
     function handleRouteChange() {
@@ -79,12 +110,15 @@ export default function OrientationResultBridge() {
     }
 
     watch();
+    window.addEventListener("mauriresults:routechange", handleRouteChange);
     window.addEventListener("hashchange", handleRouteChange);
     window.addEventListener("popstate", handleRouteChange);
 
     return () => {
       cancelAnimationFrame(frame);
+      timers.forEach((timer) => window.clearTimeout(timer));
       observer?.disconnect();
+      window.removeEventListener("mauriresults:routechange", handleRouteChange);
       window.removeEventListener("hashchange", handleRouteChange);
       window.removeEventListener("popstate", handleRouteChange);
     };
@@ -95,7 +129,7 @@ export default function OrientationResultBridge() {
   const href = `/orientation?stream=${encodeURIComponent(result.stream)}&average=${encodeURIComponent(result.average.toFixed(2))}`;
 
   return createPortal(
-    <aside className="mt-3 flex min-w-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-300/20 dark:bg-emerald-300/10">
+    <aside data-orientation-result className="mt-3 flex min-w-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-300/20 dark:bg-emerald-300/10">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-mauri-green text-white">
         <GraduationCap className="h-4.5 w-4.5" />
       </span>
