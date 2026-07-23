@@ -25,41 +25,11 @@ const memoryCache = new Map<string, CacheEntry>();
 const inFlight = new Map<string, Promise<Dashboard>>();
 
 const LEGACY_VIEWS: Record<string, Record<string, string | undefined>> = {
-  bac: {
-    stats: "bac_stats",
-    regionStats: "bac_region_stats",
-    schoolStats: "bac_school_stats",
-    trackStats: "bac_track_stats",
-    topStudents: "bac_top_students",
-    averageFrequency: "bac_average_frequency",
-  },
-  brevet: {
-    stats: "brevet_stats",
-    regionStats: "brevet_region_stats",
-    schoolStats: "brevet_school_stats",
-    topStudents: "brevet_top_students",
-    averageFrequency: "brevet_average_frequency",
-  },
-  concours: {
-    stats: "concours_stats",
-    regionStats: "concours_region_stats",
-    moughataaStats: "concours_moughataa_stats",
-    schoolStats: "concours_school_stats",
-    topStudents: "concours_top_students",
-  },
-  excellence_1as: {
-    stats: "excellence_1as_stats",
-    regionStats: "excellence_1as_region_stats",
-    topStudents: "excellence_1as_top_students",
-    averageFrequency: "excellence_1as_average_frequency",
-  },
-  bac_session: {
-    stats: "bac_session2_stats",
-    regionStats: "bac_session2_region_stats",
-    trackStats: "bac_session2_track_stats",
-    topStudents: "bac_session2_top_students",
-    averageFrequency: "bac_session2_average_frequency",
-  },
+  bac: { stats: "bac_stats", regionStats: "bac_region_stats", schoolStats: "bac_school_stats", trackStats: "bac_track_stats", topStudents: "bac_top_students" },
+  brevet: { stats: "brevet_stats", regionStats: "brevet_region_stats", schoolStats: "brevet_school_stats", topStudents: "brevet_top_students" },
+  concours: { stats: "concours_stats", regionStats: "concours_region_stats", moughataaStats: "concours_moughataa_stats", schoolStats: "concours_school_stats", topStudents: "concours_top_students" },
+  excellence_1as: { stats: "excellence_1as_stats", regionStats: "excellence_1as_region_stats", topStudents: "excellence_1as_top_students" },
+  bac_session: { stats: "bac_session2_stats", regionStats: "bac_session2_region_stats", trackStats: "bac_session2_track_stats", topStudents: "bac_session2_top_students" },
 };
 
 function numberValue(value: unknown) {
@@ -102,16 +72,6 @@ function normalizeBreakdown(rows: Array<Record<string, unknown>> = [], source: s
       passRate: total ? (passed / total) * 100 : 0,
     };
   });
-}
-
-function normalizeAverageFrequency(rows: Array<Record<string, unknown>> = []) {
-  return rows
-    .map((row) => ({
-      average: numberValue(row.average),
-      occurrences: numberValue(row.occurrences ?? row.count),
-    }))
-    .filter((row) => row.average > 0 && row.occurrences > 0)
-    .sort((a, b) => b.average - a.average);
 }
 
 function normalizeTopStudents(rows: Array<Record<string, unknown>> = []) {
@@ -164,21 +124,16 @@ async function getUploadedDashboard(source: string) {
 async function getLegacyDashboard(source: string) {
   const views = LEGACY_VIEWS[source];
   if (!views) throw new Error("Invalid source");
-  const [statsRows, regionRows, schoolRows, trackRows, moughataaRows, topRows, averageFrequencyRows] = await Promise.all([
+  const [statsRows, regionRows, schoolRows, trackRows, moughataaRows, topRows] = await Promise.all([
     fetchLegacyView(views.stats, 1),
     fetchLegacyView(views.regionStats),
     fetchLegacyView(views.schoolStats),
     fetchLegacyView(views.trackStats),
     fetchLegacyView(views.moughataaStats),
     fetchLegacyView(views.topStudents),
-    fetchLegacyView(views.averageFrequency, 1500),
   ]);
-  const stats = normalizeStats(statsRows?.[0], source);
   return {
-    stats: {
-      ...stats,
-      averageFrequency: stats.isConcours ? [] : normalizeAverageFrequency(averageFrequencyRows),
-    },
+    stats: normalizeStats(statsRows?.[0], source),
     regionStats: normalizeBreakdown(regionRows, source),
     schoolStats: normalizeBreakdown(schoolRows, source),
     trackStats: source === "concours" || source === "brevet" ? [] : normalizeBreakdown(trackRows, source),
