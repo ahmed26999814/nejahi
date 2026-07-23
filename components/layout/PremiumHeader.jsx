@@ -9,7 +9,6 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
     { key: "home", label: text.home, view: "home" },
     { key: "toppers", label: text.toppers, view: "toppers" },
     { key: "analytics", label: text.analytics, view: "analytics" },
-    { key: "average-frequency", label: lang === "ar" ? "تكرار المعدلات" : "Fréquence", href: "/average-frequency" },
     { key: "orientation", label: lang === "ar" ? "التوجيه الجامعي" : "Orientation", href: "/orientation" },
     { key: "lessons", label: lang === "ar" ? "الدروس" : "Cours", href: "/lessons" },
     { key: "calculator", label: lang === "ar" ? "حاسبة المعدل" : "Calculateur", href: "/calculator" },
