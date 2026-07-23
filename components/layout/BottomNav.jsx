@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GraduationCap, MoreHorizontal, X } from "lucide-react";
+import { GraduationCap, Hash, MoreHorizontal, X } from "lucide-react";
 import { AwardIcon, ChartIcon, HomeIcon, SearchIcon } from "../common/icons";
 
 function BookIcon() {
@@ -34,6 +34,12 @@ export default function BottomNav({ activeView, onNavigate, text }) {
   ];
 
   const secondaryItems = [
+    {
+      key: "average-frequency",
+      label: isFrench ? "Fréquence des moyennes" : "تكرار المعدلات",
+      href: "/average-frequency",
+      icon: <Hash strokeWidth={2.2} />,
+    },
     {
       key: "lessons",
       label: isFrench ? "Cours et sujets" : "الدروس والمواضيع",
