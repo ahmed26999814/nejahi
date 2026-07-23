@@ -1,5 +1,4 @@
 import FeatureSeoPage from "../../components/seo/FeatureSeoPage";
-import Bac2026StatisticsAutoOpen from "../../components/seo/Bac2026StatisticsAutoOpen";
 
 const url = "https://mauri-results.vercel.app/statistics";
 
@@ -30,22 +29,19 @@ export const metadata = {
 
 export default function StatisticsPage() {
   return (
-    <>
-      <Bac2026StatisticsAutoOpen />
-      <FeatureSeoPage
-        slug="statistics"
-        eyebrow="الإحصائيات"
-        title="نسبة النجاح في باكالوريا 2026 وإحصائيات موريتانيا"
-        intro="تعرض MauriResults ملخصًا سريعًا لأعداد المترشحين والناجحين والراسبين ونسبة النجاح وأعلى معدل، إضافة إلى باكالوريا حسب الولاية والشعبة وترتيب المدارس والمراكز وفق البيانات المتاحة لكل مسابقة."
-        ctaLabel="فتح إحصائيات باكالوريا 2026"
-        ctaHash="statistics?open=bac-2026"
-        sections={[
-          { title: "نسبة النجاح في باكالوريا 2026", description: "مقارنة عدد الناجحين والراسبين وإظهار نسبة النجاح العامة حسب البيانات الرسمية المتاحة." },
-          { title: "الترتيب حسب الولاية", description: "ترتيب الولايات حسب نسبة النجاح مع إمكانية الوصول إلى أفضل المترشحين في كل ولاية." },
-          { title: "الترتيب حسب الشعبة", description: "مقارنة شعب باكالوريا بالترتيب المعتمد: SN ثم M ثم LO ثم LM ثم TM ثم TS ثم LA." },
-          { title: "المدارس والمراكز", description: "مقارنة المدارس والمراكز حسب نسبة النجاح وعرض أول عشرة مترشحين حسب المعدل." },
-        ]}
-      />
-    </>
+    <FeatureSeoPage
+      slug="statistics"
+      eyebrow="الإحصائيات"
+      title="نسبة النجاح في باكالوريا 2026 وإحصائيات موريتانيا"
+      intro="تعرض MauriResults ملخصًا سريعًا لأعداد المترشحين والناجحين والراسبين ونسبة النجاح وأعلى معدل، إضافة إلى باكالوريا حسب الولاية والشعبة وترتيب المدارس والمراكز وفق البيانات المتاحة لكل مسابقة."
+      ctaLabel="فتح قسم تكرار المعدلات"
+      ctaHash="average-frequency"
+      sections={[
+        { title: "نسبة النجاح في باكالوريا 2026", description: "مقارنة عدد الناجحين والراسبين وإظهار نسبة النجاح العامة حسب البيانات الرسمية المتاحة." },
+        { title: "الترتيب حسب الولاية", description: "ترتيب الولايات حسب نسبة النجاح مع إمكانية الوصول إلى أفضل المترشحين في كل ولاية." },
+        { title: "الترتيب حسب الشعبة", description: "مقارنة شعب باكالوريا بالترتيب المعتمد: SN ثم M ثم LO ثم LM ثم TM ثم TS ثم LA." },
+        { title: "المدارس والمراكز", description: "مقارنة المدارس والمراكز حسب نسبة النجاح وعرض أول عشرة مترشحين حسب المعدل." },
+      ]}
+    />
   );
 }
