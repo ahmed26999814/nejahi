@@ -4,21 +4,25 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 const INITIAL_LIMIT = 36;
+const BAC_2026_ID_PATTERN = /(?:bac.*2026|2026.*bac|results[_-]?bac[_-]?2026)/i;
 
 function formatAverage(value) {
   const number = Number(String(value ?? "").replace(",", "."));
   return Number.isFinite(number) ? number.toFixed(2) : "0.00";
 }
 
-function isBac2026Analytics(shell) {
-  if (!shell) return false;
+function getAnalyticsTarget() {
+  const shell = document.querySelector(".analytics-reference-shell");
+  if (!shell) return null;
 
-  const title = String(shell.querySelector("h1")?.textContent || "").trim();
   const examId = String(localStorage.getItem("mauriresults-selected-exam") || "").trim();
-  const titleMatches = /2026/.test(title) && /(باكالوريا|bac)/i.test(title);
-  const idMatches = /(?:bac.*2026|2026.*bac|results[_-]?bac[_-]?2026)/i.test(examId);
+  const shellText = String(shell.textContent || "").replace(/\s+/g, " ").trim();
+  const hash = String(window.location.hash || "").replace(/^#/, "");
+  const isAnalyticsView = hash === "analytics" || /إحصائيات|statistiques/i.test(shellText);
+  const isBac2026 = BAC_2026_ID_PATTERN.test(examId)
+    || /باكالوريا\s*2026|bac(?:calaur[eé]at)?\s*2026/i.test(shellText);
 
-  return titleMatches || idMatches;
+  return isAnalyticsView && isBac2026 ? shell : null;
 }
 
 export default function Bac2026AverageFrequency() {
@@ -34,10 +38,7 @@ export default function Bac2026AverageFrequency() {
 
     const sync = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const shell = document.querySelector(".analytics-reference-shell");
-        setTarget(isBac2026Analytics(shell) ? shell : null);
-      });
+      frame = requestAnimationFrame(() => setTarget(getAnalyticsTarget()));
     };
 
     sync();
@@ -45,12 +46,16 @@ export default function Bac2026AverageFrequency() {
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     window.addEventListener("hashchange", sync);
     window.addEventListener("popstate", sync);
+    window.addEventListener("storage", sync);
+    window.addEventListener("mauriresults:routechange", sync);
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("hashchange", sync);
       window.removeEventListener("popstate", sync);
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("mauriresults:routechange", sync);
     };
   }, []);
 
@@ -87,8 +92,10 @@ export default function Bac2026AverageFrequency() {
     return rows
       .filter((row) => formatAverage(row.average).includes(normalized))
       .sort((a, b) => {
-        const exactA = formatAverage(a.average) === Number(normalized).toFixed(2) ? 1 : 0;
-        const exactB = formatAverage(b.average) === Number(normalized).toFixed(2) ? 1 : 0;
+        const numericQuery = Number(normalized);
+        const exactValue = Number.isFinite(numericQuery) ? numericQuery.toFixed(2) : normalized;
+        const exactA = formatAverage(a.average) === exactValue ? 1 : 0;
+        const exactB = formatAverage(b.average) === exactValue ? 1 : 0;
         return exactB - exactA || Number(b.average) - Number(a.average);
       });
   }, [query, rows]);
@@ -102,12 +109,12 @@ export default function Bac2026AverageFrequency() {
   const visibleRows = filteredRows.slice(0, limit);
 
   return createPortal(
-    <section className="analytics-reference-card grid gap-4 rounded-[24px] p-3 md:p-5" aria-labelledby="bac-2026-average-frequency-title">
+    <section id="bac-2026-average-frequency" className="analytics-reference-card scroll-mt-24 grid gap-4 rounded-[24px] p-3 md:p-5" aria-labelledby="bac-2026-average-frequency-title">
       <header className="flex flex-wrap items-start justify-between gap-3 px-1">
         <div>
           <span className="text-[10px] font-black text-[#2e7655] dark:text-emerald-300">للناجحين فقط</span>
           <h2 id="bac-2026-average-frequency-title" className="mt-1 text-base font-black text-slate-950 dark:text-white md:text-lg">عدد تكرار المعدلات</h2>
-          <p className="mt-1 text-[11px] font-bold text-slate-400">خاص بباكالوريا 2026 — مثال: كم مرة تكرر المعدل 10.00.</p>
+          <p className="mt-1 text-[11px] font-bold text-slate-400">خاص بباكالوريا 2026 — ابحث عن أي معدل لمعرفة عدد مرات تكراره.</p>
         </div>
         <span className="rounded-full bg-[#eef8f2] px-3 py-1.5 text-[10px] font-black text-[#176f49] dark:bg-emerald-300/10 dark:text-emerald-300">
           {rows.length.toLocaleString("ar-MR")} معدل
