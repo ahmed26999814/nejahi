@@ -18,10 +18,6 @@ const ResultDetailSanitizer = dynamic(
   () => import("../results/ResultDetailSanitizer"),
   { ssr: false },
 );
-const OrientationResultBridge = dynamic(
-  () => import("../orientation/OrientationResultBridge"),
-  { ssr: false },
-);
 
 export default function HomeDeferredEnhancements() {
   return (
@@ -30,7 +26,6 @@ export default function HomeDeferredEnhancements() {
       <BacTopperTrackOrder />
       <ResultSubjectDetailsBridge />
       <ResultDetailSanitizer />
-      <OrientationResultBridge />
     </>
   );
 }
