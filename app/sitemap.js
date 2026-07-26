@@ -7,7 +7,8 @@ const staticRoutes = [
   { path: "", changeFrequency: "daily", priority: 1 },
   { path: "/toppers", changeFrequency: "daily", priority: 0.9 },
   { path: "/statistics", changeFrequency: "daily", priority: 0.9 },
-  { path: "/orientation", changeFrequency: "monthly", priority: 0.88 },
+  { path: "/orientation", changeFrequency: "monthly", priority: 0.92 },
+  { path: "/orientation/match", changeFrequency: "monthly", priority: 0.86 },
   { path: "/lessons", changeFrequency: "weekly", priority: 0.92 },
   { path: "/calculator", changeFrequency: "monthly", priority: 0.7 },
   { path: "/apk", changeFrequency: "weekly", priority: 0.7 },
@@ -24,7 +25,7 @@ const examRoutes = Object.entries(examSeoData).flatMap(([exam, details]) =>
 const orientationRoutes = orientationPrograms.map((program) => ({
   path: `/orientation/${program.id}`,
   changeFrequency: "monthly",
-  priority: 0.66,
+  priority: 0.68,
 }));
 
 export default function sitemap() {
