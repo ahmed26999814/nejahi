@@ -28,6 +28,8 @@ export default function BottomNav({ activeView, onNavigate, text }) {
       label: isFrench ? "Orientation" : "التوجيه",
       href: "/orientation",
       icon: <GraduationCap strokeWidth={2.2} />,
+      featured: true,
+      badge: isFrench ? "Nouveau" : "جديد",
     },
     { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
     { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
@@ -112,9 +114,10 @@ export default function BottomNav({ activeView, onNavigate, text }) {
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1 rounded-[24px] border border-white/75 bg-white/[.95] p-1.5 shadow-[0_-16px_46px_rgba(15,23,42,.13)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.97]">
           {primaryItems.map((item) => {
             const active = isActive(item);
+            const featured = item.featured && !active;
             return (
               <button
-                className={`relative grid min-h-12 min-w-0 content-center justify-items-center gap-1 rounded-[15px] px-1 text-[10px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
+                className={`relative grid min-h-12 min-w-0 content-center justify-items-center gap-1 rounded-[15px] px-1 text-[10px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : featured ? "bg-emerald-50 text-mauri-green ring-1 ring-emerald-200/80 hover:bg-emerald-100 dark:bg-emerald-300/10 dark:text-emerald-300 dark:ring-emerald-300/15" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
                 onClick={() => activate(item)}
                 type="button"
                 key={item.key}
@@ -122,7 +125,14 @@ export default function BottomNav({ activeView, onNavigate, text }) {
                 data-control-key={item.key}
                 data-haptic
               >
-                <span className="grid h-[21px] w-[21px] place-items-center [&>svg]:h-[21px] [&>svg]:w-[21px]">{item.icon}</span>
+                <span className="relative grid h-[21px] w-[21px] place-items-center [&>svg]:h-[21px] [&>svg]:w-[21px]">
+                  {item.icon}
+                  {item.badge && !active && (
+                    <span className="absolute -left-5 -top-2 rounded-full bg-amber-400 px-1.5 py-0.5 text-[7px] font-black leading-none text-slate-900 shadow-sm">
+                      {item.badge}
+                    </span>
+                  )}
+                </span>
                 <span className="block w-full truncate text-center" data-control-label>{item.label}</span>
                 {active && <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-white/85" aria-hidden="true" />}
               </button>
