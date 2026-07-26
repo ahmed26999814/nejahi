@@ -2,13 +2,12 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
-  Briefcase,
+  BriefcaseBusiness,
   Building2,
   CheckCircle2,
   GraduationCap,
   MapPin,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import {
@@ -35,31 +34,20 @@ export async function generateMetadata({ params }) {
   };
 }
 
-function DetailItem({ label, value }) {
+function InfoList({ icon: Icon, items, title }) {
+  if (!items?.length) return null;
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/5">
-      <span className="text-[11px] font-black text-slate-500 dark:text-slate-300">{label}</span>
-      <strong className="mt-1 block text-sm font-black text-slate-950 dark:text-white">{value}</strong>
-    </div>
-  );
-}
-
-function GuideList({ icon: Icon, items, title }) {
-  return (
-    <article className="rounded-[26px] border border-slate-200/80 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/[.055] md:p-5">
+    <section className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/[.055]">
       <div className="flex items-center gap-2.5">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300"><Icon className="h-5 w-5" /></span>
-        <h2 className="text-lg font-black">{title}</h2>
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300"><Icon className="h-4.5 w-4.5" /></span>
+        <h2 className="font-black">{title}</h2>
       </div>
-      <ul className="mt-4 grid gap-2.5">
+      <ul className="mt-3 grid gap-2">
         {items.map((item) => (
-          <li className="flex items-start gap-2 text-sm font-bold leading-6 text-slate-600 dark:text-slate-300" key={item}>
-            <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-mauri-green" />
-            <span>{item}</span>
-          </li>
+          <li className="rounded-xl bg-slate-50 px-3 py-2 text-sm font-bold leading-6 text-slate-700 dark:bg-white/5 dark:text-slate-200" key={item}>{item}</li>
         ))}
       </ul>
-    </article>
+    </section>
   );
 }
 
@@ -70,13 +58,12 @@ export default async function OrientationProgramPage({ params }) {
   const guide = getSpecialtyGuide(program.name, program.category);
 
   const sameProgramRows = orientationPrograms
-    .filter((item) => item.name === program.name && item.institution === program.institution)
+    .filter((item) => item.name === program.name)
     .sort((a, b) => b.lastScore - a.lastScore);
 
-  const similarPrograms = orientationPrograms
-    .filter((item) => item.id !== program.id && item.category === program.category && item.stream === program.stream)
-    .sort((a, b) => Math.abs(a.lastScore - program.lastScore) - Math.abs(b.lastScore - program.lastScore))
-    .slice(0, 4);
+  const uniquePlaces = [...new Map(
+    sameProgramRows.map((item) => [`${item.institution}|${item.faculty}|${item.stream}`, item]),
+  ).values()];
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -100,76 +87,57 @@ export default async function OrientationProgramPage({ params }) {
         </div>
       </header>
 
-      <div className="app-shell grid gap-5 py-5 md:gap-8 md:py-10">
-        <section className="relative overflow-hidden rounded-[32px] border border-emerald-200/70 bg-white p-5 shadow-premium dark:border-emerald-300/15 dark:bg-white/[.055] md:p-8">
-          <div className="absolute -left-16 -top-20 h-56 w-56 rounded-full bg-emerald-200/35 blur-3xl dark:bg-emerald-400/10" aria-hidden="true" />
-          <div className="relative grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
-            <div>
-              <span className="inline-flex rounded-full bg-mauri-green/10 px-3 py-1.5 text-xs font-black text-mauri-green dark:text-emerald-300">{program.category}</span>
-              <h1 className="mt-4 text-3xl font-black leading-tight md:text-5xl">{program.name}</h1>
-              <div className="mt-4 grid gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
-                <span className="flex items-start gap-2"><Building2 className="mt-0.5 h-4 w-4 shrink-0 text-mauri-green" />{program.institution}</span>
-                <span className="flex items-start gap-2"><GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-mauri-green" />{program.faculty}</span>
-                <span className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-mauri-green" />{program.country} · {program.studyType}</span>
-              </div>
-            </div>
-            <div className="rounded-[26px] bg-mauri-green p-5 text-center text-white shadow-glow">
-              <span className="text-xs font-black text-white/80">آخر معدل مسجل</span>
-              <strong className="mt-1 block text-4xl font-black">{program.lastScore.toFixed(2)}</strong>
-              <span className="mt-1 block text-xs font-bold text-white/80">{program.stream}</span>
-            </div>
-          </div>
+      <div className="app-shell grid gap-3 py-4 md:gap-5 md:py-8">
+        <section className="rounded-[26px] border border-emerald-200/80 bg-white p-5 shadow-soft dark:border-emerald-300/15 dark:bg-white/[.055] md:p-6">
+          <span className="text-xs font-black text-mauri-green">{program.category}</span>
+          <h1 className="mt-1 text-3xl font-black leading-tight md:text-4xl">{program.name}</h1>
+          <p className="mt-4 text-sm font-bold leading-7 text-slate-700 dark:text-slate-200 md:text-base">{guide.summary}</p>
         </section>
 
-        <section className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-soft dark:border-white/10 dark:bg-white/[.055] md:p-6">
-          <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-mauri-green/10 text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300"><Sparkles className="h-5 w-5" /></span>
-            <div><p className="text-xs font-black text-mauri-green dark:text-mauri-gold">شرح التخصص</p><h2 className="mt-1 text-xl font-black">ما هو {program.name}؟</h2><p className="mt-2 text-sm font-bold leading-7 text-slate-600 dark:text-slate-300 md:text-base">{guide.summary}</p></div>
-          </div>
+        <section className="grid grid-cols-2 gap-2.5">
+          <article className="rounded-[20px] border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[.055]">
+            <Building2 className="h-5 w-5 text-mauri-green" />
+            <span className="mt-2 block text-[11px] font-black text-slate-400">المؤسسة</span>
+            <strong className="mt-1 block text-sm font-black leading-6">{program.institution}</strong>
+          </article>
+          <article className="rounded-[20px] border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[.055]">
+            <GraduationCap className="h-5 w-5 text-mauri-green" />
+            <span className="mt-2 block text-[11px] font-black text-slate-400">الكلية أو المعهد</span>
+            <strong className="mt-1 block text-sm font-black leading-6">{program.faculty}</strong>
+          </article>
+          <article className="rounded-[20px] border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[.055]">
+            <MapPin className="h-5 w-5 text-mauri-green" />
+            <span className="mt-2 block text-[11px] font-black text-slate-400">مكان الدراسة</span>
+            <strong className="mt-1 block text-sm font-black leading-6">{program.country}</strong>
+          </article>
+          <article className="rounded-[20px] border border-amber-200 bg-amber-50 p-3 dark:border-amber-300/15 dark:bg-amber-300/10">
+            <CheckCircle2 className="h-5 w-5 text-amber-700 dark:text-amber-200" />
+            <span className="mt-2 block text-[11px] font-black text-amber-700 dark:text-amber-200">آخر معدل · {program.stream}</span>
+            <strong className="mt-1 block text-xl font-black text-amber-800 dark:text-amber-100">{program.lastScore.toFixed(2)}</strong>
+          </article>
         </section>
 
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <DetailItem label="شعبة الباك" value={program.stream} />
-          <DetailItem label="طريقة القبول" value={program.admissionMode} />
-          <DetailItem label="مكان الدراسة" value={program.country} />
-          <DetailItem label="درجة التحقق" value={program.confidence} />
-        </section>
+        <InfoList icon={BookOpen} items={guide.subjects} title="مواد تُدرّس عادة" />
+        <InfoList icon={BriefcaseBusiness} items={guide.careers} title="الآفاق المستقبلية" />
 
-        <section className="grid gap-3 md:grid-cols-3">
-          <GuideList icon={BookOpen} items={guide.subjects} title="ماذا ستدرس؟" />
-          <GuideList icon={Sparkles} items={guide.skills} title="المهارات المناسبة" />
-          <GuideList icon={Briefcase} items={guide.careers} title="فرص العمل" />
-        </section>
-
-        <section className="rounded-[26px] border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-300/15 dark:bg-emerald-300/10 md:p-5">
-          <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-200" /><div><h2 className="text-base font-black text-emerald-900 dark:text-emerald-100">هل يناسبك هذا التخصص؟</h2><p className="mt-1 text-sm font-bold leading-7 text-emerald-800 dark:text-emerald-200">{guide.suitableFor}</p></div></div>
-        </section>
-
-        {sameProgramRows.length > 1 && (
-          <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/[.055] md:p-5">
-            <h2 className="text-xl font-black">المعدلات حسب شعبة الباك</h2>
-            <div className="mt-4 grid gap-2">
-              {sameProgramRows.map((item) => <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-white/5" key={item.id}><span className="text-sm font-black">{item.stream}</span><strong className="text-lg font-black text-mauri-green dark:text-mauri-gold">{item.lastScore.toFixed(2)}</strong></div>)}
-            </div>
-          </section>
-        )}
-
-        <section className="rounded-[28px] border border-amber-200 bg-amber-50 p-4 text-sm font-bold leading-7 text-amber-900 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
-          <div className="flex items-start gap-3"><ShieldCheck className="mt-1 h-5 w-5 shrink-0" /><p>الشرح عام للتعريف بالتخصص، وقد تختلف المواد وفرص العمل حسب المؤسسة والخطة الدراسية. وهذا المعدل تاريخي للاستئناس فقط وليس ضماناً للقبول.<a className="mr-1 font-black underline underline-offset-4" href={ORIENTATION_SOURCE_URL} target="_blank" rel="noopener noreferrer">المصدر الرسمي للإحصائيات</a></p></div>
-        </section>
-
-        {similarPrograms.length > 0 && (
-          <section className="grid gap-4">
-            <div><p className="text-xs font-black text-mauri-green dark:text-mauri-gold">قد تهمك أيضاً</p><h2 className="text-2xl font-black">تخصصات قريبة</h2></div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {similarPrograms.map((item) => (
-                <Link className="rounded-[24px] border border-slate-200/80 bg-white p-4 shadow-soft transition hover:-translate-y-1 hover:border-mauri-green/30 dark:border-white/10 dark:bg-white/[.055]" href={`/orientation/${item.id}`} key={item.id}>
-                  <span className="text-[11px] font-black text-mauri-green">{item.category}</span><h3 className="mt-1 line-clamp-2 min-h-12 text-base font-black">{item.name}</h3><p className="mt-2 line-clamp-2 text-xs font-bold text-slate-500 dark:text-slate-300">{item.institution}</p><strong className="mt-3 block text-xl font-black text-mauri-green dark:text-mauri-gold">{item.lastScore.toFixed(2)}</strong>
+        {uniquePlaces.length > 1 && (
+          <section className="rounded-[22px] border border-slate-200/80 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/[.055]">
+            <h2 className="font-black">أماكن وشعب أخرى للتخصص</h2>
+            <div className="mt-3 grid gap-2">
+              {uniquePlaces.map((item) => (
+                <Link className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 transition hover:bg-mauri-green/5 dark:bg-white/5" href={`/orientation/${item.id}`} key={item.id}>
+                  <MapPin className="h-4 w-4 shrink-0 text-mauri-green" />
+                  <span className="min-w-0 flex-1"><strong className="block text-sm font-black leading-5">{item.institution}</strong><small className="mt-0.5 block text-xs font-bold text-slate-500">{item.faculty} · {item.stream}</small></span>
+                  <strong className="shrink-0 text-base font-black text-mauri-green">{item.lastScore.toFixed(2)}</strong>
                 </Link>
               ))}
             </div>
           </section>
         )}
+
+        <section className="rounded-[20px] border border-amber-200 bg-amber-50 p-4 text-xs font-bold leading-6 text-amber-900 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
+          <div className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" /><p>المواد المذكورة تعريفية وشائعة وقد تختلف حسب المؤسسة والخطة الدراسية. المعدل تاريخي للاستئناس فقط وليس ضماناً للقبول. <a className="font-black underline" href={ORIENTATION_SOURCE_URL} target="_blank" rel="noopener noreferrer">مصدر المعدلات</a></p></div>
+        </section>
       </div>
     </main>
   );
