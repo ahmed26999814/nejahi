@@ -1,11 +1,7 @@
-import BacAlertRegistration from "../../../components/alerts/BacAlertRegistration";
+import { permanentRedirect } from "next/navigation";
 
 export const metadata = {
-  title: "أخبرني عند صدور نتائج باكالوريا 2026",
-  description: "سجّل اسمك ورقم واتساب للحصول على إشعار فور صدور نتائج باكالوريا 2026 الرسمية في موريتانيا عبر MauriResults.",
-  alternates: {
-    canonical: "/notify/bac-2026",
-  },
+  title: "نتائج باكالوريا موريتانيا 2026",
   robots: {
     index: false,
     follow: true,
@@ -13,5 +9,5 @@ export const metadata = {
 };
 
 export default function BacAlertPage() {
-  return <BacAlertRegistration />;
+  permanentRedirect("/results/bac/2026");
 }
