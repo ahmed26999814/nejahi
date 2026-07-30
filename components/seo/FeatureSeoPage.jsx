@@ -17,9 +17,10 @@ export default function FeatureSeoPage({ slug, title, eyebrow, intro, ctaLabel, 
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: title,
+    description: intro,
     url: pageUrl,
     inLanguage: "ar-MR",
-    isPartOf: { "@type": "WebSite", name: "MauriResults", url: SITE_URL },
+    isPartOf: { "@id": `${SITE_URL}/#website` },
   };
 
   return (
@@ -55,12 +56,12 @@ export default function FeatureSeoPage({ slug, title, eyebrow, intro, ctaLabel, 
         </section>
 
         <section className="mt-10 border-t border-slate-200 pt-7">
-          <h2 className="text-xl font-black">صفحات المسابقات</h2>
+          <h2 className="text-xl font-black">نتائج المسابقات الوطنية 2026</h2>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold">
-            <Link href="/results/bac-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">البكالوريا</Link>
-            <Link href="/results/brevet-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">ابريفه</Link>
-            <Link href="/results/concours-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">الكونكور</Link>
-            <Link href="/results/excellence-mauritanie" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">الامتياز</Link>
+            <Link href="/results/bac/2026" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">نتائج باكالوريا 2026</Link>
+            <Link href="/results/brevet/2026" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">نتائج ابريفه 2026</Link>
+            <Link href="/results/concours/2026" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">نتائج كونكور 2026</Link>
+            <Link href="/results/excellence/2026" className="rounded-full border border-slate-200 px-4 py-2 hover:border-emerald-600">نتائج الامتياز 2026</Link>
           </div>
         </section>
       </article>
