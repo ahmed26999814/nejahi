@@ -93,6 +93,7 @@ export default function Footer({ content = {}, onNavigate, text }) {
         {isWeb && (
           <div className="mt-4 border-t border-mauri-border/70 pt-3 text-center text-xs font-bold text-slate-500 dark:border-white/10 dark:text-slate-400">
             <nav className="footer-seo-links" aria-label="روابط المنصة">
+              <Link href="/about">عن MauriResults</Link>
               <Link href="/toppers">الأوائل</Link>
               <Link href="/statistics">الإحصائيات</Link>
               <Link href="/lessons">الدروس</Link>
