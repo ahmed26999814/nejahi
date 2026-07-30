@@ -4,6 +4,14 @@ import examSeoData from "../../../../data/exam-seo.json";
 
 const siteUrl = "https://mauri-results.vercel.app";
 
+const relatedResultLinks = [
+  { href: "/results/bac/2026", label: "نتائج باكالوريا 2026" },
+  { href: "/results/brevet/2026", label: "نتائج ابريفه 2026" },
+  { href: "/results/concours/2026", label: "نتائج كونكور 2026" },
+  { href: "/toppers", label: "أوائل باكالوريا 2026" },
+  { href: "/statistics", label: "إحصائيات باكالوريا 2026" },
+];
+
 function formatTemplate(value, year) {
   return String(value || "").replaceAll("{year}", year);
 }
@@ -18,8 +26,10 @@ function getExamPage(examKey, year) {
     examKey,
     year,
     availability,
+    publishedDate: exam.publishedDates?.[year],
     title: `نتائج ${exam.nameAr} ${year} في موريتانيا`,
     heading: `نتائج ${exam.nameAr} ${year} في موريتانيا`,
+    seoTitle: formatTemplate(exam.seoTitleAr || `نتائج ${exam.nameAr} موريتانيا {year}`, year),
     description: formatTemplate(exam.introAr, year),
     keywords: [...(exam.keywordsAr || []), ...(exam.keywordsFr || [])].map((keyword) => formatTemplate(keyword, year)),
     searchSteps: (exam.searchStepsAr || []).map((step) => formatTemplate(step, year)),
@@ -46,7 +56,7 @@ export async function generateMetadata({ params }) {
   if (!page) return {};
 
   const canonical = `${siteUrl}/results/${exam}/${year}`;
-  const title = `${page.heading} | MauriResults`;
+  const title = `${page.seoTitle} | MauriResults`;
 
   return {
     title: { absolute: title },
@@ -88,10 +98,11 @@ export default async function ExamYearPage({ params }) {
 
   const canonical = `${siteUrl}/results/${exam}/${year}`;
   const isPublished = page.availability === "published";
-  const isBac2026 = page.examKey === "bac" && page.year === "2026";
-  const statusLabel = isPublished ? "البحث متاح" : isBac2026 ? "قريباً" : "عند صدور النتائج";
-  const ctaLabel = isPublished ? `فتح نتائج ${page.nameAr} ${page.year}` : `متابعة ${page.nameAr} ${page.year}`;
+  const statusLabel = isPublished ? "النتائج متاحة" : "عند صدور النتائج";
+  const ctaLabel = isPublished ? `البحث في ${page.nameAr} ${page.year}` : `متابعة ${page.nameAr} ${page.year}`;
   const searchHref = `/#year-${page.year}`;
+  const currentPath = `/results/${exam}/${year}`;
+  const relatedLinks = relatedResultLinks.filter((item) => item.href !== currentPath);
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -102,6 +113,7 @@ export default async function ExamYearPage({ params }) {
         name: page.heading,
         description: page.description,
         url: canonical,
+        dateModified: page.publishedDate,
         isPartOf: { "@id": `${siteUrl}/#website` },
         about: {
           "@type": "Thing",
@@ -151,17 +163,19 @@ export default async function ExamYearPage({ params }) {
         <h1 className="mt-3 text-3xl font-black leading-tight md:text-4xl">{page.heading}</h1>
         <p className="mt-4 text-sm font-bold leading-8 text-slate-600 dark:text-slate-300">{page.description}</p>
         <p className="mt-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-          بالفرنسية: <span dir="ltr">{page.nameFr} {page.year}</span>
+          بالفرنسية: <span dir="ltr">Résultats {page.nameFr} Mauritanie {page.year}</span>
         </p>
 
-        {isBac2026 ? (
-          <section className="mt-6 rounded-2xl border border-amber-300/60 bg-amber-50 p-4 dark:border-amber-300/20 dark:bg-amber-300/5">
-            <h2 className="text-base font-black">نتائج باكالوريا 2026 ستظهر فور صدورها رسمياً</h2>
-            <p className="mt-2 text-sm font-bold leading-7 text-slate-600 dark:text-slate-300">
-              لا تعتمد على الشائعات. ستُحدّث هذه الصفحة وتُفتح أداة البحث بمجرد نشر البيانات الرسمية.
-            </p>
-          </section>
-        ) : null}
+        <section className={`mt-6 rounded-2xl border p-4 ${isPublished ? "border-emerald-300/60 bg-emerald-50 dark:border-emerald-300/20 dark:bg-emerald-300/5" : "border-amber-300/60 bg-amber-50 dark:border-amber-300/20 dark:bg-amber-300/5"}`}>
+          <h2 className="text-base font-black">
+            {isPublished ? `نتائج ${page.nameAr} ${page.year} متاحة للبحث` : `نتائج ${page.nameAr} ${page.year} عند نشرها رسميًا`}
+          </h2>
+          <p className="mt-2 text-sm font-bold leading-7 text-slate-600 dark:text-slate-300">
+            {isPublished
+              ? `استخدم رقم المترشح وطريقة البحث الخاصة بالمسابقة للوصول إلى النتيجة بسرعة، ثم انتقل إلى الأوائل والإحصائيات عند الحاجة.`
+              : `ستُحدّث هذه الصفحة عند نشر البيانات، دون الاعتماد على مواعيد أو روابط غير مؤكدة.`}
+          </p>
+        </section>
 
         <Link href={searchHref} className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#14633f] px-5 text-sm font-black text-white transition hover:bg-[#0f4f34]">
           {ctaLabel}
@@ -189,10 +203,21 @@ export default async function ExamYearPage({ params }) {
         </section>
 
         <section className="mt-8 rounded-2xl border border-emerald-900/10 p-4 dark:border-white/10">
-          <h2 className="text-lg font-black">بعد صدور النتائج</h2>
+          <h2 className="text-lg font-black">الأوائل والإحصائيات</h2>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <Link href="/toppers" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-[#14633f] hover:bg-emerald-100 dark:bg-white/5 dark:text-emerald-300">الأوائل وأعلى المعدلات</Link>
-            <Link href="/statistics" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-[#14633f] hover:bg-emerald-100 dark:bg-white/5 dark:text-emerald-300">نسبة النجاح والإحصائيات</Link>
+            <Link href="/toppers" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-[#14633f] hover:bg-emerald-100 dark:bg-white/5 dark:text-emerald-300">أوائل باكالوريا 2026 وأعلى المعدلات</Link>
+            <Link href="/statistics" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-[#14633f] hover:bg-emerald-100 dark:bg-white/5 dark:text-emerald-300">نسبة النجاح وإحصائيات باكالوريا 2026</Link>
+          </div>
+        </section>
+
+        <section className="mt-8 border-t border-emerald-900/10 pt-6 dark:border-white/10">
+          <h2 className="text-lg font-black">نتائج المسابقات الوطنية 2026</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {relatedLinks.map((item) => (
+              <Link key={item.href} href={item.href} className="rounded-full border border-emerald-900/10 px-4 py-2 text-xs font-black text-[#14633f] hover:border-emerald-600 dark:border-white/10 dark:text-emerald-300">
+                {item.label}
+              </Link>
+            ))}
           </div>
         </section>
 
