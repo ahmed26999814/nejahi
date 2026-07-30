@@ -10,7 +10,7 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const VISITOR_COOKIE = "mauriresults_visitor_id";
 const ONE_YEAR = 60 * 60 * 24 * 365;
 const REQUEST_TIMEOUT_MS = 5_000;
-const COUNT_CACHE = "public, max-age=30, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400";
+const COUNT_CACHE = "public, max-age=30, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400";
 
 function hashValue(prefix: string, value: string) {
   const salt = process.env.ADMIN_SECRET || "mauriresults-visitors";
@@ -42,7 +42,7 @@ async function fetchVisitorCount() {
 
 const cachedVisitorCount = unstable_cache(
   fetchVisitorCount,
-  ["mauriresults-visitor-count-v1"],
+  ["mauriresults-visitor-count-v2"],
   { revalidate: 60 },
 );
 
