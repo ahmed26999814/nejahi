@@ -6,7 +6,7 @@ const pageUrl = `${siteUrl}/about`;
 export const dynamic = "force-static";
 
 export const metadata = {
-  title: "عن MauriResults | منصة نتائج المسابقات في موريتانيا",
+  title: { absolute: "عن MauriResults | منصة نتائج المسابقات في موريتانيا" },
   description:
     "تعرف على MauriResults، منصة موريتانية مستقلة وسريعة للبحث في نتائج المسابقات الوطنية ومتابعة الأوائل والإحصائيات والتوجيه.",
   alternates: { canonical: pageUrl },
@@ -19,6 +19,12 @@ export const metadata = {
     title: "عن MauriResults | منصة نتائج المسابقات في موريتانيا",
     description:
       "منصة موريتانية مستقلة تركز على سرعة الوصول إلى نتائج المسابقات والأوائل والإحصائيات والتوجيه.",
+    images: ["/logo.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "عن MauriResults | منصة نتائج المسابقات في موريتانيا",
+    description: "منصة موريتانية مستقلة للنتائج والأوائل والإحصائيات والتوجيه.",
     images: ["/logo.png"],
   },
 };
