@@ -1,13 +1,9 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-const SESSION_KEY = "mauriresults_visit_session_v2";
-const LAST_SENT_KEY = "mauriresults_visit_last_sent";
-const CACHED_COUNT_KEY = "mauriresults_visit_cached_count";
-const SEND_INTERVAL_MS = 12 * 60 * 60 * 1000;
-const MIN_REGISTRATION_DELAY_MS = 60 * 1000;
-const MAX_REGISTRATION_DELAY_MS = 10 * 60 * 1000;
+const CACHED_COUNT_KEY = "mauriresults_pageview_cached_count_v1";
 
 function VisitorsIcon() {
   return (
@@ -18,14 +14,6 @@ function VisitorsIcon() {
       <path d="M16 3.2a4 4 0 0 1 0 7.6" />
     </svg>
   );
-}
-
-function getSessionId() {
-  const stored = localStorage.getItem(SESSION_KEY);
-  if (stored) return stored;
-  const created = crypto.randomUUID();
-  localStorage.setItem(SESSION_KEY, created);
-  return created;
 }
 
 function cachedCount() {
@@ -39,10 +27,32 @@ function rememberCount(value) {
   return nextCount;
 }
 
+function sendPageView() {
+  try {
+    if (typeof navigator.sendBeacon === "function" && navigator.sendBeacon("/api/pageviews")) {
+      return;
+    }
+  } catch {
+    // Fall back to a non-blocking fetch below.
+  }
+
+  fetch("/api/pageviews", {
+    method: "POST",
+    cache: "no-store",
+    keepalive: true,
+  }).catch(() => {});
+}
+
 export default function VisitorCounter() {
+  const pathname = usePathname();
   const rootRef = useRef(null);
   const [active, setActive] = useState(false);
   const [count, setCount] = useState(null);
+
+  useEffect(() => {
+    if (!pathname) return;
+    sendPageView();
+  }, [pathname]);
 
   useEffect(() => {
     setCount(cachedCount());
@@ -67,7 +77,6 @@ export default function VisitorCounter() {
     if (!active) return undefined;
 
     let cancelled = false;
-    let registrationTimer;
     const controller = new AbortController();
 
     fetch("/api/visitors", {
@@ -77,60 +86,19 @@ export default function VisitorCounter() {
     })
       .then(async (response) => {
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Visitor counter failed");
+        if (!response.ok) throw new Error(data.error || "Page-view counter failed");
         const nextCount = rememberCount(data.count);
         if (!cancelled && nextCount > 0) setCount(nextCount);
       })
       .catch((error) => {
-        if (error?.name !== "AbortError") console.warn("[MauriResults Visitor Count]", error);
+        if (error?.name !== "AbortError") console.warn("[MauriResults Page Views]", error);
       });
-
-    const lastSent = Number(localStorage.getItem(LAST_SENT_KEY)) || 0;
-    if (Date.now() - lastSent < SEND_INTERVAL_MS) {
-      return () => {
-        cancelled = true;
-        controller.abort();
-      };
-    }
-
-    const delay = MIN_REGISTRATION_DELAY_MS
-      + Math.floor(Math.random() * (MAX_REGISTRATION_DELAY_MS - MIN_REGISTRATION_DELAY_MS));
-
-    const registerVisit = () => {
-      if (cancelled) return;
-      if (document.visibilityState !== "visible") {
-        registrationTimer = window.setTimeout(registerVisit, 60 * 1000);
-        return;
-      }
-
-      localStorage.setItem(LAST_SENT_KEY, String(Date.now()));
-      fetch("/api/visitors", {
-        method: "POST",
-        cache: "no-store",
-        signal: controller.signal,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: getSessionId() }),
-      })
-        .then(async (response) => {
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error || "Visitor registration failed");
-          const nextCount = rememberCount(data.count);
-          if (!cancelled && nextCount > 0) setCount(nextCount);
-        })
-        .catch((error) => {
-          localStorage.removeItem(LAST_SENT_KEY);
-          if (error?.name !== "AbortError") console.warn("[MauriResults Visit Registration]", error);
-        });
-    };
-
-    registrationTimer = window.setTimeout(registerVisit, delay);
 
     return () => {
       cancelled = true;
-      window.clearTimeout(registrationTimer);
       controller.abort();
     };
-  }, [active]);
+  }, [active, pathname]);
 
   return (
     <div
