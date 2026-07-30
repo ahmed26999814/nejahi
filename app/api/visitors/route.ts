@@ -42,7 +42,7 @@ async function fetchVisitorCount() {
 
 const cachedVisitorCount = unstable_cache(
   fetchVisitorCount,
-  ["mauriresults-visitor-count-v2"],
+  ["mauriresults-pageview-count-v1"],
   { revalidate: 60 },
 );
 
