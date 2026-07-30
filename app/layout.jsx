@@ -21,24 +21,22 @@ export const metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: "MauriResults",
   title: {
-    default: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
+    default: "MauriResults | نتائج باكالوريا وابريفه وكونكور موريتانيا 2026",
     template: "%s | MauriResults",
   },
   description:
-    "تابع نتائج باكالوريا 2026 فور صدورها الرسمية، وابحث عن نتائج ابريفه وكونكور وبقية المسابقات الوطنية في موريتانيا بسرعة عبر MauriResults.",
+    "ابحث بسرعة عن نتائج باكالوريا 2026 في موريتانيا برقم المترشح، وتابع نتائج ابريفه وكونكور والأوائل ونسبة النجاح والإحصائيات عبر MauriResults.",
   keywords: [
     "MauriResults",
     "Mauri Results",
-    "Mauri Bac",
-    "موري باك",
     "نتائج موريتانيا",
     "نتائج المسابقات الوطنية موريتانيا 2026",
     "نتائج باكالوريا موريتانيا 2026",
     "نتائج باكالوريا 2026 برقم المترشح",
     "نتائج البكالوريا موريتانيا 2026",
     "نتائج الباك موريتانيا 2026",
+    "باكالوريا موريتانيا 2026",
     "رابط نتائج باكالوريا موريتانيا 2026",
-    "موعد نتائج باكالوريا موريتانيا 2026",
     "لوائح باكالوريا موريتانيا 2026",
     "أوائل باكالوريا موريتانيا 2026",
     "نسبة النجاح في باكالوريا 2026",
@@ -55,6 +53,7 @@ export const metadata = {
     "نتائج دخول أولى إعدادية موريتانيا",
     "Resultats Bac Mauritanie 2026",
     "Résultats Bac Mauritanie 2026",
+    "Bac Mauritanie 2026",
     "Résultats Bac Mauritanie par numéro",
     "Résultats Brevet Mauritanie 2026",
     "Brevet Mauritanie 2026",
@@ -84,9 +83,9 @@ export const metadata = {
     locale: "ar_MR",
     url: siteUrl,
     siteName: "MauriResults",
-    title: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
+    title: "MauriResults | نتائج باكالوريا وابريفه وكونكور موريتانيا 2026",
     description:
-      "نتائج باكالوريا 2026 فور صدورها، مع البحث السريع عن نتائج ابريفه وكونكور وبقية المسابقات الوطنية في موريتانيا.",
+      "نتائج باكالوريا 2026 متاحة للبحث، مع نتائج ابريفه وكونكور والأوائل والإحصائيات في موريتانيا.",
     images: [
       {
         url: "/logo.png",
@@ -98,8 +97,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MauriResults | نتائج المسابقات الوطنية في موريتانيا",
-    description: "تابع نتائج باكالوريا 2026 وابحث عن نتائج المسابقات الوطنية بسرعة.",
+    title: "MauriResults | نتائج باكالوريا موريتانيا 2026",
+    description: "ابحث عن نتائج باكالوريا 2026 وتابع نتائج المسابقات الوطنية في موريتانيا بسرعة.",
     images: ["/logo.png"],
   },
   appleWebApp: {
@@ -131,7 +130,7 @@ export default function RootLayout({ children }) {
         "@type": "Organization",
         "@id": `${siteUrl}/#organization`,
         name: "MauriResults",
-        alternateName: ["Mauri Results", "Mauri Bac", "موري باك"],
+        alternateName: ["Mauri Results"],
         url: siteUrl,
         logo: {
           "@type": "ImageObject",
@@ -142,7 +141,7 @@ export default function RootLayout({ children }) {
         "@type": "WebSite",
         "@id": `${siteUrl}/#website`,
         name: "MauriResults",
-        alternateName: "Mauri Results",
+        alternateName: ["Mauri Results"],
         url: siteUrl,
         publisher: { "@id": `${siteUrl}/#organization` },
         inLanguage: ["ar-MR", "fr-MR"],
@@ -155,8 +154,9 @@ export default function RootLayout({ children }) {
         applicationCategory: "EducationalApplication",
         operatingSystem: "Web, Android, iOS",
         inLanguage: ["ar-MR", "fr-MR"],
+        isAccessibleForFree: true,
         description:
-          "منصة موريتانية لمتابعة نتائج باكالوريا والبحث عن نتائج ابريفه وكونكور والامتياز، مع الأوائل والإحصائيات.",
+          "منصة موريتانية سريعة للبحث عن نتائج باكالوريا وابريفه وكونكور والامتياز، مع الأوائل والإحصائيات.",
         publisher: { "@id": `${siteUrl}/#organization` },
       },
     ],
