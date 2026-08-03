@@ -128,7 +128,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
                 <span className="relative grid h-[21px] w-[21px] place-items-center [&>svg]:h-[21px] [&>svg]:w-[21px]">
                   {item.icon}
                   {item.badge && !active && (
-                    <span className="absolute -left-5 -top-2 rounded-full bg-amber-400 px-1.5 py-0.5 text-[7px] font-black leading-none text-slate-900 shadow-sm">
+                    <span className="absolute -left-5 -top-2 rounded-full bg-amber-400 px-1.5 py-0.5 text-[7px] font-black leading-none text-white shadow-sm">
                       {item.badge}
                     </span>
                   )}
