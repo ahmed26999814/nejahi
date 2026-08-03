@@ -9,8 +9,8 @@
   "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  "background_color": "#F8FAF8",
-  "theme_color": "#15803D",
+  "background_color": "#F3F6FA",
+  "theme_color": "#007A3D",
   "orientation": "portrait-primary",
   "categories": ["education", "utilities", "productivity"],
   "prefer_related_applications": false,
@@ -20,14 +20,14 @@
   "handle_links": "preferred",
   "icons": [
     {
-      "src": "/logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/brand-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
       "src": "/logo.png",
-      "sizes": "512x512",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
@@ -44,21 +44,21 @@
       "short_name": "نتائج 2025",
       "description": "فتح مسابقات سنة 2025",
       "url": "/#year-2025",
-      "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/brand-logo.svg", "sizes": "any", "type": "image/svg+xml" }]
     },
     {
       "name": "حاسبة المعدل",
       "short_name": "الحاسبة",
       "description": "حساب المعدل بسرعة",
       "url": "/calculator",
-      "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/brand-logo.svg", "sizes": "any", "type": "image/svg+xml" }]
     },
     {
       "name": "الدروس",
       "short_name": "الدروس",
       "description": "فتح الدروس والمراجعة",
       "url": "/lessons",
-      "icons": [{ "src": "/logo.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/brand-logo.svg", "sizes": "any", "type": "image/svg+xml" }]
     }
   ]
 }
