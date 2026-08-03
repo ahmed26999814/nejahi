@@ -65,7 +65,7 @@ export default function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }
                   {description}
                 </small>
               </span>
-              <span className={`rounded-full px-2 py-1 text-[9px] font-black shadow-sm ring-1 ring-white/20 md:px-3 md:text-[11px] ${available ? "bg-white text-emerald-700" : "bg-amber-100 text-amber-800"}`}>
+              <span className={`rounded-full px-2 py-1 text-[9px] font-black shadow-sm ring-1 md:px-3 md:text-[11px] ${available ? "bg-white/15 text-white ring-white/25" : "bg-amber-100 text-amber-800 ring-amber-200"}`}>
                 {available ? (isFrench ? "Ouvert" : "مفتوحة") : (isFrench ? "Bientôt" : "قريبًا")}
               </span>
             </span>
