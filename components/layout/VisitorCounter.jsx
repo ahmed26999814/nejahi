@@ -29,9 +29,7 @@ function rememberCount(value) {
 
 function sendPageView() {
   try {
-    if (typeof navigator.sendBeacon === "function" && navigator.sendBeacon("/api/pageviews")) {
-      return;
-    }
+    if (typeof navigator.sendBeacon === "function" && navigator.sendBeacon("/api/pageviews")) return;
   } catch {
     // Fall back to a non-blocking fetch below.
   }
@@ -43,11 +41,14 @@ function sendPageView() {
   }).catch(() => {});
 }
 
-export default function VisitorCounter() {
+export default function VisitorCounter({ lang = "ar" }) {
   const pathname = usePathname();
   const rootRef = useRef(null);
   const [active, setActive] = useState(false);
   const [count, setCount] = useState(null);
+  const isFrench = lang === "fr";
+  const label = isFrench ? "Visites" : "الزيارات";
+  const locale = isFrench ? "fr-MR" : "ar-MR";
 
   useEffect(() => {
     if (!pathname) return;
@@ -105,11 +106,11 @@ export default function VisitorCounter() {
       ref={rootRef}
       className={`visitor-counter ${count === null ? "counter-pending" : ""}`}
       aria-hidden={count === null ? "true" : undefined}
-      aria-label={count === null ? undefined : `عدد الزيارات ${count}`}
+      aria-label={count === null ? undefined : `${label} ${count}`}
     >
       <span className="visitor-counter-icon"><VisitorsIcon /></span>
-      <span className="visitor-counter-label">الزيارات</span>
-      <strong>{count === null ? "—" : count.toLocaleString("ar-MR")}</strong>
+      <span className="visitor-counter-label">{label}</span>
+      <strong>{count === null ? "—" : count.toLocaleString(locale)}</strong>
     </div>
   );
 }
