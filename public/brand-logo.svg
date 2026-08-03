@@ -1,23 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">MauriResults MR</title>
-  <desc id="desc">شعار MR لمنصة MauriResults بالأبيض والأصفر والأخضر والأزرق</desc>
-  <defs>
-    <linearGradient id="bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#123F8C"/>
-      <stop offset="1" stop-color="#071D49"/>
-    </linearGradient>
-    <linearGradient id="m" x1="78" y1="150" x2="275" y2="360" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFD43B"/>
-      <stop offset="0.42" stop-color="#37C85A"/>
-      <stop offset="1" stop-color="#009B55"/>
-    </linearGradient>
-    <linearGradient id="rLeg" x1="360" y1="240" x2="452" y2="366" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#5ED2FF"/>
-      <stop offset="1" stop-color="#1687E8"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
-  <path d="M78 356V158L176 282L274 158V356" fill="none" stroke="url(#m)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M310 356V158H376C438 158 446 248 376 248H310" fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M374 248L448 356" fill="none" stroke="url(#rLeg)" stroke-width="42" stroke-linecap="round"/>
+  <desc id="desc">شعار MR لمنصة MauriResults</desc>
+  <rect width="512" height="512" rx="116" fill="#081F3D"/>
+  <path d="M0 382C130 324 286 348 512 230V512H0Z" fill="#007A3D"/>
+  <circle cx="414" cy="98" r="48" fill="#F4B400"/>
+  <path d="M82 354V158L174 280L266 158V354" fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M314 354V158H382C438 158 448 246 382 246H314M378 246L440 354" fill="none" stroke="#F4B400" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M353 391l25 25 52-61" fill="none" stroke="#FFFFFF" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
