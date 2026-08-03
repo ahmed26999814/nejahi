@@ -1,0 +1,90 @@
+.app-background > header,
+.app-background header.sticky {
+  background: #fffdf8 !important;
+  border-color: #e6ded0 !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 5px 18px rgba(67, 52, 33, .055) !important;
+}
+
+.mobile-compact-hero {
+  background: #fff8e9 !important;
+  border-color: #ead7b6 !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 14px 34px rgba(98, 68, 25, .09) !important;
+}
+
+.mobile-compact-hero > div[aria-hidden="true"] {
+  display: none !important;
+}
+
+.mobile-compact-hero h1 { color: #18332a !important; }
+.mobile-compact-hero p { color: #5d625d !important; }
+
+#years > header span {
+  background: #dceede !important;
+  color: #14663c !important;
+}
+
+#years section[aria-label="سنوات النتائج"] > a {
+  background-image: none !important;
+  color: #18332a !important;
+  box-shadow: 0 10px 26px rgba(67, 52, 33, .08) !important;
+}
+
+#years section[aria-label="سنوات النتائج"] > a > span.absolute {
+  display: none !important;
+}
+
+#years section[aria-label="سنوات النتائج"] > a:nth-child(1) {
+  background: #eaf3fa !important;
+  border-color: #c6dcea !important;
+}
+
+#years section[aria-label="سنوات النتائج"] > a:nth-child(2) {
+  background: #edf7ee !important;
+  border-color: #c9e1cc !important;
+}
+
+#years section[aria-label="سنوات النتائج"] > a strong { color: #18332a !important; }
+#years section[aria-label="سنوات النتائج"] > a small { color: #5d6862 !important; }
+
+#years section[aria-label="سنوات النتائج"] > a:nth-child(1) .rounded-full:last-child {
+  background: #f7e2af !important;
+  color: #82570c !important;
+}
+
+#years section[aria-label="سنوات النتائج"] > a:nth-child(2) .rounded-full:last-child {
+  background: #177245 !important;
+  color: #fff !important;
+}
+
+.compact-home-footer {
+  background: #fff8e9 !important;
+  border-color: #ead7b6 !important;
+}
+
+.footer-action-card {
+  background: #fffdf8 !important;
+  border-color: #e3d8c7 !important;
+  backdrop-filter: none !important;
+}
+
+.dark .app-background > header,
+.dark .app-background header.sticky,
+.dark .footer-action-card {
+  background: #1d2521 !important;
+  border-color: #344039 !important;
+}
+
+.dark .mobile-compact-hero,
+.dark .compact-home-footer {
+  background: #222a22 !important;
+  border-color: #4b4a34 !important;
+}
+
+.dark .mobile-compact-hero h1 { color: #f2f3ec !important; }
+.dark .mobile-compact-hero p { color: #cbd0ca !important; }
+.dark #years section[aria-label="سنوات النتائج"] > a:nth-child(1) { background: #1b2b36 !important; border-color: #304858 !important; }
+.dark #years section[aria-label="سنوات النتائج"] > a:nth-child(2) { background: #1b3025 !important; border-color: #31523d !important; }
+.dark #years section[aria-label="سنوات النتائج"] > a strong { color: #f2f3ec !important; }
+.dark #years section[aria-label="سنوات النتائج"] > a small { color: #bdc8c1 !important; }

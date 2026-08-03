@@ -1,0 +1,405 @@
+/*
+ * MauriResults lively palette
+ * Flat, warm and recognisable colours with no extra JavaScript or assets.
+ * Imported last so it can gently replace the previous glass/gradient styling.
+ */
+
+:root {
+  --mauri-emerald: #177245;
+  --mauri-emerald-soft: rgba(23, 114, 69, .12);
+  --mauri-gold: #e3a72f;
+  --mauri-ink: #18332a;
+  --mauri-paper: #f7f4ec;
+  --mauri-coral: #e86f51;
+  --mauri-blue: #397fba;
+  --mauri-teal: #268f83;
+  --mauri-sand: #ead8b7;
+  --mauri-card: #fffdf8;
+  --mauri-line: #e6ded0;
+}
+
+body {
+  background: var(--mauri-paper);
+  color: var(--mauri-ink);
+}
+
+body::selection {
+  background: #f5cf73;
+  color: #18332a;
+}
+
+/* A warm page surface instead of the common AI mesh-gradient look. */
+.app-background {
+  background: var(--mauri-paper) !important;
+  background-image: none !important;
+  animation: none !important;
+}
+
+.app-background::before,
+.app-background::after {
+  display: none !important;
+}
+
+/* Solid surfaces: less blur, clearer hierarchy and better rendering cost. */
+.premium-card,
+.soft-tile,
+.section-toolbar,
+.analytics-panel,
+.page-hero,
+.premium-footer,
+.admin-card,
+.admin-hero,
+.admin-login,
+.compact-hero,
+.home-highlight,
+.official-stat-card,
+.stat-chip,
+.mini-card,
+.topper-compact,
+.track-group,
+.contact-chip,
+.analytics-row,
+.ranking-row,
+.info-tile,
+.match-row,
+.result-card,
+.result-modal,
+.result-page-header,
+.official-result-header,
+.result-average,
+.average-level,
+.result-share-panel {
+  background: var(--mauri-card) !important;
+  border-color: var(--mauri-line) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 10px 26px rgba(67, 52, 33, .075) !important;
+}
+
+.compact-hero,
+.page-hero {
+  background: #fff8e9 !important;
+  border-color: #ead7b6 !important;
+  box-shadow: 0 14px 34px rgba(98, 68, 25, .09) !important;
+}
+
+.compact-hero::before,
+.premium-footer::before,
+.official-result-header::before {
+  background: var(--mauri-gold) !important;
+  opacity: .8;
+}
+
+.hero-background-image {
+  opacity: .09 !important;
+  filter: saturate(.85) contrast(.95);
+}
+
+.hero-logo-glow::before {
+  background: rgba(23, 114, 69, .13) !important;
+  animation: none !important;
+  filter: blur(24px) !important;
+}
+
+/* Brand controls use one confident colour rather than synthetic gradients. */
+.search-submit,
+.developer-button,
+.action-button.bg-gradient-to-l,
+.stream-filter-chip.is-active,
+.mobile-bottom-nav button.bg-mauri-green {
+  background: var(--mauri-emerald) !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: 0 9px 20px rgba(23, 114, 69, .20) !important;
+}
+
+.search-submit::after {
+  display: none !important;
+}
+
+.search-submit:hover,
+.developer-button:hover,
+.action-button.bg-gradient-to-l:hover {
+  background: #125f39 !important;
+  box-shadow: 0 12px 24px rgba(23, 114, 69, .24) !important;
+}
+
+.icon-button,
+.lang-button,
+.premium-button,
+.close-result-button,
+.stream-filter-chip {
+  background: #fffdf8 !important;
+  border-color: var(--mauri-line) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 5px 14px rgba(67, 52, 33, .07) !important;
+}
+
+.search-card {
+  background: #fffdf8 !important;
+  border-color: #dfd4c2 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 12px 30px rgba(67, 52, 33, .08) !important;
+}
+
+.search-input,
+.exam-selector-trigger {
+  background: #fbf8f1 !important;
+  border-color: #ddd3c2 !important;
+}
+
+.search-input:focus,
+.exam-selector-trigger:focus {
+  background: #ffffff !important;
+  border-color: var(--mauri-emerald) !important;
+  box-shadow: 0 0 0 4px rgba(23, 114, 69, .11) !important;
+}
+
+/* Home highlights each get a small human, editorial accent. */
+.home-highlight:nth-child(3n + 1) {
+  background: #eef7ee !important;
+  border-color: #cfe4d2 !important;
+}
+
+.home-highlight:nth-child(3n + 1) span {
+  background: #dceede !important;
+  color: #177245 !important;
+}
+
+.home-highlight:nth-child(3n + 2) {
+  background: #fff3dc !important;
+  border-color: #ecd9af !important;
+}
+
+.home-highlight:nth-child(3n + 2) span {
+  background: #f9e5b9 !important;
+  color: #976713 !important;
+}
+
+.home-highlight:nth-child(3n) {
+  background: #eaf3fa !important;
+  border-color: #c9ddec !important;
+}
+
+.home-highlight:nth-child(3n) span {
+  background: #d6e8f5 !important;
+  color: #286c9f !important;
+}
+
+.official-stat-card:nth-child(4n + 1) span { background: #dceede !important; color: #177245 !important; }
+.official-stat-card:nth-child(4n + 2) span { background: #f9e5b9 !important; color: #976713 !important; }
+.official-stat-card:nth-child(4n + 3) span { background: #d6e8f5 !important; color: #286c9f !important; }
+.official-stat-card:nth-child(4n) span { background: #f8ded6 !important; color: #aa4a35 !important; }
+
+/* Competition cards: colour is part of the card, not only a tiny icon. */
+.exam-card {
+  background: #fffdf8 !important;
+  border-color: var(--mauri-line) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 9px 22px rgba(67, 52, 33, .075) !important;
+}
+
+.exam-card::after {
+  display: none !important;
+}
+
+.exam-card-green {
+  background: #edf7ee !important;
+  border-color: #cbe2ce !important;
+}
+.exam-card-green::before { background: #177245 !important; }
+.exam-card-green .exam-card-icon { background: #d9ecdc !important; color: #177245 !important; }
+
+.exam-card-blue {
+  background: #eaf3fa !important;
+  border-color: #c7dcea !important;
+}
+.exam-card-blue::before { background: #397fba !important; }
+.exam-card-blue .exam-card-icon { background: #d5e7f4 !important; color: #286c9f !important; }
+
+.exam-card-gold {
+  background: #fff3dc !important;
+  border-color: #ead5a7 !important;
+}
+.exam-card-gold::before { background: #e3a72f !important; }
+.exam-card-gold .exam-card-icon { background: #f7e2af !important; color: #90610f !important; }
+
+.exam-card-purple {
+  background: #fcece6 !important;
+  border-color: #edc9bd !important;
+}
+.exam-card-purple::before { background: #e86f51 !important; }
+.exam-card-purple .exam-card-icon { background: #f6d9d0 !important; color: #a94832 !important; }
+
+.exam-card-teal {
+  background: #e8f6f2 !important;
+  border-color: #c5e1da !important;
+}
+.exam-card-teal::before { background: #268f83 !important; }
+.exam-card-teal .exam-card-icon { background: #d2ece6 !important; color: #197166 !important; }
+
+.exam-card-amber {
+  background: #fbf0df !important;
+  border-color: #e9d3b2 !important;
+}
+.exam-card-amber::before { background: #cf8731 !important; }
+.exam-card-amber .exam-card-icon { background: #f2ddbc !important; color: #915815 !important; }
+
+.exam-card-rose {
+  background: #f9e9e5 !important;
+  border-color: #e8c9c2 !important;
+}
+.exam-card-rose::before { background: #cf6654 !important; }
+.exam-card-rose .exam-card-icon { background: #f1d5cf !important; color: #9f493a !important; }
+
+.exam-card.is-selected {
+  outline: 3px solid rgba(23, 114, 69, .14) !important;
+  border-color: rgba(23, 114, 69, .55) !important;
+}
+
+.exam-card:hover,
+.home-highlight:hover,
+.stat-chip:hover,
+.mini-card:hover,
+.topper-compact:hover,
+.analytics-row:hover,
+.ranking-row:hover,
+.info-tile:hover,
+.match-row:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 13px 28px rgba(67, 52, 33, .10) !important;
+}
+
+/* Result screens retain status meaning while matching the warmer identity. */
+.student-name-panel {
+  background: #f5f8f1 !important;
+  background-image: none !important;
+  border-color: #d3e2d2 !important;
+}
+
+.result-score {
+  background: #deeee0 !important;
+  border-color: #c6dfca !important;
+  color: #14663c !important;
+}
+
+.result-phrase,
+.top-rank-badge,
+.soon-badge {
+  background: #f9e6b8 !important;
+  border-color: #e5c56f !important;
+  color: #81570e !important;
+}
+
+.result-page-backdrop {
+  background: rgba(24, 35, 29, .70) !important;
+  backdrop-filter: blur(7px) !important;
+}
+
+/* Bottom navigation remains app-like, but no longer looks like glass UI. */
+.mobile-bottom-nav > div {
+  background: #fffdf8 !important;
+  border-color: #ded4c4 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 -10px 26px rgba(67, 52, 33, .11) !important;
+}
+
+.mobile-bottom-nav section {
+  background: #fffdf8 !important;
+  border-color: #ded4c4 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Dark mode keeps the same identity instead of turning everything green-black. */
+.dark {
+  --mauri-paper: #141a17;
+  --mauri-card: #1d2521;
+  --mauri-line: #344039;
+  --mauri-ink: #f2f3ec;
+}
+
+.dark body,
+.dark .app-background {
+  background: #141a17 !important;
+  color: #f2f3ec;
+}
+
+.dark .premium-card,
+.dark .soft-tile,
+.dark .section-toolbar,
+.dark .analytics-panel,
+.dark .page-hero,
+.dark .premium-footer,
+.dark .admin-card,
+.dark .admin-hero,
+.dark .admin-login,
+.dark .compact-hero,
+.dark .home-highlight,
+.dark .official-stat-card,
+.dark .stat-chip,
+.dark .mini-card,
+.dark .topper-compact,
+.dark .track-group,
+.dark .contact-chip,
+.dark .analytics-row,
+.dark .ranking-row,
+.dark .info-tile,
+.dark .match-row,
+.dark .result-card,
+.dark .result-modal,
+.dark .result-page-header,
+.dark .official-result-header,
+.dark .result-average,
+.dark .average-level,
+.dark .result-share-panel,
+.dark .search-card,
+.dark .mobile-bottom-nav > div,
+.dark .mobile-bottom-nav section {
+  background: #1d2521 !important;
+  border-color: #344039 !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .19) !important;
+}
+
+.dark .compact-hero,
+.dark .page-hero {
+  background: #222a22 !important;
+  border-color: #4b4a34 !important;
+}
+
+.dark .search-input,
+.dark .exam-selector-trigger,
+.dark .icon-button,
+.dark .lang-button,
+.dark .premium-button,
+.dark .close-result-button,
+.dark .stream-filter-chip {
+  background: #252f2a !important;
+  border-color: #3a4740 !important;
+}
+
+.dark .exam-card-green { background: #1b3025 !important; border-color: #31523d !important; }
+.dark .exam-card-blue { background: #1b2b36 !important; border-color: #304858 !important; }
+.dark .exam-card-gold { background: #322a1a !important; border-color: #584a28 !important; }
+.dark .exam-card-purple { background: #35231f !important; border-color: #5b3b33 !important; }
+.dark .exam-card-teal { background: #18302d !important; border-color: #2d504a !important; }
+.dark .exam-card-amber { background: #32281c !important; border-color: #57452c !important; }
+.dark .exam-card-rose { background: #342321 !important; border-color: #573b36 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .exam-card,
+  .home-highlight,
+  .stat-chip,
+  .mini-card,
+  .topper-compact,
+  .analytics-row,
+  .ranking-row,
+  .info-tile,
+  .match-row {
+    transition: none !important;
+  }
+}
