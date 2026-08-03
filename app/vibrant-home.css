@@ -1,34 +1,97 @@
 .app-background > header,
 .app-background header.sticky {
-  background: #fffdf8 !important;
-  border-color: #e6ded0 !important;
+  background: #ffffff !important;
+  border-color: #d8e0ea !important;
   backdrop-filter: none !important;
-  box-shadow: 0 5px 18px rgba(67, 52, 33, .055) !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 6px 20px rgba(8, 31, 61, .08) !important;
+}
+
+.app-background > header strong,
+.app-background header.sticky strong {
+  color: #081f3d;
 }
 
 .mobile-compact-hero {
-  background: #fff8e9 !important;
-  border-color: #ead7b6 !important;
+  position: relative;
+  background: #081f3d !important;
+  border: 0 !important;
+  color: #ffffff !important;
   backdrop-filter: none !important;
-  box-shadow: 0 14px 34px rgba(98, 68, 25, .09) !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 20px 46px rgba(8, 31, 61, .22) !important;
+}
+
+.mobile-compact-hero::before {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  inset-inline-start: -82px;
+  bottom: -112px;
+  border-radius: 50%;
+  background: #007a3d;
+  opacity: 1;
+}
+
+.mobile-compact-hero::after {
+  content: "";
+  position: absolute;
+  width: 122px;
+  height: 18px;
+  inset-inline-end: 30px;
+  top: 30px;
+  border-radius: 999px;
+  background: #f4b400;
+  transform: rotate(-12deg);
 }
 
 .mobile-compact-hero > div[aria-hidden="true"] {
   display: none !important;
 }
 
-.mobile-compact-hero h1 { color: #18332a !important; }
-.mobile-compact-hero p { color: #5d625d !important; }
+.mobile-compact-hero h1 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .08);
+}
+
+.mobile-compact-hero p {
+  color: #dbe7f4 !important;
+}
+
+.mobile-compact-hero > .relative > span:first-child {
+  background: #ffffff !important;
+  border: 4px solid #f4b400 !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .24) !important;
+  ring-color: transparent !important;
+}
+
+.mobile-compact-hero > .relative > span:nth-child(2) {
+  background: #f4b400 !important;
+  border-color: #f4b400 !important;
+  color: #081f3d !important;
+}
+
+#years > header p {
+  color: #007a3d !important;
+}
+
+#years > header h2 {
+  color: #081f3d !important;
+}
 
 #years > header span {
-  background: #dceede !important;
-  color: #14663c !important;
+  background: #081f3d !important;
+  color: #ffffff !important;
+  border: 1px solid #081f3d !important;
 }
 
 #years section[aria-label="سنوات النتائج"] > a {
   background-image: none !important;
-  color: #18332a !important;
-  box-shadow: 0 10px 26px rgba(67, 52, 33, .08) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  opacity: 1 !important;
+  box-shadow: 0 14px 30px rgba(8, 31, 61, .17) !important;
 }
 
 #years section[aria-label="سنوات النتائج"] > a > span.absolute {
@@ -36,55 +99,132 @@
 }
 
 #years section[aria-label="سنوات النتائج"] > a:nth-child(1) {
-  background: #eaf3fa !important;
-  border-color: #c6dcea !important;
+  background: #1769e0 !important;
 }
 
 #years section[aria-label="سنوات النتائج"] > a:nth-child(2) {
-  background: #edf7ee !important;
-  border-color: #c9e1cc !important;
+  background: #007a3d !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a strong { color: #18332a !important; }
-#years section[aria-label="سنوات النتائج"] > a small { color: #5d6862 !important; }
+#years section[aria-label="سنوات النتائج"] > a strong,
+#years section[aria-label="سنوات النتائج"] > a small {
+  color: #ffffff !important;
+}
+
+#years section[aria-label="سنوات النتائج"] > a small {
+  opacity: .82;
+}
+
+#years section[aria-label="سنوات النتائج"] > a .grid.h-9,
+#years section[aria-label="سنوات النتائج"] > a .grid.h-11 {
+  background: rgba(255, 255, 255, .18) !important;
+  border: 1px solid rgba(255, 255, 255, .20) !important;
+  color: #ffffff !important;
+}
 
 #years section[aria-label="سنوات النتائج"] > a:nth-child(1) .rounded-full:last-child {
-  background: #f7e2af !important;
-  color: #82570c !important;
+  background: #f4b400 !important;
+  color: #081f3d !important;
+  border-color: #f4b400 !important;
 }
 
 #years section[aria-label="سنوات النتائج"] > a:nth-child(2) .rounded-full:last-child {
-  background: #177245 !important;
-  color: #fff !important;
+  background: #ffffff !important;
+  color: #006634 !important;
+  border-color: #ffffff !important;
+}
+
+#years section[aria-label="سنوات النتائج"] > a:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 18px 36px rgba(8, 31, 61, .23) !important;
 }
 
 .compact-home-footer {
-  background: #fff8e9 !important;
-  border-color: #ead7b6 !important;
+  background: #081f3d !important;
+  border: 0 !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 40px rgba(8, 31, 61, .18) !important;
+}
+
+.compact-home-footer::before {
+  background: #f4b400 !important;
 }
 
 .footer-action-card {
-  background: #fffdf8 !important;
-  border-color: #e3d8c7 !important;
+  background: #ffffff !important;
+  border-color: transparent !important;
+  color: #081f3d !important;
   backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .13) !important;
+}
+
+.footer-action-card .footer-action-icon {
+  background: #007a3d !important;
+  color: #ffffff !important;
+}
+
+.footer-action-card:nth-child(2) .footer-action-icon {
+  background: #1769e0 !important;
+}
+
+.footer-action-card:nth-child(3) .footer-action-icon,
+.footer-action-card:nth-child(4) .footer-action-icon {
+  background: #00a884 !important;
+}
+
+.site-live-counters > div {
+  background: rgba(255, 255, 255, .10) !important;
+  border-color: rgba(255, 255, 255, .16) !important;
+  color: #ffffff !important;
 }
 
 .dark .app-background > header,
-.dark .app-background header.sticky,
+.dark .app-background header.sticky {
+  background: #101d30 !important;
+  border-color: #273a55 !important;
+}
+
+.dark .app-background > header strong,
+.dark .app-background header.sticky strong {
+  color: #ffffff;
+}
+
+.dark .mobile-compact-hero {
+  background: #0a2547 !important;
+}
+
+.dark #years > header h2 {
+  color: #ffffff !important;
+}
+
+.dark #years > header p {
+  color: #43d17e !important;
+}
+
+.dark #years > header span {
+  background: #f4b400 !important;
+  border-color: #f4b400 !important;
+  color: #081f3d !important;
+}
+
 .dark .footer-action-card {
-  background: #1d2521 !important;
-  border-color: #344039 !important;
+  background: #ffffff !important;
+  color: #081f3d !important;
 }
 
-.dark .mobile-compact-hero,
-.dark .compact-home-footer {
-  background: #222a22 !important;
-  border-color: #4b4a34 !important;
-}
+@media (max-width: 640px) {
+  .mobile-compact-hero::before {
+    width: 150px;
+    height: 150px;
+    inset-inline-start: -62px;
+    bottom: -86px;
+  }
 
-.dark .mobile-compact-hero h1 { color: #f2f3ec !important; }
-.dark .mobile-compact-hero p { color: #cbd0ca !important; }
-.dark #years section[aria-label="سنوات النتائج"] > a:nth-child(1) { background: #1b2b36 !important; border-color: #304858 !important; }
-.dark #years section[aria-label="سنوات النتائج"] > a:nth-child(2) { background: #1b3025 !important; border-color: #31523d !important; }
-.dark #years section[aria-label="سنوات النتائج"] > a strong { color: #f2f3ec !important; }
-.dark #years section[aria-label="سنوات النتائج"] > a small { color: #bdc8c1 !important; }
+  .mobile-compact-hero::after {
+    width: 78px;
+    height: 12px;
+    inset-inline-end: 18px;
+    top: 20px;
+  }
+}
