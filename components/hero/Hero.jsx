@@ -1,7 +1,7 @@
 import HeroBackground from "./HeroBackground";
 import LogoMark from "../common/LogoMark";
 
-export default function Hero({ title, description, eyebrow = "MauriResults", logo = "/logo.png" }) {
+export default function Hero({ title, description, eyebrow = "MauriResults", logo = "/brand-logo.svg" }) {
   return (
     <section className="mobile-compact-hero relative isolate overflow-hidden rounded-[28px] border border-white/70 bg-white/[.80] px-4 py-4 text-center shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75 md:rounded-[36px] md:px-8 md:py-10" dir="rtl">
       <HeroBackground />
