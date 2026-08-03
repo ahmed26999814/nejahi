@@ -14,7 +14,7 @@ export default function PremiumHomeView({
   text,
   yearCards,
 }) {
-  const logo = contentValue(content, "logo", "/logo.png");
+  const logo = contentValue(content, "logo", "/brand-logo.svg");
 
   return (
     <section className="app-shell grid gap-5 py-3 md:gap-10 md:py-8">
