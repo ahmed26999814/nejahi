@@ -44,10 +44,13 @@ function rememberOnline(value) {
   return nextOnline;
 }
 
-export default function OnlineUsersCounter() {
+export default function OnlineUsersCounter({ lang = "ar" }) {
   const rootRef = useRef(null);
   const [active, setActive] = useState(false);
   const [online, setOnline] = useState(null);
+  const isFrench = lang === "fr";
+  const label = isFrench ? "En ligne" : "النشطون الآن";
+  const locale = isFrench ? "fr-MR" : "ar-MR";
 
   useEffect(() => {
     setOnline(cachedOnline());
@@ -132,9 +135,7 @@ export default function OnlineUsersCounter() {
         localStorage.removeItem(LAST_HEARTBEAT_KEY);
         if (!stopped) console.warn("[MauriResults Online Heartbeat]", error);
       } finally {
-        if (!stopped) {
-          scheduleHeartbeat(randomBetween(HEARTBEAT_MIN_MS, HEARTBEAT_MAX_MS));
-        }
+        if (!stopped) scheduleHeartbeat(randomBetween(HEARTBEAT_MIN_MS, HEARTBEAT_MAX_MS));
       }
     }
 
@@ -166,12 +167,12 @@ export default function OnlineUsersCounter() {
       ref={rootRef}
       className={`online-users-counter ${online === null ? "counter-pending" : ""}`}
       aria-hidden={online === null ? "true" : undefined}
-      aria-label={online === null ? undefined : `النشطون الآن ${online}`}
+      aria-label={online === null ? undefined : `${label} ${online}`}
     >
       <span className="online-users-dot" aria-hidden="true" />
       <span className="online-users-icon"><OnlineIcon /></span>
-      <span className="online-users-label">النشطون الآن</span>
-      <strong>{online === null ? "—" : online.toLocaleString("ar-MR")}</strong>
+      <span className="online-users-label">{label}</span>
+      <strong>{online === null ? "—" : online.toLocaleString(locale)}</strong>
     </div>
   );
 }
