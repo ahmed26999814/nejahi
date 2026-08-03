@@ -25,7 +25,7 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
     <header className="sticky top-0 z-40 border-b border-mauri-border/75 bg-white/[.92] shadow-[0_8px_28px_rgba(15,23,42,.04)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.92]">
       <nav className="app-shell relative flex h-14 items-center justify-between gap-3" aria-label={lang === "ar" ? "التنقل الرئيسي" : "Navigation principale"}>
         <button className="flex min-w-0 items-center gap-2.5 rounded-2xl text-start active:scale-[.98]" onClick={() => go({ view: "home" })} type="button" data-control-key="home" data-haptic>
-          <LogoMark className="h-9 w-9 rounded-[14px]" src={contentValue(content, "logo", "/logo.png")} />
+          <LogoMark className="h-9 w-9 rounded-[14px]" src={contentValue(content, "logo", "/brand-logo.svg")} />
           <span className="min-w-0">
             <strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong>
             <small className="app-header-subtitle block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">{text.platformSubtitle}</small>
