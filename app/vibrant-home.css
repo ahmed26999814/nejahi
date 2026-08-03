@@ -72,6 +72,34 @@
   color: #081f3d !important;
 }
 
+/* Every secondary hero uses a dark background, so its text must stay light in both themes. */
+.page-hero h1,
+.page-hero h2,
+.page-hero .text-slate-950,
+.page-hero .text-slate-900 {
+  color: #ffffff !important;
+}
+
+.page-hero > div > p:first-child,
+.page-hero > p:first-child {
+  color: #43d17e !important;
+}
+
+.page-hero > div > p:last-child,
+.page-hero > p:last-child,
+.page-hero .text-slate-600,
+.page-hero .text-slate-500 {
+  color: #dbe7f4 !important;
+  opacity: 1 !important;
+}
+
+.page-hero > span:first-child {
+  background: #ffffff !important;
+  color: #007a3d !important;
+  border: 1px solid rgba(255, 255, 255, .75) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .16) !important;
+}
+
 #years > header p {
   color: #007a3d !important;
 }
@@ -86,7 +114,8 @@
   border: 1px solid #081f3d !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a {
+#years section[aria-label="سنوات النتائج"] > a,
+#years section[aria-label="Années des résultats"] > a {
   background-image: none !important;
   color: #ffffff !important;
   border: 0 !important;
@@ -94,47 +123,58 @@
   box-shadow: 0 14px 30px rgba(8, 31, 61, .17) !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a > span.absolute {
+#years section[aria-label="سنوات النتائج"] > a > span.absolute,
+#years section[aria-label="Années des résultats"] > a > span.absolute {
   display: none !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a:nth-child(1) {
+#years section[aria-label="سنوات النتائج"] > a:nth-child(1),
+#years section[aria-label="Années des résultats"] > a:nth-child(1) {
   background: #1769e0 !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a:nth-child(2) {
+#years section[aria-label="سنوات النتائج"] > a:nth-child(2),
+#years section[aria-label="Années des résultats"] > a:nth-child(2) {
   background: #007a3d !important;
 }
 
 #years section[aria-label="سنوات النتائج"] > a strong,
-#years section[aria-label="سنوات النتائج"] > a small {
+#years section[aria-label="سنوات النتائج"] > a small,
+#years section[aria-label="Années des résultats"] > a strong,
+#years section[aria-label="Années des résultats"] > a small {
   color: #ffffff !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a small {
-  opacity: .82;
+#years section[aria-label="سنوات النتائج"] > a small,
+#years section[aria-label="Années des résultats"] > a small {
+  opacity: .86;
 }
 
 #years section[aria-label="سنوات النتائج"] > a .grid.h-9,
-#years section[aria-label="سنوات النتائج"] > a .grid.h-11 {
+#years section[aria-label="سنوات النتائج"] > a .grid.h-11,
+#years section[aria-label="Années des résultats"] > a .grid.h-9,
+#years section[aria-label="Années des résultats"] > a .grid.h-11 {
   background: rgba(255, 255, 255, .18) !important;
   border: 1px solid rgba(255, 255, 255, .20) !important;
   color: #ffffff !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a:nth-child(1) .rounded-full:last-child {
+#years section[aria-label="سنوات النتائج"] > a:nth-child(1) .rounded-full:last-child,
+#years section[aria-label="Années des résultats"] > a:nth-child(1) .rounded-full:last-child {
   background: #f4b400 !important;
   color: #081f3d !important;
   border-color: #f4b400 !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a:nth-child(2) .rounded-full:last-child {
+#years section[aria-label="سنوات النتائج"] > a:nth-child(2) .rounded-full:last-child,
+#years section[aria-label="Années des résultats"] > a:nth-child(2) .rounded-full:last-child {
   background: #ffffff !important;
   color: #006634 !important;
   border-color: #ffffff !important;
 }
 
-#years section[aria-label="سنوات النتائج"] > a:hover {
+#years section[aria-label="سنوات النتائج"] > a:hover,
+#years section[aria-label="Années des résultats"] > a:hover {
   transform: translateY(-3px) !important;
   box-shadow: 0 18px 36px rgba(8, 31, 61, .23) !important;
 }
@@ -159,6 +199,15 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, .13) !important;
 }
 
+.footer-action-card strong,
+.footer-action-card small {
+  color: #081f3d !important;
+}
+
+.footer-action-card small {
+  opacity: .72;
+}
+
 .footer-action-card .footer-action-icon {
   background: #007a3d !important;
   color: #ffffff !important;
@@ -176,6 +225,12 @@
 .site-live-counters > div {
   background: rgba(255, 255, 255, .10) !important;
   border-color: rgba(255, 255, 255, .16) !important;
+  color: #ffffff !important;
+}
+
+.site-live-counters span,
+.site-live-counters strong,
+.footer-seo-links a {
   color: #ffffff !important;
 }
 
@@ -211,6 +266,12 @@
 .dark .footer-action-card {
   background: #ffffff !important;
   color: #081f3d !important;
+}
+
+[dir="ltr"] .footer-action-card,
+[dir="ltr"] .page-hero,
+[dir="ltr"] #years {
+  text-align: left;
 }
 
 @media (max-width: 640px) {

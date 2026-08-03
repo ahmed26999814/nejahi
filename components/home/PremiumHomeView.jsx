@@ -15,6 +15,17 @@ export default function PremiumHomeView({
   yearCards,
 }) {
   const logo = contentValue(content, "logo", "/brand-logo.svg");
+  const labels = lang === "fr"
+    ? {
+        available: "Résultats disponibles",
+        chooseYear: "Choisissez l’année du concours",
+        automatic: "Mise à jour automatique",
+      }
+    : {
+        available: "النتائج المتاحة",
+        chooseYear: "اختر سنة المسابقة",
+        automatic: "تحديث تلقائي",
+      };
 
   return (
     <section className="app-shell grid gap-5 py-3 md:gap-10 md:py-8">
@@ -23,20 +34,21 @@ export default function PremiumHomeView({
         title={text.heroTitle}
         description={text.heroDesc}
         logo={logo}
+        lang={lang}
       />
 
       <section className="scroll-mt-24 grid gap-3" id="years">
         <header className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-black text-mauri-green dark:text-mauri-gold">
-              النتائج المتاحة
+              {labels.available}
             </p>
             <h2 className="mt-1 text-2xl font-black text-slate-950 dark:text-white">
-              اختر سنة المسابقة
+              {labels.chooseYear}
             </h2>
           </div>
           <span className="rounded-full bg-mauri-green/10 px-3 py-1 text-[11px] font-black text-mauri-green dark:bg-emerald-300/10 dark:text-emerald-300">
-            تحديث تلقائي
+            {labels.automatic}
           </span>
         </header>
 

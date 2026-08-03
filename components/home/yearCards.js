@@ -13,9 +13,20 @@ export const HOME_YEAR_CARDS = [
   },
 ];
 
-export function normalizeYearTitle(title, yearId) {
-  const fallback = `نتائج المسابقات ${String(yearId || "").replace("year-", "")}`.trim();
-  return String(title || fallback)
+export function normalizeYearTitle(title, yearId, lang = "ar") {
+  const year = String(yearId || "").replace("year-", "");
+  const fallback = lang === "fr"
+    ? `Résultats des concours ${year}`
+    : `نتائج المسابقات ${year}`;
+  const value = String(title || fallback).trim();
+
+  if (lang === "fr") {
+    return value
+      .replace(/Résultats\s+concours/gi, "Résultats des concours")
+      .replace(/Résultats\s+des\s+concours\s+nationaux/gi, "Résultats des concours");
+  }
+
+  return value
     .replace("نتائج مسابقات", "نتائج المسابقات")
     .replace("نتائج المسابقات الوطنية", "نتائج المسابقات");
 }
@@ -51,7 +62,6 @@ export function mergeYearCards(yearCards = []) {
   return [...byId.values()]
     .map((card) => {
       const id = normalizeHomeYearId(card);
-      const yearValue = id.replace("year-", "");
       const propAvailability = Array.isArray(yearCards) && yearCards.length
         ? yearCards.find((item) => normalizeHomeYearId(item) === id)?.available
         : undefined;

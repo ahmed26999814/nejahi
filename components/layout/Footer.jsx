@@ -10,18 +10,58 @@ import VisitorCounter from "./VisitorCounter";
 import OnlineUsersCounter from "./OnlineUsersCounter";
 
 const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/GN6CJ4edITnJqVfaV5rYuI?s=cl&p=a&ilr=0&amv=3";
-const SUGGESTION_WHATSAPP_URL = `https://wa.me/22244881891?text=${encodeURIComponent("السلام عليكم، لدي اقتراح لموقع MauriResults")}`;
 
 export default function Footer({ content = {}, onNavigate, text }) {
   const [developerOpen, setDeveloperOpen] = useState(false);
   const [appMode, setAppMode] = useState(null);
+  const isFrench = text?.home === "Accueil";
+  const lang = isFrench ? "fr" : "ar";
+  const labels = isFrench
+    ? {
+        developer: "Conception et développement",
+        contact: "Nous contacter",
+        contactHelp: "Assistance et remarques",
+        whatsappGroup: "Groupe WhatsApp du site",
+        whatsappGroupDesc: "Alertes des résultats et actualités",
+        suggest: "Proposer une idée",
+        suggestDesc: "Partagez une idée pour améliorer le site",
+        suggestAria: "Proposer une idée via WhatsApp",
+        platformLinks: "Liens de la plateforme",
+        about: "À propos de MauriResults",
+        toppers: "Lauréats",
+        statistics: "Statistiques",
+        lessons: "Cours",
+        calculator: "Calculateur de moyenne",
+        suggestionMessage: "Bonjour, j’ai une suggestion pour le site MauriResults",
+      }
+    : {
+        developer: "الإعداد والتطوير",
+        contact: "اتصل بنا",
+        contactHelp: "المساعدة والملاحظات",
+        whatsappGroup: "مجموعة الموقع على واتساب",
+        whatsappGroupDesc: "تنبيهات النتائج وآخر الأخبار",
+        suggest: "اقترح لنا",
+        suggestDesc: "شاركنا فكرتك لتطوير الموقع",
+        suggestAria: "اقترح لنا عبر واتساب",
+        platformLinks: "روابط المنصة",
+        about: "عن MauriResults",
+        toppers: "الأوائل",
+        statistics: "الإحصائيات",
+        lessons: "الدروس",
+        calculator: "حاسبة المعدل",
+        suggestionMessage: "السلام عليكم، لدي اقتراح لموقع MauriResults",
+      };
+  const suggestionWhatsappUrl = `https://wa.me/22244881891?text=${encodeURIComponent(labels.suggestionMessage)}`;
   const footerBanner = contentValue(content, "footer_banner");
-  const developerLabel = contentValue(content, "ui_label_developer", "الإعداد والتطوير");
+  const developerLabel = isFrench
+    ? labels.developer
+    : contentValue(content, "ui_label_developer", labels.developer);
   const developerName = contentValue(content, "developer_name", "Ahmed abdellahi mady");
   const showVisitors = contentValue(content, "ui_show_visitors", "true") !== "false";
   const showOnline = contentValue(content, "ui_show_online", "true") !== "false";
   const isApp = appMode === true;
   const isWeb = appMode === false;
+  const arrow = isFrench ? "→" : "←";
 
   useEffect(() => {
     setAppMode(isNativeAppRuntime() || isStandaloneMode());
@@ -39,16 +79,16 @@ export default function Footer({ content = {}, onNavigate, text }) {
               <strong data-control-label>{developerLabel}</strong>
               <small>{developerName}</small>
             </span>
-            {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
+            {isWeb && <span className="footer-action-arrow" aria-hidden="true">{arrow}</span>}
           </button>
 
           <button className="footer-action-card footer-action-contact active:scale-[.98]" onClick={() => onNavigate?.("contact")} type="button" data-control-key="contact" data-haptic>
             <span className="footer-action-icon"><MessageIcon /></span>
             <span className="min-w-0 text-start">
-              <strong data-control-label>اتصل بنا</strong>
-              {isWeb && <small>المساعدة والملاحظات</small>}
+              <strong data-control-label>{labels.contact}</strong>
+              {isWeb && <small>{labels.contactHelp}</small>}
             </span>
-            {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
+            {isWeb && <span className="footer-action-arrow" aria-hidden="true">{arrow}</span>}
           </button>
 
           <a
@@ -60,44 +100,44 @@ export default function Footer({ content = {}, onNavigate, text }) {
           >
             <span className="footer-action-icon"><MessageIcon /></span>
             <span className="min-w-0 text-start">
-              <strong>مجموعة الموقع على واتساب</strong>
-              {isWeb && <small>تنبيهات النتائج وآخر الأخبار</small>}
+              <strong>{labels.whatsappGroup}</strong>
+              {isWeb && <small>{labels.whatsappGroupDesc}</small>}
             </span>
-            {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
+            {isWeb && <span className="footer-action-arrow" aria-hidden="true">{arrow}</span>}
           </a>
 
           <a
             className="footer-action-card footer-action-whatsapp footer-action-suggestion active:scale-[.98]"
-            href={SUGGESTION_WHATSAPP_URL}
+            href={suggestionWhatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="اقترح لنا عبر واتساب"
+            aria-label={labels.suggestAria}
             data-haptic
           >
             <span className="footer-action-icon"><MessageIcon /></span>
             <span className="min-w-0 text-start">
-              <strong>اقترح لنا</strong>
-              {isWeb && <small>شاركنا فكرتك لتطوير الموقع</small>}
+              <strong>{labels.suggest}</strong>
+              {isWeb && <small>{labels.suggestDesc}</small>}
             </span>
-            {isWeb && <span className="footer-action-arrow" aria-hidden="true">←</span>}
+            {isWeb && <span className="footer-action-arrow" aria-hidden="true">{arrow}</span>}
           </a>
         </div>
 
         {(showVisitors || showOnline) && (
           <div className="site-live-counters">
-            {showVisitors && <VisitorCounter />}
-            {showOnline && <OnlineUsersCounter />}
+            {showVisitors && <VisitorCounter lang={lang} />}
+            {showOnline && <OnlineUsersCounter lang={lang} />}
           </div>
         )}
 
         {isWeb && (
-          <div className="mt-4 border-t border-mauri-border/70 pt-3 text-center text-xs font-bold text-slate-500 dark:border-white/10 dark:text-slate-400">
-            <nav className="footer-seo-links" aria-label="روابط المنصة">
-              <Link href="/about">عن MauriResults</Link>
-              <Link href="/toppers">الأوائل</Link>
-              <Link href="/statistics">الإحصائيات</Link>
-              <Link href="/lessons">الدروس</Link>
-              <Link href="/calculator">حاسبة المعدل</Link>
+          <div className="mt-4 border-t border-white/15 pt-3 text-center text-xs font-bold text-white/75">
+            <nav className="footer-seo-links" aria-label={labels.platformLinks}>
+              <Link href="/about">{labels.about}</Link>
+              <Link href="/toppers">{labels.toppers}</Link>
+              <Link href="/statistics">{labels.statistics}</Link>
+              <Link href="/lessons">{labels.lessons}</Link>
+              <Link href="/calculator">{labels.calculator}</Link>
             </nav>
             <span>© {new Date().getFullYear()} MauriResults</span>
           </div>

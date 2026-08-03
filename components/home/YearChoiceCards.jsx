@@ -5,15 +5,25 @@ import { mergeYearCards, normalizeHomeYearId, normalizeYearTitle } from "./yearC
 
 export default function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }) {
   const cards = useMemo(() => mergeYearCards(yearCards), [yearCards]);
+  const isFrench = lang === "fr";
 
   return (
-    <section className="grid grid-cols-2 gap-2.5 md:gap-3" aria-label={lang === "ar" ? "سنوات النتائج" : "Années des résultats"}>
+    <section
+      className="grid grid-cols-2 gap-2.5 md:gap-3"
+      aria-label={isFrench ? "Années des résultats" : "سنوات النتائج"}
+    >
       {cards.map((year, index) => {
         const yearId = normalizeHomeYearId(year);
         const yearValue = yearId.replace("year-", "");
-        const rawTitle = year.title?.[lang] || year.title?.ar || `نتائج المسابقات ${yearValue}`;
-        const title = normalizeYearTitle(rawTitle, yearId);
-        const description = year.description?.[lang] || year.description?.ar || "كل النتائج المتوفرة الآن في مكان واحد.";
+        const fallbackTitle = isFrench
+          ? `Résultats des concours ${yearValue}`
+          : `نتائج المسابقات ${yearValue}`;
+        const fallbackDescription = isFrench
+          ? "Tous les résultats disponibles au même endroit."
+          : "كل النتائج المتوفرة الآن في مكان واحد.";
+        const rawTitle = year.title?.[lang] || fallbackTitle;
+        const title = normalizeYearTitle(rawTitle, yearId, lang);
+        const description = year.description?.[lang] || fallbackDescription;
         const available = year.available === true;
         const tone = index === 0
           ? "border-emerald-200/80 from-emerald-950/95 via-emerald-800/75 to-emerald-500/25 text-emerald-50"
@@ -24,7 +34,7 @@ export default function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }
             key={yearId}
             href={available ? `#${yearId}` : undefined}
             aria-disabled={!available}
-            aria-label={`${title} — ${available ? (lang === "ar" ? "متاحة" : "Disponible") : (lang === "ar" ? "قريبًا" : "Bientôt")}`}
+            aria-label={`${title} — ${available ? (isFrench ? "Disponible" : "متاحة") : (isFrench ? "Bientôt" : "قريبًا")}`}
             onClick={(event) => {
               if (!available) {
                 event.preventDefault();
@@ -56,7 +66,7 @@ export default function YearChoiceCards({ lang = "ar", onSelectYear, yearCards }
                 </small>
               </span>
               <span className={`rounded-full px-2 py-1 text-[9px] font-black shadow-sm ring-1 ring-white/20 md:px-3 md:text-[11px] ${available ? "bg-white text-emerald-700" : "bg-amber-100 text-amber-800"}`}>
-                {available ? (lang === "ar" ? "مفتوحة" : "Ouvert") : (lang === "ar" ? "قريبًا" : "Bientôt")}
+                {available ? (isFrench ? "Ouvert" : "مفتوحة") : (isFrench ? "Bientôt" : "قريبًا")}
               </span>
             </span>
           </a>
