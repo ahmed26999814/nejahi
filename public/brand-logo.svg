@@ -1,12 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">MauriResults</title>
-  <desc id="desc">شعار ملون لمنصة نتائج المسابقات الوطنية في موريتانيا</desc>
+  <title id="title">MauriResults MR</title>
+  <desc id="desc">شعار MR لمنصة MauriResults</desc>
   <rect width="512" height="512" rx="116" fill="#081F3D"/>
-  <path d="M0 365C118 315 226 342 512 188V512H0Z" fill="#007A3D"/>
-  <circle cx="399" cy="111" r="52" fill="#F4B400"/>
-  <rect x="108" y="90" width="296" height="326" rx="58" fill="#FFFFFF"/>
-  <rect x="154" y="142" width="156" height="24" rx="12" fill="#081F3D"/>
-  <rect x="154" y="190" width="105" height="18" rx="9" fill="#9AA8BA"/>
-  <path d="M165 300l60 59 125-145" fill="none" stroke="#007A3D" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="154" y="373" width="204" height="18" rx="9" fill="#F4B400"/>
+  <path d="M0 382C130 324 286 348 512 230V512H0Z" fill="#007A3D"/>
+  <circle cx="414" cy="98" r="48" fill="#F4B400"/>
+  <path d="M82 354V158L174 280L266 158V354" fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M314 354V158H382C438 158 448 246 382 246H314M378 246L440 354" fill="none" stroke="#F4B400" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M353 391l25 25 52-61" fill="none" stroke="#FFFFFF" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
