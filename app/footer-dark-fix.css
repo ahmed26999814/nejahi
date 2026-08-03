@@ -56,12 +56,18 @@
   color: #f4f9ff !important;
 }
 
-.dark .footer-action-card strong {
-  color: #ffffff !important;
+/* Cards are forced to white by the current visual theme, so their copy must remain dark. */
+.dark .footer-action-card strong,
+.dark .footer-action-card [data-control-label] {
+  color: #081f3d !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .dark .footer-action-card small {
-  color: rgba(255,255,255,.72) !important;
+  color: #41516a !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .dark .footer-action-developer .footer-action-icon {
@@ -77,7 +83,7 @@
 }
 
 .dark .footer-action-arrow {
-  color: rgba(255,255,255,.68) !important;
+  color: #41516a !important;
 }
 
 @media (max-width: 640px) {
