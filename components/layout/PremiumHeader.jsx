@@ -5,6 +5,33 @@ import LogoMark from "../common/LogoMark";
 import { contentValue } from "../common/content";
 import { MoonIcon, SunIcon } from "../common/icons";
 
+const LEGACY_AR_TO_FR = {
+  "اتصل بنا": "Nous contacter",
+  "اختر طريقة التواصل المناسبة، وسنكون سعداء باستقبال ملاحظاتك حول النتائج.": "Choisissez le moyen de contact qui vous convient. Vos remarques sur les résultats sont les bienvenues.",
+  "تواصل عبر واتساب": "Contacter via WhatsApp",
+  "صفحتنا على فيسبوك": "Notre page Facebook",
+  "تابع آخر أخبار المنصة والتحديثات": "Suivez les actualités et les mises à jour de la plateforme",
+};
+
+const LEGACY_FR_TO_AR = Object.fromEntries(
+  Object.entries(LEGACY_AR_TO_FR).map(([arabic, french]) => [french, arabic]),
+);
+
+function translateLegacyText(root, lang) {
+  if (!root || typeof document === "undefined") return;
+  const dictionary = lang === "fr" ? LEGACY_AR_TO_FR : LEGACY_FR_TO_AR;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+
+  while (node) {
+    const value = node.nodeValue || "";
+    const trimmed = value.trim();
+    const translated = dictionary[trimmed];
+    if (translated) node.nodeValue = value.replace(trimmed, translated);
+    node = walker.nextNode();
+  }
+}
+
 export default function PremiumHeader({ activeView, content, lang, onNavigate, onToggleLang, text, theme, setTheme }) {
   const isFrench = lang === "fr";
   const navItems = [
@@ -20,6 +47,26 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
     document.documentElement.lang = lang;
     document.documentElement.dir = direction;
     document.body.dir = direction;
+    translateLegacyText(document.body, lang);
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === "characterData") {
+          translateLegacyText(mutation.target.parentNode, lang);
+          continue;
+        }
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            translateLegacyText(node.parentNode, lang);
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            translateLegacyText(node, lang);
+          }
+        });
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
   }, [isFrench, lang]);
 
   function go(item) {
