@@ -34,6 +34,7 @@ export default function PremiumHomeView({
         title={text.heroTitle}
         description={text.heroDesc}
         logo={logo}
+        lang={lang}
       />
 
       <section className="scroll-mt-24 grid gap-3" id="years">
