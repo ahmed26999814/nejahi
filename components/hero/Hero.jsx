@@ -1,9 +1,12 @@
 import HeroBackground from "./HeroBackground";
 import LogoMark from "../common/LogoMark";
 
-export default function Hero({ title, description, eyebrow = "MauriResults", logo = "/brand-logo.svg" }) {
+export default function Hero({ title, description, eyebrow = "MauriResults", logo = "/brand-logo.svg", lang = "ar" }) {
   return (
-    <section className="mobile-compact-hero relative isolate overflow-hidden rounded-[28px] border border-white/70 bg-white/[.80] px-4 py-4 text-center shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75 md:rounded-[36px] md:px-8 md:py-10" dir="rtl">
+    <section
+      className="mobile-compact-hero relative isolate overflow-hidden rounded-[28px] border border-white/70 bg-white/[.80] px-4 py-4 text-center shadow-premium backdrop-blur-2xl dark:border-white/10 dark:bg-[#10231a]/75 md:rounded-[36px] md:px-8 md:py-10"
+      dir={lang === "fr" ? "ltr" : "rtl"}
+    >
       <HeroBackground />
       <div className="relative z-10 mx-auto grid max-w-4xl justify-items-center gap-2.5 md:gap-4">
         <LogoMark className="h-16 w-16 rounded-[20px] ring-4 ring-white/50 dark:ring-white/5 md:h-32 md:w-32 md:rounded-[28px] md:ring-8" src={logo} />
