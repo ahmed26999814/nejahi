@@ -5,6 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Toaster, toast } from "sonner";
 
 const SECRET_KEY = "mauriresults-admin-secret";
+const EXAM_LABELS = {
+  "excellence-2026": "الامتياز 2026",
+  "bac-session-2026": "باكالوريا الدورة التكميلية 2026",
+  "bac-2026": "باكالوريا 2026 (قديم)",
+};
 
 async function adminRequest(path, secret, options = {}) {
   const response = await fetch(path, {
@@ -34,6 +39,10 @@ function formatDate(value) {
 
 function csvCell(value) {
   return `"${String(value ?? "").replaceAll('"', '""')}"`;
+}
+
+function examLabel(value) {
+  return EXAM_LABELS[value] || value || "غير محددة";
 }
 
 export default function ResultAlertsAdmin() {
@@ -155,8 +164,9 @@ export default function ResultAlertsAdmin() {
   function exportVisible() {
     if (!items.length) return;
     const rows = [
-      ["الاسم", "واتساب", "الرقم الموحّد", "الحالة", "تاريخ التسجيل"],
+      ["المسابقة", "الاسم", "واتساب", "الرقم الموحّد", "الحالة", "تاريخ التسجيل"],
       ...items.map((item) => [
+        examLabel(item.exam_slug),
         item.full_name,
         item.whatsapp,
         item.whatsapp_normalized,
@@ -168,7 +178,7 @@ export default function ResultAlertsAdmin() {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `bac-2026-alerts-page-${page}.csv`;
+    anchor.download = `result-alerts-page-${page}.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -178,7 +188,7 @@ export default function ResultAlertsAdmin() {
       <main className="admin-page grid min-h-screen place-items-center px-4 py-8" dir="rtl">
         <form className="admin-login" onSubmit={unlock}>
           <span className="admin-logo mx-auto">MR</span>
-          <h1>طلبات إشعار باكالوريا</h1>
+          <h1>طلبات إشعارات النتائج</h1>
           <p>أدخل كود الإدارة لعرض الأسماء وأرقام واتساب المسجلة.</p>
           <input value={draftSecret} onChange={(event) => setDraftSecret(event.target.value)} placeholder="Admin secret" type="password" />
           <button type="submit">دخول</button>
@@ -195,9 +205,9 @@ export default function ResultAlertsAdmin() {
         <header className="admin-hero">
           <span className="admin-logo">MR</span>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black text-mauri-green">Bac 2026 WhatsApp Alerts</p>
+            <p className="text-xs font-black text-mauri-green">2026 Result Alerts</p>
             <h1 className="text-2xl font-black text-slate-950 md:text-4xl">طلبات الإشعار</h1>
-            <p className="mt-1 text-sm font-bold text-slate-500">الأسماء وأرقام واتساب المسجلة لإشعار باكالوريا 2026.</p>
+            <p className="mt-1 text-sm font-bold text-slate-500">طلبات إشعار نتائج الامتياز وباكالوريا الدورة التكميلية.</p>
           </div>
           <div className="grid grid-cols-2 gap-2 md:flex">
             <Link href="/admin" className="admin-upload inline-flex items-center justify-center">لوحة الإدارة</Link>
@@ -243,6 +253,9 @@ export default function ResultAlertsAdmin() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-black text-slate-950">{item.full_name}</h2>
+                      <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-black text-sky-800">
+                        {examLabel(item.exam_slug)}
+                      </span>
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${item.notified ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>
                         {item.notified ? "تم الإشعار" : "بانتظار الإشعار"}
                       </span>
