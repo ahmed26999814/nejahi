@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 function BellIcon() {
   return (
@@ -21,11 +22,66 @@ function CheckIcon() {
   );
 }
 
-export default function BacAlertRegistration() {
+function examIdentity(exam) {
+  return [exam?.source_key, exam?.table_name, exam?.title_ar, exam?.title_fr]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function isPublishedExam(exam, examSlug) {
+  if (String(exam?.year || "").trim() !== "2026") return false;
+  const identity = examIdentity(exam);
+
+  if (examSlug === "excellence-2026") {
+    return /excellence|امتياز/.test(identity);
+  }
+
+  if (examSlug === "bac-session-2026") {
+    const isBac = /bac|baccalaureat|baccalauréat|باكالوريا/.test(identity);
+    const isSupplementary = /session2|session 2|session_2|session complémentaire|session complementaire|complémentaire|complementaire|تكميل|تكميلية/.test(identity);
+    return isBac && isSupplementary;
+  }
+
+  return false;
+}
+
+export default function BacAlertRegistration({
+  examSlug = "excellence-2026",
+  examTitle = "نتائج الامتياز 2026",
+  resultHref = "/results/excellence/2026",
+}) {
+  const router = useRouter();
   const [form, setForm] = useState({ full_name: "", whatsapp: "", website: "" });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function redirectIfPublished() {
+      try {
+        const response = await fetch("/api/public-exams", {
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) return;
+        const payload = await response.json();
+        const exams = Array.isArray(payload?.exams) ? payload.exams : [];
+        if (!cancelled && exams.some((exam) => isPublishedExam(exam, examSlug))) {
+          router.replace(resultHref);
+        }
+      } catch {
+        // Keep the form available if publication status cannot be verified.
+      }
+    }
+
+    redirectIfPublished();
+    return () => {
+      cancelled = true;
+    };
+  }, [examSlug, resultHref, router]);
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -53,7 +109,7 @@ export default function BacAlertRegistration() {
       const response = await fetch("/api/result-alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, exam_slug: "bac-2026" }),
+        body: JSON.stringify({ ...form, exam_slug: examSlug }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "تعذر تسجيل الطلب.");
@@ -76,10 +132,10 @@ export default function BacAlertRegistration() {
           <div className="flex items-center gap-2">
             <div className="text-left">
               <strong className="block text-sm font-black">MauriResults</strong>
-              <span className="text-[10px] font-bold text-emerald-300">باكالوريا 2026</span>
+              <span className="text-[10px] font-bold text-emerald-300">{examTitle}</span>
             </div>
             <span className="relative grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white shadow-lg">
-              <Image src="/logo.png" alt="MauriResults" fill sizes="48px" className="object-contain p-1.5" priority />
+              <Image src="/brand-logo.svg?v=green-gold-20260807" alt="MauriResults" fill sizes="48px" className="object-contain p-1.5" priority />
             </span>
           </div>
         </header>
@@ -90,7 +146,7 @@ export default function BacAlertRegistration() {
               <BellIcon />
             </span>
             <p className="mt-4 text-xs font-black text-amber-300">إشعار مجاني</p>
-            <h1 className="mt-2 text-2xl font-black leading-relaxed sm:text-3xl">أخبرني فور صدور نتائج باكالوريا 2026</h1>
+            <h1 className="mt-2 text-2xl font-black leading-relaxed sm:text-3xl">أخبرني فور صدور {examTitle}</h1>
             <p className="mx-auto mt-3 max-w-md text-sm font-bold leading-7 text-slate-300">
               اكتب اسمك ورقم واتساب، وسنرسل لك تنبيهاً عندما تصبح النتائج الرسمية متاحة على MauriResults.
             </p>
