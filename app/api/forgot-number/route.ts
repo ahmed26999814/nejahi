@@ -84,7 +84,7 @@ function cachedCandidates(
       });
       return Array.isArray(rows) ? rows.slice(0, 250) : [];
     },
-    ["mauriresults-exam-filter-candidates-v2", source, track, wilaya, centre, school],
+    ["mauriresults-exam-filter-candidates-v3", source, track, wilaya, centre, school],
     {
       revalidate: 300,
       tags: [FILTER_CACHE_TAG, filterSourceTag(source)],
@@ -133,9 +133,9 @@ export async function GET(request: Request) {
       );
     }
 
-    if (!centre && !school) {
+    if (!track && !wilaya && !centre && !school) {
       return NextResponse.json(
-        { candidates: [], error: "Choose a centre or school before loading candidates" },
+        { candidates: [], error: "Choose at least one filter before loading candidates" },
         { status: 400, headers: { "Cache-Control": "no-store" } },
       );
     }
