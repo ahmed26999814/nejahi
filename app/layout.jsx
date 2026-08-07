@@ -14,6 +14,7 @@ import "./bottom-nav-expanded.css";
 import "./root-background-fix.css";
 import "./vibrant-palette.css";
 import "./vibrant-home.css";
+import "./final-ui-fixes.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import UiEnhancements from "../components/ui/UiEnhancements";
 
@@ -90,7 +91,7 @@ export const metadata = {
       "نتائج باكالوريا 2026 متاحة للبحث، مع نتائج ابريفه وكونكور والأوائل والإحصائيات في موريتانيا.",
     images: [
       {
-        url: "/logo.png",
+        url: "/brand-logo.svg",
         width: 1200,
         height: 1200,
         alt: "MauriResults - نتائج المسابقات الوطنية في موريتانيا",
@@ -101,7 +102,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "MauriResults | نتائج باكالوريا موريتانيا 2026",
     description: "ابحث عن نتائج باكالوريا 2026 وتابع نتائج المسابقات الوطنية في موريتانيا بسرعة.",
-    images: ["/logo.png"],
+    images: ["/brand-logo.svg"],
   },
   appleWebApp: {
     capable: true,
@@ -136,7 +137,7 @@ export default function RootLayout({ children }) {
         url: siteUrl,
         logo: {
           "@type": "ImageObject",
-          url: `${siteUrl}/logo.png`,
+          url: `${siteUrl}/brand-logo.svg`,
         },
       },
       {
