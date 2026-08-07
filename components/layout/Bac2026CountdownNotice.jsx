@@ -4,65 +4,53 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-const BAC_2026_TARGET = Date.UTC(2026, 6, 22, 18, 0, 0);
 const STATUS_RECHECK_MIN_MS = 60_000;
 const STATUS_RECHECK_JITTER_MS = 30_000;
 
-function isMainBac2026Exam(exam) {
-  if (String(exam?.year || "").trim() !== "2026") return false;
+const ALERTS = [
+  {
+    id: "excellence",
+    label: "نتائج الامتياز 2026",
+    shortLabel: "إشعار الامتياز",
+    href: "/notify/excellence-2026",
+  },
+  {
+    id: "supplementary",
+    label: "باكالوريا الدورة التكميلية 2026",
+    shortLabel: "إشعار الدورة التكميلية",
+    href: "/notify/bac-session-2026",
+  },
+];
 
-  const sourceText = [
-    exam?.source_key,
-    exam?.table_name,
-    exam?.title_ar,
-    exam?.title_fr,
-  ]
+function examIdentity(exam) {
+  return [exam?.source_key, exam?.table_name, exam?.title_ar, exam?.title_fr]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
-
-  const isBac =
-    sourceText.includes("باكالوريا") ||
-    sourceText.includes("baccalauréat") ||
-    sourceText.includes("baccalaureat") ||
-    /(^|[^a-z])bac([^a-z]|$)/i.test(sourceText);
-
-  const isSupplementary =
-    sourceText.includes("تكميل") ||
-    sourceText.includes("session2") ||
-    sourceText.includes("session 2") ||
-    sourceText.includes("complément") ||
-    sourceText.includes("complement");
-
-  return isBac && !isSupplementary;
 }
 
-function getRemainingParts(remainingMs) {
-  const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
-  const days = Math.floor(totalSeconds / 86_400);
-  const hours = Math.floor((totalSeconds % 86_400) / 3_600);
-  const minutes = Math.floor((totalSeconds % 3_600) / 60);
-  const seconds = totalSeconds % 60;
-
-  return { days, hours, minutes, seconds };
+function is2026Exam(exam) {
+  return String(exam?.year || "").trim() === "2026";
 }
 
-function CountdownUnit({ label, value }) {
-  const displayValue = value === null || value === undefined ? "--" : String(value).padStart(2, "0");
+function isExcellence2026Exam(exam) {
+  if (!is2026Exam(exam)) return false;
+  return /excellence|امتياز/.test(examIdentity(exam));
+}
 
-  return (
-    <span className="bac-release-countdown-unit">
-      <strong>{displayValue}</strong>
-      <small>{label}</small>
-    </span>
-  );
+function isSupplementaryBac2026Exam(exam) {
+  if (!is2026Exam(exam)) return false;
+  const identity = examIdentity(exam);
+  const isBac = /bac|baccalaureat|baccalauréat|باكالوريا/.test(identity);
+  const isSupplementary = /session2|session 2|session_2|session complémentaire|session complementaire|complémentaire|complementaire|تكميل|تكميلية/.test(identity);
+  return isBac && isSupplementary;
 }
 
 export default function Bac2026CountdownNotice() {
   const pathname = usePathname();
   const [isHomeView, setIsHomeView] = useState(false);
-  const [now, setNow] = useState(null);
-  const [isPublished, setIsPublished] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [published, setPublished] = useState({ excellence: false, supplementary: false });
 
   useEffect(() => {
     if (pathname !== "/") {
@@ -107,90 +95,75 @@ export default function Bac2026CountdownNotice() {
     };
   }, [pathname]);
 
-  const shouldShow = pathname === "/" && isHomeView;
+  const shouldCheck = pathname === "/" && isHomeView;
 
   useEffect(() => {
-    if (!shouldShow) return undefined;
-
-    setNow(Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 1_000);
-    return () => window.clearInterval(timer);
-  }, [shouldShow]);
-
-  useEffect(() => {
-    if (!shouldShow) return undefined;
+    if (!shouldCheck) return undefined;
 
     let cancelled = false;
     let nextCheckTimer;
 
-    async function checkBacPublication() {
-      let published = false;
+    async function checkPublication() {
+      let nextPublished = { excellence: false, supplementary: false };
 
       try {
         const response = await fetch("/api/public-exams", {
+          cache: "no-store",
           headers: { Accept: "application/json" },
         });
 
         if (response.ok) {
           const payload = await response.json();
-          published = Array.isArray(payload?.exams) && payload.exams.some(isMainBac2026Exam);
+          const exams = Array.isArray(payload?.exams) ? payload.exams : [];
+          nextPublished = {
+            excellence: exams.some(isExcellence2026Exam),
+            supplementary: exams.some(isSupplementaryBac2026Exam),
+          };
         }
       } catch {
-        published = false;
+        // Keep the alert visible when publication status cannot be verified.
       }
 
       if (cancelled) return;
+      setPublished(nextPublished);
+      setChecked(true);
 
-      if (published) {
-        setIsPublished(true);
-        return;
-      }
+      if (nextPublished.excellence && nextPublished.supplementary) return;
 
       const delay = STATUS_RECHECK_MIN_MS + Math.floor(Math.random() * STATUS_RECHECK_JITTER_MS);
-      nextCheckTimer = window.setTimeout(checkBacPublication, delay);
+      nextCheckTimer = window.setTimeout(checkPublication, delay);
     }
 
-    checkBacPublication();
+    checkPublication();
 
     return () => {
       cancelled = true;
       if (nextCheckTimer) window.clearTimeout(nextCheckTimer);
     };
-  }, [shouldShow]);
+  }, [shouldCheck]);
 
-  const remainingMs = now === null ? null : Math.max(0, BAC_2026_TARGET - now);
-  const countdown = useMemo(
-    () => (remainingMs === null ? null : getRemainingParts(remainingMs)),
-    [remainingMs],
+  const pendingAlerts = useMemo(
+    () => ALERTS.filter((alert) => !published[alert.id]),
+    [published],
   );
 
-  if (!shouldShow || isPublished) return null;
-
-  const targetReached = remainingMs === 0;
+  if (!shouldCheck || !checked || !pendingAlerts.length) return null;
 
   return (
-    <aside className="bac-release-notice" aria-label="العد التنازلي لباكالوريا 2026">
-      <div className="bac-release-notice-inner">
+    <aside className="bac-release-notice results-alerts-notice" aria-label="إشعارات النتائج المنتظرة 2026">
+      <div className="bac-release-notice-inner results-alerts-notice-inner">
         <span className="bac-release-notice-dot" aria-hidden="true" />
         <p>
-          <strong>باكالوريا 2026</strong>
-          <span>{targetReached ? "نترقب النشر الرسمي" : "الأربعاء 22 يوليو — الساعة 18:00"}</span>
+          <strong>إشعارات النتائج</strong>
+          <span>{pendingAlerts.map((alert) => alert.label).join(" • ")}</span>
         </p>
-
-        {targetReached ? (
-          <span className="bac-release-countdown-finished">بانتظار النشر</span>
-        ) : (
-          <span className="bac-release-countdown" aria-label="الوقت المتبقي">
-            <CountdownUnit label="يوم" value={countdown?.days} />
-            <CountdownUnit label="ساعة" value={countdown?.hours} />
-            <CountdownUnit label="دقيقة" value={countdown?.minutes} />
-            <CountdownUnit label="ثانية" value={countdown?.seconds} />
-          </span>
-        )}
-
-        <Link href="/notify/bac-2026" className="bac-release-notice-link bac-release-notice-link-alert">
-          أخبرني
-        </Link>
+        <div className="results-alert-notice-actions">
+          {pendingAlerts.map((alert) => (
+            <Link key={alert.id} href={alert.href} className="bac-release-notice-link bac-release-notice-link-alert">
+              {alert.shortLabel}
+            </Link>
+          ))}
+        </div>
       </div>
     </aside>
   );
