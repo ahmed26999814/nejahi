@@ -95,8 +95,10 @@ export function useCandidateFilters() {
     activeRequestRef.current?.abort();
     const index = levels.indexOf(level);
     if (index < 0) return;
+
     const nextValues = { ...values, [level]: value };
     for (const later of levels.slice(index + 1)) nextValues[later] = "";
+
     setValues(nextValues);
     setCandidates([]);
     setMessage("");
@@ -105,38 +107,38 @@ export function useCandidateFilters() {
       for (const later of levels.slice(index + 1)) next[later] = [];
       return next;
     });
+
     if (!value) {
       setVisibleCount(index + 1);
       setLoading("");
       return;
     }
+
     const nextLevel = levels[index + 1];
     if (!nextLevel) {
       setVisibleCount(levels.length);
       await loadCandidates(nextValues);
       return;
     }
+
     const controller = new AbortController();
     activeRequestRef.current = controller;
     setLoading(nextLevel);
+
     try {
       const data = await fetchCandidateFilterData({ mode: "options", source, level: nextLevel, ...nextValues }, controller.signal);
       if (controller.signal.aborted) return;
       const rows = data.options || [];
-      if (!rows.length) {
-        setVisibleCount(index + 1);
-        await loadCandidates(nextValues);
-        return;
-      }
       setOptions((current) => ({ ...current, [nextLevel]: rows }));
-      setVisibleCount(index + 2);
+      setVisibleCount(rows.length ? index + 2 : index + 1);
     } catch (error) {
-      if (error.name !== "AbortError") {
-        setMessage("تعذر تحميل الخيارات التالية.");
-        setVisibleCount(index + 1);
-      }
-    } finally {
-      if (!controller.signal.aborted) setLoading("");
+      if (error.name === "AbortError") return;
+      setMessage("تعذر تحميل الخيارات التالية.");
+      setVisibleCount(index + 1);
+    }
+
+    if (!controller.signal.aborted) {
+      await loadCandidates(nextValues);
     }
   }, [levels, loadCandidates, source, values]);
 
