@@ -1,0 +1,20 @@
+/* Final high-priority UI fixes loaded after the theme files. */
+
+/* Both available year cards use the same readable white status label. */
+#years section[aria-label="سنوات النتائج"] > a .rounded-full:last-child,
+#years section[aria-label="Années des résultats"] > a .rounded-full:last-child {
+  background: rgba(255, 255, 255, .16) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, .30) !important;
+  opacity: 1 !important;
+}
+
+/* Keep footer action labels readable on their white cards in dark mode. */
+.dark .footer-action-card,
+.dark .footer-action-card strong,
+.dark .footer-action-card small,
+.dark .footer-action-card [data-control-label],
+.dark .footer-action-card .min-w-0 {
+  color: #081f3d !important;
+  opacity: 1 !important;
+}
