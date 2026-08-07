@@ -53,12 +53,17 @@ export function normalizeExamSource(value) {
 }
 
 export function resolveExamSource() {
+  // Uploaded/current-year exams have their own dynamic source key. Prefer the
+  // exact selected exam over the page heading so a 2026 Bac upload is never
+  // mistaken for the legacy 2025 `bac` source merely because the H1 says Bac.
+  const stored = localStorage.getItem("mauriresults-selected-exam") || "";
+  const storedSource = normalizeExamSource(stored);
+  if (storedSource?.startsWith("upload:")) return storedSource;
+
   const headingText = `${document.querySelector("main h1")?.textContent || ""} ${window.location.hash}`;
   const headingSource = normalizeExamSource(headingText);
   if (headingSource) return headingSource;
 
-  const stored = localStorage.getItem("mauriresults-selected-exam") || "";
-  const storedSource = normalizeExamSource(stored);
   if (storedSource) return storedSource;
 
   const pageText = document.querySelector("main")?.textContent || "";
