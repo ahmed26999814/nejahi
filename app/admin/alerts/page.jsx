@@ -2,7 +2,7 @@ import AdminSecretStorageBridge from "../../../components/admin/AdminSecretStora
 import ResultAlertsAdmin from "../../../components/admin/ResultAlertsAdmin";
 
 export const metadata = {
-  title: "طلبات إشعار باكالوريا",
+  title: "طلبات إشعارات النتائج",
   robots: { index: false, follow: false },
 };
 
