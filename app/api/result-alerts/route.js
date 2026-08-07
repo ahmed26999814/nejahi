@@ -8,6 +8,11 @@ const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT = 6;
 const rateBuckets = new Map();
 
+const ALERT_EXAMS = Object.freeze({
+  "excellence-2026": "نتائج الامتياز 2026",
+  "bac-session-2026": "نتائج باكالوريا الدورة التكميلية 2026",
+});
+
 function json(data, status = 200) {
   return NextResponse.json(data, {
     status,
@@ -103,8 +108,12 @@ export async function POST(request) {
     const fullName = cleanText(body.full_name, 100);
     const whatsapp = cleanText(body.whatsapp, 40);
     const whatsappNormalized = normalizeWhatsApp(whatsapp);
-    const examSlug = body.exam_slug === "bac-2026" ? "bac-2026" : "bac-2026";
+    const examSlug = cleanText(body.exam_slug, 60);
+    const examLabel = ALERT_EXAMS[examSlug];
 
+    if (!examLabel) {
+      return json({ error: "طلب الإشعار غير متاح لهذه المسابقة." }, 400);
+    }
     if (fullName.length < 2) {
       return json({ error: "اكتب الاسم بصورة صحيحة." }, 400);
     }
@@ -124,15 +133,22 @@ export async function POST(request) {
         full_name: fullName,
         whatsapp,
         whatsapp_normalized: whatsappNormalized,
+        notified: false,
+        notified_at: null,
         updated_at: new Date().toISOString(),
       }),
     });
 
     return json({
       ok: true,
-      message: "تم تسجيلك. سنخبرك عند صدور نتائج باكالوريا 2026.",
+      message: `تم تسجيلك. سنخبرك عند صدور ${examLabel}.`,
       subscription: rows?.[0]
-        ? { id: rows[0].id, full_name: rows[0].full_name, whatsapp: rows[0].whatsapp }
+        ? {
+            id: rows[0].id,
+            exam_slug: rows[0].exam_slug,
+            full_name: rows[0].full_name,
+            whatsapp: rows[0].whatsapp,
+          }
         : null,
     });
   } catch (error) {
