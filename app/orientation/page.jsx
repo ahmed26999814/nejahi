@@ -1,22 +1,26 @@
-import SpecialtyGuideExplorer from "../../components/orientation/SpecialtyGuideExplorer";
+import OrientationHub from "../../components/orientation/OrientationHub";
+import { buildOrientationInstitutions, ORIENTATION_DIRECTORY_SOURCES } from "../../data/orientation-institutions";
+import { orientationPrograms } from "../../data/orientation-programs";
 
 export const dynamic = "force-static";
 
 export const metadata = {
-  title: "دليل التخصصات والتوجيه الجامعي",
+  title: "التوجيه الجامعي في موريتانيا",
   description:
-    "ابحث عن التخصص بالعربية أو الفرنسية واعرف تعريفه والكلية أو المعهد والمواد التي تدرس عادة وآفاقه المستقبلية وآخر معدلات التوجيه.",
+    "دليل سريع للجامعات والمعاهد والكليات والتخصصات والمواد وآخر معدلات التوجيه، مع البحث في المؤسسات والتخصصات والمقارنة حسب شعبة الباك والمعدل.",
   alternates: {
     canonical: "/orientation",
   },
   openGraph: {
-    title: "دليل التخصصات الجامعية | MauriResults",
-    description: "ابحث بالعربية أو الفرنسية واعرف التخصص ومواده وآفاقه المستقبلية.",
+    title: "دليل التوجيه الجامعي | MauriResults",
+    description: "استكشف الجامعات والمعاهد والكليات والتخصصات والمواد وآخر معدلات التوجيه في موريتانيا.",
     url: "/orientation",
     type: "website",
   },
 };
 
+const institutions = buildOrientationInstitutions(orientationPrograms);
+
 export default function OrientationPage() {
-  return <SpecialtyGuideExplorer />;
+  return <OrientationHub institutions={institutions} sources={ORIENTATION_DIRECTORY_SOURCES} />;
 }
