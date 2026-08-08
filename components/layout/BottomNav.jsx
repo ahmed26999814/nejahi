@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GraduationCap, MoreHorizontal, X } from "lucide-react";
+import { Compass, MoreHorizontal, X } from "lucide-react";
 import { AwardIcon, ChartIcon, HomeIcon, SearchIcon } from "../common/icons";
 
 function BookIcon() {
@@ -27,9 +27,8 @@ export default function BottomNav({ activeView, onNavigate, text }) {
       key: "orientation",
       label: isFrench ? "Orientation" : "التوجيه",
       href: "/orientation",
-      icon: <GraduationCap strokeWidth={2.2} />,
+      icon: <Compass strokeWidth={2.4} />,
       featured: true,
-      badge: isFrench ? "Nouveau" : "جديد",
     },
     { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
     { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
@@ -117,7 +116,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
             const featured = item.featured && !active;
             return (
               <button
-                className={`relative grid min-h-12 min-w-0 content-center justify-items-center gap-1 rounded-[15px] px-1 text-[10px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : featured ? "bg-emerald-50 text-mauri-green ring-1 ring-emerald-200/80 hover:bg-emerald-100 dark:bg-emerald-300/10 dark:text-emerald-300 dark:ring-emerald-300/15" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
+                className={`relative grid min-h-12 min-w-0 content-center justify-items-center gap-1 rounded-[15px] px-1 text-[10px] font-black leading-3 transition duration-200 active:scale-[.94] ${active ? "bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.25)]" : featured ? "text-mauri-green dark:text-emerald-300" : "text-slate-500 hover:bg-mauri-green/10 hover:text-mauri-green dark:text-slate-300"}`}
                 onClick={() => activate(item)}
                 type="button"
                 key={item.key}
@@ -125,15 +124,10 @@ export default function BottomNav({ activeView, onNavigate, text }) {
                 data-control-key={item.key}
                 data-haptic
               >
-                <span className="relative grid h-[21px] w-[21px] place-items-center [&>svg]:h-[21px] [&>svg]:w-[21px]">
+                <span className={featured ? "-mt-3 grid h-9 w-9 place-items-center rounded-[14px] bg-mauri-green text-white shadow-[0_8px_20px_rgba(21,128,61,.28)] ring-4 ring-white [&>svg]:h-5 [&>svg]:w-5 dark:ring-[#07130d]" : "grid h-[21px] w-[21px] place-items-center [&>svg]:h-[21px] [&>svg]:w-[21px]"}>
                   {item.icon}
-                  {item.badge && !active && (
-                    <span className="absolute -left-5 -top-2 rounded-full bg-amber-400 px-1.5 py-0.5 text-[7px] font-black leading-none text-slate-900 shadow-sm">
-                      {item.badge}
-                    </span>
-                  )}
                 </span>
-                <span className="block w-full truncate text-center" data-control-label>{item.label}</span>
+                <span className={`block w-full truncate text-center ${featured ? "-mt-0.5" : ""}`} data-control-label>{item.label}</span>
                 {active && <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-white/85" aria-hidden="true" />}
               </button>
             );
