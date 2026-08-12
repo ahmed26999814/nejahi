@@ -42,6 +42,38 @@ function isBrevetResult(root, source) {
   return /(?:ابريفه|ابريفه|بريفه|BEPC)/i.test(resultText);
 }
 
+function selectedExamId() {
+  if (typeof window === "undefined") return "";
+  try {
+    return String(
+      window.history.state?.examId
+      || window.localStorage.getItem("mauriresults-selected-exam")
+      || ""
+    ).trim().toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function shouldSuppressMotivational({ average, maxScore, source }) {
+  const normalizedSource = String(source || "").trim().toLowerCase();
+  const examId = selectedExamId();
+  const isConcours = normalizedSource === "concours"
+    || examId === "concours"
+    || examId.startsWith("concours-")
+    || maxScore > 20;
+  const isExcellence = normalizedSource === "excellence_1as"
+    || examId === "excellence-1as"
+    || examId.startsWith("excellence-1as-");
+  const isSupplementary = normalizedSource === "bac_session"
+    || examId === "bac-session"
+    || examId.startsWith("bac-session-");
+
+  return isConcours
+    || isExcellence
+    || (isSupplementary && average >= 8 && average < 10);
+}
+
 function parseScore(value) {
   const text = String(value ?? "").trim().replace(",", ".");
   if (!text) return Number.NaN;
@@ -83,8 +115,13 @@ function DecisionStrip({ average, label = "القرار", maxScore, source, stat
           ? Number(matchedAverage[0])
           : Number.NaN;
       const resolvedMaxScore = Number(maxScore || (/\/\s*200\b/.test(scoreText) ? 200 : 20));
+      const suppressMotivational = shouldSuppressMotivational({
+        average: resolvedAverage,
+        maxScore: resolvedMaxScore,
+        source,
+      });
 
-      if (resolvedMaxScore <= 20) {
+      if (!suppressMotivational && resolvedMaxScore <= 20) {
         nextPhrase = isBrevetResult(rootRef.current, source)
           ? brevetMotivationalPhrase(resolvedAverage)
           : motivationalPhrase(resolvedAverage);
