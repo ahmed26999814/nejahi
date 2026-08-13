@@ -2,17 +2,18 @@ import examSeoData from "../data/exam-seo.json";
 import { orientationPrograms } from "../data/orientation-programs";
 
 const siteUrl = "https://mauri-results.vercel.app";
+const seoRefreshDate = "2026-08-13";
 
 const staticRoutes = [
   { path: "", changeFrequency: "daily", priority: 1 },
-  { path: "/toppers", changeFrequency: "daily", priority: 0.96 },
-  { path: "/statistics", changeFrequency: "daily", priority: 0.96 },
+  { path: "/toppers", changeFrequency: "daily", priority: 0.96, lastModified: seoRefreshDate },
+  { path: "/statistics", changeFrequency: "daily", priority: 0.96, lastModified: seoRefreshDate },
   { path: "/about", changeFrequency: "monthly", priority: 0.78 },
   { path: "/orientation", changeFrequency: "monthly", priority: 0.82 },
-  { path: "/orientation/specialties", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/orientation/specialties", changeFrequency: "monthly", priority: 0.8, lastModified: seoRefreshDate },
   { path: "/orientation/match", changeFrequency: "monthly", priority: 0.76 },
-  { path: "/lessons", changeFrequency: "weekly", priority: 0.8 },
-  { path: "/calculator", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/lessons", changeFrequency: "weekly", priority: 0.8, lastModified: seoRefreshDate },
+  { path: "/calculator", changeFrequency: "monthly", priority: 0.7, lastModified: seoRefreshDate },
   { path: "/apk", changeFrequency: "weekly", priority: 0.7 },
 ];
 
@@ -21,7 +22,7 @@ const examRoutes = Object.entries(examSeoData).flatMap(([exam, details]) =>
     path: `/results/${exam}/${year}`,
     changeFrequency: year === "2026" ? "daily" : "monthly",
     priority: exam === "bac" && year === "2026" ? 1 : year === "2026" ? 0.92 : 0.75,
-    lastModified: details.publishedDates?.[year],
+    lastModified: seoRefreshDate,
   })),
 );
 
