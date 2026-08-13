@@ -46,6 +46,12 @@ function publicResource(input) {
   return PUBLIC_RESOURCES.has(resource) ? resource : "";
 }
 
+function publicExamsRequestKey(input) {
+  const url = resolveUrl(input);
+  if (!url || url.origin !== window.location.origin || url.pathname !== "/api/public-exams") return "";
+  return url.href;
+}
+
 function asciiDigits(value) {
   const arabic = "٠١٢٣٤٥٦٧٨٩";
   const persian = "۰۱۲۳۴۵۶۷۸۹";
@@ -190,11 +196,35 @@ export default function PublicDataFetchBridge() {
     if (window.location.pathname.startsWith("/admin")) return undefined;
 
     const originalFetch = window.fetch.bind(window);
+    const inFlightPublicExams = new Map();
+
+    function fetchPublicExamsOnce(input, init) {
+      const key = publicExamsRequestKey(input);
+      const signal = init?.signal || (typeof input === "object" ? input?.signal : undefined);
+      if (!key || signal) return originalFetch(input, init);
+
+      const existing = inFlightPublicExams.get(key);
+      if (existing) return existing.then((response) => response.clone());
+
+      const request = originalFetch(input, init).then(
+        (response) => {
+          inFlightPublicExams.delete(key);
+          return response;
+        },
+        (error) => {
+          inFlightPublicExams.delete(key);
+          throw error;
+        },
+      );
+      inFlightPublicExams.set(key, request);
+      return request.then((response) => response.clone());
+    }
 
     window.fetch = (input, init = {}) => {
       const method = String(init?.method || (typeof input === "object" && input?.method) || "GET").toUpperCase();
       const resource = method === "GET" ? publicResource(input) : "";
       const trackedResult = method === "GET" ? resultRequest(input) : null;
+      const publicExamsKey = method === "GET" ? publicExamsRequestKey(input) : "";
 
       if (resource) {
         const headers = new Headers(init?.headers || (typeof input === "object" ? input?.headers : undefined));
@@ -208,6 +238,8 @@ export default function PublicDataFetchBridge() {
           headers,
         });
       }
+
+      if (publicExamsKey) return fetchPublicExamsOnce(input, init);
 
       const shardRequest = cacheSafeShardRequest(trackedResult);
       const promise = shardRequest
@@ -225,6 +257,7 @@ export default function PublicDataFetchBridge() {
     };
 
     return () => {
+      inFlightPublicExams.clear();
       window.fetch = originalFetch;
     };
   }, []);
