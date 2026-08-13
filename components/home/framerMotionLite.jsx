@@ -41,6 +41,7 @@ function createMotionTag(tag) {
 
 export const m = {
   main: createMotionTag("main"),
+  header: createMotionTag("header"),
   figure: createMotionTag("figure"),
   article: createMotionTag("article"),
 };
