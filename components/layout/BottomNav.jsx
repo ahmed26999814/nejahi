@@ -1,8 +1,52 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Compass, MoreHorizontal, X } from "lucide-react";
 import { AwardIcon, ChartIcon, HomeIcon, SearchIcon } from "../common/icons";
+
+function StrokeIcon({ children, className = "", strokeWidth = 2 }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      viewBox="0 0 24 24"
+    >
+      {children}
+    </svg>
+  );
+}
+
+function CompassIcon() {
+  return (
+    <StrokeIcon strokeWidth={2.4}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />
+    </StrokeIcon>
+  );
+}
+
+function MoreIcon() {
+  return (
+    <StrokeIcon>
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+    </StrokeIcon>
+  );
+}
+
+function CloseIcon({ className = "" }) {
+  return (
+    <StrokeIcon className={className}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </StrokeIcon>
+  );
+}
 
 function BookIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H6.5A2.5 2.5 0 0 0 4 19.5z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H14v17a3 3 0 0 1 3-3h.5a2.5 2.5 0 0 1 2.5 2.5z" /></svg>;
@@ -27,11 +71,11 @@ export default function BottomNav({ activeView, onNavigate, text }) {
       key: "orientation",
       label: isFrench ? "Orientation" : "التوجيه",
       href: "/orientation",
-      icon: <Compass strokeWidth={2.4} />,
+      icon: <CompassIcon />,
       featured: true,
     },
     { key: "analytics", label: text.analytics, view: "analytics", icon: <ChartIcon /> },
-    { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreHorizontal /> },
+    { key: "more", label: isFrench ? "Plus" : "المزيد", more: true, icon: <MoreIcon /> },
   ];
 
   const secondaryItems = [
@@ -89,7 +133,7 @@ export default function BottomNav({ activeView, onNavigate, text }) {
                 {isFrench ? "Plus de services" : "خدمات أخرى"}
               </strong>
               <button className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200" onClick={() => setMoreOpen(false)} type="button" aria-label={isFrench ? "Fermer" : "إغلاق"}>
-                <X className="h-4 w-4" />
+                <CloseIcon className="h-4 w-4" />
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
