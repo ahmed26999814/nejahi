@@ -75,6 +75,7 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: [
+      "framer-motion",
       "lucide-react",
       "react-icons",
       "@radix-ui/react-select",
