@@ -150,8 +150,14 @@ function legacyUpdateExam(): Record<string, unknown> {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const client = url.searchParams.get("client");
+  const explicitClient = url.searchParams.get("client");
   const nativeClient = request.headers.get("x-mauriresults-client");
+  const isBrowserRequest = Boolean(
+    request.headers.get("sec-fetch-site")
+    || request.headers.get("sec-fetch-mode")
+    || request.headers.get("referer")
+  );
+  const client = explicitClient || (!isBrowserRequest ? "mobile" : null);
   const legacyMobile = client === "mobile" && nativeClient !== "flutter-native";
 
   if (legacyMobile) {
