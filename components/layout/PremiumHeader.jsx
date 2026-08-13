@@ -49,6 +49,8 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
     document.body.dir = direction;
     translateLegacyText(document.body, lang);
 
+    if (!isFrench) return undefined;
+
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === "characterData") {
