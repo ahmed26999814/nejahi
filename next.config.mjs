@@ -58,10 +58,12 @@ const NO_STORE = "no-store, max-age=0";
 const PRIVATE_RESULT_ROBOTS = "noindex, nofollow, noarchive";
 const HOME_COMPONENTS_DIR = path.resolve(process.cwd(), "components/home");
 const ADMIN_COMPONENTS_DIR = path.resolve(process.cwd(), "components/admin");
-const LIGHT_DEPENDENCY_DIRS = new Set([HOME_COMPONENTS_DIR, ADMIN_COMPONENTS_DIR]);
+const LAYOUT_COMPONENTS_DIR = path.resolve(process.cwd(), "components/layout");
+const LIGHT_DEPENDENCY_DIRS = new Set([HOME_COMPONENTS_DIR, ADMIN_COMPONENTS_DIR, LAYOUT_COMPONENTS_DIR]);
 const LIGHT_MOTION_SHIM = path.resolve(HOME_COMPONENTS_DIR, "framerMotionLite.jsx");
 const LIGHT_TOAST_SHIM = path.resolve(process.cwd(), "components/common/sonnerLite.jsx");
 const LIGHT_SELECT_SHIM = path.resolve(HOME_COMPONENTS_DIR, "radixSelectLite.jsx");
+const LIGHT_SOCIAL_ICONS_SHIM = path.resolve(process.cwd(), "components/common/socialIconsLite.jsx");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -80,7 +82,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: [
       "lucide-react",
-      "react-icons",
     ],
   },
   webpack(config, { webpack }) {
@@ -97,6 +98,7 @@ const nextConfig = {
 
     replaceForLightweightAreas(/^framer-motion$/, LIGHT_MOTION_SHIM);
     replaceForLightweightAreas(/^sonner$/, LIGHT_TOAST_SHIM);
+    replaceForLightweightAreas(/^react-icons\/fa6$/, LIGHT_SOCIAL_ICONS_SHIM);
     config.plugins.push(
       new webpack.NormalModuleReplacementPlugin(/^@radix-ui\/react-select$/, (resource) => {
         const importerDir = resource.context ? path.resolve(resource.context) : "";
