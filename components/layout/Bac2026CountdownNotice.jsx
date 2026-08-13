@@ -65,8 +65,7 @@ export default function Bac2026CountdownNotice() {
       frame = window.requestAnimationFrame(() => {
         const routedView = routeDetail?.view;
         const isHomeRoute = routedView ? routedView === "home" : !window.location.hash;
-        const hasOpenResult = Boolean(document.querySelector(".result-modal"));
-        setIsHomeView(isHomeRoute && !hasOpenResult);
+        setIsHomeView(isHomeRoute);
       });
     }
 
@@ -78,9 +77,6 @@ export default function Bac2026CountdownNotice() {
       syncVisibility();
     }
 
-    const observer = new MutationObserver(() => syncVisibility());
-    observer.observe(document.body, { childList: true, subtree: true });
-
     syncVisibility();
     window.addEventListener("mauriresults:routechange", handleRouteChange);
     window.addEventListener("hashchange", handleLocationChange);
@@ -88,7 +84,6 @@ export default function Bac2026CountdownNotice() {
 
     return () => {
       window.cancelAnimationFrame(frame);
-      observer.disconnect();
       window.removeEventListener("mauriresults:routechange", handleRouteChange);
       window.removeEventListener("hashchange", handleLocationChange);
       window.removeEventListener("popstate", handleLocationChange);
