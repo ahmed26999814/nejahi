@@ -1,6 +1,6 @@
 import LessonsAndExams from "./LessonsAndExams";
 
-const url = "https://mauriresults.vercel.app/lessons";
+const url = "https://mauri-results.vercel.app/lessons";
 
 export const metadata = {
   title: "الدروس ومواضيع الامتحانات",
