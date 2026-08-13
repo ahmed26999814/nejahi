@@ -57,7 +57,9 @@ const RESULT_CACHE = "public, max-age=300, s-maxage=86400, stale-while-revalidat
 const NO_STORE = "no-store, max-age=0";
 const PRIVATE_RESULT_ROBOTS = "noindex, nofollow, noarchive";
 const HOME_COMPONENTS_DIR = path.resolve(process.cwd(), "components/home");
-const HOME_MOTION_SHIM = path.resolve(HOME_COMPONENTS_DIR, "framerMotionLite.jsx");
+const ADMIN_COMPONENTS_DIR = path.resolve(process.cwd(), "components/admin");
+const LIGHT_MOTION_DIRS = new Set([HOME_COMPONENTS_DIR, ADMIN_COMPONENTS_DIR]);
+const LIGHT_MOTION_SHIM = path.resolve(HOME_COMPONENTS_DIR, "framerMotionLite.jsx");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -75,7 +77,6 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: [
-      "framer-motion",
       "lucide-react",
       "react-icons",
       "@radix-ui/react-select",
@@ -85,8 +86,8 @@ const nextConfig = {
     config.plugins.push(
       new webpack.NormalModuleReplacementPlugin(/^framer-motion$/, (resource) => {
         const importerDir = resource.context ? path.resolve(resource.context) : "";
-        if (importerDir === HOME_COMPONENTS_DIR) {
-          resource.request = HOME_MOTION_SHIM;
+        if (LIGHT_MOTION_DIRS.has(importerDir)) {
+          resource.request = LIGHT_MOTION_SHIM;
         }
       }),
     );
