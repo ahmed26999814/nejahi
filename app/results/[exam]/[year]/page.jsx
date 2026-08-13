@@ -8,8 +8,7 @@ const relatedResultLinks = [
   { href: "/results/bac/2026", label: "نتائج باكالوريا 2026" },
   { href: "/results/brevet/2026", label: "نتائج ابريفه 2026" },
   { href: "/results/concours/2026", label: "نتائج كونكور 2026" },
-  { href: "/toppers", label: "أوائل باكالوريا 2026" },
-  { href: "/statistics", label: "إحصائيات باكالوريا 2026" },
+  { href: "/results/excellence/2026", label: "نتائج الامتياز 2026" },
 ];
 
 function formatTemplate(value, year) {
@@ -103,6 +102,16 @@ export default async function ExamYearPage({ params }) {
   const searchHref = `/#year-${page.year}`;
   const currentPath = `/results/${exam}/${year}`;
   const relatedLinks = relatedResultLinks.filter((item) => item.href !== currentPath);
+  const featureLinks = [
+    {
+      href: "/toppers",
+      label: `أوائل ${page.nameAr} ${page.year}${page.examKey === "bac" ? " وأعلى المعدلات" : ""}`,
+    },
+    {
+      href: "/statistics",
+      label: `إحصائيات ${page.nameAr} ${page.year} ونسبة النجاح`,
+    },
+  ];
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -205,8 +214,11 @@ export default async function ExamYearPage({ params }) {
         <section className="mt-8 rounded-2xl border border-emerald-900/10 p-4 dark:border-white/10">
           <h2 className="text-lg font-black">الأوائل والإحصائيات</h2>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <Link href="/toppers" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-[#14633f] hover:bg-emerald-100 dark:bg-white/5 dark:text-emerald-300">أوائل باكالوريا 2026 وأعلى المعدلات</Link>
-            <Link href="/statistics" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-[#14633f] hover:bg-emerald-100 dark:bg-white/5 dark:text-emerald-300">نسبة النجاح وإحصائيات باكالوريا 2026</Link>
+            {featureLinks.map((item) => (
+              <Link key={item.href} href={item.href} className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-black text-[#14633f] hover:bg-emerald-100 dark:bg-white/5 dark:text-emerald-300">
+                {item.label}
+              </Link>
+            ))}
           </div>
         </section>
 
