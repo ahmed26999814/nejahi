@@ -58,8 +58,9 @@ const NO_STORE = "no-store, max-age=0";
 const PRIVATE_RESULT_ROBOTS = "noindex, nofollow, noarchive";
 const HOME_COMPONENTS_DIR = path.resolve(process.cwd(), "components/home");
 const ADMIN_COMPONENTS_DIR = path.resolve(process.cwd(), "components/admin");
-const LIGHT_MOTION_DIRS = new Set([HOME_COMPONENTS_DIR, ADMIN_COMPONENTS_DIR]);
+const LIGHT_DEPENDENCY_DIRS = new Set([HOME_COMPONENTS_DIR, ADMIN_COMPONENTS_DIR]);
 const LIGHT_MOTION_SHIM = path.resolve(HOME_COMPONENTS_DIR, "framerMotionLite.jsx");
+const LIGHT_TOAST_SHIM = path.resolve(process.cwd(), "components/common/sonnerLite.jsx");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -83,14 +84,19 @@ const nextConfig = {
     ],
   },
   webpack(config, { webpack }) {
-    config.plugins.push(
-      new webpack.NormalModuleReplacementPlugin(/^framer-motion$/, (resource) => {
-        const importerDir = resource.context ? path.resolve(resource.context) : "";
-        if (LIGHT_MOTION_DIRS.has(importerDir)) {
-          resource.request = LIGHT_MOTION_SHIM;
-        }
-      }),
-    );
+    const replaceForLightweightAreas = (requestPattern, replacement) => {
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(requestPattern, (resource) => {
+          const importerDir = resource.context ? path.resolve(resource.context) : "";
+          if (LIGHT_DEPENDENCY_DIRS.has(importerDir)) {
+            resource.request = replacement;
+          }
+        }),
+      );
+    };
+
+    replaceForLightweightAreas(/^framer-motion$/, LIGHT_MOTION_SHIM);
+    replaceForLightweightAreas(/^sonner$/, LIGHT_TOAST_SHIM);
     return config;
   },
   images: {
