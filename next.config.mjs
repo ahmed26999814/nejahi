@@ -61,6 +61,7 @@ const ADMIN_COMPONENTS_DIR = path.resolve(process.cwd(), "components/admin");
 const LIGHT_DEPENDENCY_DIRS = new Set([HOME_COMPONENTS_DIR, ADMIN_COMPONENTS_DIR]);
 const LIGHT_MOTION_SHIM = path.resolve(HOME_COMPONENTS_DIR, "framerMotionLite.jsx");
 const LIGHT_TOAST_SHIM = path.resolve(process.cwd(), "components/common/sonnerLite.jsx");
+const LIGHT_SELECT_SHIM = path.resolve(HOME_COMPONENTS_DIR, "radixSelectLite.jsx");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -80,7 +81,6 @@ const nextConfig = {
     optimizePackageImports: [
       "lucide-react",
       "react-icons",
-      "@radix-ui/react-select",
     ],
   },
   webpack(config, { webpack }) {
@@ -97,6 +97,14 @@ const nextConfig = {
 
     replaceForLightweightAreas(/^framer-motion$/, LIGHT_MOTION_SHIM);
     replaceForLightweightAreas(/^sonner$/, LIGHT_TOAST_SHIM);
+    config.plugins.push(
+      new webpack.NormalModuleReplacementPlugin(/^@radix-ui\/react-select$/, (resource) => {
+        const importerDir = resource.context ? path.resolve(resource.context) : "";
+        if (importerDir === HOME_COMPONENTS_DIR) {
+          resource.request = LIGHT_SELECT_SHIM;
+        }
+      }),
+    );
     return config;
   },
   images: {
