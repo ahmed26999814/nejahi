@@ -1,10 +1,12 @@
 "use client";
 
+const BRAND_LOGO = "/brand-logo.svg?v=green-gold-20260807";
+
 export default function Error({ error, reset }) {
   return (
     <main className="app-background grid min-h-screen place-items-center px-4 text-center text-mauri-ink dark:text-white">
       <section className="result-card max-w-md">
-        <img className="mx-auto h-20 w-20 rounded-[24px] object-contain" src="/logo.png" alt="MauriResults" />
+        <img className="mx-auto h-20 w-20 rounded-[24px] bg-white object-contain" src={BRAND_LOGO} alt="MauriResults" decoding="async" />
         <p className="mt-4 text-xs font-black text-red-600 dark:text-red-300">خطأ غير متوقع</p>
         <h1 className="mt-1 text-2xl font-black">تعذر تحميل الصفحة</h1>
         <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-300">
