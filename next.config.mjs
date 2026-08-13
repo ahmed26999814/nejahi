@@ -1,3 +1,5 @@
+import path from "node:path";
+
 // Production rebuild trigger: Flutter 3.3.0 mandatory update release.
 const DEFAULT_SUPABASE_URL = "https://nxizqnlemsbjmsfyuevg.supabase.co";
 
@@ -54,6 +56,8 @@ if (publicSupabaseAnonKey) {
 const RESULT_CACHE = "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=604800";
 const NO_STORE = "no-store, max-age=0";
 const PRIVATE_RESULT_ROBOTS = "noindex, nofollow, noarchive";
+const HOME_COMPONENTS_DIR = path.resolve(process.cwd(), "components/home");
+const HOME_MOTION_SHIM = path.resolve(HOME_COMPONENTS_DIR, "framerMotionLite.jsx");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -71,11 +75,21 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: [
-      "framer-motion",
       "lucide-react",
       "react-icons",
       "@radix-ui/react-select",
     ],
+  },
+  webpack(config, { webpack }) {
+    config.plugins.push(
+      new webpack.NormalModuleReplacementPlugin(/^framer-motion$/, (resource) => {
+        const importerDir = resource.context ? path.resolve(resource.context) : "";
+        if (importerDir === HOME_COMPONENTS_DIR) {
+          resource.request = HOME_MOTION_SHIM;
+        }
+      }),
+    );
+    return config;
   },
   images: {
     formats: ["image/avif", "image/webp"],
