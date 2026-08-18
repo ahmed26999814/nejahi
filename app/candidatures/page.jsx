@@ -26,6 +26,7 @@ export default function CandidaturesPage() {
           </span>
           <h1 className="mt-3 text-2xl font-black tracking-tight text-[#0d1d35] sm:text-3xl dark:text-white">تحقق من حالة ترشحك</h1>
           <p className="mx-auto mt-2 max-w-lg text-sm font-semibold leading-7 text-slate-500 dark:text-slate-300">اكتب الاسم أو رقم الوصل في نفس خانة البحث، وسيحدد النظام الطريقة تلقائيًا.</p>
+          <p className="mt-1 text-xs font-bold text-emerald-600 dark:text-emerald-300">مثال: أحمدو مفتاح عبد الله أو 1538</p>
         </section>
 
         <CandidatureSearch />
