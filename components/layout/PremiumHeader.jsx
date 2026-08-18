@@ -38,6 +38,7 @@ export default function PremiumHeader({ activeView, content, lang, onNavigate, o
     { key: "home", label: text.home, view: "home" },
     { key: "toppers", label: text.toppers, view: "toppers" },
     { key: "analytics", label: text.analytics, view: "analytics" },
+    { key: "candidatures", label: isFrench ? "Candidatures" : "الترشحات", href: "/candidatures" },
     { key: "lessons", label: isFrench ? "Cours" : "الدروس", href: "/lessons" },
     { key: "calculator", label: isFrench ? "Calculateur" : "حاسبة المعدل", href: "/calculator" },
   ];
