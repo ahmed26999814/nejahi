@@ -5,9 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  || process.env.SUPABASE_ANON_KEY
-  || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const REQUEST_TIMEOUT_MS = 4_000;
 const CATALOG_CACHE = "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400, stale-if-error=86400";
 
