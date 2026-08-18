@@ -45,7 +45,7 @@ const STATUS_META = {
   },
 };
 
-function statusMeta(status) {
+function getStatusMeta(status) {
   return STATUS_META[status] || {
     label: "قيد المتابعة",
     className: "border-slate-200 bg-slate-50 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200",
@@ -62,8 +62,8 @@ export default function CandidatureSearch() {
   const [results, setResults] = useState([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [searching, setSearching] = useState(false);
-  const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -77,7 +77,9 @@ export default function CandidatureSearch() {
         setCompetitions(list);
         setCompetitionSlug((current) => current || list[0]?.slug || "");
       } catch (loadError) {
-        if (loadError?.name !== "AbortError") setError(loadError?.message || "تعذر تحميل المسابقات حاليًا");
+        if (loadError?.name !== "AbortError") {
+          setError(loadError?.message || "تعذر تحميل المسابقات حاليًا");
+        }
       } finally {
         if (!controller.signal.aborted) setLoadingCatalog(false);
       }
@@ -91,33 +93,34 @@ export default function CandidatureSearch() {
     () => competitions.find((competition) => competition.slug === competitionSlug) || null,
     [competitions, competitionSlug],
   );
-
   const tracks = Array.isArray(selectedCompetition?.tracks) ? selectedCompetition.tracks : [];
 
-  function changeMode(nextMode) {
-    setMode(nextMode);
-    setQuery("");
+  function resetResults() {
     setResults([]);
     setSearched(false);
     setError("");
   }
 
+  function switchMode(nextMode) {
+    setMode(nextMode);
+    setQuery("");
+    resetResults();
+  }
+
   async function submitSearch(event) {
     event.preventDefault();
-    const normalizedQuery = query.trim();
-    setError("");
-    setResults([]);
-    setSearched(false);
+    const value = query.trim();
+    resetResults();
 
     if (!competitionSlug) {
       setError("اختر المسابقة أولًا");
       return;
     }
-    if (mode === "name" && normalizedQuery.length < 3) {
+    if (mode === "name" && value.length < 3) {
       setError("اكتب ثلاثة أحرف على الأقل من الاسم");
       return;
     }
-    if (mode === "receipt" && !/^\d+$/.test(normalizedQuery.replace(/\s+/g, ""))) {
+    if (mode === "receipt" && !/^\d+$/.test(value.replace(/\s+/g, ""))) {
       setError("أدخل رقم وصل صحيحًا");
       return;
     }
@@ -131,7 +134,7 @@ export default function CandidatureSearch() {
           competition: competitionSlug,
           track: trackCode || null,
           mode,
-          query: normalizedQuery,
+          query: value,
         }),
       });
       const data = await response.json();
@@ -150,9 +153,7 @@ export default function CandidatureSearch() {
       <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_16px_48px_rgba(15,23,42,.06)] sm:p-6 dark:border-white/10 dark:bg-[#0b1811]">
         <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/80 p-3 text-sm leading-6 text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-100">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-          <p>
-            الحالة المعروضة مطابقة للوائح المنشورة من الجهة الرسمية. عبارة «مقبول مؤقتًا» لا تعني القبول النهائي، والتظلمات تُقدَّم عبر المنصة الرسمية فقط.
-          </p>
+          <p>الحالة مطابقة للوائح الرسمية المنشورة. «مقبول مؤقتًا» لا تعني القبول النهائي، والتظلمات تُقدَّم عبر الجهة الرسمية فقط.</p>
         </div>
 
         <form onSubmit={submitSearch} className="space-y-4">
@@ -164,8 +165,7 @@ export default function CandidatureSearch() {
                 onChange={(event) => {
                   setCompetitionSlug(event.target.value);
                   setTrackCode("");
-                  setResults([]);
-                  setSearched(false);
+                  resetResults();
                 }}
                 disabled={loadingCatalog}
                 className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-900 outline-none transition focus:border-mauri-green focus:ring-4 focus:ring-mauri-green/10 disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white"
@@ -184,8 +184,7 @@ export default function CandidatureSearch() {
                 value={trackCode}
                 onChange={(event) => {
                   setTrackCode(event.target.value);
-                  setResults([]);
-                  setSearched(false);
+                  resetResults();
                 }}
                 disabled={!competitionSlug || loadingCatalog}
                 className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-900 outline-none transition focus:border-mauri-green focus:ring-4 focus:ring-mauri-green/10 disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white"
@@ -203,18 +202,18 @@ export default function CandidatureSearch() {
             <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1 dark:bg-white/5">
               <button
                 type="button"
-                onClick={() => changeMode("name")}
-                className={`flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-black transition ${mode === "name" ? "bg-white text-mauri-green shadow-sm dark:bg-white/10 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"}`}
+                onClick={() => switchMode("name")}
                 aria-pressed={mode === "name"}
+                className={`flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-black transition ${mode === "name" ? "bg-white text-mauri-green shadow-sm dark:bg-white/10 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"}`}
               >
                 <UserRound className="h-4 w-4" />
                 بالاسم
               </button>
               <button
                 type="button"
-                onClick={() => changeMode("receipt")}
-                className={`flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-black transition ${mode === "receipt" ? "bg-white text-mauri-green shadow-sm dark:bg-white/10 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"}`}
+                onClick={() => switchMode("receipt")}
                 aria-pressed={mode === "receipt"}
+                className={`flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-black transition ${mode === "receipt" ? "bg-white text-mauri-green shadow-sm dark:bg-white/10 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"}`}
               >
                 <Hash className="h-4 w-4" />
                 برقم الوصل
@@ -223,9 +222,7 @@ export default function CandidatureSearch() {
           </div>
 
           <label className="block">
-            <span className="mb-1.5 block text-xs font-black text-slate-600 dark:text-slate-300">
-              {mode === "name" ? "اسم المترشح" : "رقم الوصل"}
-            </span>
+            <span className="mb-1.5 block text-xs font-black text-slate-600 dark:text-slate-300">{mode === "name" ? "اسم المترشح" : "رقم الوصل"}</span>
             <div className="relative">
               <Search className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input
@@ -238,13 +235,13 @@ export default function CandidatureSearch() {
                 className="h-14 w-full rounded-2xl border border-slate-200 bg-white pr-12 pl-4 text-base font-bold text-slate-950 outline-none transition placeholder:font-medium placeholder:text-slate-400 focus:border-mauri-green focus:ring-4 focus:ring-mauri-green/10 dark:border-white/10 dark:bg-[#07130d] dark:text-white"
               />
             </div>
-            {mode === "name" && <small className="mt-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">يمكنك كتابة الاسم كاملًا أو جزءًا منه — ثلاثة أحرف على الأقل.</small>}
+            {mode === "name" && <small className="mt-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">يمكن كتابة الاسم كاملًا أو جزءًا منه — ثلاثة أحرف على الأقل.</small>}
           </label>
 
           <button
             type="submit"
             disabled={searching || loadingCatalog || !competitionSlug}
-            className="flex h-13 min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-mauri-green px-5 py-3.5 text-sm font-black text-white shadow-[0_12px_28px_rgba(21,128,61,.22)] transition active:scale-[.985] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-mauri-green px-5 py-3.5 text-sm font-black text-white shadow-[0_12px_28px_rgba(21,128,61,.22)] transition active:scale-[.985] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {searching ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
             {searching ? "جاري البحث…" : "بحث عن الترشح"}
@@ -262,7 +259,7 @@ export default function CandidatureSearch() {
         <section className="rounded-[24px] border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-white/10 dark:bg-[#0b1811]">
           <Search className="mx-auto mb-3 h-9 w-9 text-slate-300 dark:text-slate-600" />
           <h2 className="text-base font-black text-slate-950 dark:text-white">لم نجد ترشحًا مطابقًا</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">تأكد من الاسم أو رقم الوصل، ويمكنك اختيار «كل التخصصات» لتوسيع البحث.</p>
+          <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">تأكد من الاسم أو رقم الوصل، أو اختر «كل التخصصات» لتوسيع البحث.</p>
         </section>
       )}
 
@@ -274,7 +271,7 @@ export default function CandidatureSearch() {
           </div>
 
           {results.map((candidate) => {
-            const meta = statusMeta(candidate.status);
+            const meta = getStatusMeta(candidate.status);
             const StatusIcon = meta.icon;
             return (
               <article key={candidate.candidate_id} className="rounded-[24px] border border-slate-200/90 bg-white p-4 shadow-[0_12px_32px_rgba(15,23,42,.05)] sm:p-5 dark:border-white/10 dark:bg-[#0b1811]">
