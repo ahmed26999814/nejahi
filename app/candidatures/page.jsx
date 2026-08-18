@@ -1,6 +1,7 @@
 import { ShieldCheck } from "lucide-react";
 import CandidatureHeader from "../../components/candidatures/CandidatureHeader";
 import CandidatureSearch from "../../components/candidatures/CandidatureSearch";
+import styles from "./page.module.css";
 
 export const metadata = {
   title: "حالة الترشح في المسابقات",
@@ -15,7 +16,7 @@ export const metadata = {
 
 export default function CandidaturesPage() {
   return (
-    <main className="min-h-screen bg-[#f5f8fb] pb-12 text-slate-950 dark:bg-[#071426] dark:text-white">
+    <main className={`${styles.page} min-h-screen bg-[#f5f8fb] pb-12 text-slate-950 dark:bg-[#071426] dark:text-white`}>
       <CandidatureHeader />
 
       <div className="app-shell mx-auto max-w-2xl py-5 sm:py-8">
