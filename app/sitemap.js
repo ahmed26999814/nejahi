@@ -2,12 +2,13 @@ import examSeoData from "../data/exam-seo.json";
 import { orientationPrograms } from "../data/orientation-programs";
 
 const siteUrl = "https://mauri-results.vercel.app";
-const seoRefreshDate = "2026-08-13";
+const seoRefreshDate = "2026-08-18";
 
 const staticRoutes = [
   { path: "", changeFrequency: "daily", priority: 1 },
   { path: "/toppers", changeFrequency: "daily", priority: 0.96, lastModified: seoRefreshDate },
   { path: "/statistics", changeFrequency: "daily", priority: 0.96, lastModified: seoRefreshDate },
+  { path: "/candidatures", changeFrequency: "daily", priority: 0.94, lastModified: seoRefreshDate },
   { path: "/about", changeFrequency: "monthly", priority: 0.78 },
   { path: "/orientation", changeFrequency: "monthly", priority: 0.82 },
   { path: "/orientation/specialties", changeFrequency: "monthly", priority: 0.8, lastModified: seoRefreshDate },
