@@ -90,6 +90,7 @@ export async function POST(request: Request) {
   const competition = clean(body.competition, 100);
   const track = clean(body.track, 40);
   const mode = clean(body.mode, 20) === "receipt" ? "receipt" : "name";
+  const action = clean(body.action, 20) === "suggest" ? "suggest" : "search";
   const query = clean(body.query, mode === "receipt" ? 40 : 120);
 
   if (!competition || !query) {
@@ -110,7 +111,7 @@ export async function POST(request: Request) {
       p_query: query,
       p_mode: mode,
       p_track_code: track || null,
-      p_limit: 25,
+      p_limit: action === "suggest" ? 6 : 25,
     });
 
     return NextResponse.json(
