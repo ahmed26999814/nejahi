@@ -91,10 +91,8 @@ async function deletePreparedSource(tableName: string, sourceKey: string) {
   const metadataResponse = await supabaseFetch(metadataUrl, { method: "DELETE" });
   if (!metadataResponse.ok) throw new Error((await metadataResponse.text()).slice(0, 500));
 
-  const lookupUrl = new URL(`${SUPABASE_URL}/rest/v1/result_number_lookup`);
-  lookupUrl.searchParams.set("source_key", `eq.${sourceKey}`);
-  const lookupResponse = await supabaseFetch(lookupUrl, { method: "DELETE" });
-  if (!lookupResponse.ok) throw new Error((await lookupResponse.text()).slice(0, 500));
+  // Original result tables are now queried directly; no secondary lookup
+  // table needs to be purged when unpublishing an uploaded exam.
 
   const dashboardUrl = new URL(`${SUPABASE_URL}/rest/v1/published_exam_dashboard_cache`);
   dashboardUrl.searchParams.set("source_key", `eq.${sourceKey}`);
@@ -350,7 +348,7 @@ export async function POST(request: Request) {
         error: numberLookup.error,
         published: false,
         rollback,
-        hint: "The exam was not released. Build its candidate-number lookup and publish again.",
+        hint: "The exam was not released. Verify the original candidate-number source and publish again.",
       });
     }
 
@@ -365,7 +363,7 @@ export async function POST(request: Request) {
         error: "Publishing preparation completed, but there was not enough safe execution time to warm the result cache.",
         published: false,
         rollback,
-        hint: "Publish again. The prepared lookup remains ready, so the retry should complete faster.",
+        hint: "Publish again. The source table remains ready, so publishing can be retried.",
       });
     }
 

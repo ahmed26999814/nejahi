@@ -145,12 +145,6 @@ async function requestJson(url: URL, options: RequestInit = {}): Promise<JsonReq
   }
 }
 
-async function requestLookup(url: URL): Promise<NumberLookupResult> {
-  const result = await requestJson(url);
-  if ("error" in result) return { error: result.error, status: result.status };
-  return { rows: rowsFromEntries(result.data), status: 200 };
-}
-
 async function requestShard(rpcName: string, body: Record<string, string>): Promise<ShardLookupResult> {
   if (!SUPABASE_URL) return { error: "Missing Supabase URL", status: 500 };
   const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/${rpcName}`);
@@ -195,15 +189,32 @@ export async function fetchCentreShard(
   });
 }
 
+// Direct search from original results tables; no duplicated 803 MB lookup required.
+async function requestDirectLookup(
+  source: string,
+  candidateKey: string,
+  location?: { wilaya: string; moughataa: string; centre: string },
+): Promise<NumberLookupResult> {
+  if (!SUPABASE_URL) return { error: "Missing Supabase URL", status: 500 };
+  const url = new URL(`${SUPABASE_URL}/rest/v1/rpc/lookup_source_results`);
+  const result = await requestJson(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      p_source_key: source,
+      p_candidate_key: candidateKey,
+      p_wilaya: location?.wilaya || null,
+      p_moughataa: location?.moughataa || null,
+      p_centre: location?.centre || null,
+      p_limit: 20,
+    }),
+  });
+  if ("error" in result) return { error: result.error, status: result.status };
+  return { rows: rowsFromEntries(result.data), status: 200 };
+}
+
 export async function fetchExactNumberResult(source: string, candidateKey: string) {
-  if (!SUPABASE_URL) return { error: "Missing Supabase URL", status: 500 } as const;
-  const url = new URL(`${SUPABASE_URL}/rest/v1/result_number_lookup`);
-  url.searchParams.set("select", "payload,rank");
-  url.searchParams.set("source_key", `eq.${source}`);
-  url.searchParams.set("candidate_key", `eq.${candidateKey}`);
-  url.searchParams.set("order", "rank.asc.nullslast");
-  url.searchParams.set("limit", "20");
-  return requestLookup(url);
+  return requestDirectLookup(source, candidateKey);
 }
 
 export async function fetchExactConcoursResult(
@@ -213,15 +224,5 @@ export async function fetchExactConcoursResult(
   moughataa: string,
   centre: string,
 ) {
-  if (!SUPABASE_URL) return { error: "Missing Supabase URL", status: 500 } as const;
-  const url = new URL(`${SUPABASE_URL}/rest/v1/result_number_lookup`);
-  url.searchParams.set("select", "payload,rank");
-  url.searchParams.set("source_key", `eq.${source}`);
-  url.searchParams.set("candidate_key", `eq.${candidateKey}`);
-  url.searchParams.set("wilaya", `eq.${wilaya}`);
-  url.searchParams.set("moughataa", `eq.${moughataa}`);
-  url.searchParams.set("centre", `eq.${centre}`);
-  url.searchParams.set("order", "rank.asc.nullslast");
-  url.searchParams.set("limit", "20");
-  return requestLookup(url);
+  return requestDirectLookup(source, candidateKey, { wilaya, moughataa, centre });
 }
