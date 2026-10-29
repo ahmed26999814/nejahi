@@ -27,6 +27,7 @@ jobs:
           p.dependencies.xlsx = 'file:vendor/xlsx-0.20.3.tgz';
           fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
           NODE
+          sed -i 's@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz@file:vendor/xlsx-0.20.3.tgz@g' tests/excel-reader.test.mjs
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Verify locked installation and test
         run: |
@@ -39,6 +40,6 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add vendor/xlsx-0.20.3.tgz package.json package-lock.json
+          git add vendor/xlsx-0.20.3.tgz package.json package-lock.json tests/excel-reader.test.mjs
           git commit -m 'fix(deploy): vendor verified official SheetJS 0.20.3 archive'
           git push origin HEAD:improve/mauriresults-ux-security-20261029
