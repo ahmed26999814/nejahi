@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Download, Eye, FileText, Search, RotateCcw } from "lucide-react";
 import driveIndex from "../../data/indexed-drive-study-files.json";
-import { classifyStudyFile, normalizeStudyTitle, STUDY_TYPES, driveDownloadUrl } from "../../data/study-file-type.mjs";
+import { classifyStudyFile, normalizeStudyTitle, STUDY_TYPES } from "../../data/study-file-type.mjs";
 
 const ALL = "all";
 const LIMIT = 20;
@@ -42,6 +42,8 @@ const UI = {
     reset: "إلغاء التصفية",
     found: "ملف",
     download: "تحميل",
+    downloading: "جاري التحميل…",
+    downloadFailed: "تعذر التحميل المباشر لهذا الملف. قد يكون الوصول إليه مقيّدًا؛ جرّب زر «عرض».",
     view: "عرض",
     more: "المزيد",
     empty: "لا توجد ملفات مطابقة",
@@ -65,6 +67,8 @@ const UI = {
     reset: "Effacer les filtres",
     found: "documents",
     download: "Télécharger",
+    downloading: "Téléchargement…",
+    downloadFailed: "Téléchargement direct indisponible. Essayez « Voir ». Ce fichier peut nécessiter une autorisation.",
     view: "Voir",
     more: "Plus",
     empty: "Aucun document trouvé",
@@ -118,6 +122,8 @@ export default function IndexedStudyFiles() {
   const [year, setYear] = useState(ALL);
   const [query, setQuery] = useState("");
   const [shown, setShown] = useState(LIMIT);
+  const [downloading, setDownloading] = useState("");
+  const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
     const sync = event => {
@@ -151,6 +157,23 @@ export default function IndexedStudyFiles() {
 
   const hasFilters = level !== ALL || subject !== ALL || category !== ALL || year !== ALL || query.trim() !== "";
   const resetShown = () => setShown(LIMIT);
+  async function downloadFile(file) {
+    if (downloading) return;
+    const url = `/api/study-files/download?id=${encodeURIComponent(file.id)}`;
+    setDownloadError("");
+    setDownloading(file.id);
+    try {
+      const check = await fetch(url, { method: "HEAD", cache: "no-store" });
+      if (!check.ok) throw new Error("unavailable");
+      // Content-Disposition: attachment keeps the current page visible in browsers.
+      // This URL belongs to MauriResults, not to Google Drive.
+      window.location.assign(url);
+    } catch {
+      setDownloadError(t.downloadFailed);
+    } finally {
+      setDownloading("");
+    }
+  }
   const reset = () => {
     setLevel(ALL); setSubject(ALL); setCategory(ALL); setYear(ALL); setQuery(""); resetShown();
   };
@@ -236,6 +259,7 @@ export default function IndexedStudyFiles() {
         </div>
       </div>
 
+      {downloadError && <p role="alert" className="mt-4 rounded-xl border border-amber-400/30 bg-amber-50 p-3 text-sm font-bold text-amber-900 dark:bg-amber-400/10 dark:text-amber-100">{downloadError}</p>}
       <div className="mb-3 mt-5 text-sm font-black text-slate-700 dark:text-slate-200" aria-live="polite">
         {matches.length} {t.found}
       </div>
@@ -260,11 +284,11 @@ export default function IndexedStudyFiles() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <a href={driveDownloadUrl(file.id)} target="_blank" rel="noopener noreferrer"
+                <button type="button" disabled={Boolean(downloading)} onClick={() => downloadFile(file)}
                   aria-label={`${t.download}: ${file.title}`}
                   className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-3 text-sm font-black text-white transition hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mauri-green">
-                  <Download className="h-4 w-4" aria-hidden="true" />{t.download}
-                </a>
+                  <Download className="h-4 w-4" aria-hidden="true" />{downloading === file.id ? t.downloading : t.download}
+                </button>
                 <a href={file.link} target="_blank" rel="noopener noreferrer"
                   aria-label={`${t.view}: ${file.title}`}
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:bg-slate-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/10">
