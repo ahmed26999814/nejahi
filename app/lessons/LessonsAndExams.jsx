@@ -16,7 +16,7 @@ const COPY = {
     exams: "مواضيع الامتحانات",
     examsDesc: "باكالوريا وابريفه وكونكور والامتياز مع الحلول",
     resources: "مكتبة المراجع",
-    resourcesDesc: "548 ملفًا للبحث حسب المستوى والسنة",
+    resourcesDesc: "ملفات مرتبة حسب المستوى والسنة",
     home: "الرئيسية",
   },
   fr: {
@@ -27,7 +27,7 @@ const COPY = {
     exams: "Sujets d’examens",
     examsDesc: "Bac, Brevet, Concours et Excellence avec corrigés",
     resources: "Bibliothèque",
-    resourcesDesc: "548 documents classés par année et niveau",
+    resourcesDesc: "Documents classés par année et niveau",
     home: "Accueil",
   },
 };
