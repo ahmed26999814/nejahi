@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookOpen, ClipboardCheck, Home, LibraryBig } from "lucide-react";
 import { useEffect, useState } from "react";
 import ExamLibrary from "../../components/documents/ExamLibrary";
+import ExternalResourceCollections from "../../components/documents/ExternalResourceCollections";
 import LessonsExplorer from "./LessonsExplorer";
 
 const COPY = {
@@ -14,6 +15,8 @@ const COPY = {
     lessonsDesc: "كتب المراحل الابتدائية والإعدادية والثانوية",
     exams: "مواضيع الامتحانات",
     examsDesc: "باكالوريا وابريفه وكونكور والامتياز مع الحلول",
+    resources: "مراجع إضافية",
+    resourcesDesc: "مجلدات تعليمية خارجية مصنفة حسب المستوى",
     home: "الرئيسية",
   },
   fr: {
@@ -23,18 +26,21 @@ const COPY = {
     lessonsDesc: "Manuels du primaire, collège et lycée",
     exams: "Sujets d’examens",
     examsDesc: "Bac, Brevet, Concours et Excellence avec corrigés",
+    resources: "Ressources en ligne",
+    resourcesDesc: "Dossiers externes par niveau et série",
     home: "Accueil",
   },
 };
 
 function tabFromLocation() {
   if (typeof window === "undefined") return "lessons";
-  return new URLSearchParams(window.location.search).get("tab") === "exams" ? "exams" : "lessons";
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  return tab === "exams" || tab === "resources" ? tab : "lessons";
 }
 
 export default function LessonsAndExams({ initialTab = "lessons" }) {
   const [lang, setLang] = useState("ar");
-  const [tab, setTab] = useState(initialTab === "exams" ? "exams" : "lessons");
+  const [tab, setTab] = useState(["exams", "resources"].includes(initialTab) ? initialTab : "lessons");
 
   useEffect(() => {
     const syncLanguage = (event) => {
@@ -51,7 +57,7 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
   function selectTab(nextTab) {
     setTab(nextTab);
     const url = new URL(window.location.href);
-    if (nextTab === "exams") url.searchParams.set("tab", "exams");
+    if (nextTab === "exams" || nextTab === "resources") url.searchParams.set("tab", nextTab);
     else url.searchParams.delete("tab");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -88,7 +94,7 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
           </div>
         </header>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 rounded-[1.6rem] border border-slate-200 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-white/5">
+        <div className="mt-5 grid grid-cols-3 gap-2 rounded-[1.6rem] border border-slate-200 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-white/5">
           <button className={`rounded-[1.2rem] px-3 py-4 text-start transition ${tab === "lessons" ? "bg-mauri-green text-white shadow-lg shadow-emerald-900/15" : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"}`} onClick={() => selectTab("lessons")} type="button" aria-pressed={tab === "lessons"}>
             <span className="flex items-center gap-2 text-sm font-black sm:text-base"><BookOpen className="h-5 w-5" aria-hidden="true" />{text.lessons}</span>
             <span className="mt-1 hidden text-xs font-semibold opacity-80 sm:block">{text.lessonsDesc}</span>
@@ -97,16 +103,24 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
             <span className="flex items-center gap-2 text-sm font-black sm:text-base"><ClipboardCheck className="h-5 w-5" aria-hidden="true" />{text.exams}</span>
             <span className="mt-1 hidden text-xs font-semibold opacity-80 sm:block">{text.examsDesc}</span>
           </button>
+          <button className={`rounded-[1.2rem] px-2 py-4 text-start transition sm:px-3 ${tab === "resources" ? "bg-mauri-green text-white shadow-lg shadow-emerald-900/15" : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"}`} onClick={() => selectTab("resources")} type="button" aria-pressed={tab === "resources"}>
+            <span className="flex items-center gap-2 text-xs font-black sm:text-base"><LibraryBig className="h-5 w-5 shrink-0" aria-hidden="true" />{text.resources}</span>
+            <span className="mt-1 hidden text-xs font-semibold opacity-80 sm:block">{text.resourcesDesc}</span>
+          </button>
         </div>
       </div>
 
       <p role="status" className="relative mx-auto w-full max-w-7xl px-4 pt-3 text-sm font-semibold leading-7 text-slate-700 dark:text-slate-200 sm:px-6">
         {tab === "lessons"
           ? lang === "fr" ? "Choisissez votre niveau, puis une matière pour ouvrir les ressources." : "اختر المرحلة الدراسية ثم المادة لعرض الدروس والكتب المتاحة."
-          : lang === "fr" ? "Choisissez l’examen et l’année pour consulter les sujets et corrigés disponibles." : "اختر المسابقة والسنة لعرض المواضيع والتصحيحات المتاحة."}
+          : tab === "resources"
+            ? lang === "fr" ? "Choisissez un niveau ou recherchez une série pour ouvrir les dossiers sources." : "اختر المستوى أو ابحث باسم الشعبة لفتح المجلدات الأصلية."
+            : lang === "fr" ? "Choisissez l’examen et l’année pour consulter les sujets et corrigés disponibles." : "اختر المسابقة والسنة لعرض المواضيع والتصحيحات المتاحة."}
       </p>
       {tab === "lessons" ? (
         <LessonsExplorer />
+      ) : tab === "resources" ? (
+        <ExternalResourceCollections />
       ) : (
         <section className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-9 lg:px-8">
           <ExamLibrary />
