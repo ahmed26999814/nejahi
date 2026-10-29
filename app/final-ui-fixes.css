@@ -18,3 +18,34 @@
   color: #081f3d !important;
   opacity: 1 !important;
 }
+
+/*
+ * Keyboard-only skip navigation: keep it available to screen readers and
+ * keyboard users, but never display it in the page flow by default.
+ */
+.skip-to-content {
+  position: fixed;
+  z-index: 100000;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -180%);
+  padding: 0.75rem 1rem;
+  max-width: calc(100vw - 2rem);
+  border: 2px solid #f4c64e;
+  border-radius: 0.75rem;
+  background: #102c21;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+}
+.skip-to-content:focus,
+.skip-to-content:focus-visible {
+  transform: translate(-50%, 0.75rem);
+  opacity: 1;
+  pointer-events: auto;
+}
