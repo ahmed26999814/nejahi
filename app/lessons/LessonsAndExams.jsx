@@ -79,18 +79,18 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
           <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-black text-emerald-700 dark:text-emerald-300">MauriResults</span>
         </nav>
 
-        <header className="relative mt-5 overflow-hidden rounded-[2rem] border border-emerald-900/10 bg-gradient-to-bl from-[#0a3d2a] via-[#0b2c20] to-[#07150f] px-5 py-8 text-white shadow-[0_28px_70px_rgba(5,46,32,.25)] sm:px-8 sm:py-11 lg:px-12">
+        <header className={`relative mt-5 overflow-hidden rounded-[2rem] border border-emerald-900/10 bg-gradient-to-bl from-[#0a3d2a] via-[#0b2c20] to-[#07150f] text-white shadow-[0_28px_70px_rgba(5,46,32,.25)] ${tab === "resources" ? "px-5 py-5 sm:px-8 sm:py-6" : "px-5 py-8 sm:px-8 sm:py-11 lg:px-12"}`}>
           <div className="absolute inset-0 opacity-20" aria-hidden="true">
             <div className="absolute -left-16 top-0 h-56 w-56 rounded-full border-[40px] border-emerald-300/20" />
             <div className="absolute bottom-0 right-1/3 h-40 w-40 rounded-full bg-amber-300/20 blur-3xl" />
           </div>
           <div className="relative max-w-4xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-black text-emerald-100">
+            {tab !== "resources" && <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-black text-emerald-100">
               <LibraryBig className="h-4 w-4" aria-hidden="true" />
               MauriResults
-            </div>
-            <h1 className="mt-5 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">{text.title}</h1>
-            <p className="mt-4 max-w-3xl text-sm font-semibold leading-7 text-emerald-50/80 sm:text-base">{text.description}</p>
+            </div>}
+            <h1 className={tab === "resources" ? "text-xl font-black leading-tight sm:text-2xl" : "mt-5 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl"}>{text.title}</h1>
+            {tab !== "resources" && <p className="mt-4 max-w-3xl text-sm font-semibold leading-7 text-emerald-50/80 sm:text-base">{text.description}</p>}
           </div>
         </header>
 
@@ -110,13 +110,13 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
         </div>
       </div>
 
-      <p role="status" className="relative mx-auto w-full max-w-7xl px-4 pt-3 text-sm font-semibold leading-7 text-slate-700 dark:text-slate-200 sm:px-6">
+      {tab !== "resources" && <p role="status" className="relative mx-auto w-full max-w-7xl px-4 pt-3 text-sm font-semibold leading-7 text-slate-700 dark:text-slate-200 sm:px-6">
         {tab === "lessons"
           ? lang === "fr" ? "Choisissez votre niveau, puis une matière pour ouvrir les ressources." : "اختر المرحلة الدراسية ثم المادة لعرض الدروس والكتب المتاحة."
           : tab === "resources"
             ? lang === "fr" ? "Choisissez votre niveau, la matière et l’année pour ouvrir les fichiers." : "اختر مستواك الدراسي ثم المادة والسنة للوصول مباشرة إلى الملفات."
             : lang === "fr" ? "Choisissez l’examen et l’année pour consulter les sujets et corrigés disponibles." : "اختر المسابقة والسنة لعرض المواضيع والتصحيحات المتاحة."}
-      </p>
+      </p>}
       {tab === "lessons" ? (
         <LessonsExplorer />
       ) : tab === "resources" ? (
