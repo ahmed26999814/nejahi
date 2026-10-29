@@ -132,8 +132,11 @@ export default function IndexedStudyFiles() {
   const t = UI[lang];
   const byLevel = useMemo(() => FILES.filter(file => level === ALL || file.level === level), [level]);
   const subjects = useMemo(() => [...new Set(byLevel.map(file => file.subject))].sort((a, b) => a.localeCompare(b, "ar")), [byLevel]);
+  const bySubject = useMemo(() => byLevel.filter(file => subject === ALL || file.subject === subject), [byLevel, subject]);
   const countsByCategory = useMemo(() =>
-    Object.fromEntries(STUDY_TYPES.map(type => [type, byLevel.filter(file => file.category === type).length])), [byLevel]);
+    Object.fromEntries(STUDY_TYPES.map(type => [type, bySubject.filter(file => file.category === type).length])), [bySubject]);
+  const yearScope = useMemo(() => bySubject.filter(file => category === ALL || file.category === category), [bySubject, category]);
+  const availableYears = useMemo(() => YEAR_OPTIONS.filter(value => yearScope.some(file => yearMatches(file, value))), [yearScope]);
 
   const matches = useMemo(() => {
     const needle = normalizeStudyTitle(query).trim();
@@ -174,7 +177,7 @@ export default function IndexedStudyFiles() {
           <div className="flex flex-wrap gap-2" role="group" aria-label={t.level}>
             {[ALL, ...LEVELS].map(key => (
               <button key={key} type="button" aria-pressed={level === key}
-                onClick={() => { setLevel(key); setSubject(ALL); setYear(ALL); resetShown(); }} className={pill(level === key)}>
+                onClick={() => { setLevel(key); setSubject(ALL); setCategory(ALL); setYear(ALL); resetShown(); }} className={pill(level === key)}>
                 {key === ALL ? t.all : t.levels[key]}
               </button>
             ))}
@@ -185,10 +188,10 @@ export default function IndexedStudyFiles() {
           <h3 className="mb-2 text-xs font-black text-slate-500 dark:text-slate-300">{t.subject}</h3>
           <div className="flex flex-wrap gap-2" role="group" aria-label={t.subject}>
             <button type="button" aria-pressed={subject === ALL} className={pill(subject === ALL)}
-              onClick={() => { setSubject(ALL); resetShown(); }}>{t.all}</button>
+              onClick={() => { setSubject(ALL); setCategory(ALL); setYear(ALL); resetShown(); }}>{t.all}</button>
             {subjects.map(value => (
               <button key={value} type="button" aria-pressed={subject === value} className={pill(subject === value)}
-                onClick={() => { setSubject(value); resetShown(); }}>
+                onClick={() => { setSubject(value); setCategory(ALL); setYear(ALL); resetShown(); }}>
                 {lang === "fr" ? FR_SUBJECTS[value] || value : value}
               </button>
             ))}
@@ -198,13 +201,13 @@ export default function IndexedStudyFiles() {
         <div>
           <h3 className="mb-2 text-xs font-black text-slate-500 dark:text-slate-300">{t.type}</h3>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" role="group" aria-label={t.type}>
-            {[ALL, ...STUDY_TYPES].map(key => (
+            {[ALL, ...STUDY_TYPES.filter(key => countsByCategory[key] > 0)].map(key => (
               <button key={key} type="button" aria-pressed={category === key}
                 onClick={() => { setCategory(key); setYear(ALL); resetShown(); }}
                 className={pill(category === key) + " flex min-h-[60px] flex-col items-center justify-center gap-1 text-center"}>
                 <span>{key === ALL ? t.all : t.types[key]}</span>
                 <span className={category === key ? "text-[11px] text-white/75" : "text-[11px] text-slate-500 dark:text-slate-400"}>
-                  {key === ALL ? byLevel.length : countsByCategory[key]}
+                  {key === ALL ? bySubject.length : countsByCategory[key]}
                 </span>
               </button>
             ))}
@@ -212,18 +215,18 @@ export default function IndexedStudyFiles() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
-          <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+          {availableYears.length > 0 && <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
             {t.year}
             <select value={year} onChange={e => { setYear(e.target.value); resetShown(); }}
               className="h-10 max-w-[185px] rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 outline-none focus:border-mauri-green dark:border-white/15 dark:bg-[#07130d] dark:text-white">
               <option value={ALL}>{t.allYears}</option>
-              {YEAR_OPTIONS.map(value => (
+              {availableYears.map(value => (
                 <option key={value} value={value}>
                   {value === "older" ? t.older : value === "multi" ? t.multi : value === "none" ? t.none : value}
                 </option>
               ))}
             </select>
-          </label>
+          </label>}
           {hasFilters && (
             <button type="button" onClick={reset}
               className="inline-flex min-h-10 items-center gap-1 rounded-xl px-2 text-xs font-black text-mauri-green hover:bg-mauri-green/10">
