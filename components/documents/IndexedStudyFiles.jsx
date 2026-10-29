@@ -1,310 +1,219 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, Download, Eye, FileText, Search, RotateCcw } from "lucide-react";
-import driveIndex from "../../data/indexed-drive-study-files.json";
-import { classifyStudyFile, normalizeStudyTitle, STUDY_TYPES } from "../../data/study-file-type.mjs";
+import { ArrowRight, ArrowLeft, BookOpen, Download, Eye, FileText, GraduationCap, Layers3 } from "lucide-react";
+import index from "../../data/indexed-drive-study-files.json";
+import { classifyStudyFile, STUDY_TYPES, normalizeStudyTitle } from "../../data/study-file-type.mjs";
 
-const ALL = "all";
-const LIMIT = 20;
-const LEVELS = ["7AS", "6AS", "5AS", "4AS", "6AF"];
-const FILES = (driveIndex.files || []).map(file => ({
-  ...file,
-  category: classifyStudyFile(file.title),
-}));
+const GRADES = ["7AS", "6AS", "5AS", "4AS", "6AF"];
+const PAGE = 20;
+const FILES = (index.files || []).map(file => ({ ...file, category: classifyStudyFile(file.title) }));
 const FR_SUBJECTS = {
-  "الرياضيات": "Mathématiques",
-  "الفيزياء": "Physique",
-  "الكيمياء": "Chimie",
-  "العلوم الطبيعية": "Sciences naturelles",
-  "اللغة العربية": "Arabe",
-  "الفرنسية": "Français",
-  "الإنجليزية": "Anglais",
-  "التاريخ والجغرافيا": "Histoire-géographie",
-  "التربية الإسلامية": "Instruction islamique",
-  "الفلسفة والفكر": "Philosophie",
-  "التربية المدنية": "Instruction civique",
-  "مواد متنوعة": "Autres",
+  "الرياضيات": "Mathématiques", "الفيزياء": "Physique", "الكيمياء": "Chimie",
+  "العلوم الطبيعية": "Sciences naturelles", "اللغة العربية": "Arabe",
+  "الفرنسية": "Français", "الإنجليزية": "Anglais",
+  "التاريخ والجغرافيا": "Histoire-géographie", "التربية الإسلامية": "Instruction islamique",
+  "الفلسفة والفكر": "Philosophie", "التربية المدنية": "Instruction civique",
+  "مواد متنوعة": "Autres matières",
 };
-const UI = {
+const LABELS = {
   ar: {
-    heading: "الملفات الدراسية",
-    search: "ابحث عن كتاب أو درس أو امتحان...",
-    all: "الكل",
-    level: "المستوى",
-    subject: "المادة",
-    type: "المحتوى",
-    year: "السنة",
-    allYears: "كل السنوات",
-    older: "2021 وما قبلها",
-    multi: "سنوات متعددة",
-    none: "دون سنة",
-    reset: "إلغاء التصفية",
-    found: "ملف",
+    title: "مكتبة المراجع",
+    grade: "اختر مستواك",
+    subject: "اختر المادة",
+    type: "اختر نوع الملف",
+    files: "الملفات",
+    back: "رجوع",
+    more: "عرض المزيد",
     download: "تحميل",
-    downloading: "جاري التحميل…",
-    downloadFailed: "تعذر التحميل المباشر لهذا الملف. قد يكون الوصول إليه مقيّدًا؛ جرّب زر «عرض».",
     view: "عرض",
-    more: "المزيد",
-    empty: "لا توجد ملفات مطابقة",
-    note: "قد يطلب Google Drive تأكيدًا للملفات الكبيرة أو إذنًا للوصول. إذا لم يبدأ التحميل، استخدم «عرض».",
-    types: { series: "سلاسل Séries", exams: "امتحانات", tests: "فروض واختبارات", books: "كتب", lessons: "دروس وملخصات" },
-    levels: { "7AS": "الباكالوريا", "6AS": "السادسة ثانوي", "5AS": "الخامسة ثانوي", "4AS": "ابريفه 4AS", "6AF": "كونكور 6AF" },
-    correction: "تصحيح",
+    downloading: "جاري التحميل…",
+    error: "التحميل غير متاح لهذا الملف حاليًا. يمكنك تجربة «عرض».",
+    empty: "لا توجد ملفات في هذا القسم",
+    types: { series: "سلاسل التمارين", exams: "الامتحانات", tests: "الفروض والاختبارات", books: "الكتب", lessons: "الدروس والملخصات" },
+    grades: { "7AS": "الباكالوريا", "6AS": "السادسة ثانوي", "5AS": "الخامسة ثانوي", "4AS": "ابريفه", "6AF": "كونكور" },
+    correction: "مع التصحيح",
   },
   fr: {
-    heading: "Documents scolaires",
-    search: "Chercher un livre, cours ou examen...",
-    all: "Tout",
-    level: "Niveau",
-    subject: "Matière",
-    type: "Documents",
-    year: "Année",
-    allYears: "Toutes les années",
-    older: "2021 et avant",
-    multi: "Plusieurs années",
-    none: "Sans année",
-    reset: "Effacer les filtres",
-    found: "documents",
+    title: "Bibliothèque",
+    grade: "Choisir le niveau",
+    subject: "Choisir la matière",
+    type: "Choisir le document",
+    files: "Documents",
+    back: "Retour",
+    more: "Voir plus",
     download: "Télécharger",
-    downloading: "Téléchargement…",
-    downloadFailed: "Téléchargement direct indisponible. Essayez « Voir ». Ce fichier peut nécessiter une autorisation.",
     view: "Voir",
-    more: "Plus",
-    empty: "Aucun document trouvé",
-    note: "Google Drive peut demander une confirmation pour les gros fichiers ou une autorisation d’accès. Si le téléchargement ne démarre pas, cliquez sur « Voir ».",
-    types: { series: "Séries", exams: "Examens", tests: "Devoirs & contrôles", books: "Livres", lessons: "Cours & résumés" },
-    levels: { "7AS": "Bac 7AS", "6AS": "6AS", "5AS": "5AS", "4AS": "BEPC 4AS", "6AF": "Concours 6AF" },
-    correction: "Corrigé",
+    downloading: "Téléchargement…",
+    error: "Téléchargement indisponible. Essayez « Voir ».",
+    empty: "Aucun document dans cette rubrique",
+    types: { series: "Séries", exams: "Examens", tests: "Devoirs et contrôles", books: "Livres", lessons: "Cours et résumés" },
+    grades: { "7AS": "Baccalauréat", "6AS": "6AS", "5AS": "5AS", "4AS": "BEPC", "6AF": "Concours" },
+    correction: "Avec corrigé",
   },
 };
-const YEAR_OPTIONS = ["2026", "2025", "2024", "2023", "2022", "older", "multi", "none"];
 
-function getLanguage() {
-  if (typeof window === "undefined") return "ar";
-  return localStorage.getItem("mauriresults-lang") === "fr" ? "fr" : "ar";
+function niceTitle(title) {
+  return title.replace(/\.(?:pdf|docx?)$/i, "").replace(/[\u200e\u200f\u061c]/g, "")
+    .replace(/[_]+/g, " ").replace(/\s+/g, " ").trim();
 }
-
-function niceTitle(value) {
-  return value
-    .replace(/\.(?:pdf|docx?|PDF)$/i, "")
-    .replace(/[\u200e\u200f\u061c]/g, "")
-    .replace(/[_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+function rank(file) {
+  return file.yearKind === "single" || file.yearKind === "academic" ? file.year || 0 : 0;
 }
-
-function yearMatches(file, choice) {
-  if (choice === ALL) return true;
-  if (choice === "none") return file.yearKind === "unspecified";
-  if (choice === "multi") return file.yearKind === "range";
-  if (choice === "older") return file.yearKind === "single" && file.year <= 2021 ||
-    file.yearKind === "academic" && Number(file.yearLabel?.split("–")[0]) <= 2021;
-  const selected = Number(choice);
-  return file.yearKind === "single" && file.year === selected ||
-    file.yearKind === "academic" && (file.yearLabel?.split("–").some(y => Number(y) === selected) ?? false);
+function ChoiceCard({ icon: Icon, title, count, onClick }) {
+  return (
+    <button type="button" onClick={onClick}
+      className="group flex min-h-[94px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-start shadow-sm transition hover:border-mauri-green/50 hover:bg-emerald-50/50 active:scale-[.99] dark:border-white/10 dark:bg-[#12231a] dark:hover:bg-emerald-500/10">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-mauri-green/10 text-mauri-green dark:text-emerald-300">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <strong className="block break-words text-sm font-black leading-6 text-slate-900 dark:text-white">{title}</strong>
+        <span className="mt-1 block text-xs font-semibold text-slate-500 dark:text-slate-400">{count}</span>
+      </span>
+    </button>
+  );
 }
-
-function sortRank(file) {
-  if (file.yearKind === "single" || file.yearKind === "academic") return file.year || 0;
-  return 0;
-}
-
-const pill = (active) => active
-  ? "min-h-10 rounded-xl bg-mauri-green px-3 py-2 text-xs font-black text-white shadow-sm sm:text-sm"
-  : "min-h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-mauri-green/40 hover:text-mauri-green dark:border-white/10 dark:bg-[#12231a] dark:text-slate-200 sm:text-sm";
 
 export default function IndexedStudyFiles() {
   const [lang, setLang] = useState("ar");
-  const [level, setLevel] = useState(ALL);
-  const [subject, setSubject] = useState(ALL);
-  const [category, setCategory] = useState(ALL);
-  const [year, setYear] = useState(ALL);
-  const [query, setQuery] = useState("");
-  const [shown, setShown] = useState(LIMIT);
+  const [grade, setGrade] = useState("");
+  const [subject, setSubject] = useState("");
+  const [type, setType] = useState("");
+  const [shown, setShown] = useState(PAGE);
   const [downloading, setDownloading] = useState("");
-  const [downloadError, setDownloadError] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const sync = event => {
-      const language = event?.detail?.lang || getLanguage();
-      setLang(language === "fr" ? "fr" : "ar");
+      const value = event?.detail?.lang || localStorage.getItem("mauriresults-lang") || "ar";
+      setLang(value === "fr" ? "fr" : "ar");
     };
     sync();
     window.addEventListener("mauriresults:language-change", sync);
     return () => window.removeEventListener("mauriresults:language-change", sync);
   }, []);
 
-  const t = UI[lang];
-  const byLevel = useMemo(() => FILES.filter(file => level === ALL || file.level === level), [level]);
-  const subjects = useMemo(() => [...new Set(byLevel.map(file => file.subject))].sort((a, b) => a.localeCompare(b, "ar")), [byLevel]);
-  const bySubject = useMemo(() => byLevel.filter(file => subject === ALL || file.subject === subject), [byLevel, subject]);
-  const countsByCategory = useMemo(() =>
-    Object.fromEntries(STUDY_TYPES.map(type => [type, bySubject.filter(file => file.category === type).length])), [bySubject]);
-  const yearScope = useMemo(() => bySubject.filter(file => category === ALL || file.category === category), [bySubject, category]);
-  const availableYears = useMemo(() => YEAR_OPTIONS.filter(value => yearScope.some(file => yearMatches(file, value))), [yearScope]);
+  const t = LABELS[lang];
+  const gradeFiles = useMemo(() => FILES.filter(file => file.level === grade), [grade]);
+  const subjectFiles = useMemo(() => gradeFiles.filter(file => file.subject === subject), [gradeFiles, subject]);
+  const files = useMemo(() => subjectFiles.filter(file => file.category === type)
+    .sort((a, b) => rank(b) - rank(a) || a.title.localeCompare(b.title, lang === "ar" ? "ar" : "fr")), [subjectFiles, type, lang]);
 
-  const matches = useMemo(() => {
-    const needle = normalizeStudyTitle(query).trim();
-    return FILES.filter(file => {
-      if (level !== ALL && file.level !== level) return false;
-      if (subject !== ALL && file.subject !== subject) return false;
-      if (category !== ALL && file.category !== category) return false;
-      if (!yearMatches(file, year)) return false;
-      return !needle || normalizeStudyTitle([file.title, file.subject, file.level, file.yearLabel || "", file.branch || ""].join(" ")).includes(needle);
-    }).sort((a, b) => sortRank(b) - sortRank(a) || a.title.localeCompare(b.title, lang === "fr" ? "fr" : "ar"));
-  }, [level, subject, category, year, query, lang]);
+  const subjects = useMemo(() => [...new Set(gradeFiles.map(file => file.subject))]
+    .sort((a, b) => a === "مواد متنوعة" ? 1 : b === "مواد متنوعة" ? -1 : a.localeCompare(b, "ar")), [gradeFiles]);
+  const kinds = useMemo(() => STUDY_TYPES.filter(kind => subjectFiles.some(file => file.category === kind)), [subjectFiles]);
+  const step = !grade ? "grade" : !subject ? "subject" : !type ? "type" : "files";
 
-  const hasFilters = level !== ALL || subject !== ALL || category !== ALL || year !== ALL || query.trim() !== "";
-  const resetShown = () => setShown(LIMIT);
+  function goBack() {
+    setError("");
+    setShown(PAGE);
+    if (type) { setType(""); return; }
+    if (subject) { setSubject(""); return; }
+    setGrade("");
+  }
   async function downloadFile(file) {
     if (downloading) return;
     const url = `/api/study-files/download?id=${encodeURIComponent(file.id)}`;
-    setDownloadError("");
+    setError("");
     setDownloading(file.id);
     try {
-      const check = await fetch(url, { method: "HEAD", cache: "no-store" });
-      if (!check.ok) throw new Error("unavailable");
-      // Content-Disposition: attachment keeps the current page visible in browsers.
-      // This URL belongs to MauriResults, not to Google Drive.
+      const response = await fetch(url, { method: "HEAD", cache: "no-store" });
+      if (!response.ok) throw new Error("Unavailable");
       window.location.assign(url);
     } catch {
-      setDownloadError(t.downloadFailed);
+      setError(t.error);
     } finally {
       setDownloading("");
     }
   }
-  const reset = () => {
-    setLevel(ALL); setSubject(ALL); setCategory(ALL); setYear(ALL); setQuery(""); resetShown();
-  };
 
   return (
-    <section data-no-auto-translate dir={lang === "fr" ? "ltr" : "rtl"} aria-label={t.heading}>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white">
-          <BookOpen className="h-5 w-5 text-mauri-green" aria-hidden="true" />{t.heading}
-        </h2>
-        <span className="text-sm font-bold text-slate-500 dark:text-slate-300">{FILES.length} {t.found}</span>
+    <section data-no-auto-translate dir={lang === "fr" ? "ltr" : "rtl"} aria-label={t.title}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-black text-slate-900 dark:text-white">{t.title}</h2>
+        {step !== "grade" && (
+          <button type="button" onClick={goBack}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-mauri-green dark:border-white/10 dark:bg-[#12231a]">
+            {lang === "ar" ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}{t.back}
+          </button>
+        )}
       </div>
+      {step !== "grade" && (
+        <p className="mb-4 text-sm font-semibold text-slate-500 dark:text-slate-300">
+          {[grade && t.grades[grade], subject && (lang === "fr" ? FR_SUBJECTS[subject] || subject : subject), type && t.types[type]].filter(Boolean).join(" / ")}
+        </p>
+      )}
+      <h3 className="mb-3 text-sm font-black text-slate-800 dark:text-slate-100">
+        {step === "grade" ? t.grade : step === "subject" ? t.subject : step === "type" ? t.type : t.files}
+      </h3>
 
-      <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-[#12231a] sm:p-5">
-        <label className="relative block">
-          <span className="sr-only">{t.search}</span>
-          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <input type="search" value={query} onChange={e => { setQuery(e.target.value); resetShown(); }} placeholder={t.search}
-            className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 ps-10 pe-3 text-sm font-semibold text-slate-900 outline-none focus:border-mauri-green focus:ring-2 focus:ring-mauri-green/15 dark:border-white/10 dark:bg-[#07130d] dark:text-white" />
-        </label>
-
-        <div>
-          <h3 className="mb-2 text-xs font-black text-slate-500 dark:text-slate-300">{t.level}</h3>
-          <div className="flex flex-wrap gap-2" role="group" aria-label={t.level}>
-            {[ALL, ...LEVELS].map(key => (
-              <button key={key} type="button" aria-pressed={level === key}
-                onClick={() => { setLevel(key); setSubject(ALL); setCategory(ALL); setYear(ALL); resetShown(); }} className={pill(level === key)}>
-                {key === ALL ? t.all : t.levels[key]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-2 text-xs font-black text-slate-500 dark:text-slate-300">{t.subject}</h3>
-          <div className="flex flex-wrap gap-2" role="group" aria-label={t.subject}>
-            <button type="button" aria-pressed={subject === ALL} className={pill(subject === ALL)}
-              onClick={() => { setSubject(ALL); setCategory(ALL); setYear(ALL); resetShown(); }}>{t.all}</button>
-            {subjects.map(value => (
-              <button key={value} type="button" aria-pressed={subject === value} className={pill(subject === value)}
-                onClick={() => { setSubject(value); setCategory(ALL); setYear(ALL); resetShown(); }}>
-                {lang === "fr" ? FR_SUBJECTS[value] || value : value}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="mb-2 text-xs font-black text-slate-500 dark:text-slate-300">{t.type}</h3>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6" role="group" aria-label={t.type}>
-            {[ALL, ...STUDY_TYPES.filter(key => countsByCategory[key] > 0)].map(key => (
-              <button key={key} type="button" aria-pressed={category === key}
-                onClick={() => { setCategory(key); setYear(ALL); resetShown(); }}
-                className={pill(category === key) + " flex min-h-[60px] flex-col items-center justify-center gap-1 text-center"}>
-                <span>{key === ALL ? t.all : t.types[key]}</span>
-                <span className={category === key ? "text-[11px] text-white/75" : "text-[11px] text-slate-500 dark:text-slate-400"}>
-                  {key === ALL ? bySubject.length : countsByCategory[key]}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-white/10">
-          {availableYears.length > 0 && <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
-            {t.year}
-            <select value={year} onChange={e => { setYear(e.target.value); resetShown(); }}
-              className="h-10 max-w-[185px] rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 outline-none focus:border-mauri-green dark:border-white/15 dark:bg-[#07130d] dark:text-white">
-              <option value={ALL}>{t.allYears}</option>
-              {availableYears.map(value => (
-                <option key={value} value={value}>
-                  {value === "older" ? t.older : value === "multi" ? t.multi : value === "none" ? t.none : value}
-                </option>
-              ))}
-            </select>
-          </label>}
-          {hasFilters && (
-            <button type="button" onClick={reset}
-              className="inline-flex min-h-10 items-center gap-1 rounded-xl px-2 text-xs font-black text-mauri-green hover:bg-mauri-green/10">
-              <RotateCcw className="h-4 w-4" aria-hidden="true" />{t.reset}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {downloadError && <p role="alert" className="mt-4 rounded-xl border border-amber-400/30 bg-amber-50 p-3 text-sm font-bold text-amber-900 dark:bg-amber-400/10 dark:text-amber-100">{downloadError}</p>}
-      <div className="mb-3 mt-5 text-sm font-black text-slate-700 dark:text-slate-200" aria-live="polite">
-        {matches.length} {t.found}
-      </div>
-
-      {matches.length > 0 ? (
-        <div className="grid gap-3 md:grid-cols-2">
-          {matches.slice(0, shown).map(file => (
-            <article key={file.id} className="flex min-w-0 flex-col justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#12231a]">
-              <div className="flex min-w-0 items-start gap-3">
-                <FileText className="mt-1 h-5 w-5 shrink-0 text-mauri-green" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <h3 className="line-clamp-2 break-words text-sm font-black leading-6 text-slate-900 dark:text-white" title={file.title}>
-                    {niceTitle(file.title)}
-                  </h3>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-500 dark:text-slate-300">
-                    <span>{lang === "fr" ? FR_SUBJECTS[file.subject] || file.subject : file.subject}</span>
-                    {file.yearLabel && <span>• {file.yearLabel}</span>}
-                    {file.branch && <span>• {file.branch}</span>}
-                    {file.fileType && <span>• {file.fileType}</span>}
-                    {/corrig|correction|تصحيح|مع الحل|الحل النموذج/i.test(normalizeStudyTitle(file.title)) && <span className="font-black text-mauri-green">• {t.correction}</span>}
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button type="button" disabled={Boolean(downloading)} onClick={() => downloadFile(file)}
-                  aria-label={`${t.download}: ${file.title}`}
-                  className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-3 text-sm font-black text-white transition hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mauri-green">
-                  <Download className="h-4 w-4" aria-hidden="true" />{downloading === file.id ? t.downloading : t.download}
-                </button>
-                <a href={file.link} target="_blank" rel="noopener noreferrer"
-                  aria-label={`${t.view}: ${file.title}`}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:bg-slate-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/10">
-                  <Eye className="h-4 w-4" aria-hidden="true" />{t.view}
-                </a>
-              </div>
-            </article>
+      {step === "grade" && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {GRADES.map(value => (
+            <ChoiceCard key={value} icon={GraduationCap} title={t.grades[value]}
+              count={FILES.filter(file => file.level === value).length}
+              onClick={() => { setGrade(value); setSubject(""); setType(""); setShown(PAGE); }} />
           ))}
         </div>
-      ) : <p className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm font-semibold text-slate-500 dark:border-white/10 dark:text-slate-300">{t.empty}</p>}
-
-      {shown < matches.length && (
-        <button type="button" className="mx-auto mt-5 flex min-h-11 items-center justify-center rounded-xl border border-mauri-green px-5 text-sm font-black text-mauri-green hover:bg-mauri-green/10"
-          onClick={() => setShown(v => v + LIMIT)}>{t.more} ({Math.min(LIMIT, matches.length - shown)})</button>
       )}
-      <p className="mt-5 text-xs font-medium leading-6 text-slate-500 dark:text-slate-400">{t.note}</p>
+      {step === "subject" && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {subjects.map(value => (
+            <ChoiceCard key={value} icon={BookOpen}
+              title={lang === "fr" ? FR_SUBJECTS[value] || value : value}
+              count={gradeFiles.filter(file => file.subject === value).length}
+              onClick={() => { setSubject(value); setType(""); setShown(PAGE); }} />
+          ))}
+        </div>
+      )}
+      {step === "type" && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {kinds.map(value => (
+            <ChoiceCard key={value} icon={Layers3} title={t.types[value]}
+              count={subjectFiles.filter(file => file.category === value).length}
+              onClick={() => { setType(value); setShown(PAGE); }} />
+          ))}
+        </div>
+      )}
+      {step === "files" && (
+        <>
+          <p className="mb-3 text-xs font-semibold text-slate-500 dark:text-slate-300">{files.length} {lang === "ar" ? "ملف" : "documents"}</p>
+          {error && <p role="alert" className="mb-3 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-900 dark:bg-amber-500/10 dark:text-amber-100">{error}</p>}
+          {files.length ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              {files.slice(0, shown).map(file => (
+                <article key={file.id} className="flex min-w-0 flex-col justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#12231a]">
+                  <div className="flex min-w-0 gap-3">
+                    <FileText className="mt-1 h-5 w-5 shrink-0 text-mauri-green" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="line-clamp-2 break-words text-sm font-black leading-6 text-slate-900 dark:text-white" title={file.title}>{niceTitle(file.title)}</h4>
+                      <div className="mt-1.5 flex flex-wrap gap-x-2 text-xs font-semibold text-slate-500 dark:text-slate-300">
+                        {file.yearLabel && <span>{file.yearLabel}</span>}
+                        {file.branch && <span>{file.branch}</span>}
+                        {file.fileType && <span>{file.fileType}</span>}
+                        {/corrig|correction|تصحيح|مع الحل|الحل النموذج/i.test(normalizeStudyTitle(file.title)) && <span>{t.correction}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" disabled={Boolean(downloading)} onClick={() => downloadFile(file)}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-4 text-sm font-black text-white transition hover:bg-emerald-700 disabled:opacity-60">
+                      <Download className="h-4 w-4" aria-hidden="true" />{downloading === file.id ? t.downloading : t.download}
+                    </button>
+                    <a href={file.link} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-600 dark:border-white/15 dark:text-slate-200">
+                      <Eye className="h-4 w-4" aria-hidden="true" />{t.view}
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : <p className="rounded-xl border border-dashed border-slate-200 p-6 text-sm text-slate-500 dark:border-white/10">{t.empty}</p>}
+          {shown < files.length && <button type="button" onClick={() => setShown(value => value + PAGE)}
+            className="mx-auto mt-4 flex min-h-11 items-center rounded-xl border border-mauri-green px-5 text-sm font-black text-mauri-green">{t.more}</button>}
+        </>
+      )}
     </section>
   );
 }
