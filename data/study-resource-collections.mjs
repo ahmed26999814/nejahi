@@ -45,7 +45,7 @@ export const STUDY_COLLECTIONS = [
     title: { ar: "مراجع الخامسة الثانوية – الشعبتان C وD", fr: "Ressources de 5e secondaire – C et D" },
     source: "Google Drive",
     sourceYear: null,
-    note: { ar: "المجلد يحمل عنوان 5ème D C؛ لم تُفهرس الكتب داخله بعد.", fr: "Le dossier est intitulé 5ème D C ; ses fichiers ne sont pas encore indexés." },
+    note: { ar: "مراجع متنوعة للخامسة الثانوية، مع كتب وتمارين ومواضيع دراسية.", fr: "Livres, cours, exercices et documents de cinquième année secondaire." },
     url: "https://drive.google.com/drive/folders/18SHE_58aSKh0nAvA5am4GfHk49PE3WgC"
   },
   {
