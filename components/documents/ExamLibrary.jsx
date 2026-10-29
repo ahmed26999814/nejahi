@@ -1,27 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, ChevronDown, Download, FileText, GraduationCap, Loader2 } from "lucide-react";
+import { ArrowRight, BookOpen, ChevronDown, Download, FileText, GraduationCap, Loader2 } from "lucide-react";
 
-const ALL = "الكل";
-const COMPETITION_ORDER = ["باكالوريا", "ابريفه", "كونكور", "الامتياز", "المعهد العالي"];
-const TYPES = { exam: "الموضوع", solution: "التصحيح", memo: "مذكرة", reference: "مرجع", bundle: "مجموعة" };
-const OLDER_COUNT = 7;
-const PAGE_SIZE = 36;
+const ORDER = ["باكالوريا", "ابريفه", "كونكور", "الامتياز", "المعهد العالي"];
+const PAGE = 24;
+const TYPES = { exam: "الموضوع", solution: "التصحيح", memo: "المذكرة", reference: "المرجع", bundle: "المجموعة" };
 
-function yearKey(file) { return file.year ? String(file.year) : "undated"; }
-function sourceFileGroup(file) {
-  return [file.competition, yearKey(file), file.session || "", file.branch || "", file.subject || ""].join("|");
-}
 function ExamDownload({ file, label, subtle = false }) {
   return (
-    <a
-      href={`/api/exam-documents/download?id=${encodeURIComponent(file.id)}`}
-      download
+    <a download href={`/api/exam-documents/download?id=${encodeURIComponent(file.id)}`}
       aria-label={`${label}: ${file.title}`}
       className={subtle
-        ? "inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 text-sm font-black text-emerald-700 transition hover:bg-emerald-500/20 dark:text-emerald-300"
-        : "inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-mauri-green px-3 text-sm font-black text-white transition hover:bg-emerald-700"}>
+        ? "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-mauri-green/25 bg-mauri-green/10 px-3 text-sm font-black text-mauri-green dark:text-emerald-300"
+        : "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-3 text-sm font-black text-white hover:bg-emerald-700"}>
       <Download className="h-4 w-4" aria-hidden="true" />{label}
     </a>
   );
@@ -31,151 +23,148 @@ function SubjectCard({ group }) {
   const solution = group.documents.find(file => file.document_type === "solution");
   const extras = group.documents.filter(file => file !== exam && file !== solution);
   return (
-    <article className="flex min-w-0 flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-white/10 dark:bg-[#12231a]">
-      <div className="flex min-w-0 items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="break-words text-base font-black leading-6 text-slate-900 dark:text-white">{group.subject}</h3>
-          <div className="mt-1.5 flex flex-wrap gap-2 text-xs font-semibold text-slate-500 dark:text-slate-300">
-            {group.branch && <span>{group.branch}</span>}
-            {group.session && <span>{group.session}</span>}
-          </div>
+    <article className="flex min-w-0 flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#12231a]">
+      <div className="flex min-w-0 items-start gap-2">
+        <FileText className="mt-1 h-5 w-5 shrink-0 text-mauri-green" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <h3 className="break-words text-sm font-black leading-6 text-slate-900 dark:text-white">{group.subject}</h3>
+          {(group.branch || group.session) && <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-300">
+            {[group.branch, group.session].filter(Boolean).join(" · ")}
+          </p>}
         </div>
-        <FileText className="h-5 w-5 shrink-0 text-mauri-green" aria-hidden="true" />
       </div>
       <div className="mt-auto flex flex-wrap gap-2">
         {exam && <ExamDownload file={exam} label="الموضوع" />}
         {solution && <ExamDownload file={solution} label="التصحيح" subtle />}
-        {extras.map(file => (
-          <ExamDownload key={file.id} file={file} label={TYPES[file.document_type] || "الملف"} subtle />
-        ))}
+        {extras.map(file => <ExamDownload key={file.id} file={file} label={TYPES[file.document_type] || "الملف"} subtle />)}
       </div>
     </article>
+  );
+}
+function ChoiceCard({ title, count, onClick, Icon = GraduationCap }) {
+  return (
+    <button type="button" onClick={onClick}
+      className="flex min-h-[92px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-start shadow-sm transition hover:border-mauri-green/40 hover:bg-emerald-50/40 active:scale-[.99] dark:border-white/10 dark:bg-[#12231a] dark:hover:bg-emerald-500/10">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-mauri-green/10 text-mauri-green dark:text-emerald-300">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <strong className="block text-sm font-black text-slate-900 dark:text-white">{title}</strong>
+        <span className="mt-1 block text-xs font-semibold text-slate-500 dark:text-slate-300">{count}</span>
+      </span>
+    </button>
   );
 }
 export default function ExamLibrary() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [competition, setCompetition] = useState(ALL);
-  const [year, setYear] = useState(ALL);
-  const [older, setOlder] = useState(false);
-  const [shown, setShown] = useState(PAGE_SIZE);
+  const [competition, setCompetition] = useState("");
+  const [year, setYear] = useState("");
+  const [showOlder, setShowOlder] = useState(false);
+  const [shown, setShown] = useState(PAGE);
 
   useEffect(() => {
     let active = true;
-    async function loadDocuments() {
+    async function fetchDocuments() {
       try {
         const response = await fetch("/api/exam-documents", { cache: "no-store" });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || "تعذر تحميل الملفات.");
-        if (!active) return;
-        const items = Array.isArray(payload.documents) ? payload.documents : [];
-        setDocuments(items);
-        const initialCompetition = items.some(file => file.competition === "باكالوريا")
-          ? "باكالوريا" : items[0]?.competition || ALL;
-        setCompetition(initialCompetition);
-        const newest = items.filter(file => file.competition === initialCompetition && file.year)
-          .map(file => Number(file.year)).sort((a, b) => b - a)[0];
-        setYear(newest ? String(newest) : ALL);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "تعذر تحميل الامتحانات.");
+        if (active) setDocuments(Array.isArray(result.documents) ? result.documents : []);
       } catch (cause) {
-        if (active) setError(cause.message || "تعذر تحميل الملفات.");
+        if (active) setError(cause.message || "تعذر تحميل الامتحانات.");
       } finally {
         if (active) setLoading(false);
       }
     }
-    loadDocuments();
+    fetchDocuments();
     return () => { active = false; };
   }, []);
 
-  const competitionCounts = useMemo(() => {
+  const options = useMemo(() => {
     const counts = new Map();
-    for (const file of documents) counts.set(file.competition, (counts.get(file.competition) || 0) + 1);
-    return [...counts].sort(([a], [b]) => COMPETITION_ORDER.indexOf(a) - COMPETITION_ORDER.indexOf(b));
-  }, [documents]);
-  const scoped = useMemo(() => documents.filter(file => competition === ALL || file.competition === competition), [documents, competition]);
-  const years = useMemo(() => [...new Set(scoped.map(file => file.year).filter(Boolean).map(String))].sort((a, b) => Number(b) - Number(a)), [scoped]);
-  const hasUndated = scoped.some(file => !file.year);
-  const activeFiles = useMemo(() => scoped.filter(file => year === ALL || year === "undated" && !file.year || String(file.year) === year), [scoped, year]);
-  const groups = useMemo(() => {
-    const items = new Map();
-    for (const file of activeFiles) {
-      const key = sourceFileGroup(file);
-      if (!items.has(key)) items.set(key, { key, year: file.year, competition: file.competition, session: file.session, subject: file.subject, branch: file.branch, documents: [] });
-      items.get(key).documents.push(file);
+    for (const document of documents) {
+      counts.set(document.competition, (counts.get(document.competition) || 0) + 1);
     }
-    return [...items.values()].sort((a, b) => Number(b.year || 0) - Number(a.year || 0) || String(a.subject).localeCompare(String(b.subject), "ar"));
-  }, [activeFiles]);
+    return [...counts.entries()].sort(([a], [b]) => {
+      const ai = ORDER.indexOf(a), bi = ORDER.indexOf(b);
+      return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+    });
+  }, [documents]);
+  const scoped = useMemo(() => documents.filter(file => file.competition === competition), [documents, competition]);
+  const years = useMemo(() => [...new Set(scoped.map(file => file.year).filter(Boolean).map(String))].sort((a, b) => Number(b) - Number(a)), [scoped]);
+  const undated = scoped.some(file => !file.year);
+  const groups = useMemo(() => {
+    const map = new Map();
+    for (const file of scoped) {
+      if (year === "undated" ? Boolean(file.year) : String(file.year) !== year) continue;
+      const key = [file.competition, file.year || "", file.session || "", file.branch || "", file.subject].join("|");
+      if (!map.has(key)) map.set(key, { key, subject: file.subject, branch: file.branch, session: file.session, documents: [] });
+      map.get(key).documents.push(file);
+    }
+    return [...map.values()].sort((a, b) => String(a.subject).localeCompare(String(b.subject), "ar"));
+  }, [scoped, year]);
 
-  function chooseCompetition(value) {
-    setCompetition(value);
-    const relevant = documents.filter(file => value === ALL || file.competition === value);
-    const newest = relevant.filter(file => file.year).map(file => Number(file.year)).sort((a, b) => b - a)[0];
-    setYear(newest ? String(newest) : ALL);
-    setOlder(false);
-    setShown(PAGE_SIZE);
+  function back() {
+    if (year) { setYear(""); setShown(PAGE); return; }
+    setCompetition("");
+    setShowOlder(false);
   }
-  function chooseYear(value) { setYear(value); setShown(PAGE_SIZE); }
 
-  if (loading) return (
-    <div role="status" className="flex min-h-40 items-center justify-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
-      <Loader2 className="h-5 w-5 animate-spin text-mauri-green" aria-hidden="true" />جاري تحميل الامتحانات…
-    </div>
-  );
-
-  const chip = (active) => active
-    ? "shrink-0 rounded-xl bg-mauri-green px-3 py-2.5 text-sm font-black text-white"
-    : "shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:border-mauri-green/40 dark:border-white/10 dark:bg-[#12231a] dark:text-slate-200";
+  if (loading) return <div role="status" className="flex min-h-32 items-center justify-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-300">
+    <Loader2 className="h-5 w-5 animate-spin text-mauri-green" />جاري تحميل الملفات…
+  </div>;
 
   return (
     <div className="space-y-4">
       {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700 dark:bg-red-500/10 dark:text-red-300">{error}</p>}
-
-      <section aria-label="المسابقة">
-        <div className="flex snap-x gap-2 overflow-x-auto pb-2">
-          {competitionCounts.map(([name, count]) => (
-            <button key={name} type="button" onClick={() => chooseCompetition(name)} aria-pressed={competition === name}
-              className={chip(competition === name) + " snap-start inline-flex min-h-12 items-center gap-2"}>
-              <GraduationCap className="h-4 w-4" aria-hidden="true" />{name}
-              <span className="text-xs opacity-70">{count}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section aria-label="السنة" className="flex flex-wrap items-center gap-2">
-        <span className="me-1 text-xs font-black text-slate-500 dark:text-slate-300">السنة</span>
-        {years.slice(0, older ? undefined : OLDER_COUNT).map(value => (
-          <button key={value} type="button" aria-pressed={year === value} onClick={() => chooseYear(value)} className={chip(year === value)}>
-            {value}
-          </button>
-        ))}
-        {hasUndated && <button type="button" aria-pressed={year === "undated"} onClick={() => chooseYear("undated")} className={chip(year === "undated")}>دون سنة</button>}
-        {years.length > OLDER_COUNT && <button type="button" onClick={() => setOlder(v => !v)}
-          className="inline-flex min-h-10 items-center gap-1 rounded-xl px-2 text-xs font-black text-mauri-green">
-          {older ? "أقل" : "سنوات أقدم"}<ChevronDown className={older ? "h-4 w-4 rotate-180" : "h-4 w-4"} aria-hidden="true" />
-        </button>}
-      </section>
-
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-black text-slate-900 dark:text-white">
-          {competition === ALL ? "الامتحانات" : competition}{year !== ALL ? ` · ${year === "undated" ? "دون سنة" : year}` : ""}
-        </h2>
-        <span aria-live="polite" className="text-xs font-bold text-slate-500 dark:text-slate-300">{groups.length} مادة</span>
-      </div>
-      {groups.length ? (
-        <>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {groups.slice(0, shown).map(group => <SubjectCard key={group.key} group={group} />)}
-          </div>
-          {shown < groups.length && <button type="button" onClick={() => setShown(n => n + PAGE_SIZE)}
-            className="mx-auto flex min-h-11 items-center justify-center rounded-xl border border-mauri-green px-5 text-sm font-black text-mauri-green">
-            المزيد ({Math.min(PAGE_SIZE, groups.length - shown)})
-          </button>}
-        </>
-      ) : (
-        <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm font-semibold text-slate-500 dark:border-white/10 dark:text-slate-300">
-          <BookOpen className="mx-auto mb-2 h-6 w-6" aria-hidden="true" />لا توجد ملفات لهذه السنة
+        <div className="min-w-0">
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">
+            {!competition ? "اختر الامتحان" : !year ? "اختر السنة" : `${competition} · ${year === "undated" ? "دون سنة" : year}`}
+          </h2>
+          {competition && <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-300">{competition}{year ? ` / ${year === "undated" ? "دون سنة" : year}` : ""}</p>}
         </div>
+        {competition && <button type="button" onClick={back}
+          className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-black text-mauri-green dark:border-white/10 dark:bg-[#12231a]">
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />رجوع
+        </button>}
+      </div>
+
+      {!competition ? (
+        <section aria-label="المسابقات" className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {options.map(([name, count]) => <ChoiceCard key={name} title={name} count={count}
+            onClick={() => { setCompetition(name); setYear(""); setShowOlder(false); setShown(PAGE); }} />)}
+        </section>
+      ) : !year ? (
+        <section aria-label="السنوات" className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {years.slice(0, showOlder ? undefined : 8).map(value => (
+            <ChoiceCard key={value} title={value} count={scoped.filter(file => String(file.year) === value).length}
+              Icon={BookOpen} onClick={() => { setYear(value); setShown(PAGE); }} />
+          ))}
+          {undated && <ChoiceCard title="دون سنة" count={scoped.filter(file => !file.year).length}
+            Icon={BookOpen} onClick={() => { setYear("undated"); setShown(PAGE); }} />}
+          {years.length > 8 && <button type="button" onClick={() => setShowOlder(value => !value)}
+            className="flex min-h-[92px] items-center justify-center gap-2 rounded-2xl border border-dashed border-mauri-green/40 bg-white p-3 text-sm font-black text-mauri-green dark:bg-[#12231a]">
+            <ChevronDown className={showOlder ? "h-4 w-4 rotate-180" : "h-4 w-4"} />{showOlder ? "أقل" : "سنوات أقدم"}
+          </button>}
+        </section>
+      ) : (
+        <section aria-label="المواضيع">
+          <p aria-live="polite" className="mb-3 text-xs font-semibold text-slate-500 dark:text-slate-300">{groups.length} مادة</p>
+          {groups.length ? (
+            <>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {groups.slice(0, shown).map(group => <SubjectCard key={group.key} group={group} />)}
+              </div>
+              {shown < groups.length && <button type="button" onClick={() => setShown(value => value + PAGE)}
+                className="mx-auto mt-4 flex min-h-11 items-center rounded-xl border border-mauri-green px-5 text-sm font-black text-mauri-green">
+                عرض المزيد
+              </button>}
+            </>
+          ) : <div className="rounded-xl border border-dashed border-slate-200 p-6 text-sm text-slate-500 dark:border-white/10">لا توجد ملفات لهذه السنة.</div>}
+        </section>
       )}
     </div>
   );

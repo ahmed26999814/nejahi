@@ -11,22 +11,22 @@ const COPY = {
   ar: {
     title: "الدروس ومواضيع الامتحانات",
     description: "الكتب والدروس المدرسية، ومواضيع المسابقات الوطنية مع الحلول والمذكرات والمراجع، في قسم واحد منظم وسهل التحميل.",
-    lessons: "الدروس والكتب",
+    lessons: "الكتب",
     lessonsDesc: "كتب المراحل الابتدائية والإعدادية والثانوية",
-    exams: "مواضيع الامتحانات",
+    exams: "الامتحانات",
     examsDesc: "باكالوريا وابريفه وكونكور والامتياز مع الحلول",
-    resources: "مكتبة المراجع",
+    resources: "المراجع",
     resourcesDesc: "ملفات مرتبة حسب المستوى والسنة",
     home: "الرئيسية",
   },
   fr: {
     title: "Cours et sujets d’examens",
     description: "Les manuels scolaires, les cours et les sujets des concours nationaux avec corrigés et références, réunis dans une seule rubrique.",
-    lessons: "Cours et livres",
+    lessons: "Livres",
     lessonsDesc: "Manuels du primaire, collège et lycée",
-    exams: "Sujets d’examens",
+    exams: "Examens",
     examsDesc: "Bac, Brevet, Concours et Excellence avec corrigés",
-    resources: "Bibliothèque",
+    resources: "Ressources",
     resourcesDesc: "Documents classés par année et niveau",
     home: "Accueil",
   },
@@ -89,22 +89,22 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
               <LibraryBig className="h-4 w-4" aria-hidden="true" />
               MauriResults
             </div>}
-            <h1 className={tab !== "lessons" ? "text-xl font-black leading-tight sm:text-2xl" : "mt-5 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl"}>{text.title}</h1>
+            <h1 className={tab !== "lessons" ? "text-xl font-black leading-tight sm:text-2xl" : "mt-5 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl"}>{tab === "lessons" ? text.title : text[tab === "exams" ? "exams" : "resources"]}</h1>
             {tab === "lessons" && <p className="mt-4 max-w-3xl text-sm font-semibold leading-7 text-emerald-50/80 sm:text-base">{text.description}</p>}
           </div>
         </header>
 
-        <div className="mt-5 grid grid-cols-3 gap-2 rounded-[1.6rem] border border-slate-200 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-white/5">
-          <button className={`rounded-[1.2rem] px-3 py-4 text-start transition ${tab === "lessons" ? "bg-mauri-green text-white shadow-lg shadow-emerald-900/15" : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"}`} onClick={() => selectTab("lessons")} type="button" aria-pressed={tab === "lessons"}>
-            <span className="flex items-center gap-2 text-sm font-black sm:text-base"><BookOpen className="h-5 w-5" aria-hidden="true" />{text.lessons}</span>
+        <div className="mt-3 grid grid-cols-3 gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-white/10 dark:bg-white/5">
+          <button className={`rounded-xl px-2 py-3 text-start transition ${tab === "lessons" ? "bg-mauri-green text-white shadow-lg shadow-emerald-900/15" : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"}`} onClick={() => selectTab("lessons")} type="button" aria-pressed={tab === "lessons"}>
+            <span className="flex items-center gap-2 text-sm font-black sm:text-base"><BookOpen className="hidden h-5 w-5 sm:block" aria-hidden="true" />{text.lessons}</span>
             <span className="mt-1 hidden text-xs font-semibold opacity-80 sm:block">{text.lessonsDesc}</span>
           </button>
-          <button className={`rounded-[1.2rem] px-3 py-4 text-start transition ${tab === "exams" ? "bg-mauri-green text-white shadow-lg shadow-emerald-900/15" : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"}`} onClick={() => selectTab("exams")} type="button" aria-pressed={tab === "exams"}>
-            <span className="flex items-center gap-2 text-sm font-black sm:text-base"><ClipboardCheck className="h-5 w-5" aria-hidden="true" />{text.exams}</span>
+          <button className={`rounded-xl px-2 py-3 text-start transition ${tab === "exams" ? "bg-mauri-green text-white shadow-lg shadow-emerald-900/15" : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"}`} onClick={() => selectTab("exams")} type="button" aria-pressed={tab === "exams"}>
+            <span className="flex items-center gap-2 text-sm font-black sm:text-base"><ClipboardCheck className="hidden h-5 w-5 sm:block" aria-hidden="true" />{text.exams}</span>
             <span className="mt-1 hidden text-xs font-semibold opacity-80 sm:block">{text.examsDesc}</span>
           </button>
-          <button className={`rounded-[1.2rem] px-2 py-4 text-start transition sm:px-3 ${tab === "resources" ? "bg-mauri-green text-white shadow-lg shadow-emerald-900/15" : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"}`} onClick={() => selectTab("resources")} type="button" aria-pressed={tab === "resources"}>
-            <span className="flex items-center gap-2 text-xs font-black sm:text-base"><LibraryBig className="h-5 w-5 shrink-0" aria-hidden="true" />{text.resources}</span>
+          <button className={`rounded-xl px-2 py-3 text-start transition sm:px-3 ${tab === "resources" ? "bg-mauri-green text-white shadow-lg shadow-emerald-900/15" : "text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"}`} onClick={() => selectTab("resources")} type="button" aria-pressed={tab === "resources"}>
+            <span className="flex items-center gap-2 text-xs font-black sm:text-base"><LibraryBig className="hidden h-5 w-5 shrink-0 sm:block" aria-hidden="true" />{text.resources}</span>
             <span className="mt-1 hidden text-xs font-semibold opacity-80 sm:block">{text.resourcesDesc}</span>
           </button>
         </div>
