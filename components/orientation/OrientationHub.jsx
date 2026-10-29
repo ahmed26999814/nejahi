@@ -104,6 +104,7 @@ export default function OrientationHub({ institutions, sources }) {
 
   return (
     <main dir="rtl" className="min-h-screen overflow-x-clip bg-[#f7faf8] pb-20 text-slate-950 dark:bg-[#06110b] dark:text-white">
+      {selected && (
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
         <div className="app-shell flex min-h-14 items-center justify-between gap-3">
           {selected ? (
@@ -122,6 +123,7 @@ export default function OrientationHub({ institutions, sources }) {
           <strong className="text-sm font-black text-slate-700 dark:text-slate-100">التوجيه</strong>
         </div>
       </header>
+      )}
 
       <div className="app-shell grid gap-4 py-4 md:gap-5 md:py-7">
         {!selected ? (
