@@ -62,7 +62,8 @@ export function studyFileBranches(file) {
 /** A mock exam or classroom test is not an official Bac/BEPC paper. */
 export function studyFileCategory(file) {
   const title = normalizedTitle(file.title || "");
-  if (/\bbac\s*blan|bacblan|\bbac\s+blanc|\bdevoir\b|\bcomposition\b|\bcontrole\b|\bevaluation\b|\btest\b|\bex[1-5]\b|فروض|فرض|اختبار|امتحان تجريبي/.test(title)) return "tests";
+  if (/\bbac\s*blan|bacblan|\bbac\s+blanc|امتحان تجريبي/.test(title)) return "exams";
+  if (/\bdevoir\b|\bcomposition\b|\bcontrole\b|\bevaluation\b|\btest\b|\bex[1-5]\b|فروض|فرض|اختبار/.test(title)) return "tests";
   if (/\bserie\b|\bseries\b|\bexercice\b|\bexercices\b|\bqcm\b|تمارين|سلسلة|سلاسل|تطبيقات/.test(title)) return "series";
   if (/\blivre\b|\bmanuel\b|\bjoussour\b|كتاب|الكتاب|\bcahier\b|\btome\b|المغني|المغنى/.test(title)) return "books";
   if (/\bmethodologie\b|منهجية|دفتر تحضير|\brevision\b|مراجعة/.test(title) && !/\bannales\b|مواضيع/.test(title)) return "lessons";
@@ -102,7 +103,8 @@ export function studyFileCompetition(file) {
 }
 export function examYearGroup(file) {
   if (file.yearKind === "single" && file.year >= 1990 && file.year <= 2028) return String(file.year);
-  if (file.yearKind === "range" || file.yearKind === "academic") return "archives";
+  if (file.yearKind === "academic" && file.yearLabel) return `school:${file.yearLabel}`;
+  if (file.yearKind === "range") return "archives";
   return "undated";
 }
 export function decorateStudyFile(file) {
