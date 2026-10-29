@@ -1,23 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUpLeft, ChevronDown, LibraryBig } from "lucide-react";
+import { ArrowUpLeft, ChevronDown } from "lucide-react";
 import { STUDY_COLLECTIONS } from "../../data/study-resource-collections.mjs";
 import IndexedStudyFiles from "./IndexedStudyFiles";
 
 const COPY = {
   ar: {
-    title: "مكتبة المراجع الدراسية",
-    subtitle: "كتب، دروس، ملخصات، تمارين ومواضيع امتحانات مرتبة حسب المستوى الدراسي والسنة.",
-    extra: "تصفح المكتبات الكاملة",
-    extraHint: "تجد هنا مجموعات كاملة للمواد الدراسية إن أردت استعراض ملفات إضافية.",
+    extra: "مكتبات أخرى",
     open: "فتح المكتبة",
   },
   fr: {
-    title: "Bibliothèque scolaire",
-    subtitle: "Livres, cours, résumés, exercices et sujets classés par niveau et année.",
-    extra: "Explorer les collections complètes",
-    extraHint: "Accédez à des collections de documents supplémentaires.",
+    extra: "Autres bibliothèques",
     open: "Ouvrir la collection",
   },
 };
@@ -43,23 +37,15 @@ export default function ExternalResourceCollections() {
 
   return (
     <section data-no-auto-translate dir={lang === "fr" ? "ltr" : "rtl"} className="relative mx-auto w-full max-w-7xl px-4 pb-16 pt-5 text-slate-900 dark:text-white sm:px-6 lg:px-8">
-      <div className="mb-6 rounded-3xl border border-emerald-900/10 bg-gradient-to-l from-[#0b3e2a] to-[#116947] px-5 py-6 text-white shadow-sm sm:px-7">
-        <div className="flex items-center gap-2">
-          <LibraryBig className="h-5 w-5" aria-hidden="true" />
-          <h2 className="text-lg font-black sm:text-xl">{t.title}</h2>
-        </div>
-        <p className="mt-2 max-w-3xl text-sm font-semibold leading-7 text-emerald-50">{t.subtitle}</p>
-      </div>
-
       <IndexedStudyFiles />
 
-      <details className="group mt-9 rounded-3xl border border-slate-200 bg-white shadow-sm open:pb-4 dark:border-white/10 dark:bg-[#12231a]">
+      <details className="group mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm open:pb-4 dark:border-white/10 dark:bg-[#12231a]">
         <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-black text-slate-800 marker:hidden dark:text-white sm:text-base">
           <span>{t.extra}</span>
           <ChevronDown className="h-5 w-5 shrink-0 text-mauri-green transition-transform group-open:rotate-180" aria-hidden="true" />
         </summary>
         <div className="border-t border-slate-100 px-4 pt-4 dark:border-white/10 sm:px-5">
-          <p className="mb-4 text-sm font-medium leading-6 text-slate-500 dark:text-slate-300">{t.extraHint}</p>
+          
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {COLLECTIONS.map(item => (
               <article key={item.id} className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/5">
