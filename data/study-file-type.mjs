@@ -24,3 +24,12 @@ export function classifyStudyFile(title) {
   if (/livre|manuel|textbook|كتاب|الكتاب|joussour|جسور|المغنى|المغني|cahier/.test(t)) return "books";
   return "lessons";
 }
+
+/**
+ * Browser-facing Drive download endpoint (not a Vercel file proxy).
+ * Google may display a confirmation/interstitial for large or restricted files.
+ */
+export function driveDownloadUrl(fileId) {
+  if (!/^[a-zA-Z0-9_-]+$/.test(fileId)) throw new TypeError("Invalid Google Drive file ID");
+  return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`;
+}
