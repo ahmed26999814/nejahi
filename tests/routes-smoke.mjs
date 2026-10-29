@@ -13,6 +13,11 @@ for (const exam of ['bac', 'brevet', 'concours', 'excellence', 'bac-session']) {
     assert.ok(html.includes('النتائج متاحة'));
   }
 }
+const orientationGuide = await get('/orientation');
+const orientationHtml = await orientationGuide.text();
+assert.ok(orientationHtml.includes('من اختيار التخصص إلى التوجيه الرسمي'), 'official guidance visible');
+assert.ok(orientationHtml.includes('https://etudiants-mesrs.app/'), 'ministry platform linked');
+assert.ok(orientationHtml.includes('المنحة الدراسية ليست نتيجة تلقائية'), 'grant eligibility not implied');
 assert.equal((await get('/results/bac/1900')).status, 404);
 assert.equal((await get('/candidatures')).status, 404);
 assert.equal((await get('/api/candidatures')).status, 404);
