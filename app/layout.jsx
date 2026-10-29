@@ -15,6 +15,7 @@ import "./root-background-fix.css";
 import "./vibrant-palette.css";
 import "./vibrant-home.css";
 import "./final-ui-fixes.css";
+import "./unified-sections.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import UiEnhancements from "../components/ui/UiEnhancements";
 
