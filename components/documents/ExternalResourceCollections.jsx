@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpLeft, BookOpen, FolderOpen, Search } from "lucide-react";
 import { STUDY_COLLECTIONS, STUDY_COLLECTION_STAGES } from "../../data/study-resource-collections.mjs";
+import IndexedStudyFiles from "./IndexedStudyFiles";
 
 const COPY = {
   ar: {
     title: "مراجع تعليمية إضافية",
-    intro: "مجلدات تعليمية شاركها أصحابها عبر خدمات خارجية، مرتبة حسب المستوى والشعبة. افتح المصدر لاختيار الملفات المتاحة فيه.",
+    collectionsHeading: "مجلدات المصادر الأصلية",
+    intro: "فهرس الملفات التعليمية المتاحة عبر المجلدات المشتركة، مع الاحتفاظ بروابط المصادر الأصلية.",
     caution: "هذه روابط لمجلدات خارجية وليست ملفات PDF مستضافة على MauriResults. لم يتم التحقق من محتوياتها فرديًا أو من حقوق إعادة نشرها. سنة المجلد لا تعني سنة الامتحان المستهدف.",
     search: "ابحث عن شعبة أو مستوى أو مصدر…",
     all: "كل المستويات",
@@ -25,7 +27,8 @@ const COPY = {
   },
   fr: {
     title: "Ressources complémentaires",
-    intro: "Dossiers pédagogiques hébergés sur des plateformes externes, classés par niveau et par série. Ouvrez la source pour voir les fichiers disponibles.",
+    collectionsHeading: "Dossiers d’origine",
+    intro: "Un index de ressources pédagogiques issues de dossiers partagés, avec leurs liens de source.",
     caution: "Il s’agit de liens vers des dossiers externes, et non de PDF hébergés par MauriResults. Le contenu et les droits de republication de chaque fichier n’ont pas été vérifiés. La date du dossier ne garantit pas une édition pour l’examen visé.",
     search: "Rechercher une série, un niveau ou une source…",
     all: "Tous les niveaux",
@@ -89,6 +92,9 @@ export default function ExternalResourceCollections() {
         {t.caution}
       </p>
 
+      <IndexedStudyFiles />
+
+      <h2 className="mt-10 text-xl font-black text-slate-950 dark:text-white">{t.collectionsHeading}</h2>
       <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#12231a]">
         <div className="flex flex-wrap gap-2" aria-label={t.title}>
           {STUDY_COLLECTION_STAGES.map((value) => (
