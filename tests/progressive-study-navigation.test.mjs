@@ -7,8 +7,8 @@ const exams = readFileSync(new URL("../components/documents/ExamLibrary.jsx", im
 const shell = readFileSync(new URL("../app/lessons/LessonsAndExams.jsx", import.meta.url), "utf8");
 
 test("resources present one card selection stage at a time", () => {
-  assert.match(resources, /!grade \? "grade" : !subject \? "subject" : !type \? "type" : "files"/);
-  for (const stage of ["grade", "subject", "type", "files"]) {
+  assert.match(resources, /!grade \? "grade" : splitBranches && !branch \? "branch" : !subject \? "subject" : !type \? "type" : "files"/);
+  for (const stage of ["grade", "branch", "subject", "type", "files"]) {
     assert.ok(resources.includes(`step === "${stage}"`));
   }
   assert.match(resources, /function ChoiceCard/);
