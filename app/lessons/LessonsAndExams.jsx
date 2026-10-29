@@ -115,7 +115,7 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
           ? lang === "fr" ? "Choisissez votre niveau, puis une matière pour ouvrir les ressources." : "اختر المرحلة الدراسية ثم المادة لعرض الدروس والكتب المتاحة."
           : tab === "resources"
             ? lang === "fr" ? "Choisissez un niveau ou recherchez une série pour ouvrir les dossiers sources." : "اختر المستوى أو ابحث باسم الشعبة لفتح المجلدات الأصلية."
-            : lang === "fr" ? "Choisissez l’examen et l’année pour consulter les sujets et corrigés disponibles." : "اختر المسابقة والسنة لعرض المواضيع والتصحيحات المتاحة."
+            : lang === "fr" ? "Choisissez l’examen et l’année pour consulter les sujets et corrigés disponibles." : "اختر المسابقة والسنة لعرض المواضيع والتصحيحات المتاحة."}
       </p>
       {tab === "lessons" ? (
         <LessonsExplorer />
