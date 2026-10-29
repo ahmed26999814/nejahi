@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import OfficialOrientationGuide from "./OfficialOrientationGuide";
 import {
   ArrowLeft,
   ArrowRight,
@@ -169,6 +170,8 @@ export default function OrientationHub({ institutions, sources }) {
               <Stat label="تخصصاً" value={new Set(institutions.flatMap((item) => item.specialties.map((specialty) => specialty.name))).size} />
               <Stat label="مدينة" value={new Set(institutions.map((item) => item.city)).size} />
             </section>
+
+            <OfficialOrientationGuide />
 
             <section className="rounded-[26px] border border-slate-200/80 bg-white p-4 shadow-soft dark:border-white/10 dark:bg-white/[.055] md:p-5">
               <div className="flex items-end justify-between gap-4">
