@@ -11,7 +11,7 @@ export const metadata = {
 
 export default function CalculatorLayout({ children }) {
   return (
-    <IntegratedSectionShell active="/calculator">
+    <IntegratedSectionShell section="calculator">
       <div className="calculator-route">
         <style>{`
           .calculator-route .average-calculator-page{padding-top:1.2rem;background:linear-gradient(180deg,#f8faf8 0%,#eef6f1 100%)}
