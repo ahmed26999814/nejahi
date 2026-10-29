@@ -1,6 +1,5 @@
 "use client";
 
-import VerseCard from "../common/VerseCard";
 import PremiumHomeView from "./PremiumHomeView";
 import dynamic from "next/dynamic";
 import SearchPanel from "../search/SearchPanel";
@@ -1784,7 +1783,6 @@ export default function HomePage() {
     <m.main className="app-background min-h-screen pb-20 text-mauri-ink dark:text-white md:pb-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.32, ease: "easeOut" }}>
       <Header activeView={activeView} content={siteContent} lang={lang} onNavigate={openView} onToggleLang={toggleLang} text={text} theme={theme} setTheme={setTheme} />
 
-      {activeView === "home" && <VerseCard scope="home" />}
       {activeView === "home" && (
         <HomeView examCards={examCards} catalogStatus={catalogStatus} onRetry={() => setCatalogAttempt((attempt) => attempt + 1)} onSearch={(exam, number) => { openExam(exam); setQuery(number); if (number) handleSubmit(null, exam, number); }}
           dashboardLoading={dashboardLoading}
@@ -2665,7 +2663,6 @@ function ResultExperience({ content, onOpenRanking, onShare, resultBanner, stude
             </div>
           </div>
         </header>
-        <VerseCard scope="result" />
         <ResultCard onOpenRanking={onOpenRanking} resultBanner={resultBanner} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
       </div>
     </section>
