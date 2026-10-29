@@ -234,7 +234,11 @@ export default function AverageCalculator() {
         </section>
 
         <p className="calculator-note">هذه الحاسبة مساعدة للتقدير فقط. تأكد من المعاملات والقرارات المعتمدة رسميًا عند صدور أي تحديث.</p>
-        <a href="/" className="calculator-home-link">العودة إلى النتائج</a>
+        <nav aria-label="خدمات تعليمية مرتبطة" className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <a href="/orientation/match" className="calculator-home-link">استكشف التخصصات المناسبة لمعدلك</a>
+          <a href="/lessons" className="calculator-home-link">الدروس والمراجعة</a>
+          <a href="/" className="calculator-home-link">العودة إلى النتائج</a>
+        </nav>
       </section>
     </main>
   );
