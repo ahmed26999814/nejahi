@@ -39,13 +39,14 @@ export function studyFileBranches(file) {
   if (/الاداب الاصلية|الآداب الأصلية|اداب اصلية|آداب أصلية|lettres originelles|(?:^|\s)(?:7as\s*)?lo(?:\s|$)/.test(title)) found.add("LO");
   if (/الشعب الادبية|الشعب الأدبية|الشعبة الادبية|الشعبة الأدبية/.test(title)) { found.add("LM"); found.add("LO"); }
   if (/tm\s?gm|\btm\b|technique|تقنية|التقنية/.test(title)) found.add("TMGM");
-  if (/(?:^|\s)(?:7as\s*)?la(?:\s|$)/.test(title)) found.add("LA");
+  if (/(?:^|\s)(?:7\s*la|7as\s*la|bac\s+la)(?:\s|$)/.test(title)) found.add("LA");
 
   // Explicit C/D labels, including Bac_C, 7D, 5CD, 7D&C and 7C et 7D.
   if (/(?:^|\s)(?:bac\s*)?(?:[57]\s*)?c(?=\s|$)/.test(title) ||
       /(?:[57]cd|\b[57]c\s*&\s*[57]?d\b|\bc\s*(?:et|and|&|\+)\s*d\b)/.test(compact)) found.add("C");
   if (/(?:^|\s)(?:bac\s*)?(?:[57]\s*)?d(?=\s|$)/.test(title) ||
       /(?:[57]cd|\b[57]d\s*&\s*[57]?c\b|\bc\s*(?:et|and|&|\+)\s*d\b)/.test(compact)) found.add("D");
+  if (/[57]\s*d\s*&\s*[57]?c|\bd\s*(?:et|and|&|\+)\s*c\b/.test(compact)) { found.add("C"); found.add("D"); }
   if (/الشعب العلمية|الشعبة العلمية/.test(title)) { found.add("C"); found.add("D"); }
 
   // Some names use direct "7AS C" or "BAC-C" but older index branches are
