@@ -1924,7 +1924,6 @@ function CompetitionCards({ currentYearId = "year-2025", examCards = [], lang, o
           type="button"
           disabled={!exam.available}
         >
-          <span className="exam-card-icon" aria-hidden="true">{exam.icon}</span>
           <span className="min-w-0 text-start">
             <strong className="block text-base font-black text-slate-950 dark:text-white">{exam.title[lang]}</strong>
             <small className="mt-1 block text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{exam.description[lang]}</small>
