@@ -207,7 +207,7 @@ export default function IndexedStudyFiles() {
                       <h4 className="line-clamp-2 break-words text-sm font-black leading-6 text-slate-900 dark:text-white" title={file.title}>{niceTitle(file.title)}</h4>
                       <div className="mt-1.5 flex flex-wrap gap-x-2 text-xs font-semibold text-slate-500 dark:text-slate-300">
                         {file.yearLabel && <span>{file.yearLabel}</span>}
-                        {file.branch && <span>{file.branch}</span>}
+                        {file.branches[0] !== "common" && <span>{file.branches.map(value => BRANCH_LABELS[lang][value]).join(" / ")}</span>}
                         {file.fileType && <span>{file.fileType}</span>}
                         {/corrig|correction|تصحيح|مع الحل|الحل النموذج/i.test(normalizeStudyTitle(file.title)) && <span>{t.correction}</span>}
                       </div>
