@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 const base = process.env.MAURI_TEST_URL || 'http://127.0.0.1:3000';
 const get = (path) => fetch(`${base}${path}`, { redirect: 'manual' });
-for (const path of ['/', '/about', '/apk', '/lessons', '/calculator', '/toppers', '/statistics', '/candidatures', '/robots.txt', '/sitemap.xml', '/brand-logo.svg']) {
+for (const path of ['/', '/about', '/apk', '/lessons', '/calculator', '/toppers', '/statistics', '/privacy', '/terms', '/orientation', '/orientation/match', '/orientation/specialties', '/robots.txt', '/sitemap.xml', '/brand-logo.svg']) {
   assert.equal((await get(path)).status, 200, path);
 }
 for (const exam of ['bac', 'brevet', 'concours', 'excellence', 'bac-session']) {
@@ -14,6 +14,8 @@ for (const exam of ['bac', 'brevet', 'concours', 'excellence', 'bac-session']) {
   }
 }
 assert.equal((await get('/results/bac/1900')).status, 404);
+assert.equal((await get('/candidatures')).status, 404);
+assert.equal((await get('/api/candidatures')).status, 404);
 assert.equal((await get('/Apk')).status, 308);
 assert.ok((await get('/Apk')).headers.get('location').endsWith('/apk'));
 assert.equal((await get('/api/debug')).status, 401);
@@ -21,6 +23,11 @@ for (const [path, method] of [['content','PUT'], ['publish-exam','POST'], ['publ
   const response = await fetch(`${base}/api/admin/${path}`, { method, headers: { 'Content-Type': 'application/json' }, body: '{}' });
   assert.ok([401,503].includes(response.status), `Unauthorized ${path}: ${response.status}`);
 }
+const coverage = await get('/api/health/coverage');
+assert.ok([200, 503].includes(coverage.status));
+const coverageReport = await coverage.json();
+assert.equal(coverageReport.totalSources, 11);
+assert.equal(coverageReport.checks.length, 11);
 const catalogue = await get('/api/public-exams');
 assert.ok([200, 503].includes(catalogue.status));
 if (catalogue.status === 200) assert.ok(!(await catalogue.json()).updateRequired);
@@ -45,4 +52,4 @@ assert.equal(oversizedConcours.status, 400);
 const home = await get('/');
 assert.equal(home.headers.get('x-content-type-options'), 'nosniff');
 assert.equal((await get('/?candidate=12345')).headers.get('x-robots-tag'), 'noindex, nofollow, noarchive');
-console.log('PASS: 21 public pages/assets, invalid routes, diagnostics authorization, numeric validation, 2025/2026 source redirects, private-result indexing headers.');
+console.log('PASS: updated public pages/assets, 11-source health coverage, invalid routes, diagnostics authorization, numeric validation, 2025/2026 source redirects, private-result indexing headers.');
