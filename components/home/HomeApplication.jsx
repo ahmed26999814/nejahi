@@ -1,15 +1,15 @@
 "use client";
 
+import VerseCard from "../common/VerseCard";
 import PremiumHomeView from "./PremiumHomeView";
 import dynamic from "next/dynamic";
 import SearchPanel from "../search/SearchPanel";
+import { frenchExamTitle } from "../../lib/examLabels";
+import { sanitizeCandidateNumber } from "../search/searchUtils";
 import BottomNav from "../layout/BottomNav";
 import FloatingActionButton from "../ui/FloatingActionButton";
-import { CandidateProfileCard, ResultDetailsGrid, StatusBadge } from "../results/ResultDesignKit";
-import ResultOfficialSummary from "../results/ResultOfficialSummary";
 import Footer from "../layout/Footer";
 import Header from "../layout/PremiumHeader";
-import DecisionStrip from "../results/DecisionStrip";
 import { useHashRoute, writeHashRoute } from "../../hooks/useHashRoute";
 import { cva } from "class-variance-authority";
 import { LazyMotion, MotionConfig, domAnimation, m } from "framer-motion";
@@ -18,6 +18,7 @@ import { FaFacebookF, FaTelegram, FaWhatsapp } from "react-icons/fa6";
 import * as Select from "@radix-ui/react-select";
 import { Toaster, toast } from "sonner";
 
+const DecisionStrip = dynamic(() => import("../results/DecisionStrip"));
 const AnalyticsPage = dynamic(() => import("../analytics/AnalyticsPage"), { ssr: false });
 
 const PAGE_SIZE = 1000;
@@ -85,7 +86,7 @@ const UI_TEXT = {
     soon: "قريبًا",
     open: "البحث مفتوح",
     heroTitle: "نتائج المسابقات الوطنية في موريتانيا",
-    heroDesc: "اختر المسابقة ثم ابحث عن النتيجة الرسمية بسرعة.",
+    heroDesc: "نتائج 2025 و2026 في مكان واحد. اختر السنة والمسابقة وابحث برقم المترشح.",
     officialResult: "النتيجة الرسمية",
     verification: "رقم التحقق",
     examPageDesc: "صفحة منظمة للبحث وعرض النتائج الخاصة بهذه المسابقة.",
@@ -94,7 +95,7 @@ const UI_TEXT = {
     chooseExam: "اختر المسابقة",
     exam: "المسابقة",
     allTracks: "كل الشعب",
-    chooseExamFirst: "اختر مسابقة من نتائج 2025 أولًا لعرض الإحصائيات والأوائل الخاصة بها.",
+    chooseExamFirst: "اختر السنة والمسابقة أولًا لعرض نتائجها وإحصائياتها.",
     ranking: "التصنيف",
     rankingDesc: "ترتيب المترشحين حسب المعدل داخل نفس المجموعة.",
     noData: "لا توجد بيانات كافية.",
@@ -171,11 +172,11 @@ const UI_TEXT = {
     chooseCentre: "اختر مركز الامتحان",
     candidateNumber: "رقم المترشح",
     unavailable: "غير متوفرة",
-    concoursFailed: "راسب",
+    concoursFailed: "غير موفق",
     concoursPassedCompetition: "ناجح في المسابقة",
     concoursPassedCertificate: "ناجح في المسابقة والشهادة",
     successToast: "🎉 مبروك بالنجاح!",
-    statusLabels: { admis: "ناجح", sessionnaire: "دورة استدراكية", absent: "غائب", ajourne: "راسب", unknown: "غير محددة" },
+    statusLabels: { admis: "ناجح", sessionnaire: "دورة استدراكية", absent: "غائب", ajourne: "غير موفق", unknown: "غير محددة" },
     missingEnv: "لم يتم ضبط إعدادات الاتصال في بيئة النشر.",
     statsLoadError: "تعذر تحميل الإحصائيات.",
     enterQuery: "يرجى إدخال رقم المترشح.",
@@ -428,7 +429,7 @@ function getOfficialStatus(value) {
   if (normalized.includes("admis") || normalized.includes("ناجح")) return { label: "ناجح", icon: <CheckIcon />, className: "admis" };
   if (normalized.includes("sessionnaire")) return { label: "دورة استدراكية", icon: <AlertIcon />, className: "sessionnaire" };
   if (normalized.includes("absent") || normalized.includes("غائب")) return { label: "غائب", icon: <MinusIcon />, className: "absent" };
-  if (normalized.includes("ajourn") || normalized.includes("راسب")) return { label: "راسب", icon: <XIcon />, className: "ajourne" };
+  if (normalized.includes("ajourn") || normalized.includes("راسب")) return { label: "غير موفق", icon: <XIcon />, className: "ajourne" };
   return { label: value ? cleanText(value) : "غير محددة", icon: <InfoIcon />, className: "unknown" };
 }
 
@@ -972,24 +973,21 @@ function prepareBrevetStudents(rows) {
 }
 
 async function fetchConcoursLocations() {
-  const rows = [];
-  let from = 0;
-  while (true) {
-    const batch = await supabaseRequest({
-      select: "*",
-      limit: PAGE_SIZE,
-      offset: from,
-    }, CONCOURS_LOCATIONS_VIEW);
-    rows.push(...batch);
-    if (batch.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  console.log("[MauriResults Concours Locations]", {
-    rawCount: rows.length,
-    wilayas: uniqueSorted(rows.map((row) => getColumn(row, "WILAYA_AR"))).length,
+  const response = await fetch("/api/concours-locations?source=concours", {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(12000),
   });
-  return rows;
+  if (!response.ok) throw new Error("Locations unavailable");
+  const data = await response.json();
+  return (data.locations || []).flatMap((region) =>
+    (region.moughataas || []).flatMap((district) =>
+      (district.centres || []).map((centre) => ({
+        WILAYA_AR: region.wilaya,
+        MOUGHATAA_AR: district.name,
+        "Centre Examen_AR": centre,
+      })),
+    ),
+  );
 }
 
 async function fetchConcoursFilteredResults(field, value) {
@@ -1056,31 +1054,22 @@ async function fetchFastRankingResults(source, field, value) {
   return config.prepare(rows).sort((a, b) => getAverage(b) - getAverage(a) || a.originalIndex - b.originalIndex);
 }
 
-async function searchConcoursByLocation({ wilaya, wilayaValues = [], moughataa, centre, number }) {
-  const numbers = concoursNumberSearchValues(number);
-  const params = {
-    select: "*",
-    WILAYA_AR: postgrestInFilter(concoursWilayaQueryValues(wilaya, wilayaValues)),
-    MOUGHATAA_AR: `eq.${escapePostgrestValue(moughataa)}`,
-    "Centre Examen_AR": `eq.${escapePostgrestValue(centre)}`,
-    or: `(${numbers.map((item) => `NODOSS.eq.${item}`).join(",")},${numbers.map((item) => `Numéro_C1AS.eq.${item}`).join(",")})`,
-    limit: 20,
-  };
-  let rows;
-  try {
-    rows = await supabaseRequest({ ...params, order: "total_num.desc.nullslast" }, CONCOURS_VIEW);
-  } catch (error) {
-    if (!isMissingConcoursView(error)) throw error;
-    rows = await supabaseRequest(params, CONCOURS_TABLE);
-  }
-  const students = prepareConcoursStudents(rows);
-  logConcoursRows("location-search", rows, students);
-  return students;
+async function searchConcoursByLocation({ wilaya, moughataa, centre, number }) {
+  const path = ["/api/concours-number/concours", wilaya, moughataa, centre, number]
+    .map((part, index) => index === 0 ? part : encodeURIComponent(part)).join("/");
+  const response = await fetch(path, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error("Result lookup unavailable");
+  const data = await response.json();
+  return preserveSourceRanks("concours", data.rows || [], prepareConcoursStudents(data.rows || []));
 }
 
-async function searchResults(query, exam) {
+async function searchResults(query, exam, signal) {
    if (!exam?.source) throw new Error("Missing selected exam.");
    const response = await fetch(`/api/search?source=${encodeURIComponent(exam.source)}&q=${encodeURIComponent(query.trim())}`, {
+     signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
      headers: { Accept: "application/json" },
    });
    if (!response.ok) throw new Error(await response.text());
@@ -1176,7 +1165,7 @@ function buildPublishedExamCards(rows = []) {
       const searchMode = isClearlyBac ? "simple" : (row.search_mode || "simple");
       return ({
       id: publishedExamId(row),
-      title: { ar: row.title_ar || row.table_name, fr: row.title_fr || row.title_ar || row.table_name },
+      title: { ar: row.title_ar || row.table_name, fr: frenchExamTitle(row) },
       description: { ar: row.description_ar || "نتائج منشورة من لوحة الأدمن.", fr: row.description_fr || "Résultats publiés depuis l'administration." },
       tone: row.tone || "green",
       available: true,
@@ -1209,13 +1198,13 @@ function getExamYear(exam) {
 
 async function fetchPublishedExams() {
   try {
-    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" } });
-    if (!response.ok) return [];
+    const response = await fetch("/api/public-exams", { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(12000) });
+    if (!response.ok) throw new Error("Catalogue unavailable");
     const data = await response.json();
-    return buildPublishedExamCards(data.exams || []);
+    if (!Array.isArray(data.exams)) throw new Error("Invalid catalogue");
+    return buildPublishedExamCards(data.exams);
   } catch (error) {
-    console.warn("[MauriResults Published Exams]", error);
-    return [];
+    throw error;
   }
 }
 
@@ -1311,6 +1300,9 @@ export default function HomePage() {
   const [analyticsViews, setAnalyticsViews] = useState({});
   const [analyticsLoadingSources, setAnalyticsLoadingSources] = useState({});
   const [publishedExams, setPublishedExams] = useState([]);
+  const [catalogStatus, setCatalogStatus] = useState("loading");
+  const [catalogAttempt, setCatalogAttempt] = useState(0);
+  const searchRequestRef = useRef(null);
   const sharedResultRequestRef = useRef("");
 
   const examCards = publishedExams;
@@ -1332,7 +1324,7 @@ export default function HomePage() {
     const savedLang = localStorage.getItem("mauriresults-lang");
     const savedYearId = localStorage.getItem("mauriresults-selected-year");
     setTheme(saved || "light");
-    setLang(savedLang || "ar");
+    setLang(savedLang === "fr" ? "fr" : "ar");
     if (savedYearId && /^year-20\d{2}$/.test(savedYearId)) setSelectedYearId(savedYearId);
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -1351,11 +1343,19 @@ export default function HomePage() {
 
   useEffect(() => {
     let ignore = false;
+    setCatalogStatus("loading");
     fetchPublishedExams().then((exams) => {
-      if (!ignore) setPublishedExams(exams);
-    });
+      if (!ignore) { setPublishedExams(exams); setCatalogStatus("ready"); }
+    }).catch(() => { if (!ignore) setCatalogStatus("error"); });
     return () => { ignore = true; };
-  }, []);
+  }, [catalogAttempt]);
+
+  useEffect(() => () => searchRequestRef.current?.abort(), []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "fr" ? "ltr" : "rtl";
+  }, [lang]);
 
 
   async function loadAnalyticsSource(source) {
@@ -1469,6 +1469,7 @@ export default function HomePage() {
   }, [examCards, lang]);
 
   function setTheme(nextTheme) {
+    document.documentElement.style.colorScheme = nextTheme;
     setThemeState(nextTheme);
     document.documentElement.dataset.theme = nextTheme;
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
@@ -1567,7 +1568,7 @@ export default function HomePage() {
     });
   }, [viewStats, searchPool, selectedTopperTrack, showTopperTrackSelector, showTrackGroups, text]);
 
-  function showStudent(student) {
+  function showStudent(student, examId = selectedExamId) {
     const known = activeStudents.find((item) => item.id === student.id && item.source === student.source);
     setMatches([]);
     setSelectedStudent(null);
@@ -1579,12 +1580,12 @@ export default function HomePage() {
       setResultLoading(false);
       setResultPageOpen(true);
       setActiveView("result");
-      writeHashRoute("result", { view: "result", examId: selectedExamId });
+      writeHashRoute("result", { view: "result", examId });
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, 20);
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event, targetExam = selectedExam, input = query) {
     event?.preventDefault();
     setError("");
     setMessage("");
@@ -1593,7 +1594,7 @@ export default function HomePage() {
     setResultPageOpen(false);
     setResultLoading(false);
 
-    if (!selectedExam?.source) {
+    if (!targetExam?.source) {
       setActiveView("year");
       setError(text.chooseExamFirst);
       writeHashRoute(selectedYearId, { view: "year", yearId: selectedYearId });
@@ -1601,40 +1602,45 @@ export default function HomePage() {
       return;
     }
 
-    const value = query.trim();
+    const value = sanitizeCandidateNumber(input);
     if (!value) {
       setError(text.enterQuery);
       return;
     }
-    if (value.length < 2) {
+    if (value.length < 1) {
       setError(text.shortQuery);
       return;
     }
-    if (!/^\d{2,20}$/.test(value)) {
+    if (!/^\d{1,20}$/.test(value)) {
       setError(text.invalidCandidateNumber || text.shortQuery);
       return;
     }
 
+    searchRequestRef.current?.abort();
+    const controller = new AbortController();
+    searchRequestRef.current = controller;
     setLoading(true);
     try {
-      const rows = await searchResults(value, selectedExam);
+      const rows = await searchResults(value, targetExam, controller.signal);
+      if (controller.signal.aborted) return;
       const found = rows.map((student) => {
-        const known = searchPool.find((item) => item.id === student.id);
+        const known = searchPool.find((item) => item.id === student.id && item.source === student.source);
         return known ? { ...student, rank: known.rank } : student;
-      }).filter((student) => selectedExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);
+      }).filter((student) => targetExam?.filter === "sessionnaire" ? getOfficialStatus(student.kr).className === "sessionnaire" : true);
 
       if (!found.length) {
-        setError(selectedExam?.filter === "sessionnaire" ? text.sessionNotFound : text.notFound);
+        setError(targetExam?.filter === "sessionnaire" ? text.sessionNotFound : text.notFound);
         return;
       }
 
-      if (found.length === 1) showStudent(found[0]);
+      if (found.length === 1) showStudent(found[0], targetExam.id);
       else setMatches(found);
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error("[MauriResults Search Error]", error);
       setError(isMissingSupabaseEnv(error) ? text.missingEnv : text.connectionError);
     } finally {
-      setLoading(false);
+      if (searchRequestRef.current === controller) setLoading(false);
     }
   }
 
@@ -1653,6 +1659,8 @@ export default function HomePage() {
   }
 
   async function openView(view) {
+    searchRequestRef.current?.abort();
+    setLoading(false);
     if (view === "search") {
       if (selectedExamId) {
         setActiveView("exam");
@@ -1679,6 +1687,8 @@ export default function HomePage() {
   }
 
   function openYear(year) {
+    searchRequestRef.current?.abort();
+    setLoading(false);
     if (!year.available) return;
     const nextYearId = year.id || "year-2025";
     const nextYear = nextYearId.replace("year-", "");
@@ -1697,6 +1707,9 @@ export default function HomePage() {
   }
 
   async function openExam(exam) {
+    searchRequestRef.current?.abort();
+    setLoading(false);
+    setQuery("");
     setSelectedExamId(exam.id);
     setSelectedYearId(`year-${getExamYear(exam)}`);
     localStorage.setItem("mauriresults-selected-year", `year-${getExamYear(exam)}`);
@@ -1771,8 +1784,9 @@ export default function HomePage() {
     <m.main className="app-background min-h-screen pb-20 text-mauri-ink dark:text-white md:pb-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.32, ease: "easeOut" }}>
       <Header activeView={activeView} content={siteContent} lang={lang} onNavigate={openView} onToggleLang={toggleLang} text={text} theme={theme} setTheme={setTheme} />
 
+      {activeView === "home" && <VerseCard scope="home" />}
       {activeView === "home" && (
-        <HomeView
+        <HomeView examCards={examCards} catalogStatus={catalogStatus} onRetry={() => setCatalogAttempt((attempt) => attempt + 1)} onSearch={(exam, number) => { openExam(exam); setQuery(number); if (number) handleSubmit(null, exam, number); }}
           dashboardLoading={dashboardLoading}
           error={error}
           handleSubmit={handleSubmit}
@@ -1836,9 +1850,14 @@ function ContactPage({ text }) {
     </section>
   );
 }
-function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text, yearCards }) {
+function HomeView({ content, homepageBanner, lang, onSelectYear, stats, text, yearCards, examCards, catalogStatus, onRetry, onSearch }) {
   return (
     <PremiumHomeView
+      content={content}
+      examCards={examCards}
+      catalogStatus={catalogStatus}
+      onRetry={onRetry}
+      onSearch={onSearch}
       homepageBanner={homepageBanner}
       lang={lang}
       onSelectYear={onSelectYear}
@@ -1900,13 +1919,14 @@ function CompetitionCards({ currentYearId = "year-2025", examCards = [], lang, o
     <section className="grid grid-cols-2 gap-2.5 md:gap-3">
       {visibleExamCards.map((exam) => (
         <button
+          aria-pressed={selectedExamId === exam.id}
           className={`exam-card exam-card-${exam.tone} ${selectedExamId === exam.id ? "is-selected" : ""} ${exam.available ? "" : "is-locked"}`}
           key={exam.id}
           onClick={() => exam.available && onSelectExam(exam)}
           type="button"
           disabled={!exam.available}
         >
-          <span className="exam-card-icon">{exam.icon}</span>
+          <span className="exam-card-icon" aria-hidden="true">{exam.icon}</span>
           <span className="min-w-0 text-start">
             <strong className="block text-base font-black text-slate-950 dark:text-white">{exam.title[lang]}</strong>
             <small className="mt-1 block text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{exam.description[lang]}</small>
@@ -1956,7 +1976,7 @@ function uniqueSorted(values) {
 
 function SearchErrorHelp({ error, text }) {
   return (
-    <div className="col-span-full rounded-[16px] bg-red-50 px-3 py-2 text-xs font-black leading-6 text-red-700 dark:bg-red-300/10 dark:text-red-200">
+    <div role="alert" className="col-span-full rounded-[16px] bg-red-50 px-3 py-2 text-xs font-black leading-6 text-red-700 dark:bg-red-300/10 dark:text-red-200">
       <p>{error}</p>
       <ul className="mt-1 list-disc ps-5 font-bold">
         <li>{text.checkCandidateNumber}</li>
@@ -2040,7 +2060,7 @@ function ConcoursSearchPanel({ onSelect, text }) {
       <SelectField disabled={busy || !moughataa} label={text.chooseCentre} onChange={setCentre} options={centres} value={centre} />
       <label className="grid gap-1">
         <span className="px-1 text-[11px] font-black text-slate-500 dark:text-slate-400">{text.candidateNumber}</span>
-        <input className="search-input pr-4" disabled={busy || !centre} inputMode="numeric" enterKeyHint="search" pattern="[0-9]*" onChange={(event) => setNumber(event.target.value)} placeholder={text.candidateNumber} value={number} />
+        <input className="search-input pr-4" disabled={busy || !centre} inputMode="numeric" dir="ltr" maxLength={20} enterKeyHint="search" pattern="[0-9]*" onChange={(event) => setNumber(sanitizeCandidateNumber(event.target.value))} placeholder={text.candidateNumber} value={number} />
       </label>
       <button className="tap-button h-12 rounded-[16px] bg-gradient-to-l from-mauri-green via-emerald-600 to-emerald-500 px-5 text-sm font-black text-white shadow-[0_16px_35px_rgba(21,128,61,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgba(21,128,61,.28)] active:scale-[.98] disabled:cursor-wait disabled:opacity-70" disabled={busy} type="submit">
         {busy ? text.searching : text.searchButton}
@@ -2200,26 +2220,26 @@ setLocalError(text.connectionError);
   return (
     <form className="search-card animate-slide-up" onSubmit={submit} aria-busy={searching || Boolean(loadingLevel)}>
       <div className="col-span-full flex items-center justify-between gap-2 px-1">
-        <strong className="text-xs font-black text-mauri-green dark:text-mauri-gold">البحث بالخيارات</strong>
-        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">الولاية ← المقاطعة ← المركز ← الرقم</span>
+        <strong className="text-xs font-black text-mauri-green dark:text-mauri-gold">{text.searchButton === "Rechercher" ? "Recherche guidée" : "البحث بالخيارات"}</strong>
+        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{text.searchButton === "Rechercher" ? "Région → Département → Centre → Numéro" : "الولاية ← المقاطعة ← المركز ← الرقم"}</span>
       </div>
       <SelectField
         disabled={searching || loadingLevel === "wilaya"}
-        label={loadingLevel === "wilaya" ? "جاري تحميل الولايات..." : (text.chooseWilaya || "اختر الولاية")}
+        label={loadingLevel === "wilaya" ? (text.searchButton === "Rechercher" ? "Chargement des régions…" : "جارٍ تحميل الولايات…") : (text.chooseWilaya || "اختر الولاية")}
         onChange={setWilaya}
         options={wilayas}
         value={wilaya}
       />
       <SelectField
         disabled={searching || !wilaya || loadingLevel === "moughataa"}
-        label={loadingLevel === "moughataa" ? "جاري تحميل المقاطعات..." : (text.chooseMoughataa || "اختر المقاطعة")}
+        label={loadingLevel === "moughataa" ? (text.searchButton === "Rechercher" ? "Chargement des départements…" : "جارٍ تحميل المقاطعات…") : (text.chooseMoughataa || "اختر المقاطعة")}
         onChange={setMoughataa}
         options={moughataas}
         value={moughataa}
       />
       <SelectField
         disabled={searching || !moughataa || loadingLevel === "centre"}
-        label={loadingLevel === "centre" ? "جاري تحميل المراكز..." : (text.chooseCentre || "اختر مركز الامتحان")}
+        label={loadingLevel === "centre" ? (text.searchButton === "Rechercher" ? "Chargement des centres…" : "جارٍ تحميل المراكز…") : (text.chooseCentre || "اختر مركز الامتحان")}
         onChange={setCentre}
         options={centres}
         value={centre}
@@ -2230,9 +2250,11 @@ setLocalError(text.connectionError);
 className="search-input pr-4"
 disabled={searching || !centre}
 inputMode="numeric"
+dir="ltr"
+maxLength={20}
 enterKeyHint="search"
 pattern="[0-9]*"
-onChange={(event) => setNumber(event.target.value)}
+onChange={(event) => setNumber(sanitizeCandidateNumber(event.target.value))}
 placeholder={text.candidateNumber || text.number || "رقم المترشح"}
 value={number}
         />
@@ -2643,6 +2665,7 @@ function ResultExperience({ content, onOpenRanking, onShare, resultBanner, stude
             </div>
           </div>
         </header>
+        <VerseCard scope="result" />
         <ResultCard onOpenRanking={onOpenRanking} resultBanner={resultBanner} student={student} onShare={onShare} text={text} verificationCode={verificationCode} />
       </div>
     </section>

@@ -10,7 +10,7 @@ const SITE_URL = "https://mauri-results.vercel.app";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=3600";
-const REQUIRED_APP_VERSION = "3.2.0";
+const REQUIRED_APP_VERSION = "3.3.0";
 
 function isAdminPlaceholder(value: unknown) {
   const text = String(value || "").trim().toLowerCase();
@@ -95,8 +95,8 @@ function sortExams(rows: ReadonlyArray<Record<string, unknown>>) {
   });
 }
 
-async function fetchPublishedExamsUncached(): Promise<{ rows: Array<Record<string, unknown>>; error?: string }> {
-  if (!SUPABASE_URL || !SUPABASE_KEY) return { rows: [], error: "Missing Supabase environment variables" };
+async function fetchPublishedExamsUncached(): Promise<{ rows: Array<Record<string, unknown>> }> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error("Catalogue unavailable");
   const url = new URL(`${SUPABASE_URL}/rest/v1/published_exams`);
   url.searchParams.set("select", "source_key,table_name,title_ar,title_fr,description_ar,description_fr,year,tone,search_mode,number_column,name_column,score_column,decision_column,track_column,wilaya_column,moughataa_column,school_column,centre_column,birth_place_column,birth_date_column,ranked_view,total_rows,created_at");
   url.searchParams.set("is_active", "eq.true");
@@ -104,9 +104,10 @@ async function fetchPublishedExamsUncached(): Promise<{ rows: Array<Record<strin
   const response = await fetch(url, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Accept: "application/json", Prefer: "count=none" },
     cache: "no-store",
+    signal: AbortSignal.timeout(5000),
   });
   const text = await response.text();
-  if (!response.ok) return { rows: [], error: text };
+  if (!response.ok) throw new Error("Catalogue unavailable");
   const rows = (text ? JSON.parse(text) : [])
     .filter((exam: Record<string, unknown>) => /^[A-Za-z_][A-Za-z0-9_]{1,62}$/.test(String(exam.table_name || "").trim()))
     .map(cleanExam);
@@ -157,7 +158,8 @@ export async function GET(request: Request) {
     || request.headers.get("sec-fetch-mode")
     || request.headers.get("referer")
   );
-  const client = explicitClient || (!isBrowserRequest ? "mobile" : null);
+  const legacyAgent = /okhttp|expo|reactnative|react-native/i.test(request.headers.get("user-agent") || "");
+  const client = explicitClient || (!isBrowserRequest && legacyAgent ? "mobile" : null);
   const legacyMobile = client === "mobile" && nativeClient !== "flutter-native";
 
   if (legacyMobile) {
@@ -180,18 +182,25 @@ export async function GET(request: Request) {
     );
   }
 
-  const result = await fetchPublishedExams();
-  const exams = publicCatalog(result.rows);
-  return NextResponse.json(
-    { exams },
-    {
-      status: 200,
-      headers: {
-        "Cache-Control": PUBLIC_CACHE,
-        "CDN-Cache-Control": PUBLIC_CACHE,
-        "Vercel-CDN-Cache-Control": PUBLIC_CACHE,
-        Vary: "X-MauriResults-Client, Accept-Encoding",
-      },
-    }
-  );
+  try {
+    const result = await fetchPublishedExams();
+    const exams = publicCatalog(result.rows);
+    return NextResponse.json(
+      { exams },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": PUBLIC_CACHE,
+          "CDN-Cache-Control": PUBLIC_CACHE,
+          "Vercel-CDN-Cache-Control": PUBLIC_CACHE,
+          Vary: "X-MauriResults-Client, User-Agent, Accept-Encoding",
+        },
+      }
+    );
+  } catch {
+    return NextResponse.json({ exams: [], error: "Catalogue temporarily unavailable" }, {
+      status: 503,
+      headers: { "Cache-Control": "no-store", "CDN-Cache-Control": "no-store", "Retry-After": "30" },
+    });
+  }
 }

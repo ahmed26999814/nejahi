@@ -11,28 +11,34 @@ export default function ApkDownload() {
   const [info, setInfo] = useState(null);
   const [downloads, setDownloads] = useState(null);
   const [checking, setChecking] = useState(true);
+  const [downloadAvailable, setDownloadAvailable] = useState(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
+    setChecking(true);
     Promise.allSettled([
-      fetch(`/apk/version.json?t=${Date.now()}`, { cache: "no-store", signal: controller.signal }).then((response) => {
+      fetch(`/apk/version.json?t=${Date.now()}`, { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]) }).then((response) => {
         if (!response.ok) throw new Error("APK metadata is not available");
         return response.json();
       }),
-      fetch("/api/apk-download?action=count", { cache: "no-store", signal: controller.signal }).then((response) => response.json()),
-    ]).then(([versionResult, countResult]) => {
+      fetch("/api/apk-download?action=count", { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]) }).then((response) => response.json()),
+      fetch("/api/apk-download?action=status", { signal: controller.signal }).then((response) => response.json()),
+    ]).then(([versionResult, countResult, availabilityResult]) => {
+      if (controller.signal.aborted) return;
+      setDownloadAvailable(availabilityResult.status === "fulfilled" && availabilityResult.value.available === true);
       if (versionResult.status === "fulfilled") setInfo(versionResult.value);
       if (countResult.status === "fulfilled") setDownloads(Number(countResult.value?.downloads || 0));
       setChecking(false);
     });
     return () => controller.abort();
-  }, []);
+  }, [attempt]);
 
   const version = info?.version || "3.3.0";
 
   return (
     <div className="apk-action-area">
-      {info ? (
+      {info && downloadAvailable ? (
         <a href="/api/apk-download" className="apk-download" aria-label={`تحميل النسخة الجديدة MauriResults ${version} للأندرويد`}>
           <span className="apk-download-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -49,11 +55,13 @@ export default function ApkDownload() {
         <div className="apk-download apk-download-disabled" role="status" aria-live="polite">
           <span className="apk-download-icon" aria-hidden="true">…</span>
           <span className="apk-download-copy">
-            <strong>{checking ? "جاري تجهيز النسخة الجديدة" : "التحديث غير متاح الآن"}</strong>
-            <small>سنحاول إظهاره تلقائيًا</small>
+            <strong>{checking ? "جاري تجهيز النسخة الجديدة" : "التنزيل غير متاح مؤقتًا"}</strong>
+            <small>يمكنك متابعة البحث عن النتائج عبر الموقع.</small>
           </span>
         </div>
       )}
+
+      {!checking && !downloadAvailable && <button type="button" onClick={() => setAttempt((value) => value + 1)} className="min-h-12 rounded-xl border px-4 font-bold">إعادة المحاولة</button>}
 
       <div className="apk-trust-row" aria-label="معلومات التطبيق">
         <span>الإصدار {version}</span>

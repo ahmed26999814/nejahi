@@ -1,3 +1,7 @@
+import { isAuthorizedAdmin } from "../../../lib/adminAuthorization.js";
+
+export const runtime = "nodejs";
+
 const TABLES = [
   "bac_results",
   "bac_session2_results",
@@ -42,7 +46,6 @@ async function readTableWithKey(table, config, key, mode) {
       available: false,
       ok: false,
       count: null,
-      firstRow: null,
       columns: [],
       error: `Missing ${mode} key or Supabase URL`,
     };
@@ -55,6 +58,7 @@ async function readTableWithKey(table, config, key, mode) {
   try {
     const response = await fetch(url, {
       cache: "no-store",
+      signal: AbortSignal.timeout(8000),
       headers: {
         apikey: key,
         Authorization: `Bearer ${key}`,
@@ -81,9 +85,8 @@ async function readTableWithKey(table, config, key, mode) {
       ok: response.ok,
       status: response.status,
       count: countMatch ? Number(countMatch[1]) : rows.length,
-      firstRow: Array.isArray(rows) ? rows[0] || null : null,
       columns: Array.isArray(rows) && rows[0] ? Object.keys(rows[0]) : [],
-      error: response.ok ? null : text,
+      error: response.ok ? null : `Upstream request failed (${response.status})`,
     };
   } catch (error) {
     return {
@@ -91,9 +94,8 @@ async function readTableWithKey(table, config, key, mode) {
       available: true,
       ok: false,
       count: null,
-      firstRow: null,
       columns: [],
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: "Upstream request unavailable",
     };
   }
 }
@@ -119,7 +121,13 @@ async function inspectTable(table, config) {
   };
 }
 
-export async function GET() {
+export async function GET(request) {
+  if (!isAuthorizedAdmin(request)) {
+    return Response.json({ error: "Unauthorized" }, {
+      status: 401,
+      headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" },
+    });
+  }
   const config = getSupabaseConfig();
   const tables = await Promise.all(TABLES.map((table) => inspectTable(table, config)));
 
@@ -136,5 +144,5 @@ export async function GET() {
     },
     note: "Counts are read from the Supabase project shown in env.projectRef. serviceRole counts bypass RLS only when SUPABASE_SERVICE_ROLE_KEY is configured on the server.",
     tables,
-  });
+  }, { headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } });
 }

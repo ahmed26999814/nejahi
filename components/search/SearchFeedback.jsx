@@ -1,11 +1,11 @@
 "use client";
 
-export default function SearchFeedback({ error, message, text }) {
+export default function SearchFeedback({ id = "search-feedback", error, message, text }) {
   if (!error && !message) return null;
 
   return (
     <div
-      id="search-feedback"
+      id={id}
       role={error ? "alert" : "status"}
       className={`search-feedback ${error ? "search-feedback-error" : "search-feedback-success"}`}
     >

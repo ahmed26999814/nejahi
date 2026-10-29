@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import examSeoData from "../../../../data/exam-seo.json";
 
+export const dynamicParams = false;
+
 const siteUrl = "https://mauri-results.vercel.app";
 
 const relatedResultLinks = [

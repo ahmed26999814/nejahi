@@ -31,19 +31,9 @@ export type ShardLookupResult =
   | { candidates: Record<string, PublicRow[]>; status: 200 }
   | { error: string; status: number };
 
-export function asciiDigits(value: string) {
-  const arabic = "٠١٢٣٤٥٦٧٨٩";
-  const persian = "۰۱۲۳۴۵۶۷۸۹";
-  return String(value || "")
-    .replace(/[٠-٩]/g, (digit) => String(arabic.indexOf(digit)))
-    .replace(/[۰-۹]/g, (digit) => String(persian.indexOf(digit)));
-}
-
-export function normalizeCandidateNumber(value: string) {
-  const digits = asciiDigits(String(value || "").trim()).slice(0, 20);
-  if (!/^\d{1,20}$/.test(digits)) return "";
-  return digits.replace(/^0+(?=\d)/, "");
-}
+export { asciiCandidateDigits as asciiDigits } from "./candidateNumber";
+import { normalizeCandidateNumber } from "./candidateNumber";
+export { normalizeCandidateNumber };
 
 export function candidateShardKey(candidateKey: string) {
   const normalized = normalizeCandidateNumber(candidateKey);

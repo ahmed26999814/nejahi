@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/prebuild-status-label.cjs",
+    "prebuild": "node scripts/prebuild-status-label.cjs && npm test",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.3.2",
@@ -17,21 +18,25 @@
     "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.23.0",
-    "next": "^15.1.6",
+    "next": "15.5.28",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.7.0",
     "sonner": "^2.0.7",
     "tailwindcss-animate": "^1.0.7",
-    "xlsx": "^0.18.5"
+    "xlsx": "file:vendor/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@types/node": "20.17.6",
     "@types/react": "latest",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.5.1",
+    "postcss": "8.5.32",
     "tailwindcss": "^3.4.17",
     "typescript": "5.8.2"
+  },
+  "overrides": {
+    "postcss": "$postcss",
+    "sharp": "0.35.5"
   }
 }

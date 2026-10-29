@@ -10,8 +10,14 @@ export default function LogoMark({ className = "h-10 w-10", src = RESTORED_LOGO 
         src={resolvedSrc}
         alt="MauriResults"
         loading="eager"
+        width={128}
+        height={128}
+        decoding="async"
         onError={(event) => {
-          event.currentTarget.src = RESTORED_LOGO;
+          const image = event.currentTarget;
+          if (image.dataset.fallbackApplied) return;
+          image.dataset.fallbackApplied = "true";
+          image.src = RESTORED_LOGO;
         }}
       />
     </span>

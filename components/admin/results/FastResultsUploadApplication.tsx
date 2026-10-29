@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import * as XLSX from "xlsx";
+import { readResultsWorksheet } from "../../../lib/readResultsWorksheet";
 import { detectColumnMappings } from "../../../lib/columnMapping";
 
 const SOURCES = [
@@ -34,7 +34,7 @@ function normalizeTableName(value: string) {
 }
 
 function normalizeRow(row: Row) {
-  const output: Row = {};
+  const output: Row = Object.create(null);
   for (const [key, value] of Object.entries(row || {})) {
     const cleanKey = String(key || "").replace(/\u0000/g, "").trim();
     if (!cleanKey || cleanKey.startsWith("__EMPTY")) continue;
@@ -46,10 +46,7 @@ function normalizeRow(row: Row) {
 }
 
 async function parseFile(file: File) {
-  const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
-  const sheetName = workbook.SheetNames[0];
-  if (!sheetName) return { rows: [] as Row[], columns: [] as string[], sheetName: "" };
-  const raw = XLSX.utils.sheet_to_json<Row>(workbook.Sheets[sheetName], { defval: null, raw: false });
+  const { sheetName, rawRows: raw } = await readResultsWorksheet(file);
   const rows = raw.map(normalizeRow).filter((row) => Object.values(row).some((value) => value !== null && value !== ""));
   const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
   return { rows, columns, sheetName };

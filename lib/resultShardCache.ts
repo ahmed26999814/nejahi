@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import {
   fetchCentreShard,
   fetchExactNumberResult,
+  fetchExactConcoursResult,
   fetchNumberShard,
 } from "./resultNumberLookup";
 import { SEARCH_CACHE_TAG, searchSourceTag } from "./cacheTags";
@@ -48,5 +49,15 @@ export function cachedLegacyConcoursResult(source: string, candidateKey: string)
       revalidate: RESULT_CACHE_SECONDS,
       tags: [SEARCH_CACHE_TAG, searchSourceTag(source)],
     },
+  )();
+}
+
+export function cachedLegacyConcoursByLocation(
+  candidateKey: string, wilaya: string, moughataa: string, centre: string,
+) {
+  return unstable_cache(
+    () => fetchExactConcoursResult("concours", candidateKey, wilaya, moughataa, centre),
+    ["mauriresults-legacy-concours-location-v1", candidateKey, wilaya, moughataa, centre],
+    { revalidate: RESULT_CACHE_SECONDS, tags: [SEARCH_CACHE_TAG, searchSourceTag("concours")] },
   )();
 }

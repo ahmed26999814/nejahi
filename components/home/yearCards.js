@@ -2,14 +2,14 @@ export const HOME_YEAR_CARDS = [
   {
     id: "year-2026",
     title: { ar: "نتائج المسابقات 2026", fr: "Résultats des concours 2026" },
-    description: { ar: "نتائج 2026 المنشورة والمتاحة للبحث الآن.", fr: "Résultats 2026 publiés et disponibles dès maintenant." },
-    available: true,
+    description: { ar: "تصفح المسابقات المنشورة لسنة 2026.", fr: "Consultez les concours publiés pour 2026." },
+    available: false,
   },
   {
     id: "year-2025",
     title: { ar: "نتائج المسابقات 2025", fr: "Résultats des concours 2025" },
-    description: { ar: "كل نتائج 2025 المتوفرة الآن في مكان واحد.", fr: "Tous les résultats 2025 disponibles au même endroit." },
-    available: true,
+    description: { ar: "تصفح أرشيف المسابقات لسنة 2025.", fr: "Consultez les archives des concours de 2025." },
+    available: false,
   },
 ];
 

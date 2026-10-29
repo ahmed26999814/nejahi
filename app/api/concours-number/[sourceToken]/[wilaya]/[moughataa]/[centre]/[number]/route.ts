@@ -4,7 +4,7 @@ import {
   normalizeCandidateNumber,
   tokenToSource,
 } from "../../../../../../../../lib/resultNumberLookup";
-import { cachedCentreShard } from "../../../../../../../../lib/resultShardCache";
+import { cachedCentreShard, cachedLegacyConcoursByLocation } from "../../../../../../../../lib/resultShardCache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export async function GET(
   const moughataa = clean(params.moughataa);
   const centre = clean(params.centre);
 
-  if (!source.startsWith("upload:")) {
+  if (source !== "concours" && !source.startsWith("upload:")) {
     return NextResponse.json(
       { rows: [], error: "Invalid source" },
       { status: 400, headers: { "Cache-Control": "no-store" } },
@@ -57,7 +57,9 @@ export async function GET(
     );
   }
 
-  const result = await cachedCentreShard(source, wilaya, moughataa, centre);
+  const result = source === "concours"
+    ? await cachedLegacyConcoursByLocation(candidateKey, wilaya, moughataa, centre)
+    : await cachedCentreShard(source, wilaya, moughataa, centre);
   if ("error" in result) {
     return NextResponse.json(
       { rows: [], error: result.error },
@@ -72,7 +74,7 @@ export async function GET(
   }
 
   return NextResponse.json(
-    { rows: result.candidates[candidateKey] || [] },
+    { rows: "candidates" in result ? result.candidates[candidateKey] || [] : result.rows },
     {
       headers: {
         "Cache-Control": CACHE_CONTROL,
