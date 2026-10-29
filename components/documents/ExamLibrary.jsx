@@ -26,7 +26,7 @@ function titleWithoutExtension(value) {
     .replace(/_/g, " ").replace(/\s+/g, " ").trim();
 }
 function yearLabel(year) {
-  return year === "archives" ? "سنوات متعددة" : year === "undated" ? "دون سنة" : year;
+  return year === "archives" ? "أرشيف سنوات متعددة" : year === "undated" ? "دون سنة" : year.startsWith("school:") ? `السنة الدراسية ${year.slice(7)}` : year;
 }
 function branchTitle(value) {
   return BRANCH_LABELS.ar[value] || value;
@@ -136,13 +136,10 @@ export default function ExamLibrary() {
     [competitionFiles, needsBranch, selectedBranch]);
   const years = useMemo(() => {
     const names = [...new Set(branchFiles.map(file => file.yearGroup))];
-    return names.sort((a, b) => {
-      if (a === "archives") return 1;
-      if (b === "archives") return -1;
-      if (a === "undated") return 1;
-      if (b === "undated") return -1;
-      return Number(b) - Number(a);
-    });
+    const score = value => /^\\d{4}$/.test(value) ? Number(value) * 10 + 2 :
+      value.startsWith("school:") ? Number(value.slice(7, 11)) * 10 + 1 :
+      value === "archives" ? 1 : 0;
+    return names.sort((a, b) => score(b) - score(a));
   }, [branchFiles]);
   const filtered = useMemo(() => branchFiles.filter(file => file.yearGroup === year), [branchFiles, year]);
 
@@ -253,6 +250,7 @@ export default function ExamLibrary() {
                           {titleWithoutExtension(card.file.title)}
                         </p>
                         {card.file.yearLabel && <span className="mt-1 inline-block text-xs font-bold text-mauri-green">{card.file.yearLabel}</span>}
+                        {/bac\\s*blan|bacblan|امتحان تجريبي/i.test(card.file.title) && <span className="ms-2 inline-block text-xs font-black text-amber-600 dark:text-amber-300">امتحان تجريبي</span>}
                       </div>
                     </div>
                     <div className="mt-auto flex gap-2">
