@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, ArrowLeft, BookOpen, Download, Eye, FileText, GraduationCap, Layers3 } from "lucide-react";
 import index from "../../data/indexed-drive-study-files.json";
-import { classifyStudyFile, STUDY_TYPES, normalizeStudyTitle } from "../../data/study-file-type.mjs";
+import { STUDY_TYPES, normalizeStudyTitle } from "../../data/study-file-type.mjs";
+import { decorateStudyFile, BRANCH_LABELS, BRANCH_ORDER } from "../../data/study-catalog.mjs";
 
 const GRADES = ["7AS", "6AS", "5AS", "4AS", "6AF"];
 const PAGE = 20;
-const FILES = (index.files || []).map(file => ({ ...file, category: classifyStudyFile(file.title) }));
+const FILES = (index.files || []).map(decorateStudyFile).filter(file => file.category !== "exams");
 const FR_SUBJECTS = {
   "الرياضيات": "Mathématiques", "الفيزياء": "Physique", "الكيمياء": "Chimie",
   "العلوم الطبيعية": "Sciences naturelles", "اللغة العربية": "Arabe",
@@ -20,6 +21,7 @@ const LABELS = {
   ar: {
     title: "مكتبة المراجع",
     grade: "اختر مستواك",
+    branch: "اختر الشعبة",
     subject: "اختر المادة",
     type: "اختر نوع الملف",
     files: "الملفات",
@@ -37,6 +39,7 @@ const LABELS = {
   fr: {
     title: "Bibliothèque",
     grade: "Choisir le niveau",
+    branch: "Choisir la série",
     subject: "Choisir la matière",
     type: "Choisir le document",
     files: "Documents",
@@ -78,6 +81,7 @@ function ChoiceCard({ icon: Icon, title, count, onClick }) {
 export default function IndexedStudyFiles() {
   const [lang, setLang] = useState("ar");
   const [grade, setGrade] = useState("");
+  const [branch, setBranch] = useState("");
   const [subject, setSubject] = useState("");
   const [type, setType] = useState("");
   const [shown, setShown] = useState(PAGE);
@@ -96,20 +100,24 @@ export default function IndexedStudyFiles() {
 
   const t = LABELS[lang];
   const gradeFiles = useMemo(() => FILES.filter(file => file.level === grade), [grade]);
-  const subjectFiles = useMemo(() => gradeFiles.filter(file => file.subject === subject), [gradeFiles, subject]);
+  const splitBranches = grade === "7AS" || grade === "5AS";
+  const branches = useMemo(() => BRANCH_ORDER.filter(value => gradeFiles.some(file => file.branches.includes(value))), [gradeFiles]);
+  const branchFiles = useMemo(() => gradeFiles.filter(file => !splitBranches || file.branches.includes(branch)), [gradeFiles, splitBranches, branch]);
+  const subjectFiles = useMemo(() => branchFiles.filter(file => file.subject === subject), [branchFiles, subject]);
   const files = useMemo(() => subjectFiles.filter(file => file.category === type)
     .sort((a, b) => rank(b) - rank(a) || a.title.localeCompare(b.title, lang === "ar" ? "ar" : "fr")), [subjectFiles, type, lang]);
 
-  const subjects = useMemo(() => [...new Set(gradeFiles.map(file => file.subject))]
-    .sort((a, b) => a === "مواد متنوعة" ? 1 : b === "مواد متنوعة" ? -1 : a.localeCompare(b, "ar")), [gradeFiles]);
+  const subjects = useMemo(() => [...new Set(branchFiles.map(file => file.subject))]
+    .sort((a, b) => a === "مواد متنوعة" ? 1 : b === "مواد متنوعة" ? -1 : a.localeCompare(b, "ar")), [branchFiles]);
   const kinds = useMemo(() => STUDY_TYPES.filter(kind => subjectFiles.some(file => file.category === kind)), [subjectFiles]);
-  const step = !grade ? "grade" : !subject ? "subject" : !type ? "type" : "files";
+  const step = !grade ? "grade" : splitBranches && !branch ? "branch" : !subject ? "subject" : !type ? "type" : "files";
 
   function goBack() {
     setError("");
     setShown(PAGE);
     if (type) { setType(""); return; }
     if (subject) { setSubject(""); return; }
+    if (branch) { setBranch(""); return; }
     setGrade("");
   }
   async function downloadFile(file) {
@@ -141,11 +149,11 @@ export default function IndexedStudyFiles() {
       </div>
       {step !== "grade" && (
         <p className="mb-4 text-sm font-semibold text-slate-500 dark:text-slate-300">
-          {[grade && t.grades[grade], subject && (lang === "fr" ? FR_SUBJECTS[subject] || subject : subject), type && t.types[type]].filter(Boolean).join(" / ")}
+          {[grade && t.grades[grade], branch && BRANCH_LABELS[lang][branch], subject && (lang === "fr" ? FR_SUBJECTS[subject] || subject : subject), type && t.types[type]].filter(Boolean).join(" / ")}
         </p>
       )}
       <h3 className="mb-3 text-sm font-black text-slate-800 dark:text-slate-100">
-        {step === "grade" ? t.grade : step === "subject" ? t.subject : step === "type" ? t.type : t.files}
+        {step === "grade" ? t.grade : step === "branch" ? t.branch : step === "subject" ? t.subject : step === "type" ? t.type : t.files}
       </h3>
 
       {step === "grade" && (
@@ -153,7 +161,16 @@ export default function IndexedStudyFiles() {
           {GRADES.map(value => (
             <ChoiceCard key={value} icon={GraduationCap} title={t.grades[value]}
               count={FILES.filter(file => file.level === value).length}
-              onClick={() => { setGrade(value); setSubject(""); setType(""); setShown(PAGE); }} />
+              onClick={() => { setGrade(value); setBranch(""); setSubject(""); setType(""); setShown(PAGE); }} />
+          ))}
+        </div>
+      )}
+      {step === "branch" && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {branches.map(value => (
+            <ChoiceCard key={value} icon={Layers3} title={BRANCH_LABELS[lang][value]}
+              count={gradeFiles.filter(file => file.branches.includes(value)).length}
+              onClick={() => { setBranch(value); setSubject(""); setType(""); setShown(PAGE); }} />
           ))}
         </div>
       )}
@@ -162,7 +179,7 @@ export default function IndexedStudyFiles() {
           {subjects.map(value => (
             <ChoiceCard key={value} icon={BookOpen}
               title={lang === "fr" ? FR_SUBJECTS[value] || value : value}
-              count={gradeFiles.filter(file => file.subject === value).length}
+              count={branchFiles.filter(file => file.subject === value).length}
               onClick={() => { setSubject(value); setType(""); setShown(PAGE); }} />
           ))}
         </div>
