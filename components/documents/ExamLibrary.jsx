@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, BookOpen, ChevronDown, Download, FileText, GraduationCap, Layers3, Loader2 } from "lucide-react";
 import index from "../../data/indexed-drive-study-files.json";
-import { decorateStudyFile, BRANCH_LABELS, BRANCH_ORDER, examYearGroup } from "../../data/study-catalog.mjs";
+import { decorateStudyFile, BRANCH_LABELS, BRANCH_ORDER, examBrowseGroup, examBrowseLabel, studyDocumentKind } from "../../data/study-catalog.mjs";
 
 const PAGE = 24;
 const ORDER = ["باكالوريا", "ابريفه", "كونكور", "الامتياز", "المعهد العالي", "الأولمبياد"];
@@ -19,14 +19,14 @@ function branchForDb(file) {
   return BRANCH_TRANSLATIONS[file.branch] || file.branch || "common";
 }
 function yearForDb(file) {
-  return file.year ? String(file.year) : "undated";
+  return file.year ? String(file.year) : "undated:papers";
 }
 function titleWithoutExtension(value) {
   return String(value || "").replace(/\.(?:pdf|docx?)$/i, "").replace(/[\u200e\u200f]/g, "")
     .replace(/_/g, " ").replace(/\s+/g, " ").trim();
 }
 function yearLabel(year) {
-  return year === "archives" ? "أرشيف سنوات متعددة" : year === "undated" ? "دون سنة" : year.startsWith("school:") ? `السنة الدراسية ${year.slice(7)}` : year;
+  return examBrowseLabel(year);
 }
 function branchTitle(value) {
   return BRANCH_LABELS.ar[value] || value;
@@ -113,7 +113,7 @@ export default function ExamLibrary() {
     ...file, sourceType: "archive", branches: [branchForDb(file)], yearGroup: yearForDb(file),
   })), [documents]);
   const driveDocs = useMemo(() => FILES.map(file => ({
-    ...file, sourceType: "drive", yearGroup: examYearGroup(file),
+    ...file, sourceType: "drive", yearGroup: examBrowseGroup(file),
   })), []);
   const all = useMemo(() => [...archiveDocs, ...driveDocs], [archiveDocs, driveDocs]);
 
@@ -138,7 +138,7 @@ export default function ExamLibrary() {
     const names = [...new Set(branchFiles.map(file => file.yearGroup))];
     const score = value => /^\\d{4}$/.test(value) ? Number(value) * 10 + 2 :
       value.startsWith("school:") ? Number(value.slice(7, 11)) * 10 + 1 :
-      value === "archives" ? 1 : 0;
+      value.startsWith("archives:") ? 2 : value.startsWith("undated:") ? 1 : 0;
     return names.sort((a, b) => score(b) - score(a));
   }, [branchFiles]);
   const filtered = useMemo(() => branchFiles.filter(file => file.yearGroup === year), [branchFiles, year]);
@@ -245,11 +245,12 @@ export default function ExamLibrary() {
                     <div className="flex min-w-0 items-start gap-2">
                       <FileText className="mt-1 h-5 w-5 shrink-0 text-mauri-green" aria-hidden="true" />
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-black leading-6 text-slate-900 dark:text-white">{card.subject}</h3>
+                        <h3 className="text-sm font-black leading-6 text-slate-900 dark:text-white">{card.subject === "مواد متنوعة" ? studyDocumentKind(card.file) : card.subject}</h3>
                         <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-500 dark:text-slate-300" title={card.file.title}>
-                          {titleWithoutExtension(card.file.title)}
+                          {titleWithoutExtension(card.file.displayTitle || card.file.title)}
                         </p>
-                        {card.file.yearLabel && <span className="mt-1 inline-block text-xs font-bold text-mauri-green">{card.file.yearLabel}</span>}
+                        <span className="mt-1 inline-block text-xs font-bold text-mauri-green">{studyDocumentKind(card.file)}</span>
+                        {card.file.yearLabel && <span className="ms-2 mt-1 inline-block text-xs font-bold text-slate-500 dark:text-slate-300">{card.file.yearLabel}</span>}
                         {/bac\\s*blan|bacblan|امتحان تجريبي/i.test(card.file.title) && <span className="ms-2 inline-block text-xs font-black text-amber-600 dark:text-amber-300">امتحان تجريبي</span>}
                       </div>
                     </div>
