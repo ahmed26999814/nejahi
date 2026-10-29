@@ -61,7 +61,7 @@ function asciiDigits(value) {
 }
 
 function candidateNumber(value) {
-  const digits = asciiDigits(value).trim().slice(0, 20);
+  const digits = asciiDigits(value).trim();
   if (!/^\d{1,20}$/.test(digits)) return "";
   return digits.replace(/^0+(?=\d)/, "");
 }

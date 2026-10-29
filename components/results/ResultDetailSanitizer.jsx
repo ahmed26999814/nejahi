@@ -51,6 +51,7 @@ function createVerseCard(scope) {
 
 function addHomepageVerse() {
   const existing = document.querySelector('[data-quran-verse="home"]');
+  if (existing?.dataset.renderedByReact) return;
   const isHome = !window.location.hash || window.location.hash === "#home";
   if (!isHome) {
     existing?.remove();
@@ -173,7 +174,7 @@ export default function ResultDetailSanitizer() {
 
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
-      document.querySelectorAll("[data-quran-verse]").forEach((element) => element.remove());
+      document.querySelectorAll("[data-quran-verse]:not([data-rendered-by-react])").forEach((element) => element.remove());
       window.removeEventListener("mauriresults:routechange", schedule);
       window.removeEventListener("hashchange", schedule);
       window.removeEventListener("popstate", schedule);

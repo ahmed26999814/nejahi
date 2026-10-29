@@ -2,7 +2,8 @@
   "git": {
     "deploymentEnabled": {
       "native-mobile-source": false,
-      "assistant-*": false
+      "assistant-*": false,
+      "improve/mauriresults-ux-security-20261029": false
     }
   },
   "headers": [

@@ -2,7 +2,7 @@ import examSeoData from "../data/exam-seo.json";
 import { orientationPrograms } from "../data/orientation-programs";
 
 const siteUrl = "https://mauri-results.vercel.app";
-const seoRefreshDate = "2026-08-13";
+const seoRefreshDate = "2026-10-29";
 const candidatureRefreshDate = "2026-08-18";
 
 const staticRoutes = [

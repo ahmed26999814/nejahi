@@ -123,11 +123,6 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: "/Apk",
-        destination: "/apk",
-        permanent: true,
-      },
-      {
         source: "/apk/MauriResults.apk",
         destination: "/api/apk-download",
         permanent: false,
@@ -164,16 +159,19 @@ const nextConfig = {
       },
     ];
   },
-  async rewrites() {
-    return [
-      {
-        source: "/apk",
-        destination: "/Apk",
-      },
-    ];
-  },
   async headers() {
     return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+      {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: PRIVATE_RESULT_ROBOTS }],
+      },
       {
         source: "/",
         has: [{ type: "query", key: "candidate" }],

@@ -15,6 +15,7 @@ import "./root-background-fix.css";
 import "./vibrant-palette.css";
 import "./vibrant-home.css";
 import "./final-ui-fixes.css";
+import "./home-experience.css";
 import AppRuntimeShell from "../components/layout/AppRuntimeShell";
 import UiEnhancements from "../components/ui/UiEnhancements";
 
@@ -91,9 +92,7 @@ export const metadata = {
       "نتائج باكالوريا 2026 متاحة للبحث، مع نتائج ابريفه وكونكور والأوائل والإحصائيات في موريتانيا.",
     images: [
       {
-        url: "/brand-logo.svg",
-        width: 1200,
-        height: 1200,
+        url: "/logo.png",
         alt: "MauriResults - نتائج المسابقات الوطنية في موريتانيا",
       },
     ],
@@ -102,7 +101,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "MauriResults | نتائج باكالوريا موريتانيا 2026",
     description: "ابحث عن نتائج باكالوريا 2026 وتابع نتائج المسابقات الوطنية في موريتانيا بسرعة.",
-    images: ["/brand-logo.svg"],
+    images: ["/logo.png"],
   },
   appleWebApp: {
     capable: true,
@@ -170,9 +169,10 @@ export default function RootLayout({ children }) {
       <body className="font-arabic antialiased" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <a href="#site-content" className="skip-to-content">تجاوز إلى المحتوى · Aller au contenu</a>
         <AppRuntimeShell />
         <UiEnhancements />
-        {children}
+        <div id="site-content" tabIndex={-1}>{children}</div>
         <Analytics />
       </body>
     </html>

@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
+import { normalizeCandidateNumber } from "../../../lib/candidateNumber";
 
 // Production rollout marker: exact candidate-number lookup.
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://mauri-results.vercel.app";
-const REQUIRED_APP_VERSION = "3.2.0";
+const REQUIRED_APP_VERSION = "3.3.0";
 
 const SOURCE_ALIASES: Record<string, string> = {
-  bac_2026: "bac",
-  brevet_2026: "brevet",
-  concours_2026: "concours",
-  bac_session_2026: "bac_session",
-  excellence_1as_2026: "excellence_1as",
+  bac_2026: "upload:results_bac_2026",
+  brevet_2026: "upload:brevet_2026",
+  concours_2026: "upload:concour_2026",
+  bac_session_2026: "upload:results_bac_ses_2026",
+  excellence_1as_2026: "upload:results_concours_exe_2026",
 };
 
 const BUILTIN_SOURCES = new Set([
@@ -22,20 +23,6 @@ const BUILTIN_SOURCES = new Set([
   "bac_session",
   "excellence_1as",
 ]);
-
-function asciiDigits(value: string) {
-  const arabic = "٠١٢٣٤٥٦٧٨٩";
-  const persian = "۰۱۲۳۴۵۶۷۸۹";
-  return String(value || "")
-    .replace(/[٠-٩]/g, (digit) => String(arabic.indexOf(digit)))
-    .replace(/[۰-۹]/g, (digit) => String(persian.indexOf(digit)));
-}
-
-function normalizeCandidateNumber(value: string) {
-  const digits = asciiDigits(String(value || "").trim()).slice(0, 20);
-  if (!/^\d{1,20}$/.test(digits)) return "";
-  return digits.replace(/^0+(?=\d)/, "");
-}
 
 function normalizeSource(value: string) {
   const source = String(value || "").trim();

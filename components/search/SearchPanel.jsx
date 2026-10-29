@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { SearchIcon } from "../common/icons";
 import ForgotCandidateNumber from "../ui/ForgotCandidateNumber";
 import SearchFeedback from "./SearchFeedback";
@@ -17,6 +19,8 @@ export default function SearchPanel(props) {
     text,
   } = props;
 
+  const feedbackId = useId();
+  const hintId = useId();
   const isFrench = text?.searchButton === "Rechercher";
 
   return (
@@ -37,6 +41,7 @@ export default function SearchPanel(props) {
 
         <div className="relative min-w-0 flex-1">
           <label className="relative block">
+            <span className="mb-2 block text-sm font-bold">{isFrench ? "Numéro du candidat" : "رقم المترشح"}</span>
             <span
               className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-mauri-green dark:text-mauri-gold"
               aria-hidden="true"
@@ -49,16 +54,20 @@ export default function SearchPanel(props) {
               onChange={(event) => setQuery(sanitizeCandidateNumber(event.target.value))}
               placeholder={isFrench ? "Entrez le numéro du candidat" : "أدخل رقم المترشح"}
               inputMode="numeric"
+              dir="ltr"
+              type="text"
+              name="candidate"
+              aria-invalid={Boolean(error)}
               pattern="[0-9]*"
               enterKeyHint="search"
               autoComplete="off"
               autoCapitalize="off"
               spellCheck="false"
               maxLength={20}
-              minLength={2}
+              minLength={1}
               required
               aria-label={isFrench ? "Numéro du candidat" : "رقم المترشح"}
-              aria-describedby={(error || message) ? "search-feedback" : undefined}
+              aria-describedby={`${hintId}${error || message ? ` ${feedbackId}` : ""}`}
             />
           </label>
         </div>
@@ -72,7 +81,8 @@ export default function SearchPanel(props) {
           <span>{loading ? (text?.searching || "بحث...") : (text?.searchButton || "بحث")}</span>
         </button>
 
-        <SearchFeedback error={error} message={message} text={text} />
+        <p id={hintId} className="col-span-full text-sm text-slate-600 dark:text-slate-300">{isFrench ? "Vérifiez l’année, le concours et le numéro sur votre convocation." : "تحقق من السنة والمسابقة ورقم المترشح في الاستدعاء."}</p>
+        <SearchFeedback id={feedbackId} error={error} message={message} text={text} />
       </form>
       <ForgotCandidateNumber />
     </>

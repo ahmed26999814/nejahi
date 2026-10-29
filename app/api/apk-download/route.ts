@@ -18,6 +18,7 @@ async function supabaseRequest(path: string, init?: RequestInit) {
       ...(init?.headers || {}),
     },
     cache: "no-store",
+    signal: AbortSignal.timeout(3000),
   });
   if (!response.ok) return null;
   const text = await response.text();
@@ -28,8 +29,17 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const action = url.searchParams.get("action");
 
+  if (action === "status") {
+    const available = await fetch(APK_URL, {
+      method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(3000),
+    }).then((response) => response.ok).catch(() => false);
+    return NextResponse.json({ available }, {
+      headers: { "Cache-Control": "public, max-age=0, s-maxage=60" },
+    });
+  }
+
   if (action === "count") {
-    const rows = await supabaseRequest("apk_download_stats?select=downloads&id=eq.mauriresults&limit=1");
+    const rows = await supabaseRequest("apk_download_stats?select=downloads&id=eq.mauriresults&limit=1").catch(() => null);
     const downloads = Number(rows?.[0]?.downloads || 0);
     return NextResponse.json(
       { downloads },
@@ -41,7 +51,7 @@ export async function GET(request: Request) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ p_id: "mauriresults" }),
-  });
+  }).catch(() => null);
 
   return NextResponse.redirect(APK_URL, 302);
 }

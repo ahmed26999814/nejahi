@@ -67,6 +67,7 @@ function labelFor(key, controls) {
 }
 
 function applyTerminology() {
+  if (document.documentElement.lang === "fr") return;
   document.querySelectorAll("strong, small, h1, h2, h3, p, span, a, button").forEach((element) => {
     if (element.childElementCount > 0) return;
     const current = element.textContent || "";
@@ -86,7 +87,7 @@ function applyControls(controls) {
       setVisible(element, visible);
       const labelNode = element.matches("[data-control-label]") ? element : element.querySelector("[data-control-label]");
       const nextLabel = labelFor(key, controls);
-      if (labelNode && nextLabel) labelNode.textContent = nextLabel;
+      if (labelNode && nextLabel && document.documentElement.lang !== "fr") labelNode.textContent = nextLabel;
     });
   }
 
@@ -119,12 +120,15 @@ export default function UiEnhancements() {
       schedule();
     }).catch(() => {});
 
+    const languageObserver = new MutationObserver(schedule);
+    languageObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
     window.addEventListener("mauriresults:routechange", schedule);
     window.addEventListener("hashchange", schedule, { passive: true });
     window.addEventListener("popstate", schedule, { passive: true });
     window.addEventListener("mauriresults:site-controls-updated", refresh);
 
     return () => {
+      languageObserver.disconnect();
       controller.abort();
       timers.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener("mauriresults:routechange", schedule);

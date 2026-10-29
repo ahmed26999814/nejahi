@@ -4,6 +4,8 @@ import PremiumHero from "../hero/Hero";
 import BackToTopButton from "../ui/BackToTopButton";
 import { contentValue } from "../common/content";
 import PremiumSiteBanner from "./PremiumSiteBanner";
+import Bac2026CountdownNotice from "../layout/Bac2026CountdownNotice";
+import HomeResultsFinder from "./HomeResultsFinder";
 import YearChoiceCards from "./YearChoiceCards";
 
 export default function PremiumHomeView({
@@ -13,22 +15,26 @@ export default function PremiumHomeView({
   onSelectYear,
   text,
   yearCards,
+  examCards,
+  catalogStatus,
+  onRetry,
+  onSearch,
 }) {
   const logo = contentValue(content, "logo", "/brand-logo.svg");
   const labels = lang === "fr"
     ? {
         available: "Résultats disponibles",
         chooseYear: "Choisissez l’année du concours",
-        automatic: "Mise à jour automatique",
+        automatic: "2025 · 2026",
       }
     : {
         available: "النتائج المتاحة",
         chooseYear: "اختر سنة المسابقة",
-        automatic: "تحديث تلقائي",
+        automatic: "2025 · 2026",
       };
 
   return (
-    <section className="app-shell grid gap-5 py-3 md:gap-10 md:py-8">
+    <section className="app-shell results-home">
       <PremiumHero
         eyebrow="MauriResults"
         title={text.heroTitle}
@@ -36,6 +42,8 @@ export default function PremiumHomeView({
         logo={logo}
         lang={lang}
       />
+
+      <div id="quick-search" className="results-quick-search"><HomeResultsFinder exams={examCards} lang={lang} status={catalogStatus} onRetry={onRetry} onSearch={onSearch} /></div>
 
       <section className="scroll-mt-24 grid gap-3" id="years">
         <header className="flex items-end justify-between gap-3">
@@ -59,6 +67,7 @@ export default function PremiumHomeView({
         />
       </section>
 
+      <Bac2026CountdownNotice exams={examCards} status={catalogStatus} lang={lang} />
       <PremiumSiteBanner asset={homepageBanner} />
       <BackToTopButton />
     </section>
