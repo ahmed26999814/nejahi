@@ -4,7 +4,7 @@ const url = "https://mauri-results.vercel.app/lessons";
 
 export const metadata = {
   title: "الدروس ومواضيع الامتحانات",
-  description: "تصفح الكتب والدروس المدرسية ومواضيع باكالوريا وابريفه وكونكور والامتياز مع الحلول والمذكرات والمراجع عبر MauriResults.",
+  description: "تصفح الكتب المدرسية ومواضيع الامتحانات ومجلدات المراجع التعليمية الإضافية للباكالوريا وابريفه وكونكور عبر MauriResults.",
   alternates: { canonical: url },
   openGraph: {
     title: "الدروس ومواضيع الامتحانات | MauriResults",
@@ -17,6 +17,6 @@ export const metadata = {
 
 export default async function LessonsPage({ searchParams }) {
   const params = await searchParams;
-  const initialTab = params?.tab === "exams" ? "exams" : "lessons";
+  const initialTab = ["exams", "resources"].includes(params?.tab) ? params.tab : "lessons";
   return <LessonsAndExams initialTab={initialTab} />;
 }
