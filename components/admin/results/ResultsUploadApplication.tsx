@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import * as XLSX from "xlsx";
+import { readResultsWorksheet } from "../../../lib/readResultsWorksheet";
 import { detectColumnMappings } from "../../../lib/columnMapping";
 
 const SOURCES = [
@@ -72,7 +72,7 @@ function cleanColumnName(value: unknown) {
 }
 
 function normalizeRow(row: Record<string, unknown>) {
-  const output: Record<string, unknown> = {};
+  const output: Record<string, unknown> = Object.create(null);
   for (const [key, value] of Object.entries(row || {})) {
     const cleanKey = cleanColumnName(key);
     if (!cleanKey || cleanKey.startsWith("__EMPTY")) continue;
@@ -91,16 +91,7 @@ async function yieldToBrowser() {
 
 async function parseXlsxFile(file: File, requestedSheetName?: string): Promise<ParsedXlsx> {
   await yieldToBrowser();
-  const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: "array", cellDates: true, dense: false });
-  const sheetName = requestedSheetName && workbook.SheetNames.includes(requestedSheetName)
-    ? requestedSheetName
-    : workbook.SheetNames[0];
-
-  if (!sheetName) return { sheetName: "", rows: [], columns: [] };
-
-  const sheet = workbook.Sheets[sheetName];
-  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null, raw: false });
+  const { sheetName, rawRows } = await readResultsWorksheet(file, requestedSheetName);
   await yieldToBrowser();
 
   const rows = rawRows
