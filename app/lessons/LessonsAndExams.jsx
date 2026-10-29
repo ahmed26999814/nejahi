@@ -15,8 +15,8 @@ const COPY = {
     lessonsDesc: "كتب المراحل الابتدائية والإعدادية والثانوية",
     exams: "مواضيع الامتحانات",
     examsDesc: "باكالوريا وابريفه وكونكور والامتياز مع الحلول",
-    resources: "مراجع إضافية",
-    resourcesDesc: "مجلدات تعليمية خارجية مصنفة حسب المستوى",
+    resources: "مكتبة المراجع",
+    resourcesDesc: "548 ملفًا للبحث حسب المستوى والسنة",
     home: "الرئيسية",
   },
   fr: {
@@ -26,8 +26,8 @@ const COPY = {
     lessonsDesc: "Manuels du primaire, collège et lycée",
     exams: "Sujets d’examens",
     examsDesc: "Bac, Brevet, Concours et Excellence avec corrigés",
-    resources: "Ressources en ligne",
-    resourcesDesc: "Dossiers externes par niveau et série",
+    resources: "Bibliothèque",
+    resourcesDesc: "548 documents classés par année et niveau",
     home: "Accueil",
   },
 };
@@ -114,7 +114,7 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
         {tab === "lessons"
           ? lang === "fr" ? "Choisissez votre niveau, puis une matière pour ouvrir les ressources." : "اختر المرحلة الدراسية ثم المادة لعرض الدروس والكتب المتاحة."
           : tab === "resources"
-            ? lang === "fr" ? "Choisissez un niveau ou recherchez une série pour ouvrir les dossiers sources." : "اختر المستوى أو ابحث باسم الشعبة لفتح المجلدات الأصلية."
+            ? lang === "fr" ? "Choisissez votre niveau, la matière et l’année pour ouvrir les fichiers." : "اختر مستواك الدراسي ثم المادة والسنة للوصول مباشرة إلى الملفات."
             : lang === "fr" ? "Choisissez l’examen et l’année pour consulter les sujets et corrigés disponibles." : "اختر المسابقة والسنة لعرض المواضيع والتصحيحات المتاحة."}
       </p>
       {tab === "lessons" ? (
