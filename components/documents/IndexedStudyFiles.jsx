@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Download, Eye, FileText, Search, RotateCcw } from "lucide-react";
 import driveIndex from "../../data/indexed-drive-study-files.json";
-import { classifyStudyFile, normalizeStudyTitle, STUDY_TYPES } from "../../data/study-file-type.mjs";
+import { classifyStudyFile, normalizeStudyTitle, STUDY_TYPES, driveDownloadUrl } from "../../data/study-file-type.mjs";
 
 const ALL = "all";
 const LIMIT = 20;
@@ -12,7 +12,6 @@ const FILES = (driveIndex.files || []).map(file => ({
   ...file,
   category: classifyStudyFile(file.title),
 }));
-const TYPES = ["series", "exams", "tests", "books", "lessons"];
 const FR_SUBJECTS = {
   "الرياضيات": "Mathématiques",
   "الفيزياء": "Physique",
@@ -107,12 +106,6 @@ function sortRank(file) {
   return 0;
 }
 
-function directDownloadLink(file) {
-  // A browser can attempt a direct Drive download; Google may still require a
-  // confirmation or deny access. Do not proxy large third-party files via Vercel.
-  return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(file.id)}`;
-}
-
 const pill = (active) => active
   ? "min-h-10 rounded-xl bg-mauri-green px-3 py-2 text-xs font-black text-white shadow-sm sm:text-sm"
   : "min-h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-mauri-green/40 hover:text-mauri-green dark:border-white/10 dark:bg-[#12231a] dark:text-slate-200 sm:text-sm";
@@ -140,7 +133,7 @@ export default function IndexedStudyFiles() {
   const byLevel = useMemo(() => FILES.filter(file => level === ALL || file.level === level), [level]);
   const subjects = useMemo(() => [...new Set(byLevel.map(file => file.subject))].sort((a, b) => a.localeCompare(b, "ar")), [byLevel]);
   const countsByCategory = useMemo(() =>
-    Object.fromEntries(TYPES.map(type => [type, byLevel.filter(file => file.category === type).length])), [byLevel]);
+    Object.fromEntries(STUDY_TYPES.map(type => [type, byLevel.filter(file => file.category === type).length])), [byLevel]);
 
   const matches = useMemo(() => {
     const needle = normalizeStudyTitle(query).trim();
@@ -264,7 +257,7 @@ export default function IndexedStudyFiles() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <a href={directDownloadLink(file)} target="_blank" rel="noopener noreferrer"
+                <a href={driveDownloadUrl(file.id)} target="_blank" rel="noopener noreferrer"
                   aria-label={`${t.download}: ${file.title}`}
                   className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-3 text-sm font-black text-white transition hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mauri-green">
                   <Download className="h-4 w-4" aria-hidden="true" />{t.download}
