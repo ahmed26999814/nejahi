@@ -100,6 +100,11 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
         </div>
       </div>
 
+      <p role="status" className="relative mx-auto w-full max-w-7xl px-4 pt-3 text-sm font-semibold leading-7 text-slate-700 dark:text-slate-200 sm:px-6">
+        {tab === "lessons"
+          ? lang === "fr" ? "Choisissez votre niveau, puis une matière pour ouvrir les ressources." : "اختر المرحلة الدراسية ثم المادة لعرض الدروس والكتب المتاحة."
+          : lang === "fr" ? "Choisissez l’examen et l’année pour consulter les sujets et corrigés disponibles." : "اختر المسابقة والسنة لعرض المواضيع والتصحيحات المتاحة."}
+      </p>
       {tab === "lessons" ? (
         <LessonsExplorer />
       ) : (
