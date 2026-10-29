@@ -7,6 +7,7 @@ export const BRANCH_LABELS = {
     LM: "الآداب العصرية A / LM",
     LO: "الآداب الأصلية O / LO",
     TMGM: "التقنية TMGM",
+    TSGE: "العلوم والتكنولوجيا TSGE",
     LA: "LA",
     common: "مشتركة أو غير محددة",
   },
@@ -16,11 +17,12 @@ export const BRANCH_LABELS = {
     LM: "Lettres modernes A / LM",
     LO: "Lettres originelles O / LO",
     TMGM: "Technique TMGM",
+    TSGE: "Sciences et technologie TSGE",
     LA: "Série LA",
     common: "Commun / non précisé",
   },
 };
-export const BRANCH_ORDER = ["C", "D", "LM", "LO", "TMGM", "LA", "common"];
+export const BRANCH_ORDER = ["C", "D", "LM", "LO", "TMGM", "TSGE", "LA", "common"];
 
 function normalizedTitle(title) {
   return normalizeStudyTitle(title).replace(/[_.–—/-]+/g, " ").replace(/\s+/g, " ").trim();
@@ -31,6 +33,7 @@ function hasLetterPair(s, code) {
 
 /** No branch can be inferred solely from folder membership or a French article "La". */
 export function studyFileBranches(file) {
+  if (Array.isArray(file.verifiedBranches) && file.verifiedBranches.length) return file.verifiedBranches;
   const title = normalizedTitle(file.title || "");
   const compact = normalizeStudyTitle(file.title || "");
   const found = new Set();
@@ -61,6 +64,7 @@ export function studyFileBranches(file) {
 
 /** A mock exam or classroom test is not an official Bac/BEPC paper. */
 export function studyFileCategory(file) {
+  if (file.verifiedType) return file.verifiedType;
   const title = normalizedTitle(file.title || "");
   if (/\bbac\s*blan|bacblan|\bbac\s+blanc|امتحان تجريبي/.test(title)) return "exams";
   if (/\bdevoir\b|\bcomposition\b|\bcontrole\b|\bevaluation\b|\btest\b|\bex[1-5]\b|فروض|فرض|اختبار/.test(title)) return "tests";
@@ -72,6 +76,7 @@ export function studyFileCategory(file) {
 }
 
 export function studyFileSubject(file) {
+  if (file.verifiedSubject) return file.verifiedSubject;
   const title = normalizedTitle(file.title || "");
   if (/\bmath(?:s|ematiques?)?\b|\bma\b|رياضيات|الرياضيات|حساب/.test(title)) return "الرياضيات";
   if (/\bp\s*c\b|\bpc\b|physique.*chimie|فيزياء.*كيمياء/.test(title)) return "الفيزياء والكيمياء";
@@ -94,6 +99,7 @@ export function studyFileSubject(file) {
 }
 
 export function studyFileCompetition(file) {
+  if (file.verifiedCompetition) return file.verifiedCompetition;
   const t = normalizedTitle(file.title || "");
   if (/\bolympiade|olympiad|\brallye\b/.test(t)) return "الأولمبياد";
   if (/\bconcour|كونكور|السادسة ابتدائي/.test(t) || file.level === "6AF") return "كونكور";
@@ -110,9 +116,45 @@ export function examYearGroup(file) {
 export function decorateStudyFile(file) {
   return {
     ...file,
+    displayTitle: file.verifiedTitle || file.title,
     category: studyFileCategory(file),
     branches: studyFileBranches(file),
     subject: studyFileSubject(file),
     competition: studyFileCompetition(file),
   };
+}
+
+/** Human-readable kind from the filename, and verified content where supplied. */
+export function studyDocumentKind(file) {
+  if (file.verifiedDocumentType) return file.verifiedDocumentType;
+  const t = normalizedTitle(file.title || "");
+  if (/bac\s*blan|bacblan|blanc|تجريبي/.test(t)) return "تجريبي";
+  if (/corrig|correction|corrige|\bsolution\b|حلول|تصحيح|الإجابة|الاجابة|مع الحل|reponses/.test(t)) {
+    return /sujets?|مواضيع|موضوع|\bbac\b/.test(t) ? "موضوع وحل" : "تصحيح";
+  }
+  if (/\bannales\b|مواضيع|sujets?\b|\bbac\b/.test(t) && file.yearKind === "range") return "مواضيع سنوات متعددة";
+  if (/\bolympiade|اولمبياد|الأولمبياد/.test(t)) return "أولمبياد";
+  return "موضوع";
+}
+
+export function examBrowseGroup(file) {
+  const year = examYearGroup(file);
+  if (year !== "archives" && year !== "undated") return year;
+  const kind = studyDocumentKind(file);
+  const isSolution = kind === "تصحيح" || kind === "موضوع وحل";
+  const suffix = kind === "تجريبي" ? "mock" : isSolution ? "solved" : "papers";
+  return `${year}:${suffix}`;
+}
+
+export function examBrowseLabel(group) {
+  const labels = {
+    "archives:papers": "مواضيع لعدة سنوات",
+    "archives:solved": "مواضيع وتصحيحات لعدة سنوات",
+    "archives:mock": "امتحانات تجريبية لعدة سنوات",
+    "undated:papers": "مواضيع غير مؤرخة",
+    "undated:solved": "تصحيحات ومواضيع محلولة",
+    "undated:mock": "امتحانات تجريبية",
+  };
+  if (labels[group]) return labels[group];
+  return group.startsWith("school:") ? `السنة الدراسية ${group.slice(7)}` : group;
 }
