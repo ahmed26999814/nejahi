@@ -139,3 +139,87 @@
     border-radius: 1.3rem !important;
   }
 }
+
+/* Usable on compact Android phones and with large system fonts. */
+.mauri-unified-route {
+  overflow-x: clip;
+}
+.mauri-unified-route :is(button, a, input, select, textarea) {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.mauri-unified-route [data-integrated-content] :is(button, select, input:not([type="checkbox"]), a.rounded-xl, a.rounded-2xl) {
+  min-height: 44px;
+}
+.mauri-unified-route .mauri-section-bottom-nav {
+  width: min(100%, 34rem);
+  padding-inline: max(.5rem, env(safe-area-inset-left)) max(.5rem, env(safe-area-inset-right));
+}
+.mauri-unified-route [data-integrated-content] :is(
+  .calculator-subject-name, .calculator-card, .calculator-subject-row, .app-shell
+) {
+  min-width: 0;
+}
+.mauri-unified-route :is(button, a):focus-visible {
+  outline: 3px solid #f3bd19;
+  outline-offset: 3px;
+}
+.mauri-unified-route [aria-current="page"] {
+  font-weight: 800;
+}
+.mauri-unified-route .calculator-progress {
+  margin-block: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--section-border);
+  padding: .85rem 1rem;
+  background: var(--section-surface);
+  color: var(--section-ink);
+  font-size: .9rem;
+  font-weight: 700;
+}
+.mauri-unified-route .calculator-progress progress {
+  display: block;
+  width: 100%;
+  height: .6rem;
+  margin-block-start: .6rem;
+  accent-color: #087b4b;
+}
+.mauri-unified-route .calculator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: .75rem;
+}
+.mauri-unified-route .calculator-actions > button {
+  flex: 1 1 10rem;
+  min-height: 48px;
+}
+.mauri-unified-route .calculator-reset {
+  border: 1px solid var(--section-border);
+  background: var(--section-surface);
+  border-radius: 1rem;
+  padding: .7rem 1rem;
+  color: var(--section-ink);
+  font-weight: 800;
+}
+@media (max-width: 360px) {
+  .mauri-unified-route .mauri-section-bottom-nav {
+    gap: 0;
+    padding-inline: .2rem;
+  }
+  .mauri-unified-route .mauri-section-bottom-nav a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 10px;
+  }
+  .mauri-unified-route [data-integrated-content] {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mauri-unified-route *, .mauri-unified-route *::before, .mauri-unified-route *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

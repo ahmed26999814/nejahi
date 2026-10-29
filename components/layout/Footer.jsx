@@ -32,6 +32,8 @@ export default function Footer({ content = {}, onNavigate, text }) {
         statistics: "Statistiques",
         lessons: "Cours",
         calculator: "Calculateur de moyenne",
+        privacy: "Confidentialité",
+        terms: "Conditions d’utilisation",
         suggestionMessage: "Bonjour, j’ai une suggestion pour le site MauriResults",
       }
     : {
@@ -49,6 +51,8 @@ export default function Footer({ content = {}, onNavigate, text }) {
         statistics: "الإحصائيات",
         lessons: "الدروس",
         calculator: "حاسبة المعدل",
+        privacy: "الخصوصية",
+        terms: "شروط الاستخدام",
         suggestionMessage: "السلام عليكم، لدي اقتراح لموقع MauriResults",
       };
   const suggestionWhatsappUrl = `https://wa.me/22244881891?text=${encodeURIComponent(labels.suggestionMessage)}`;
@@ -138,6 +142,8 @@ export default function Footer({ content = {}, onNavigate, text }) {
               <Link href="/statistics">{labels.statistics}</Link>
               <Link href="/lessons">{labels.lessons}</Link>
               <Link href="/calculator">{labels.calculator}</Link>
+              <Link href="/privacy">{labels.privacy}</Link>
+              <Link href="/terms">{labels.terms}</Link>
             </nav>
             <span>© {new Date().getFullYear()} MauriResults</span>
           </div>

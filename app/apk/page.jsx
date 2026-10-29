@@ -55,6 +55,16 @@ export default function ApkDownloadPage() {
             <p>الإصدار الحالي 3.3.0 يعرض درجات مواد الباك والتوجيه. نتحقق من توفر ملف التطبيق قبل إتاحة التنزيل، ويمكنك متابعة نتائج المسابقات عبر الموقع.</p>
             <ApkDownload />
             <p className="apk-safe-note">إذا تعذر التنزيل، استخدم الموقع لمتابعة النتائج حتى عودة الخدمة.</p>
+            <div className="mt-5 rounded-2xl border border-white/20 bg-white/10 p-4 text-white">
+              <h2 className="text-lg font-black">بديل مؤقت دون تنزيل APK</h2>
+              <p className="mt-2 text-sm leading-7">يمكنك إضافة موقع MauriResults إلى الشاشة الرئيسية لهاتفك واستخدامه مثل تطبيق ويب. هذا لا يثبت ملف Android الأصلي.</p>
+              <ol className="mt-2 list-decimal space-y-1 pr-6 text-sm leading-7">
+                <li>افتح الموقع في متصفح Chrome على Android.</li>
+                <li>اضغط قائمة النقاط الثلاث في المتصفح.</li>
+                <li>اختر «إضافة إلى الشاشة الرئيسية» أو «تثبيت التطبيق» إن ظهر الخيار.</li>
+              </ol>
+              <Link href="/" className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-white/35 bg-white/15 px-4 font-bold text-white">الاستمرار باستخدام الموقع</Link>
+            </div>
           </div>
 
           <div className="apk-phone" aria-hidden="true">

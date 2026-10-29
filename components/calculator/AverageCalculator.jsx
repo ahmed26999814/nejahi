@@ -210,22 +210,35 @@ export default function AverageCalculator() {
             <input type="checkbox" checked={skipSport} onChange={(event) => { setSkipSport(event.target.checked); setShowResult(false); }} />
           </label>
 
+          <div className="calculator-progress" aria-live="polite">
+            <span>درجات مُدخلة: {calculation.filled} من {calculation.expected}</span>
+            <progress max={calculation.expected} value={calculation.filled} aria-label="نسبة اكتمال إدخال الدرجات" />
+            {calculation.filled < calculation.expected && <small>يمكنك حساب معدل مؤقت؛ القرار النهائي التقديري يظهر بعد إدخال جميع المواد.</small>}
+          </div>
+          <div className="calculator-actions">
           <button className="calculator-submit" type="button" onClick={() => setShowResult(true)} disabled={!calculation.filled}>
             <CalculatorIcon />
             احسب المعدل
           </button>
 
+          <button className="calculator-reset" type="button" onClick={() => { setScores({}); setSkipSport(false); setShowResult(false); }} aria-label="مسح جميع الدرجات المدخلة">مسح الدرجات</button>
+          </div>
+
           {showResult && (
-            <section className={`calculator-result ${decision.tone}`} aria-live="polite">
+            <section className={`calculator-result ${calculation.filled < calculation.expected ? "warning" : decision.tone}`} aria-live="polite">
               <span>المعدل</span>
               <strong>{calculation.average.toFixed(2)}</strong>
-              <div className="calculator-decision-label">{decision.label}</div>
+              <div className="calculator-decision-label">{calculation.filled < calculation.expected ? "معدل مؤقت للمواد المدخلة فقط — أكمل الدرجات لعرض القرار التقديري" : decision.label}</div>
             </section>
           )}
         </section>
 
         <p className="calculator-note">هذه الحاسبة مساعدة للتقدير فقط. تأكد من المعاملات والقرارات المعتمدة رسميًا عند صدور أي تحديث.</p>
-        <a href="/" className="calculator-home-link">العودة إلى النتائج</a>
+        <nav aria-label="خدمات تعليمية مرتبطة" className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <a href="/orientation/match" className="calculator-home-link">استكشف التخصصات المناسبة لمعدلك</a>
+          <a href="/lessons" className="calculator-home-link">الدروس والمراجعة</a>
+          <a href="/" className="calculator-home-link">العودة إلى النتائج</a>
+        </nav>
       </section>
     </main>
   );

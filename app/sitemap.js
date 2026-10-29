@@ -9,6 +9,8 @@ const staticRoutes = [
   { path: "/toppers", changeFrequency: "daily", priority: 0.96, lastModified: seoRefreshDate },
   { path: "/statistics", changeFrequency: "daily", priority: 0.96, lastModified: seoRefreshDate },
   { path: "/about", changeFrequency: "monthly", priority: 0.78 },
+  { path: "/privacy", changeFrequency: "yearly", priority: 0.24, lastModified: seoRefreshDate },
+  { path: "/terms", changeFrequency: "yearly", priority: 0.22, lastModified: seoRefreshDate },
   { path: "/orientation", changeFrequency: "monthly", priority: 0.82 },
   { path: "/orientation/specialties", changeFrequency: "monthly", priority: 0.8, lastModified: seoRefreshDate },
   { path: "/orientation/match", changeFrequency: "monthly", priority: 0.76 },
