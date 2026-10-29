@@ -19,12 +19,19 @@ const FILE_MIME = {
 async function fetchTrustedDrive(url) {
   for (let redirect = 0; redirect < 6; redirect += 1) {
     if (!isTrustedDriveDownloadUrl(url)) return null;
-    const response = await fetch(url, {
-      redirect: "manual",
-      cache: "no-store",
-      signal: AbortSignal.timeout(28000),
-      headers: { Accept: "application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,*/*;q=0.5" },
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 28000);
+    let response;
+    try {
+      response = await fetch(url, {
+        redirect: "manual",
+        cache: "no-store",
+        signal: controller.signal,
+        headers: { Accept: "application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,*/*;q=0.5" },
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (response.status >= 300 && response.status < 400) {
       const destination = response.headers.get("location");
       await response.body?.cancel().catch(() => {});
@@ -58,8 +65,8 @@ async function handleDownload(request, headOnly) {
   const file = findStudyFile(id);
   if (!file) return Response.json({ error: "الملف غير موجود." }, { status: 404 });
 
-  try {
-    for (const source of driveSourceUrls(id)) {
+  for (const source of driveSourceUrls(id)) {
+    try {
       const upstream = await fetchTrustedDrive(source);
       if (!upstream) continue;
       if (!isBinaryFileResponse(upstream)) {
@@ -81,9 +88,9 @@ async function handleDownload(request, headOnly) {
         return new Response(null, { status: 200, headers });
       }
       return new Response(upstream.body, { status: 200, headers });
+    } catch (error) {
+      console.warn("study-files:download source unavailable", error instanceof Error ? error.message : "unknown error");
     }
-  } catch (error) {
-    console.warn("study-files:download unavailable", error instanceof Error ? error.message : "unknown error");
   }
   return Response.json(
     { error: "تعذر تنزيل هذا الملف مباشرة. قد يحتاج إلى إذن من صاحب المجلد." },
