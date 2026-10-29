@@ -6,8 +6,8 @@ import "./apk-state.css";
 const canonical = "https://mauri-results.vercel.app/apk";
 
 export const metadata = {
-  title: "تحميل تطبيق MauriResults للأندرويد - الإصدار 3.3.0",
-  description: "حمّل تطبيق MauriResults الرسمي للأندرويد لمتابعة نتائج باكالوريا وابريفه وكونكور في موريتانيا. الإصدار الحالي 3.3.0.",
+  title: "تطبيق MauriResults للأندرويد - حالة التنزيل",
+  description: "تحقق من توفر تطبيق MauriResults للأندرويد، أو تابع نتائج المسابقات مباشرة عبر الموقع.",
   keywords: [
     "تحميل تطبيق MauriResults",
     "تطبيق نتائج موريتانيا",
@@ -51,10 +51,10 @@ export default function ApkDownloadPage() {
         <section className="apk-hero">
           <div className="apk-hero-copy">
             <span className="apk-kicker">النسخة الرسمية الجديدة · الإصدار 3.3.0</span>
-            <h1>حمّل آخر نسخة من التطبيق</h1>
-            <p>تم إيقاف الإصدار 3.2.0 وجميع النسخ الأقدم. نزّل MauriResults 3.3.0 للحصول على درجات مواد الباك، والتوجيه في الشريط السفلي، وأحدث تحسينات التطبيق.</p>
+            <h1>تطبيق MauriResults للأندرويد</h1>
+            <p>الإصدار الحالي 3.3.0 يعرض درجات مواد الباك والتوجيه. نتحقق من توفر ملف التطبيق قبل إتاحة التنزيل، ويمكنك متابعة نتائج المسابقات عبر الموقع.</p>
             <ApkDownload />
-            <p className="apk-safe-note">تحميل مباشر وآمن من الموقع الرسمي · جميع الروابط القديمة تحوّلك إلى أحدث نسخة</p>
+            <p className="apk-safe-note">إذا تعذر التنزيل، استخدم الموقع لمتابعة النتائج حتى عودة الخدمة.</p>
           </div>
 
           <div className="apk-phone" aria-hidden="true">
@@ -78,7 +78,7 @@ export default function ApkDownloadPage() {
         </section>
 
         <section className="apk-install-help">
-          <div><strong>طريقة التحديث</strong><p>اضغط زر التحميل ثم افتح الملف واضغط تثبيت. إذا طلب Android تأكيد استبدال النسخة القديمة فوافق على التحديث.</p></div>
+          <div><strong>طريقة التحديث</strong><p>عند توفر التنزيل، اضغط زر التحميل ثم افتح الملف واضغط تثبيت. إذا طلب Android تأكيد استبدال النسخة القديمة فوافق على التحديث.</p></div>
           <span aria-hidden="true">1 — 2 — 3</span>
         </section>
 

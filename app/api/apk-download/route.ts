@@ -25,14 +25,18 @@ async function supabaseRequest(path: string, init?: RequestInit) {
   return text ? JSON.parse(text) : null;
 }
 
+async function apkAvailable() {
+  return fetch(APK_URL, {
+    method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(3000),
+  }).then((response) => response.ok && /application\/(?:vnd\.android\.package-archive|octet-stream)/i.test(response.headers.get("content-type") || "")).catch(() => false);
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const action = url.searchParams.get("action");
 
   if (action === "status") {
-    const available = await fetch(APK_URL, {
-      method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(3000),
-    }).then((response) => response.ok).catch(() => false);
+    const available = await apkAvailable();
     return NextResponse.json({ available }, {
       headers: { "Cache-Control": "public, max-age=0, s-maxage=60" },
     });
@@ -45,6 +49,10 @@ export async function GET(request: Request) {
       { downloads },
       { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=600" } },
     );
+  }
+
+  if (!await apkAvailable()) {
+    return NextResponse.redirect(new URL("/apk?download=unavailable", request.url), 303);
   }
 
   await supabaseRequest("rpc/increment_apk_download", {
