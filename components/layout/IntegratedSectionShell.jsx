@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { House, Compass, BookOpen, Calculator, ChartNoAxesCombined } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const translations = {
@@ -15,7 +16,7 @@ function MoonIcon() { return <svg viewBox="0 0 24 24" className="h-5 w-5 fill-no
 function SunIcon() { return <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41" /></svg>; }
 function BackIcon({ rtl }) { return <svg viewBox="0 0 24 24" className={`h-5 w-5 fill-none stroke-current stroke-2 ${rtl ? "" : "rotate-180"}`} aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>; }
 
-export default function IntegratedSectionShell({ children }) {
+export default function IntegratedSectionShell({ children, section = "general" }) {
   const [theme, setTheme] = useState("light");
   const [lang, setLang] = useState("ar");
 
@@ -54,24 +55,43 @@ export default function IntegratedSectionShell({ children }) {
     else window.location.href = "/";
   }
 
+  const sectionLinks = [
+    { href: "/", label: lang === "fr" ? "Accueil" : "الرئيسية", icon: House, id: "home" },
+    { href: "/orientation", label: lang === "fr" ? "Orientation" : "التوجيه", icon: Compass, id: "orientation" },
+    { href: "/lessons", label: lang === "fr" ? "Cours" : "الدروس", icon: BookOpen, id: "lessons" },
+    { href: "/calculator", label: lang === "fr" ? "Calculateur" : "الحاسبة", icon: Calculator, id: "calculator" },
+    { href: "/statistics", label: lang === "fr" ? "Stats" : "الإحصائيات", icon: ChartNoAxesCombined, id: "statistics" },
+  ];
+
   return (
-    <div data-integrated-page>
-      <header className="sticky top-0 z-50 border-b border-mauri-border/80 bg-white/95 text-slate-900 backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1811]/95 dark:text-white">
-        <nav className="app-shell flex h-16 items-center justify-between gap-2">
+    <div data-integrated-page data-mauri-section={section} className="mauri-unified-route">
+      <header className="sticky top-0 z-50 border-b border-mauri-border/75 bg-white/[.92] text-slate-900 shadow-[0_8px_28px_rgba(15,23,42,.04)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#07130d]/[.92] dark:text-white">
+        <nav className="app-shell relative flex h-14 items-center justify-between gap-3" aria-label={lang === "ar" ? "التنقل الرئيسي" : "Navigation principale"}>
           <div className="flex min-w-0 items-center gap-2">
-            <button onClick={goBack} type="button" className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition active:scale-95 dark:border-white/15 dark:bg-white/10 dark:text-white" aria-label={lang === "ar" ? "رجوع" : "Retour"}><BackIcon rtl={lang === "ar"} /></button>
-            <Link href="/" className="flex min-w-0 items-center gap-2.5">
-              <img src={BRAND_LOGO} width="40" height="40" alt="MauriResults" className="h-10 w-10 rounded-[14px] bg-white object-contain" decoding="async" />
-              <span className="min-w-0"><strong className="block truncate text-sm font-black">MauriResults</strong><small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-300">{lang === "ar" ? "منصة النتائج الوطنية" : "Plateforme nationale des résultats"}</small></span>
+            <button type="button" onClick={goBack} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-mauri-border bg-white text-mauri-green shadow-sm transition active:scale-95 dark:border-white/15 dark:bg-white/10 dark:text-white" aria-label={lang === "ar" ? "رجوع" : "Retour"}><BackIcon rtl={lang === "ar"} /></button>
+            <Link href="/" className="flex min-w-0 items-center gap-2.5 rounded-2xl">
+              <img src={BRAND_LOGO} alt="MauriResults" width="36" height="36" className="h-9 w-9 shrink-0 rounded-[14px] bg-white object-contain" />
+              <span className="min-w-0"><strong className="block truncate text-sm font-black tracking-tight">MauriResults</strong><small className="block truncate text-[11px] font-bold text-slate-500 dark:text-slate-400">{lang === "ar" ? "منصة النتائج الوطنية" : "Plateforme nationale des résultats"}</small></span>
             </Link>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="icon-button h-10 w-10 border-slate-200 bg-white text-slate-800 dark:border-white/15 dark:bg-white/10 dark:text-white" type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="تبديل الوضع">{theme === "dark" ? <SunIcon /> : <MoonIcon />}</button>
-            <button className="lang-button h-10 min-w-12 border-slate-200 bg-white text-slate-800 dark:border-white/15 dark:bg-white/10 dark:text-white" type="button" onClick={() => setLang(lang === "ar" ? "fr" : "ar")}>{lang === "ar" ? "FR" : "AR"}</button>
+          <div className="hidden items-center gap-1 md:flex">
+            {sectionLinks.map((item) => (
+              <Link key={item.id} href={item.href} aria-current={section === item.id ? "page" : undefined} className={section === item.id ? "nav-link min-h-10 rounded-xl bg-mauri-green px-3 py-2 text-xs font-black text-white" : "nav-link min-h-10 rounded-xl px-3 py-2 text-xs font-black transition hover:bg-mauri-green/10 hover:text-mauri-green"}>{item.label}</Link>
+            ))}
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button className="icon-button h-9 w-9 rounded-xl" type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={lang === "ar" ? "تبديل الوضع" : "Changer le thème"}>{theme === "dark" ? <SunIcon /> : <MoonIcon />}</button>
+            <button className="lang-button min-h-9 rounded-xl" type="button" onClick={() => setLang(lang === "ar" ? "fr" : "ar")} aria-label={lang === "ar" ? "الفرنسية" : "Arabe"}>{lang === "ar" ? "FR" : "AR"}</button>
           </div>
         </nav>
       </header>
-      <div data-integrated-content>{children}</div>
+      <div data-integrated-content className="pb-24 md:pb-0">{children}</div>
+      <nav className="mauri-section-bottom-nav fixed inset-x-0 bottom-0 z-50 mx-auto grid grid-cols-5 items-center gap-1 border border-white/10 bg-[#101e34]/95 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 text-white shadow-[0_-12px_36px_rgba(3,12,23,.18)] backdrop-blur-xl md:hidden" aria-label={lang === "ar" ? "أقسام الموقع" : "Rubriques du site"}>
+        {sectionLinks.map((item) => {
+          const Icon = item.icon;
+          return <Link key={item.id} href={item.href} aria-current={section === item.id ? "page" : undefined} className={section === item.id ? "flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl bg-mauri-green px-1 py-2 text-center text-[10px] font-black text-white" : "flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-black text-slate-200 transition hover:bg-white/10"}><Icon className="h-5 w-5" strokeWidth={2} /><span>{item.label}</span></Link>;
+        })}
+      </nav>
     </div>
   );
 }

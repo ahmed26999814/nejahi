@@ -25,7 +25,7 @@ export default function LessonsLayout({ children }) {
   };
 
   return (
-    <IntegratedSectionShell active="/lessons">
+    <IntegratedSectionShell section="lessons">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <style>{`
         .lessons-route > main > header{display:none}

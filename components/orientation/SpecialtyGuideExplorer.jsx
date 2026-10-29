@@ -195,6 +195,7 @@ export default function SpecialtyGuideExplorer() {
 
   return (
     <main dir="rtl" className="min-h-screen overflow-x-clip bg-[#f7faf8] pb-20 text-slate-950 dark:bg-[#06110b] dark:text-white">
+      {view === "guide" && (
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
         <div className="app-shell flex min-h-14 items-center justify-between gap-3">
           {view === "guide" ? (
@@ -209,6 +210,7 @@ export default function SpecialtyGuideExplorer() {
           <strong className="text-sm font-black text-slate-700 dark:text-slate-100">التوجيه</strong>
         </div>
       </header>
+      )}
 
       {view === "home" ? (
         <div className="app-shell grid min-h-[calc(100vh-5rem)] content-center gap-3 py-6 sm:grid-cols-2">
