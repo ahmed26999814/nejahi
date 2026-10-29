@@ -11,7 +11,7 @@ test('Excel uses the official patched distribution with a locked integrity hash'
   const sheetjs = lock.packages['node_modules/xlsx'];
   assert.equal(XLSX.version, '0.20.3');
   assert.equal(sheetjs.version, '0.20.3');
-  assert.equal(sheetjs.resolved, 'https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz');
+  assert.equal(sheetjs.resolved, 'file:vendor/xlsx-0.20.3.tgz');
   assert.match(sheetjs.integrity, /^sha512-/);
   assert.ok(Object.entries(lock.packages).filter(([path]) => /(?:^|\/)node_modules\/xlsx$/.test(path)).every(([, entry]) => entry.version === '0.20.3'));
 });
