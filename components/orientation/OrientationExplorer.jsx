@@ -244,15 +244,7 @@ export default function OrientationExplorer() {
 
   return (
     <main className="min-h-screen w-full overflow-x-clip bg-[#f7faf8] pb-16 text-slate-950 dark:bg-[#06110b] dark:text-white">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[#07130d]/95">
-        <div className="app-shell flex min-h-14 min-w-0 items-center justify-between gap-3">
-          <Link className="inline-flex min-w-0 items-center gap-2 text-sm font-black text-mauri-green" href="/">
-            <ArrowLeft className="h-4 w-4 rotate-180" />
-            <span className="truncate">MauriResults</span>
-          </Link>
-          <strong className="text-sm font-black text-slate-700 dark:text-slate-100">دليل التوجيه</strong>
-        </div>
-      </header>
+
 
       <div className="app-shell grid w-full min-w-0 gap-4 overflow-hidden py-4 md:gap-6 md:py-8">
         <section className="relative flex min-w-0 items-start gap-3 overflow-hidden rounded-[26px] border border-emerald-200/70 bg-white p-4 shadow-soft dark:border-emerald-300/15 dark:bg-white/[.055] md:p-5">
