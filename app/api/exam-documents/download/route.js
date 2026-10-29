@@ -391,7 +391,7 @@ export async function GET(request) {
     if (!record) return NextResponse.json({ error: "الملف غير موجود." }, { status: 404 });
 
     const resolved = await resolveDownload(record);
-    if (!resolved) return NextResponse.redirect(record.source_url, 302);
+    if (!resolved) return NextResponse.json({ error: "الملف غير متاح للتنزيل المباشر حالياً." }, { status: 424 });
 
     const contentType = resolved.response.headers.get("content-type") || "application/octet-stream";
     const extension = extensionFrom(resolved.finalUrl, contentType);
