@@ -10,7 +10,7 @@ const GRADES = ["7AS", "6AS", "5AS", "4AS", "6AF"];
 const PAGE = 20;
 const FILES = (index.files || []).map(decorateStudyFile).filter(file => file.category !== "exams");
 const FR_SUBJECTS = {
-  "الرياضيات": "Mathématiques", "الفيزياء": "Physique", "الكيمياء": "Chimie",
+  "الرياضيات": "Mathématiques", "الفيزياء": "Physique", "الفيزياء والكيمياء": "Physique et chimie", "الكيمياء": "Chimie",
   "العلوم الطبيعية": "Sciences naturelles", "اللغة العربية": "Arabe",
   "الفرنسية": "Français", "الإنجليزية": "Anglais",
   "التاريخ والجغرافيا": "Histoire-géographie", "التربية الإسلامية": "Instruction islamique",
@@ -204,9 +204,11 @@ export default function IndexedStudyFiles() {
                   <div className="flex min-w-0 gap-3">
                     <FileText className="mt-1 h-5 w-5 shrink-0 text-mauri-green" aria-hidden="true" />
                     <div className="min-w-0 flex-1">
-                      <h4 className="line-clamp-2 break-words text-sm font-black leading-6 text-slate-900 dark:text-white" title={file.title}>{niceTitle(file.title)}</h4>
+                      <h4 className="line-clamp-2 break-words text-sm font-black leading-6 text-slate-900 dark:text-white" title={file.title}>{niceTitle(file.displayTitle || file.title)}</h4>
                       <div className="mt-1.5 flex flex-wrap gap-x-2 text-xs font-semibold text-slate-500 dark:text-slate-300">
-                        {file.yearLabel && <span>{file.yearLabel}</span>}
+                        <span>{t.types[file.category]}</span>
+                        {file.editionYear && <span>{lang === "fr" ? "Édition" : "طبعة"} {file.editionYear}</span>}
+                        {file.yearLabel && !file.editionYear && <span>{file.yearLabel}</span>}
                         {file.branches[0] !== "common" && <span>{file.branches.map(value => BRANCH_LABELS[lang][value]).join(" / ")}</span>}
                         {file.fileType && <span>{file.fileType}</span>}
                         {/corrig|correction|تصحيح|مع الحل|الحل النموذج/i.test(normalizeStudyTitle(file.title)) && <span>{t.correction}</span>}
