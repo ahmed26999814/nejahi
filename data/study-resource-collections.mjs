@@ -10,10 +10,10 @@ export const STUDY_COLLECTIONS = [
     levels: ["7AS"],
     branches: ["LO", "LM", "LA"],
     title: { ar: "مراجع الشعب الأدبية", fr: "Ressources des séries littéraires" },
-    source: "uShare Cloud",
+    source: "MauriResults Google Drive",
     sourceYear: "2024",
-    note: { ar: "عنوان المجلد الأصلي يشير إلى 2024؛ صلاحية الملفات لتحضير 2027 غير مؤكدة.", fr: "Le dossier est intitulé 2024 ; la pertinence pour 2027 reste à vérifier." },
-    url: "https://ushare.cloud/drive/s/zs10qmRsbUlCJmQfI3J0qTxjtK7ARY"
+    note: { ar: "مراجع الباكالوريا المنسوخة إلى Google Drive الخاص بـMauriResults. اختر شعبة LM أو LO من فهرس المراجع للوصول إلى ملفاتها مباشرة.", fr: "Documents copiés dans le Google Drive de MauriResults. Choisissez LM ou LO dans la bibliothèque pour accéder directement aux fichiers." },
+    url: "https://drive.google.com/drive/folders/13ZJKedQfaW_aGrcGUs4Coe4ZWK1NP7xx"
   },
   {
     id: "bac-drive",
