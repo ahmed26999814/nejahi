@@ -9,6 +9,7 @@ export default async function StudyReader({ searchParams }) {
   const file = findStudyFile(query?.id || "");
   if (!file) notFound();
   const isPdf = file.fileType === "PDF";
+  const isVideo = file.fileType === "MP4";
   const filename = String(file.title || "document").replace(/[_]+/g, " ").trim();
   const endpoint = "/api/study-files/download?id=" + encodeURIComponent(file.id);
   return (
@@ -31,6 +32,10 @@ export default async function StudyReader({ searchParams }) {
         <iframe title={"قراءة " + filename} src={endpoint + "&inline=1"}
           className="h-[76vh] min-h-[460px] w-full rounded-2xl border border-slate-200 bg-white dark:border-white/10"
           loading="eager" />
+      ) : isVideo ? (
+        <video controls preload="metadata" className="mx-auto max-h-[76vh] w-full rounded-2xl border border-slate-200 bg-black" src={endpoint + "&inline=1"}>
+          متصفحك لا يدعم مشاهدة هذا الفيديو. يمكنك تنزيل الملف.
+        </video>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm font-semibold dark:border-white/10 dark:bg-[#12231a]">
           هذا النوع من الملفات متاح للتحميل فقط.
