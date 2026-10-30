@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { neon } from "@neondatabase/serverless";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -6,6 +7,13 @@ const TABLE = "site_content";
 
 export async function GET() {
   try {
+    if (process.env.NEXT_PUBLIC_NEON_MODE === "1") {
+      const connection = process.env.NEON_DATABASE_URL || process.env.NEON_STAGING_DATABASE_URL;
+      if (!connection) return NextResponse.json({ items: [], error: "Neon is not configured" }, { status: 503 });
+      const sql = neon(connection);
+      const items = await sql`SELECT content_key,title,value,type,updated_at FROM public.site_content ORDER BY content_key`;
+      return NextResponse.json({ items }, { headers: { "Cache-Control": "no-store" } });
+    }
     if (!SUPABASE_URL || !SERVICE_KEY) {
       return NextResponse.json({ items: [] }, { status: 200 });
     }
