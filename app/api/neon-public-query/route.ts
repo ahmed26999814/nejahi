@@ -31,10 +31,11 @@ const ALLOWED_QUERY_COLUMNS = new Set([
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const table = url.searchParams.get("table") || "";
-  if (process.env.NEXT_PUBLIC_NEON_MODE !== "1" ||
-      !ALLOWED_TABLES.has(table) ||
-      [...url.searchParams.keys()].some(key => key !== "table" && !ALLOWED_QUERY_COLUMNS.has(key))) {
-    return NextResponse.json({ error: "Resource not available" }, { status: 404 });
+  const modeEnabled = process.env.NEXT_PUBLIC_NEON_MODE === "1";
+  const tableAllowed = ALLOWED_TABLES.has(table);
+  const paramsAllowed = ![...url.searchParams.keys()].some(key => key !== "table" && !ALLOWED_QUERY_COLUMNS.has(key));
+  if (!modeEnabled || !tableAllowed || !paramsAllowed) {
+    return NextResponse.json({ error: "Resource not available", check: { modeEnabled, tableAllowed, paramsAllowed } }, { status: 404 });
   }
   const count = Number(url.searchParams.get("limit") || "100");
   const offset = Number(url.searchParams.get("offset") || "0");
