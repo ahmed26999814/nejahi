@@ -44,7 +44,7 @@ test("migration script is valid Bash and handles literal reserved URI password c
 });
 
 test("staging pg_restore excludes only Supabase-specific policy entries, not row security", () => {
-  const awkProgram = script.match(/awk '([\\s\\S]*?)' "\\$\\{toc\\}" > "\\$\\{filtered\\}"/)?.[1];
+  const awkProgram = script.match(/awk '([\s\S]*?)' "\$\{toc\}" > "\$\{filtered\}"/)?.[1];
   assert.ok(awkProgram, "Expected a constrained custom-format restore TOC filter");
   const toc = [
     "10; 100 200 TABLE public bac_results source_admin",
@@ -55,7 +55,7 @@ test("staging pg_restore excludes only Supabase-specific policy entries, not row
     "15; 100 205 SCHEMA - public source_admin",
     "16; 100 206 TABLE DATA public bac_results source_admin",
     "",
-  ].join("\\n");
+  ].join("\n");
   const filtered = execFileSync("awk", [awkProgram], { input: toc, encoding: "utf8" });
   assert.match(filtered, /TABLE public bac_results/);
   assert.match(filtered, /ROW SECURITY public bac_results/);
