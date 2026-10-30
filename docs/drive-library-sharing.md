@@ -1,26 +1,14 @@
-# نشر مكتبة MauriResults للطلاب
+# MauriResults — internal study library maintenance
 
-المكتبة موجودة داخل حساب `mauriresults@gmail.com` في المجلد:
+The student-facing interface is the on-site library at `/lessons?tab=resources`. Do not display third-party folder URLs in its cards. File reading takes place under `/study/reader?id=...`, and downloads under `/api/study-files/download?id=...`.
 
-https://drive.google.com/drive/folders/1x2rpT9IDcbAkZWn0yGAv9zYmvMo9sgcE
+- The two owned-copy mapping files currently map **558** indexed educational resources to corresponding files in the MauriResults Drive library.
+- The literary archive adds 142 entries, with 4 shared IDs. The combined catalog contains **696 unique items**.
+- The library root and representative files at different levels have Google Drive `anyone:reader` access, verified 2026-10-30.
+- A PDF converted from a native Google document is stored under its original ID in the catalog and a new PDF Drive ID in the owned-copy mapping.
+- The reader supports PDF and MP4. DOC/DOCX documents are downloaded from the same domain.
+- Folder shortcuts and one provisional-results document are not included as educational resources; the archive video is included.
+- The MediaFire folder contents have **not been enumerated**, so no unverified MediaFire items appear in the catalog.
+- Year filters use explicitly tagged years; where not provided, they are extracted from document filenames, not assumed to be 2027.
 
-## إتاحة القراءة من حساب MauriResults (مرة واحدة)
-
-1. افتح الرابط السابق أثناء تسجيل الدخول بالحساب المالك.
-2. انقر **مشاركة** على المجلد **MauriResults - المكتبة التعليمية**.
-3. في **الوصول العام / General access** اختر **أي شخص لديه الرابط / Anyone with the link**.
-4. اضبط الدور **مشاهد / Viewer** فقط (ليس محررًا).
-5. اضغط **تم**، ثم افتح أحد ملفات الباكالوريا من نافذة خاصة لا تحمل حساب Google للتأكد من إمكانية الوصول والتنزيل. ترث الملفات والمجلدات الفرعية عادةً صلاحية عرض المجلد الأب، لكن يجب فحص الملفات إذا كانت هناك قيود أخرى.
-
-## في الموقع
-
-- يطابق `data/study-owned-drive-part-a.json` و`data/study-owned-drive-part-b.json` جميع الملفات الـ552 المنسوخة على Drive مع معرّفاتها القديمة، باستخدام اسم الملف والمجلد الدراسي.
-- جرّب رابط تنزيل ملف من `/api/study-files/download?id=<original-id>`.
-- يفضل الموقع نسختك داخل حساب MauriResults تلقائيًا عند نجاح التنزيل، ويعود إلى الرابط القديم إذا لم تتوفر النسخة.
-- لا حاجة لرفع 1TB إلى GitHub أو Vercel؛ يمر تنزيل الملفات المتاحة عبر مسار الموقع نفسه.
-- يجب أن يبقى المجلد دون منح إذن التعديل للطلاب. تذكر أن مشاركة المجلد تمنح أي شخص يملك الرابط إمكانية الاطلاع على كل الملفات الموجودة داخله.
-- إن تعذر جعل المجلد عامًا بسبب سياسة حساب Google، يبقى رابط الملف الأصلي احتياطيًا. لا يمكن لربط Google Drive الحالي في ChatGPT إنشاء صلاحية `anyone` للمجلد؛ يلزم تنفيذ الإعداد من Google Drive مباشرة.
-
-## قيود
-
-أسماء/شعب بعض الملفات ما تزال مصنّفة آليًا؛ إتاحة النسخ الجديدة لا تعني تأكيد التصنيف العلمي لكل ملف. يجب التحقق من ملف عشوائي من كل مستوى.
+Google Drive is storage; the website does not link to the upstream folder or expose direct file links in the visible UI. The on-site download endpoint chooses publicly readable MauriResults copies first and returns 424 when no verified binary source is reachable.
