@@ -65,7 +65,7 @@ async function handleDownload(request, headOnly) {
   const file = findStudyFile(id);
   if (!file) return Response.json({ error: "الملف غير موجود." }, { status: 404 });
 
-  for (const source of driveDownloadCandidates(id, process.env.MAURI_OWN_DRIVE_PUBLIC === "1")) {
+  for (const source of driveDownloadCandidates(id, process.env.MAURI_OWN_DRIVE_PUBLIC !== "0")) {
     try {
       const upstream = await fetchTrustedDrive(source);
       if (!upstream) continue;
