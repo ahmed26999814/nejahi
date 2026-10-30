@@ -1,0 +1,40 @@
+name: Neon staging migration (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging:
+        description: 'Type STAGING_ONLY (never target production)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mauriresults-neon-staging-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Copy Supabase public data into isolated Neon staging
+    runs-on: ubuntu-latest
+    container:
+      image: postgres:18
+    env:
+      CONFIRM_STAGING: ${{ inputs.confirm_staging }}
+      SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      NEON_STAGING_DATABASE_URL: ${{ secrets.NEON_STAGING_DATABASE_URL }}
+    steps:
+      - name: Checkout this migration branch
+        uses: actions/checkout@v4
+
+      - name: Check PostgreSQL client version
+        run: |
+          pg_dump --version
+          pg_restore --version
+          psql --version
+
+      - name: Back up and restore to staging only
+        shell: bash
+        run: bash scripts/neon-staging-migrate.sh
