@@ -29,7 +29,7 @@ test("official exam subjects and mock Bac papers appear in exams, not study refe
   for (const [title, category] of samples) assert.equal(studyFileCategory({ title }), category, title);
   assert.ok(examFiles.length > 100, "No examination papers migrated into exam collection");
   assert.ok(library.every(file => file.category !== "exams"));
-  assert.equal(catalog.length, 552, "Every indexed file remains accounted for");
+  assert.equal(catalog.length, 558, "Every indexed file remains accounted for");
 });
 
 test("C, D, LM and LO are split explicitly and unknown branches are never invented", () => {

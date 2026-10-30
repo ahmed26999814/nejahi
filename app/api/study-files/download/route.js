@@ -14,9 +14,10 @@ const FILE_MIME = {
   PDF: "application/pdf",
   DOC: "application/msword",
   DOCX: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  MP4: "video/mp4",
 };
 
-async function fetchTrustedDrive(url) {
+async function fetchTrustedDrive(url, byteRange = null) {
   for (let redirect = 0; redirect < 6; redirect += 1) {
     if (!isTrustedDriveDownloadUrl(url)) return null;
     const controller = new AbortController();
@@ -27,7 +28,7 @@ async function fetchTrustedDrive(url) {
         redirect: "manual",
         cache: "no-store",
         signal: controller.signal,
-        headers: { Accept: "application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,*/*;q=0.5" },
+        headers: { Accept: "application/pdf,video/mp4,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,*/*;q=0.5", ...(byteRange ? { Range: byteRange } : {}) },
       });
     } finally {
       clearTimeout(timer);
@@ -55,6 +56,7 @@ function isBinaryFileResponse(response) {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/zip",
     "application/x-zip-compressed",
+    "video/mp4",
   ];
   return accepted.some(mime => type.includes(mime)) &&
     allowedStudyFileLength(response.headers.get("content-length"));
@@ -64,10 +66,13 @@ async function handleDownload(request, headOnly) {
   const id = new URL(request.url).searchParams.get("id") || "";
   const file = findStudyFile(id);
   if (!file) return Response.json({ error: "الملف غير موجود." }, { status: 404 });
+  const inline = new URL(request.url).searchParams.get("inline") === "1" && (file.fileType === "PDF" || file.fileType === "MP4");
+  const requestedRange = request.headers.get("range");
+  const byteRange = requestedRange && /^bytes=(?:\d+-\d*|-\d+)$/.test(requestedRange) ? requestedRange : null;
 
   for (const source of driveDownloadCandidates(id, process.env.MAURI_OWN_DRIVE_PUBLIC !== "0")) {
     try {
-      const upstream = await fetchTrustedDrive(source);
+      const upstream = await fetchTrustedDrive(source, byteRange);
       if (!upstream) continue;
       if (!isBinaryFileResponse(upstream)) {
         await upstream.body?.cancel().catch(() => {});
@@ -77,17 +82,22 @@ async function handleDownload(request, headOnly) {
       const filename = safeStudyFilename(file);
       const headers = new Headers({
         "Content-Type": FILE_MIME[file.fileType] || "application/octet-stream",
-        "Content-Disposition": `attachment; filename="study-file.${(file.fileType || "PDF").toLowerCase()}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="study-file.${(file.fileType || "PDF").toLowerCase()}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
       });
+      const contentRange = upstream.headers.get("content-range");
+      if (upstream.status === 206 && contentRange) {
+        headers.set("Content-Range", contentRange);
+        headers.set("Accept-Ranges", "bytes");
+      }
       const length = upstream.headers.get("content-length");
       if (length) headers.set("Content-Length", length);
       if (headOnly) {
         await upstream.body?.cancel().catch(() => {});
-        return new Response(null, { status: 200, headers });
+        return new Response(null, { status: upstream.status === 206 ? 206 : 200, headers });
       }
-      return new Response(upstream.body, { status: 200, headers });
+      return new Response(upstream.body, { status: upstream.status === 206 ? 206 : 200, headers });
     } catch (error) {
       console.warn("study-files:download source unavailable", error instanceof Error ? error.message : "unknown error");
     }

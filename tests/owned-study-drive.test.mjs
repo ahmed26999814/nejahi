@@ -15,9 +15,9 @@ const map = { ...partA, ...partB };
 
 test("every indexed document matches exactly one owned copy", () => {
   const stats = ownedDriveMappingStats();
-  assert.deepEqual(stats, { original: 552, copied: 552 });
+  assert.deepEqual(stats, { original: 558, copied: 558 });
   assert.equal(Object.keys(map).length, index.length);
-  assert.equal(new Set(Object.values(map)).size, 552);
+  assert.equal(new Set(Object.values(map)).size, 558);
   for (const file of index) {
     assert.equal(ownedDriveCopyId(file.id), map[file.id]);
     assert.match(map[file.id], /^[A-Za-z0-9_-]+$/);
@@ -43,9 +43,9 @@ test("anonymous IDs, relative paths and malformed values cannot access arbitrary
   }
 });
 
-test("the copied Drive files remain marked private until general access is changed by their owner", () => {
+test("MauriResults Drive library has link-reader permissions verified on the root and sample copies", () => {
   const a = JSON.parse(readFileSync(new URL("../data/study-owned-drive-part-a.json", import.meta.url), "utf8"));
   const b = JSON.parse(readFileSync(new URL("../data/study-owned-drive-part-b.json", import.meta.url), "utf8"));
-  assert.equal(a.permissionStatus, "private");
-  assert.equal(b.permissionStatus, "private");
+  assert.equal(a.permissionStatus, "public_link_reader");
+  assert.equal(b.permissionStatus, "public_link_reader");
 });

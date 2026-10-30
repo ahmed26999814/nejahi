@@ -18,13 +18,13 @@ test("uShare copies are distinct, recognized, and downloadable", () => {
     assert.ok(file.verifiedBranches.length);
     assert.ok(file.verifiedSubject);
   }
-  assert.deepEqual(ownedDriveMappingStats(), { original: 552, copied: 552 });
+  assert.deepEqual(ownedDriveMappingStats(), { original: 558, copied: 558 });
 });
 test("literary references are shown inline rather than as external shortcuts", () => {
   const resources = readFileSync(new URL("../components/documents/ExternalResourceCollections.jsx", import.meta.url), "utf8");
-  const literary = readFileSync(new URL("../components/documents/LiteraryStudyFiles.jsx", import.meta.url), "utf8");
-  assert.ok(resources.includes("<LiteraryStudyFiles />"));
-  assert.ok(resources.includes('item.id !== "literary-ushare"'));
-  assert.ok(literary.includes("archive.folderUrl"));
-  assert.ok(literary.includes("/api/study-files/download?id="));
+  const unified = readFileSync(new URL("../components/documents/StudyResourceLibrary.jsx", import.meta.url), "utf8");
+  assert.ok(resources.includes("<StudyResourceLibrary />"));
+  assert.ok(unified.includes('import literary from "../../data/ushare-literary-files.json"'));
+  assert.ok(unified.includes("/api/study-files/download?id="));
+  assert.ok(!unified.includes("href={file.link}"));
 });
