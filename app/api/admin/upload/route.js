@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { put, del } from "@vercel/blob";
+import { neon } from "@neondatabase/serverless";
+import { IMAGE_ITEMS } from "../../../../constants/adminContent";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -37,9 +40,78 @@ function publicUrl(path) {
   return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
 }
 
+
+const NEON_PREVIEW = process.env.NEON_ENABLE_API_BRIDGE === "1";
+const UPLOAD_LIMIT_BYTES = 3_500_000;
+const SAFE_MIME = Object.freeze({
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+});
+const IMAGE_KEYS = new Set(IMAGE_ITEMS.map(item => item.key));
+function stagingSql() {
+  if (!process.env.NEON_STAGING_DATABASE_URL) throw new Error("Neon staging not configured");
+  return neon(process.env.NEON_STAGING_DATABASE_URL);
+}
+function safeBlobPrevious(path) {
+  if (typeof path !== "string" || !path.includes(".public.blob.vercel-storage.com/")) return false;
+  try {
+    const parsed = new URL(path);
+    return parsed.protocol === "https:" && parsed.hostname.endsWith(".public.blob.vercel-storage.com")
+      && parsed.pathname.startsWith("/site-images/");
+  } catch { return false; }
+}
+async function uploadStagingImage(request) {
+  const form = await request.formData();
+  const file = form.get("file");
+  const key = String(form.get("content_key") || "");
+  const title = String(form.get("title") || key).slice(0, 180);
+  const previousPath = String(form.get("previous_path") || "");
+  if (!IMAGE_KEYS.has(key) || !file || typeof file.arrayBuffer !== "function") {
+    return json({ error: "Invalid image key or file" }, 400);
+  }
+  const extension = SAFE_MIME[file.type];
+  if (!extension || !Number.isFinite(file.size) || file.size < 1 || file.size > UPLOAD_LIMIT_BYTES) {
+    return json({ error: "Only PNG, JPEG or WebP images up to 3.5MB are accepted" }, 400);
+  }
+  let blob;
+  const path = "site-images/" + key + "/" + Date.now() + "-" + crypto.randomUUID() + "." + extension;
+  try {
+    blob = await put(path, file, { access: "public", addRandomSuffix: false, contentType: file.type });
+    const sql = stagingSql();
+    const rows = await sql.query(
+      "INSERT INTO public.site_content(content_key,title,value,type,storage_path) VALUES ($1,$2,$3,'image',$4) ON CONFLICT(content_key) DO UPDATE SET title=EXCLUDED.title,value=EXCLUDED.value,type='image',storage_path=EXCLUDED.storage_path RETURNING *",
+      [key, title, blob.url, blob.url],
+    );
+    if (safeBlobPrevious(previousPath) && previousPath !== blob.url) {
+      await del(previousPath).catch(() => {});
+    }
+    return json({ item: rows[0], image_url: blob.url, storage_path: blob.url });
+  } catch {
+    if (blob?.url) await del(blob.url).catch(() => {});
+    return json({ error: "Image storage unavailable" }, 503);
+  }
+}
+async function deleteStagingImage(request) {
+  const { content_key, storage_path } = await request.json();
+  if (!IMAGE_KEYS.has(String(content_key || ""))) return json({ error: "Invalid image key" }, 400);
+  try {
+    const sql = stagingSql();
+    const rows = await sql.query(
+      "UPDATE public.site_content SET value=NULL,storage_path=NULL WHERE content_key=$1 RETURNING *",
+      [content_key],
+    );
+    if (safeBlobPrevious(storage_path)) await del(storage_path).catch(() => {});
+    return json({ items: rows });
+  } catch {
+    return json({ error: "Image removal unavailable" }, 503);
+  }
+}
+
 export async function POST(request) {
   const { error } = assertAdmin(request);
   if (error) return error;
+  if (NEON_PREVIEW) return uploadStagingImage(request);
 
   try {
     const form = await request.formData();
@@ -102,6 +174,7 @@ export async function POST(request) {
 export async function DELETE(request) {
   const { error } = assertAdmin(request);
   if (error) return error;
+  if (NEON_PREVIEW) return deleteStagingImage(request);
 
   try {
     const { content_key, storage_path } = await request.json();
