@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 
 const workflow = readFileSync(new URL("../.github/workflows/neon-staging-migration.yml", import.meta.url), "utf8");
 const script = readFileSync(new URL("../scripts/neon-staging-migrate.sh", import.meta.url), "utf8");
@@ -29,4 +30,15 @@ test("workflow uses secret-managed URLs and no backups are uploaded", () => {
   assert.match(workflow, /secrets\.SUPABASE_DATABASE_URL/);
   assert.match(workflow, /secrets\.NEON_STAGING_DATABASE_URL/);
   assert.doesNotMatch(workflow, /upload-artifact|artifact\/upload|set-output/);
+});
+
+test("migration script is valid Bash and handles literal reserved URI password characters", () => {
+  assert.doesNotThrow(() =>
+    execFileSync("bash", ["-n", new URL("../scripts/neon-staging-migrate.sh", import.meta.url).pathname]),
+  );
+  assert.match(script, /source_auth="\$\{source_rest%@\*\}"/);
+  assert.match(script, /source_endpoint="\$\{source_rest##\*@\}"/);
+  assert.match(script, /PGPASSWORD="\$\{source_password\}" PGSSLMODE=require pg_dump/);
+  assert.match(script, /source_psql\(\)/);
+  assert.doesNotMatch(script, /psql "\$\{SUPABASE_DATABASE_URL\}"/);
 });
