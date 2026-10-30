@@ -42,3 +42,28 @@ test("migration script is valid Bash and handles literal reserved URI password c
   assert.match(script, /source_psql\(\)/);
   assert.doesNotMatch(script, /psql "\$\{SUPABASE_DATABASE_URL\}"/);
 });
+
+test("staging pg_restore excludes only Supabase-specific policy entries, not row security", () => {
+  const awkProgram = script.match(/awk '([\s\S]*?)' "\$\{toc\}" > "\$\{filtered\}"/)?.[1];
+  assert.ok(awkProgram, "Expected a constrained custom-format restore TOC filter");
+  const toc = [
+    "10; 100 200 TABLE public bac_results source_admin",
+    "11; 100 201 POLICY public bac_results Allow anon read source_admin",
+    "12; 100 202 ROW SECURITY public bac_results source_admin",
+    "13; 100 203 INDEX public bac_results_idx source_admin",
+    "14; 100 204 COMMENT - SCHEMA public source_admin",
+    "15; 100 205 SCHEMA - public source_admin",
+    "16; 100 206 TABLE DATA public bac_results source_admin",
+    "",
+  ].join("\n");
+  const filtered = execFileSync("awk", [awkProgram], { input: toc, encoding: "utf8" });
+  assert.match(filtered, /TABLE public bac_results/);
+  assert.match(filtered, /ROW SECURITY public bac_results/);
+  assert.match(filtered, /INDEX public bac_results_idx/);
+  assert.match(filtered, /TABLE DATA public bac_results/);
+  assert.doesNotMatch(filtered, /POLICY public bac_results/);
+  assert.doesNotMatch(filtered, /COMMENT - SCHEMA public/);
+  assert.doesNotMatch(filtered, /SCHEMA - public/);
+  assert.match(script, /--no-acl/);
+  assert.match(script, /--single-transaction/);
+});
