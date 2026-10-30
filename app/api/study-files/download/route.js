@@ -64,6 +64,7 @@ async function handleDownload(request, headOnly) {
   const id = new URL(request.url).searchParams.get("id") || "";
   const file = findStudyFile(id);
   if (!file) return Response.json({ error: "الملف غير موجود." }, { status: 404 });
+  const inline = new URL(request.url).searchParams.get("inline") === "1" && file.fileType === "PDF";
 
   for (const source of driveDownloadCandidates(id, process.env.MAURI_OWN_DRIVE_PUBLIC !== "0")) {
     try {
@@ -77,7 +78,7 @@ async function handleDownload(request, headOnly) {
       const filename = safeStudyFilename(file);
       const headers = new Headers({
         "Content-Type": FILE_MIME[file.fileType] || "application/octet-stream",
-        "Content-Disposition": `attachment; filename="study-file.${(file.fileType || "PDF").toLowerCase()}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="study-file.${(file.fileType || "PDF").toLowerCase()}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
       });
