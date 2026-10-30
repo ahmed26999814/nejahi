@@ -1,0 +1,31 @@
+name: Refresh Neon preview dependency lockfile (one-off)
+on:
+  push:
+    branches: [feature/neon-application-cutover-preflight]
+    paths:
+      - .github/workflows/neon-refresh-lockfile.yml
+permissions:
+  contents: write
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Update pinned dependency tree
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit lockfile on preview feature branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "build(neon): lock official Vercel Blob and Neon dependencies"
+            git push origin HEAD:refs/heads/feature/neon-application-cutover-preflight
+          fi
