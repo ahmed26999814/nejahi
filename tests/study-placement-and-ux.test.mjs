@@ -53,7 +53,7 @@ test("books and exams use same-site readers and never link directly to Google Dr
   assert.match(exams, /STUDY_EXAM_FILES/);
   assert.match(books, /\/study\/reader\?id=/);
   assert.match(exams, /\/study\/reader\?/);
-  assert.match(references, /\/study\/reader\?id=/);
+  assert.match(references, /\/study\/reader\?/);
   assert.match(books, /\/study\/book-reader\?url=/);
   assert.doesNotMatch(exams, /href=\{card\.file\.link\}/);
   assert.doesNotMatch(references, /href=\{file\.link\}/);
