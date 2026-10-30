@@ -51,38 +51,71 @@ const ownedBooks = STUDY_BOOK_FILES.map(file => ({
   title: file.displayTitle || file.title, id: file.id, fileType: file.fileType,
 }));
 const byGrade = (book, grade) => book.grade === grade || (grade === "4AS" && book.grade === "3AS");
+const localCopyNames = new Set(ownedBooks.map(file => String(file.title || "").replace(/[^a-z0-9]/gi, "").toLowerCase()));
+const catalogBooks = [
+  ...rows.filter(file => !localCopyNames.has(decodeURIComponent(file.url.split("/").pop() || "").replace(/[^a-z0-9]/gi, "").toLowerCase())),
+  ...ownedBooks,
+];
+function lessonSelectionFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const stage = STAGES.find(value => value.id === params.get("stage"));
+  const grade = stage?.grades.includes(params.get("grade")) ? params.get("grade") : stage?.grades[0] || null;
+  return { stageId: stage?.id || null, grade };
+}
+function lessonPath(stage, grade) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", "lessons");
+  if (stage && grade) { url.searchParams.set("stage", stage); url.searchParams.set("grade", grade); }
+  else { url.searchParams.delete("stage"); url.searchParams.delete("grade"); }
+  return url.pathname + url.search + url.hash;
+}
 function downloadUrl(book){
   if (book.id) return `/api/study-files/download?id=${encodeURIComponent(book.id)}`;
   const n = `${book.subject} - ${book.type} - ${book.grade}.pdf`;
   return `/api/books/download?url=${encodeURIComponent(book.url)}&name=${encodeURIComponent(n)}`;
 }
-function readUrl(book){
-  if (book.id) return `/study/reader?id=${encodeURIComponent(book.id)}`;
-  return `/study/book-reader?url=${encodeURIComponent(book.url)}&name=${encodeURIComponent(book.subject + " - " + book.grade)}`;
+function readUrl(book, stage, grade){
+  const context = "&stage=" + encodeURIComponent(stage) + "&grade=" + encodeURIComponent(grade);
+  if (book.id) return `/study/reader?id=${encodeURIComponent(book.id)}&from=books` + context;
+  return `/study/book-reader?url=${encodeURIComponent(book.url)}&name=${encodeURIComponent(book.subject + " - " + book.grade)}` + context;
 }
 
 export default function LessonsExplorer(){
   const [lang,setLang]=useState("ar"); const [stageId,setStageId]=useState(null); const [grade,setGrade]=useState(null); const [query,setQuery]=useState("");
-  useEffect(()=>{const sync=(e)=>setLang(e?.detail?.lang||localStorage.getItem("mauriresults-lang")||"ar");sync();window.addEventListener("mauriresults:language-change",sync);return()=>window.removeEventListener("mauriresults:language-change",sync);},[]);
+  useEffect(()=>{
+  const syncLanguage=e=>setLang(e?.detail?.lang||localStorage.getItem("mauriresults-lang")||"ar");
+  const syncNavigation=()=>{
+    const state=lessonSelectionFromUrl();
+    setStageId(state.stageId);setGrade(state.grade);setQuery("");
+  };
+  syncLanguage();syncNavigation();
+  window.addEventListener("mauriresults:language-change",syncLanguage);
+  window.addEventListener("popstate",syncNavigation);
+  return()=>{window.removeEventListener("mauriresults:language-change",syncLanguage);window.removeEventListener("popstate",syncNavigation);};
+},[]);
   const tx=T[lang]; const stage=STAGES.find(s=>s.id===stageId);
-  const books=useMemo(()=>[...rows,...ownedBooks].filter(b=>byGrade(b,grade)&&(!query.trim()||`${b.subject} ${b.type} ${b.title||""}`.toLowerCase().includes(query.trim().toLowerCase()))),[grade,query]);
-  function chooseStage(s){setStageId(s.id);setGrade(s.grades[0]);setQuery("");window.scrollTo({top:0,behavior:"smooth"});}
+  const books=useMemo(()=>catalogBooks.filter(b=>byGrade(b,grade)&&(!query.trim()||`${b.subject} ${b.type} ${b.title||""}`.toLowerCase().includes(query.trim().toLowerCase()))),[grade,query]);
+  function navigateTo(stage, nextGrade){
+  window.history.pushState({ ...window.history.state }, "", lessonPath(stage, nextGrade));
+  setStageId(stage);setGrade(nextGrade);setQuery("");
+}
+function chooseStage(s){navigateTo(s.id,s.grades[0]);window.scrollTo({top:0,behavior:"smooth"});}
   return <main data-no-auto-translate dir={lang==="ar"?"rtl":"ltr"} className="min-h-screen bg-slate-50 pb-16 text-slate-900 dark:bg-[#07130d] dark:text-white">
     <section className="app-shell py-6 sm:py-8">
       {!stage ? <>
         <div className="rounded-[30px] bg-gradient-to-l from-emerald-700 via-emerald-600 to-teal-600 p-6 text-white shadow-xl sm:p-9"><p className="text-xs font-black text-emerald-100">{tx.library}</p><h1 className="mt-2 text-2xl font-black sm:text-4xl">{tx.chooseStage}</h1><p className="mt-3 max-w-2xl text-sm font-bold leading-7 text-emerald-50">{tx.chooseStageDesc}</p></div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">{STAGES.map(s=><button key={s.id} onClick={()=>chooseStage(s)} className="group rounded-[26px] border border-slate-200 bg-white p-6 text-start shadow-sm transition hover:-translate-y-1 hover:border-mauri-green hover:shadow-xl dark:border-white/10 dark:bg-[#12231a]"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-mauri-green/10 text-xl text-mauri-green">{s.icon}</span><strong className="mt-5 block text-xl font-black">{tx[s.id]}</strong><span className="mt-2 block text-sm font-bold text-slate-500 dark:text-slate-300">{tx[`${s.id}Desc`]}</span><span className="mt-5 block text-xs font-black text-mauri-green">{s.grades.reduce((n,g)=>n+[...rows,...ownedBooks].filter(b=>byGrade(b,g)).length,0)} {tx.books}</span></button>)}</div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">{STAGES.map(s=><button key={s.id} onClick={()=>chooseStage(s)} className="group rounded-[26px] border border-slate-200 bg-white p-6 text-start shadow-sm transition hover:-translate-y-1 hover:border-mauri-green hover:shadow-xl dark:border-white/10 dark:bg-[#12231a]"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-mauri-green/10 text-xl text-mauri-green">{s.icon}</span><strong className="mt-5 block text-xl font-black">{tx[s.id]}</strong><span className="mt-2 block text-sm font-bold text-slate-500 dark:text-slate-300">{tx[`${s.id}Desc`]}</span><span className="mt-5 block text-xs font-black text-mauri-green">{s.grades.reduce((n,g)=>n+catalogBooks.filter(b=>byGrade(b,g)).length,0)} {tx.books}</span></button>)}</div>
       </> : <>
-        <button onClick={()=>{setStageId(null);setGrade(null);setQuery("")}} className="mb-4 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-mauri-green dark:border-white/10 dark:bg-[#12231a]">← {tx.backStages}</button>
+        <button onClick={()=>navigateTo(null,null)} className="mb-4 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-mauri-green dark:border-white/10 dark:bg-[#12231a]">← {tx.backStages}</button>
         <div className="rounded-[28px] bg-gradient-to-l from-emerald-700 to-teal-600 p-6 text-white"><p className="text-xs font-black text-emerald-100">{tx.library}</p><h1 className="mt-2 text-2xl font-black">{tx[stage.id]}</h1><p className="mt-2 text-sm font-bold text-emerald-50">{tx.chooseYear}</p></div>
-        <div className={`mt-5 grid gap-3 ${stage.grades.length===3?"grid-cols-3":stage.grades.length===4?"grid-cols-2 sm:grid-cols-4":"grid-cols-3 sm:grid-cols-6"}`}>{stage.grades.map(g=>{const c=[...rows,...ownedBooks].filter(b=>byGrade(b,g)).length;return <button key={g} onClick={()=>{setGrade(g);setQuery("")}} className={`rounded-2xl border p-4 text-center transition ${grade===g?"border-mauri-green bg-mauri-green text-white shadow-lg":"border-slate-200 bg-white dark:border-white/10 dark:bg-[#12231a]"}`}><strong className="block text-sm font-black">{tx.grades[g]}</strong><span className="mt-1 block text-xs font-bold opacity-80">{g}</span><span className="mt-1 block text-[11px] font-bold opacity-75">{c} {tx.books}</span></button>})}</div>
+        <div className={`mt-5 grid gap-3 ${stage.grades.length===3?"grid-cols-3":stage.grades.length===4?"grid-cols-2 sm:grid-cols-4":"grid-cols-3 sm:grid-cols-6"}`}>{stage.grades.map(g=>{const c=catalogBooks.filter(b=>byGrade(b,g)).length;return <button key={g} onClick={()=>navigateTo(stageId,g)} className={`rounded-2xl border p-4 text-center transition ${grade===g?"border-mauri-green bg-mauri-green text-white shadow-lg":"border-slate-200 bg-white dark:border-white/10 dark:bg-[#12231a]"}`}><strong className="block text-sm font-black">{tx.grades[g]}</strong><span className="mt-1 block text-xs font-bold opacity-80">{g}</span><span className="mt-1 block text-[11px] font-bold opacity-75">{c} {tx.books}</span></button>})}</div>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-xl font-black">{tx.grades[grade]} — {tx[stage.id]}</h2><p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-300">{books.length} {tx.available}</p></div><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={tx.search} className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none focus:border-mauri-green dark:border-white/10 dark:bg-[#12231a] sm:max-w-xs"/></div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{books.map(b=><article key={b.id||`${b.grade}-${b.subject}-${b.type}-${b.url}`}
           className="flex min-w-0 min-h-44 flex-col rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#12231a]">
           <h3 className="break-words text-base font-black leading-7">{b.subject}</h3>
           <p className="mt-1 line-clamp-3 break-words text-sm font-semibold text-slate-500 dark:text-slate-300" title={b.title||b.type}>{b.title ? b.title.replace(/\.(pdf|docx?)$/i,"").replace(/_/g," ") : b.type}</p>
           <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
-            {(b.fileType==="DOC"||b.fileType==="DOCX") ? null : <Link href={readUrl(b)}
+            {(b.fileType==="DOC"||b.fileType==="DOCX") ? null : <Link href={readUrl(b,stageId,grade)}
               className="flex min-h-11 items-center justify-center rounded-2xl bg-mauri-green px-2 text-sm font-black text-white">{lang==="ar"?"قراءة":"Lire"}</Link>}
             <a href={downloadUrl(b)} className={`flex min-h-11 items-center justify-center rounded-2xl border border-mauri-green px-2 text-sm font-black text-mauri-green ${(b.fileType==="DOC"||b.fileType==="DOCX")?"col-span-2":""}`}>{tx.download}</a>
           </div>

@@ -48,8 +48,13 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
     };
     syncLanguage();
     setTab(tabFromLocation());
+    const syncTab = () => setTab(tabFromLocation());
     window.addEventListener("mauriresults:language-change", syncLanguage);
-    return () => window.removeEventListener("mauriresults:language-change", syncLanguage);
+    window.addEventListener("popstate", syncTab);
+    return () => {
+      window.removeEventListener("mauriresults:language-change", syncLanguage);
+      window.removeEventListener("popstate", syncTab);
+    };
   }, []);
 
   const text = COPY[lang] || COPY.ar;
@@ -59,7 +64,10 @@ export default function LessonsAndExams({ initialTab = "lessons" }) {
     const url = new URL(window.location.href);
     if (nextTab === "exams" || nextTab === "resources") url.searchParams.set("tab", nextTab);
     else url.searchParams.delete("tab");
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    for (const param of ["stage", "grade", "level", "subject", "kind", "competition", "branch", "year"]) {
+      url.searchParams.delete(param);
+    }
+    window.history.pushState({ ...window.history.state }, "", `${url.pathname}${url.search}${url.hash}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 

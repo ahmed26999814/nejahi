@@ -51,6 +51,33 @@ export default function IntegratedSectionShell({ children, section = "general" }
   }, [lang]);
 
   function goBack() {
+    // The section header must navigate one card level, not leave the lesson area.
+    // Unlike ordinary browser history, this also works for a directly shared deep link.
+    if (section === "lessons" && window.location.pathname === "/lessons") {
+      const url = new URL(window.location.href);
+      const tab = url.searchParams.get("tab") || "lessons";
+      let changed = false;
+      const clear = (...keys) => keys.forEach(key => url.searchParams.delete(key));
+      if (tab === "resources") {
+        if (url.searchParams.has("kind")) { clear("kind", "year"); changed = true; }
+        else if (url.searchParams.has("subject")) { clear("subject", "year"); changed = true; }
+        else if (url.searchParams.has("branch")) { clear("branch", "year"); changed = true; }
+        else if (url.searchParams.has("level")) { clear("level", "year"); changed = true; }
+        else { clear("tab"); changed = true; }
+      } else if (tab === "exams") {
+        if (url.searchParams.has("year")) { clear("year"); changed = true; }
+        else if (url.searchParams.has("branch")) { clear("branch"); changed = true; }
+        else if (url.searchParams.has("competition")) { clear("competition"); changed = true; }
+        else { clear("tab"); changed = true; }
+      } else if (url.searchParams.has("stage") || url.searchParams.has("grade")) {
+        clear("stage", "grade"); changed = true;
+      }
+      if (changed) {
+        window.history.pushState({ ...window.history.state }, "", url.pathname + url.search + url.hash);
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        return;
+      }
+    }
     if (window.history.length > 1) window.history.back();
     else window.location.href = "/";
   }

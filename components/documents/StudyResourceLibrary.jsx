@@ -71,9 +71,23 @@ export default function StudyResourceLibrary() {
       const value = event?.detail?.lang || localStorage.getItem("mauriresults-lang") || "ar";
       setLang(value === "fr" ? "fr" : "ar");
     };
-    sync();
+    const syncSelection = () => {
+      const p = new URLSearchParams(window.location.search);
+      const validLevel = STUDY_LEVELS.includes(p.get("level")) ? p.get("level") : "";
+      setLevel(validLevel);
+      setBranch(BRANCH_ORDER.includes(p.get("branch")) ? p.get("branch") : "");
+      setSubject(p.get("subject")?.slice(0,100) || "");
+      setKind(["lessons", "series"].includes(p.get("kind")) ? p.get("kind") : "");
+      setYear(p.get("year")?.slice(0,50) || "all");
+      setShown(PER_PAGE);setShowOlder(false);setQuery("");
+    };
+    sync();syncSelection();
     window.addEventListener("mauriresults:language-change", sync);
-    return () => window.removeEventListener("mauriresults:language-change", sync);
+    window.addEventListener("popstate", syncSelection);
+    return () => {
+      window.removeEventListener("mauriresults:language-change", sync);
+      window.removeEventListener("popstate", syncSelection);
+    };
   }, []);
 
   const t = TEXT[lang];
@@ -97,16 +111,27 @@ export default function StudyResourceLibrary() {
     [typeFiles, year, query, lang]);
   const step = !level ? "level" : needsBranch && !branch ? "branch" : !subject ? "subject" : types.length > 1 && !kind ? "type" : "files";
 
-  function resetFiles() { setYear("all"); setQuery(""); setShown(PER_PAGE); setShowOlder(false); }
-  function pickLevel(value) { setLevel(value); setBranch(""); setSubject(""); setKind(""); resetFiles(); }
-  function pickBranch(value) { setBranch(value); setSubject(""); setKind(""); resetFiles(); }
-  function pickSubject(value) { setSubject(value); setKind(""); resetFiles(); }
+  function remember(next, replaceHistory = false) {
+    const state = { level, branch, subject, kind, year, ...next };
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", "resources");
+    for (const name of ["level", "branch", "subject", "kind", "year"]) {
+      if (state[name] && state[name] !== "all") url.searchParams.set(name, state[name]);
+      else url.searchParams.delete(name);
+    }
+    window.history[replaceHistory ? "replaceState" : "pushState"]({ ...window.history.state }, "", url.pathname + url.search + url.hash);
+    setLevel(state.level);setBranch(state.branch);setSubject(state.subject);
+    setKind(state.kind);setYear(state.year);
+    setQuery("");setShown(PER_PAGE);setShowOlder(false);
+  }
+  function pickLevel(value) { remember({ level:value, branch:"", subject:"", kind:"", year:"all" }); }
+  function pickBranch(value) { remember({ branch:value, subject:"", kind:"", year:"all" }); }
+  function pickSubject(value) { remember({ subject:value, kind:"", year:"all" }); }
   function goBack() {
-    resetFiles();
-    if (kind) { setKind(""); return; }
-    if (subject) { setSubject(""); return; }
-    if (branch) { setBranch(""); return; }
-    setLevel("");
+    if (kind) { remember({ kind:"", year:"all" }); return; }
+    if (subject) { remember({ subject:"", kind:"", year:"all" }); return; }
+    if (branch) { remember({ branch:"", subject:"", kind:"", year:"all" }); return; }
+    remember({ level:"", branch:"", subject:"", kind:"", year:"all" });
   }
   function branchName(value) { return value === "common" ? t.shared : BRANCH_LABELS[lang][value] || value; }
   function subjectName(value) { return lang === "fr" ? SUBJECT_FR[value] || value : value; }
@@ -150,14 +175,14 @@ export default function StudyResourceLibrary() {
       {step === "type" && <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {types.map(value => <ChoiceCard key={value} icon={FileText} label={t.types[value]}
           count={subjectFiles.filter(file => file.placement === value).length + " " + t.book}
-          onClick={() => { setKind(value); resetFiles(); }} />)}
+          onClick={() => remember({kind:value,year:"all"})} />)}
       </div>}
       {step === "files" && <>
         {years.length > 0 && <div className="mb-4 flex flex-wrap gap-2" aria-label={t.year}>
-          <button type="button" aria-pressed={year === "all"} onClick={() => { setYear("all"); setShown(PER_PAGE); }}
+          <button type="button" aria-pressed={year === "all"} onClick={() => remember({year:"all"}, true)}
             className={"min-h-10 rounded-xl border px-3 text-xs font-bold " + (year === "all" ? "border-mauri-green bg-mauri-green text-white" : "border-slate-200 bg-white dark:border-white/10 dark:bg-[#12231a]")}>{t.yearsAll}</button>
           {years.slice(0, showOlder ? undefined : 5).map(value => <button key={value} type="button"
-            aria-pressed={year === value} onClick={() => { setYear(value); setShown(PER_PAGE); }}
+            aria-pressed={year === value} onClick={() => remember({year:value}, true)}
             className={"min-h-10 rounded-xl border px-3 text-xs font-bold " + (year === value ? "border-mauri-green bg-mauri-green text-white" : "border-slate-200 bg-white dark:border-white/10 dark:bg-[#12231a]")}>{yearName(value, t)}</button>)}
           {years.length > 5 && <button type="button" onClick={() => setShowOlder(!showOlder)}
             className="min-h-10 rounded-xl border border-mauri-green/40 px-3 text-xs font-bold text-mauri-green">{showOlder ? t.back : "+ " + (years.length - 5)}</button>}
@@ -185,7 +210,10 @@ export default function StudyResourceLibrary() {
               </div>
             </div>
             <div className="flex gap-2">
-              {(file.fileType === "PDF" || file.fileType === "MP4") && <Link href={"/study/reader?id=" + encodeURIComponent(file.id)}
+              {(file.fileType === "PDF" || file.fileType === "MP4") && <Link href={"/study/reader?" + new URLSearchParams({
+                id:file.id, from:"resources", level, branch, subject,
+                kind, year: year === "all" ? "" : year
+              }).toString()}
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-3 text-sm font-black text-white">
                 <Eye className="h-4 w-4" aria-hidden="true" />{file.fileType === "MP4" ? t.watch : t.read}
               </Link>}
