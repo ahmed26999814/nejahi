@@ -41,7 +41,7 @@ function publicUrl(path) {
 }
 
 
-const NEON_PREVIEW = process.env.NEON_ENABLE_API_BRIDGE === "1";
+const NEON_PREVIEW = process.env.NEXT_PUBLIC_NEON_MODE === "1";
 const UPLOAD_LIMIT_BYTES = 3_500_000;
 const SAFE_MIME = Object.freeze({
   "image/jpeg": "jpg",
@@ -50,8 +50,8 @@ const SAFE_MIME = Object.freeze({
 });
 const IMAGE_KEYS = new Set(IMAGE_ITEMS.map(item => item.key));
 function stagingSql() {
-  if (!process.env.NEON_STAGING_DATABASE_URL) throw new Error("Neon staging not configured");
-  return neon(process.env.NEON_STAGING_DATABASE_URL);
+  if (!(process.env.NEON_DATABASE_URL || process.env.NEON_STAGING_DATABASE_URL)) throw new Error("Neon staging not configured");
+  return neon(process.env.NEON_DATABASE_URL || process.env.NEON_STAGING_DATABASE_URL);
 }
 async function uploadStagingImage(request) {
   const form = await request.formData();
