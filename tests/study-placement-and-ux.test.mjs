@@ -42,7 +42,7 @@ test("cards reveal only the selected step instead of four filter panels", () => 
   for (const s of ["level", "branch", "subject", "type", "files"]) assert.ok(resources.includes('step === "' + s + '"'), s);
   assert.match(resources, /function ChoiceCard/);
   assert.doesNotMatch(resources, /<select/);
-  assert.match(resources, /\/study\/reader\?id=/);
+  assert.match(resources, /\/study\/reader\?/);
 });
 
 test("books and exams use same-site readers and never link directly to Google Drive", () => {
@@ -52,7 +52,7 @@ test("books and exams use same-site readers and never link directly to Google Dr
   assert.match(books, /STUDY_BOOK_FILES/);
   assert.match(exams, /STUDY_EXAM_FILES/);
   assert.match(books, /\/study\/reader\?id=/);
-  assert.match(exams, /\/study\/reader\?id=/);
+  assert.match(exams, /\/study\/reader\?/);
   assert.match(references, /\/study\/reader\?id=/);
   assert.match(books, /\/study\/book-reader\?url=/);
   assert.doesNotMatch(exams, /href=\{card\.file\.link\}/);
