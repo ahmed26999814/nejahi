@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { put, del } from "@vercel/blob";
+import { putNeonImage, deleteOwnedNeonImage } from "../../../../lib/neon/imageStorage.mjs";
 import { neon } from "@neondatabase/serverless";
 import { IMAGE_ITEMS } from "../../../../constants/adminContent";
 
@@ -53,14 +53,6 @@ function stagingSql() {
   if (!process.env.NEON_STAGING_DATABASE_URL) throw new Error("Neon staging not configured");
   return neon(process.env.NEON_STAGING_DATABASE_URL);
 }
-function safeBlobPrevious(path) {
-  if (typeof path !== "string" || !path.includes(".public.blob.vercel-storage.com/")) return false;
-  try {
-    const parsed = new URL(path);
-    return parsed.protocol === "https:" && parsed.hostname.endsWith(".public.blob.vercel-storage.com")
-      && parsed.pathname.startsWith("/site-images/");
-  } catch { return false; }
-}
 async function uploadStagingImage(request) {
   const form = await request.formData();
   const file = form.get("file");
@@ -74,22 +66,22 @@ async function uploadStagingImage(request) {
   if (!extension || !Number.isFinite(file.size) || file.size < 1 || file.size > UPLOAD_LIMIT_BYTES) {
     return json({ error: "Only PNG, JPEG or WebP images up to 3.5MB are accepted" }, 400);
   }
-  let blob;
+  let imageUrl = "";
   const path = "site-images/" + key + "/" + Date.now() + "-" + crypto.randomUUID() + "." + extension;
   try {
-    blob = await put(path, file, { access: "public", addRandomSuffix: false, contentType: file.type });
+    imageUrl = await putNeonImage(path, Buffer.from(await file.arrayBuffer()), file.type);
     const sql = stagingSql();
     const rows = await sql.query(
       "INSERT INTO public.site_content(content_key,title,value,type,storage_path) VALUES ($1,$2,$3,'image',$4) ON CONFLICT(content_key) DO UPDATE SET title=EXCLUDED.title,value=EXCLUDED.value,type='image',storage_path=EXCLUDED.storage_path RETURNING *",
-      [key, title, blob.url, blob.url],
+      [key, title, imageUrl, imageUrl],
     );
-    if (safeBlobPrevious(previousPath) && previousPath !== blob.url) {
-      await del(previousPath).catch(() => {});
+    if (previousPath && previousPath !== imageUrl) {
+      await deleteOwnedNeonImage(previousPath).catch(() => {});
     }
-    return json({ item: rows[0], image_url: blob.url, storage_path: blob.url });
+    return json({ item: rows[0], image_url: imageUrl, storage_path: imageUrl });
   } catch {
-    if (blob?.url) await del(blob.url).catch(() => {});
-    return json({ error: "Image storage unavailable" }, 503);
+    if (imageUrl) await deleteOwnedNeonImage(imageUrl).catch(() => {});
+    return json({ error: "Neon Object Storage unavailable" }, 503);
   }
 }
 async function deleteStagingImage(request) {
@@ -101,7 +93,7 @@ async function deleteStagingImage(request) {
       "UPDATE public.site_content SET value=NULL,storage_path=NULL WHERE content_key=$1 RETURNING *",
       [content_key],
     );
-    if (safeBlobPrevious(storage_path)) await del(storage_path).catch(() => {});
+    if (storage_path) await deleteOwnedNeonImage(storage_path).catch(() => {});
     return json({ items: rows });
   } catch {
     return json({ error: "Image removal unavailable" }, 503);
