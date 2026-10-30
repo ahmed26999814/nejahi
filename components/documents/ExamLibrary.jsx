@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { STUDY_EXAM_FILES } from "../../data/study-library.mjs";
 import { ArrowRight, BookOpen, ChevronDown, Download, FileText, GraduationCap, Layers3, Loader2 } from "lucide-react";
 import index from "../../data/indexed-drive-study-files.json";
 import { decorateStudyFile, BRANCH_LABELS, BRANCH_ORDER, examBrowseGroup, examBrowseLabel, studyDocumentKind } from "../../data/study-catalog.mjs";
 
 const PAGE = 24;
-const ORDER = ["باكالوريا", "ابريفه", "كونكور", "الامتياز", "المعهد العالي", "الأولمبياد"];
+const ORDER = ["باكالوريا", "ابريفه", "كونكور", "الامتياز", "المعهد العالي", "الأولمبياد",
+  "فروض واختبارات البكالوريا", "فروض واختبارات السادسة", "فروض واختبارات الخامسة",
+  "فروض واختبارات ابريفه", "فروض واختبارات كونكور"];
 const TYPE_LABELS = { exam: "الموضوع", solution: "التصحيح", memo: "المذكرة", reference: "المرجع", bundle: "المجموعة" };
-const FILES = (index.files || []).map(decorateStudyFile).filter(file => file.category === "exams" && file.competition);
+const FILES = STUDY_EXAM_FILES.filter(file => file.competition);
 const BRANCH_TRANSLATIONS = {
   "الآداب الأصلية O": "LO",
   "الآداب العصرية A": "LM",
@@ -88,7 +92,6 @@ export default function ExamLibrary() {
   const [year, setYear] = useState("");
   const [showOlder, setShowOlder] = useState(false);
   const [shown, setShown] = useState(PAGE);
-  const [downloading, setDownloading] = useState("");
   const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
@@ -173,18 +176,6 @@ export default function ExamLibrary() {
     setCompetition("");
     setShowOlder(false);
   }
-  async function downloadFromDrive(file) {
-    if (downloading) return;
-    const url = `/api/study-files/download?id=${encodeURIComponent(file.id)}`;
-    setDownloading(file.id); setDownloadError("");
-    try {
-      const check = await fetch(url, { method: "HEAD", cache: "no-store" });
-      if (!check.ok) throw new Error("unavailable");
-      window.location.assign(url);
-    } catch {
-      setDownloadError("تعذر تنزيل هذا الملف مباشرة. استخدم «عرض» إذا سمح صاحبه بالوصول إليه.");
-    } finally { setDownloading(""); }
-  }
 
   if (loading) return <div role="status" className="flex min-h-32 items-center justify-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-300">
     <Loader2 className="h-5 w-5 animate-spin text-mauri-green" aria-hidden="true" />جاري تحميل الملفات…
@@ -245,22 +236,22 @@ export default function ExamLibrary() {
                     <div className="flex min-w-0 items-start gap-2">
                       <FileText className="mt-1 h-5 w-5 shrink-0 text-mauri-green" aria-hidden="true" />
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-black leading-6 text-slate-900 dark:text-white">{card.subject === "مواد متنوعة" ? studyDocumentKind(card.file) : card.subject}</h3>
+                        <h3 className="text-sm font-black leading-6 text-slate-900 dark:text-white">{card.subject === "مواد متنوعة" ? (card.file.placement === "tests" ? "اختبار مدرسي" : studyDocumentKind(card.file)) : card.subject}</h3>
                         <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-500 dark:text-slate-300" title={card.file.title}>
                           {titleWithoutExtension(card.file.displayTitle || card.file.title)}
                         </p>
-                        <span className="mt-1 inline-block text-xs font-bold text-mauri-green">{studyDocumentKind(card.file)}</span>
+                        <span className="mt-1 inline-block text-xs font-bold text-mauri-green">{card.file.placement === "tests" ? "فرض أو اختبار مدرسي" : studyDocumentKind(card.file)}</span>
                         {card.file.yearLabel && <span className="ms-2 mt-1 inline-block text-xs font-bold text-slate-500 dark:text-slate-300">{card.file.yearLabel}</span>}
                         {/bac\\s*blan|bacblan|امتحان تجريبي/i.test(card.file.title) && <span className="ms-2 inline-block text-xs font-black text-amber-600 dark:text-amber-300">امتحان تجريبي</span>}
                       </div>
                     </div>
                     <div className="mt-auto flex gap-2">
-                      <button type="button" disabled={Boolean(downloading)} onClick={() => downloadFromDrive(card.file)}
-                        className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-3 text-sm font-black text-white disabled:opacity-60">
-                        <Download className="h-4 w-4" aria-hidden="true" />{downloading === card.file.id ? "جاري التحميل…" : "تحميل"}
-                      </button>
-                      <a href={card.file.link} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-600 dark:border-white/15 dark:text-slate-200">عرض</a>
+                      {card.file.fileType === "PDF" || card.file.fileType === "MP4" ? <Link href={`/study/reader?id=${encodeURIComponent(card.file.id)}`}
+                        className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-mauri-green px-3 text-sm font-black text-white">قراءة</Link> : null}
+                      <a href={`/api/study-files/download?id=${encodeURIComponent(card.file.id)}`}
+                        className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-mauri-green px-3 text-sm font-black text-mauri-green">
+                        <Download className="h-4 w-4" aria-hidden="true" />تحميل
+                      </a>
                     </div>
                   </article>)}
               </div>

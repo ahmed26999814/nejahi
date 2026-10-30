@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const headers = new Headers();
 
     headers.set("Content-Type", "application/pdf");
-    headers.set("Content-Disposition", `attachment; filename="book.pdf"; filename*=UTF-8''${encodedFilename}`);
+    headers.set("Content-Disposition", `${request.nextUrl.searchParams.get("inline") === "1" ? "inline" : "attachment"}; filename="book.pdf"; filename*=UTF-8''${encodedFilename}`);
     headers.set("Cache-Control", "private, no-store, max-age=0");
     headers.set("X-Content-Type-Options", "nosniff");
 
