@@ -1,0 +1,132 @@
+{
+  "source_project": "whuddmevtiuejfwpstta",
+  "backup_host": "nxizqnlemsbjmsfyuevg",
+  "description": "Public-only Supabase storage snapshot for a staged Neon/Vercel cutover. Never includes private buckets.",
+  "files": [
+    {
+      "bucket": "app-releases",
+      "name": "MauriResults-3.3.0.apk",
+      "bytes": 37070849
+    },
+    {
+      "bucket": "app-releases",
+      "name": "version.json",
+      "bytes": 994
+    },
+    {
+      "bucket": "site-images",
+      "name": "developer_avatar/1783313492741-0efbcaaf-1d13-4796-b060-e5f7af75b591.webp",
+      "bytes": 116852
+    },
+    {
+      "bucket": "site-images",
+      "name": "developer_avatar/1783315755348-8e430784-d82e-439a-86b2-70a48a514425.webp",
+      "bytes": 40026
+    },
+    {
+      "bucket": "site-images",
+      "name": "developer_avatar/1790733857798-3af456e8-ac96-45b6-aabf-cce53b78a2b8.webp",
+      "bytes": 59008
+    },
+    {
+      "bucket": "site-images",
+      "name": "favicon/1783315966200-71733ad7-22c4-481d-bc11-85d24368f141.webp",
+      "bytes": 200290
+    },
+    {
+      "bucket": "site-images",
+      "name": "footer_banner/1783315666247-876f88ca-afc1-408f-8abd-28c9ae1f8f79.webp",
+      "bytes": 89012
+    },
+    {
+      "bucket": "site-images",
+      "name": "hero_background/1783313332496-c9005a31-398a-424b-ba03-ab7331c2d909.webp",
+      "bytes": 159776
+    },
+    {
+      "bucket": "site-images",
+      "name": "hero_background/1783315648630-6fd4d745-7d7e-4bf5-a0a6-15f554968fbc.webp",
+      "bytes": 114968
+    },
+    {
+      "bucket": "site-images",
+      "name": "hero_background/1783382427601-776e3f39-e6ba-44f4-9697-205176c9cdfb.webp",
+      "bytes": 24214
+    },
+    {
+      "bucket": "site-images",
+      "name": "home_banner_image/1783313431185-2157e245-59bc-478b-aaa4-ed3d6e770054.webp",
+      "bytes": 7992
+    },
+    {
+      "bucket": "site-images",
+      "name": "home_banner_image/1783315834049-1417c8fe-9f12-4117-a6f6-04c4c23f72db.webp",
+      "bytes": 84072
+    },
+    {
+      "bucket": "site-images",
+      "name": "home_banner_image/1783383185239-30396a31-e9bf-423e-9d66-9f7c58fa5fc8.webp",
+      "bytes": 93684
+    },
+    {
+      "bucket": "site-images",
+      "name": "home_banner_image/1783383586628-b9305429-8b2d-4df9-9e8c-dd929213eec6.webp",
+      "bytes": 70352
+    },
+    {
+      "bucket": "site-images",
+      "name": "home_banner_image/1783383713488-240b2011-51f3-4936-ba8c-c2de0c37aded.webp",
+      "bytes": 99442
+    },
+    {
+      "bucket": "site-images",
+      "name": "home_banner_image/1783585334521-ec4c4a72-68ed-43d2-872a-00de0a5350c0.webp",
+      "bytes": 66386
+    },
+    {
+      "bucket": "site-images",
+      "name": "home_banner_image/1783585414661-cc1417e5-74cf-42ef-b8d6-a34ba9c46248.webp",
+      "bytes": 99442
+    },
+    {
+      "bucket": "site-images",
+      "name": "logo/1783515109612-2e858b41-cce4-4e96-8fa8-87c75987c467.webp",
+      "bytes": 103654
+    },
+    {
+      "bucket": "site-images",
+      "name": "logo/1783585350310-a5c4f16f-eb4b-41a0-bc6f-947bfb30fe7d.webp",
+      "bytes": 83850
+    },
+    {
+      "bucket": "site-images",
+      "name": "result_card_image/1783313507831-66d316d3-b628-4fed-85f5-80bb5f1e41cd.webp",
+      "bytes": 7992
+    },
+    {
+      "bucket": "site-images",
+      "name": "result_card_image/1783978412985-fda9982c-6925-49cd-a3f7-f7ce348e5eb3.webp",
+      "bytes": 108956
+    },
+    {
+      "bucket": "site-images",
+      "name": "result_card_image/1783979113791-c27dd6ca-9259-4f64-8821-dec0471f312c.webp",
+      "bytes": 95416
+    },
+    {
+      "bucket": "site-images",
+      "name": "result_card_image/1783980130769-b4989fa3-85cf-43c4-a29c-662c9ab2ef7c.webp",
+      "bytes": 94988
+    },
+    {
+      "bucket": "site-images",
+      "name": "result_card_image/1784229032690-ea3aebde-630f-4ee0-b16c-f4e6f617592f.webp",
+      "bytes": 103576
+    },
+    {
+      "bucket": "site-images",
+      "name": "result_card_image/1784229211643-ebdc5150-528b-4791-9eb5-cb5e2420a1ac.webp",
+      "bytes": 87026
+    }
+  ]
+}
