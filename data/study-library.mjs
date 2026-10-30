@@ -8,7 +8,7 @@ export const LEVEL_TITLES = {
   fr: { "7AS": "Baccalauréat", "6AS": "6AS", "5AS": "5AS", "4AS": "BEPC (3AS / 4AS)", "6AF": "Concours" },
 };
 
-const BOOK_WORDS = /(?:^|[\s_\-])(?:livres?|manuels?|textbook|joussour|joussor|book|cours\s+en\s+livre)(?=$|[\s_\-.])|كتاب|الكتاب|كتب\s+مدرسية|جسور|المغن[ىي]|المدرسي|livrepc/i;
+const BOOK_WORDS = /(?:^|[\s_\-])(?:livres?|manuels?|textbook|joussour|joussor|book|cours\s+en\s+livre)(?=$|[\s_\-.])|كتاب|الكتاب|كتب\s+مدرسية|جسور|المغن[ىي]|المدرسي|livrepc|\bjoussour[\w-]*|\bjoussor[\w-]*/i;
 const EXERCISE_WORDS = /(?:^|[\s_\-])(?:exercices?|exos?|qcm|series?)(?=$|[\s_\-.])|تمارين|تطبيقات|سلاسل|سلسلة/i;
 
 /**
@@ -26,8 +26,9 @@ export function studyLibraryPlacement(file) {
   return file.category || "lessons";
 }
 
-export function canonicalStudyLevel(value) {
-  return value === "3AS" ? "4AS" : value;
+export function canonicalStudyLevel(value, title = "") {
+  if (value === "3AS" || /3as(?:t|\b|[_\-.])/i.test(String(title))) return "4AS";
+  return value;
 }
 
 function catalogYear(file) {
@@ -44,7 +45,7 @@ for (const file of [...originalIndex.files, ...literaryIndex.files]) {
 }
 export const STUDY_LIBRARY = [...unique.values()]
   .map(file => {
-    const normal = decorateStudyFile({ ...file, level: canonicalStudyLevel(file.level) });
+    const normal = decorateStudyFile({ ...file, level: canonicalStudyLevel(file.level, file.title) });
     const placement = studyLibraryPlacement(normal);
     return {
       ...normal,
