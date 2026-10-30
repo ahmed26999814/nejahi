@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpLeft, ChevronDown } from "lucide-react";
 import { STUDY_COLLECTIONS } from "../../data/study-resource-collections.mjs";
 import IndexedStudyFiles from "./IndexedStudyFiles";
+import LiteraryStudyFiles from "./LiteraryStudyFiles";
 
 const COPY = {
   ar: {
@@ -15,7 +16,7 @@ const COPY = {
     open: "Ouvrir la collection",
   },
 };
-const COLLECTIONS = STUDY_COLLECTIONS;
+const COLLECTIONS = STUDY_COLLECTIONS.filter(item => item.id !== "literary-ushare");
 
 function getLanguage() {
   if (typeof window === "undefined") return "ar";
@@ -38,6 +39,7 @@ export default function ExternalResourceCollections() {
   return (
     <section data-no-auto-translate dir={lang === "fr" ? "ltr" : "rtl"} className="relative mx-auto w-full max-w-7xl px-4 pb-16 pt-5 text-slate-900 dark:text-white sm:px-6 lg:px-8">
       <IndexedStudyFiles />
+      <LiteraryStudyFiles />
 
       <details className="group mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm open:pb-4 dark:border-white/10 dark:bg-[#12231a]">
         <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-black text-slate-800 marker:hidden dark:text-white sm:text-base">

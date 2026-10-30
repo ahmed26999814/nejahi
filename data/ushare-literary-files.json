@@ -1,0 +1,2004 @@
+{
+  "source": "uShare Cloud licensed copies uploaded to MauriResults Google Drive",
+  "generatedAt": "2026-10-30",
+  "sourceFilesUploaded": 167,
+  "internalDuplicatesDeleted": 25,
+  "overlappingExistingFilesReused": 4,
+  "uniqueArchiveDocuments": 142,
+  "newDriveFiles": 138,
+  "folderUrl": "https://drive.google.com/drive/folders/1dn9leZrDriumYq6F4qn-1Bh58XEdhlRh",
+  "notice": "Subjects and branch assignments derive from filenames except explicitly verified PDF extracts. Unspecified series are not silently attributed to LO or LM.",
+  "files": [
+    {
+      "id": "1fEum13Hj0T5xrSqVsuUXGRUsWOVM349i",
+      "title": "_نصوص_محللة_لطلاب_البكالوريا_وفق_المنهجية_الجديدة_١.pdf",
+      "link": "https://drive.google.com/file/d/1fEum13Hj0T5xrSqVsuUXGRUsWOVM349i/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1704165,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "1gin9PZ0mrdRlUL659pWiwEc7I8iOf2Uj",
+      "title": "4_5807485014773861168 (1).pdf",
+      "link": "https://drive.google.com/file/d/1gin9PZ0mrdRlUL659pWiwEc7I8iOf2Uj/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 192488,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1KXZ10I460n28GomLXqNfp66LpI-YgJ1n",
+      "title": "78eedfdbc7bbf66f.pdf",
+      "link": "https://drive.google.com/file/d/1KXZ10I460n28GomLXqNfp66LpI-YgJ1n/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 126542,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1o5yeBGVkr5i1x2YFxDDa-FH-PxygFpgr",
+      "title": "7A-كتاب-الإنجليزية.pdf",
+      "link": "https://drive.google.com/file/d/1o5yeBGVkr5i1x2YFxDDa-FH-PxygFpgr/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 539517,
+      "verifiedBranches": [
+        "LM"
+      ],
+      "verifiedSubject": "الإنجليزية",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1H4411jvmzn382CnoaNTqjrw6SBF7OrU5",
+      "title": "7A-كتاب-التاريخ.pdf",
+      "link": "https://drive.google.com/file/d/1H4411jvmzn382CnoaNTqjrw6SBF7OrU5/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2556255,
+      "verifiedBranches": [
+        "LM"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1WSFiEyF6rXPw-isKGRoYn0zJLWoYN97c",
+      "title": "7A-كتاب-الفرنسية.pdf",
+      "link": "https://drive.google.com/file/d/1WSFiEyF6rXPw-isKGRoYn0zJLWoYN97c/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 754114,
+      "verifiedBranches": [
+        "LM"
+      ],
+      "verifiedSubject": "الفرنسية",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1CsDle0_FL-3yykh46izkRuTfyQhyIEAN",
+      "title": "7LO الفقه.pdf",
+      "link": "https://drive.google.com/file/d/1CsDle0_FL-3yykh46izkRuTfyQhyIEAN/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 4877646,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "15PaFPG5MlnG7omYrCaFQo_ODgq9B3uVr",
+      "title": "آيات_الأحكام_المقررة_للآداب_الأصلية2024.pdf",
+      "link": "https://drive.google.com/file/d/15PaFPG5MlnG7omYrCaFQo_ODgq9B3uVr/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 636288,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1m9MVnBc5UuDvag5W1_vvwl3rt_v9eDmA",
+      "title": "اختبار الفكر-1.pdf",
+      "link": "https://drive.google.com/file/d/1m9MVnBc5UuDvag5W1_vvwl3rt_v9eDmA/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 401957,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "tests"
+    },
+    {
+      "id": "14IYggt1jOLOMtFcsmipma70U6jKXZT5C",
+      "title": "اصول التشريع الاسلامي.pdf",
+      "link": "https://drive.google.com/file/d/14IYggt1jOLOMtFcsmipma70U6jKXZT5C/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1182270,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "12a-451mai45xIwW95L7uD76CdAkSEVou",
+      "title": "الإجابة_النموذجية_قضايا_النص_الشعري_الحديث_والمعاصر.pdf",
+      "link": "https://drive.google.com/file/d/12a-451mai45xIwW95L7uD76CdAkSEVou/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 585277,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1VIcYFvtLTxHDIf-zUhfzz8NbVAIrJl2g",
+      "title": "الإجابة_على_أسئلة_الفكر_الإسلامي_لشعبة_الآداب_الأصلية_للدورة_العادية.pdf",
+      "link": "https://drive.google.com/file/d/1VIcYFvtLTxHDIf-zUhfzz8NbVAIrJl2g/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 113309,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1b8vRxqvH0O5ZfiWMz-74QDHAYKCsD1-Y",
+      "title": "الأحاديث_المقررة_للأداب_الأصلية_2023_2024.pdf",
+      "link": "https://drive.google.com/file/d/1b8vRxqvH0O5ZfiWMz-74QDHAYKCsD1-Y/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 708375,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "15CWMjhkQs4ckyKf-W70Z8Hl6w0VKdsqj",
+      "title": "الاحاديث_نسخة_الهاتف.pdf",
+      "link": "https://drive.google.com/file/d/15CWMjhkQs4ckyKf-W70Z8Hl6w0VKdsqj/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 728548,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "15Lm93qD022II9sVt90Nuax2Iy9APFhXp",
+      "title": "الأحاديث-م-السوابع-الأصلية.pdf",
+      "link": "https://drive.google.com/file/d/15Lm93qD022II9sVt90Nuax2Iy9APFhXp/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 663570,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "16OjB_MgVaYhLTM5gziP0675jf9dGtx0a",
+      "title": "الاستدلالات - الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/16OjB_MgVaYhLTM5gziP0675jf9dGtx0a/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 671795,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "series"
+    },
+    {
+      "id": "1lXGV-sPYnA1IOJTarYjNwLhczbWvtNFR",
+      "title": "الإعجاز.pdf",
+      "link": "https://drive.google.com/file/d/1lXGV-sPYnA1IOJTarYjNwLhczbWvtNFR/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 219030,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1Gx1Br-p37X_aHrVbz9B3ZdyX5fkECRSo",
+      "title": "البرنامج الجديد الجغرافيا.pdf",
+      "link": "https://drive.google.com/file/d/1Gx1Br-p37X_aHrVbz9B3ZdyX5fkECRSo/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 158638,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1XHyMBxJVpmiRTTV9YKmk0AY8PHUzinjo",
+      "title": "التاريخ والجغرافيا  ل7 أ 2021.pdf",
+      "link": "https://drive.google.com/file/d/1XHyMBxJVpmiRTTV9YKmk0AY8PHUzinjo/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 523902,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1rBlpruuDBBVcDuT7afcZwbASf7AUnAXO",
+      "title": "التاريخ_و_الجغرافيا_شعبة_الآداب_الأصلية_من_إعداد_الأستاذ_صيدو_الحسن.pdf",
+      "link": "https://drive.google.com/file/d/1rBlpruuDBBVcDuT7afcZwbASf7AUnAXO/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1220293,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "18SSurOmSQG5A-iqmADzdcJ2r08Un3ziS",
+      "title": "التاريخ-1.pdf",
+      "link": "https://drive.google.com/file/d/18SSurOmSQG5A-iqmADzdcJ2r08Un3ziS/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 400872,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1ASaAYsmyVWZ93fp8XvtEEGs6PuJ42m47",
+      "title": "التاريخ.pdf",
+      "link": "https://drive.google.com/file/d/1ASaAYsmyVWZ93fp8XvtEEGs6PuJ42m47/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1100488,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1V2phe3iSK4fZ8c2ziAiLna9UqEeQi7Xk",
+      "title": "التثصديق_السنة_السابعة_الآداب_الأصلية.pdf",
+      "link": "https://drive.google.com/file/d/1V2phe3iSK4fZ8c2ziAiLna9UqEeQi7Xk/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 672878,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1K4cxyScssGWEjU6s1AUYPgBZ17zfp9yy",
+      "title": "التركات الشاذة وتكملة التركة.pdf",
+      "link": "https://drive.google.com/file/d/1K4cxyScssGWEjU6s1AUYPgBZ17zfp9yy/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 107728,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1egtnpSjOVLTb6o7O6UG8rCirYLq_b_aD",
+      "title": "التشريع_الاداب_الاصلية.pdf",
+      "link": "https://drive.google.com/file/d/1egtnpSjOVLTb6o7O6UG8rCirYLq_b_aD/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 640357,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1yH1YHIN88zVeEfGFqdkm0JSxOGDavVfT",
+      "title": "التصحيح النموذجي للدورة الثانية.pdf",
+      "link": "https://drive.google.com/file/d/1yH1YHIN88zVeEfGFqdkm0JSxOGDavVfT/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 426767,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "1kx0oJqtVkZUfiS4TH8Q-hHmJ7ogPdwh2",
+      "title": "التصحيح_النموذجي_الفللسفة_للدورة_الثانية.pdf",
+      "link": "https://drive.google.com/file/d/1kx0oJqtVkZUfiS4TH8Q-hHmJ7ogPdwh2/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 431495,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1wjOx7_DpoOwFAbj4MJ2qkzJoZhg5B_R2",
+      "title": "التعليق_على.pdf",
+      "link": "https://drive.google.com/file/d/1xnrho0sOloZkW71SSkYc_aNsjQEVfpz3/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1205007,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1ruVxdBhXKbvN0FVZ4AySLe9G44ntJV9I",
+      "title": "التعليق.day.pdf",
+      "link": "https://drive.google.com/file/d/1ruVxdBhXKbvN0FVZ4AySLe9G44ntJV9I/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 553402,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1K8Pk6emePb3y5XO--PcerkmnoMTltYPJ",
+      "title": "الجغرافيا مختصرة 7A.pdf",
+      "link": "https://drive.google.com/file/d/17Ip6wPm7U431Fs1WBg5sLd_NX4bPYe9W/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2553507,
+      "verifiedBranches": [
+        "LM"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1CKzEI-cDQtKewEjGlDC7GlNphDRkYu-u",
+      "title": "الدرس 1 أصول الفقه.pdf",
+      "link": "https://drive.google.com/file/d/1CKzEI-cDQtKewEjGlDC7GlNphDRkYu-u/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 177258,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1sYAdY2e5sWA23KA_ex-gIG4K_NPUZJbO",
+      "title": "الدرس 2 أصول الفقه.pdf",
+      "link": "https://drive.google.com/file/d/1sYAdY2e5sWA23KA_ex-gIG4K_NPUZJbO/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 185418,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1i4VBO35M2eTbjUEarrIkTLFMOwNVkxHZ",
+      "title": "الدرس 2 الفقه.pdf",
+      "link": "https://drive.google.com/file/d/1i4VBO35M2eTbjUEarrIkTLFMOwNVkxHZ/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 190431,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1SP2uEc9P-vig8F2hCDKwNdaa5tEi5HhT",
+      "title": "الدرس 3 أصول الفقه.pdf",
+      "link": "https://drive.google.com/file/d/1SP2uEc9P-vig8F2hCDKwNdaa5tEi5HhT/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 240503,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1RMr9w8ovacJQKWtu8XgbIV02bb5-HTNj",
+      "title": "الدرس 3 الفقه .pdf",
+      "link": "https://drive.google.com/file/d/1RMr9w8ovacJQKWtu8XgbIV02bb5-HTNj/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 321797,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1noyRTKllVW7JKRbP0-sbE9peBRhI5_pt",
+      "title": "الدرس 4 الفقه الشهادات.pdf",
+      "link": "https://drive.google.com/file/d/1noyRTKllVW7JKRbP0-sbE9peBRhI5_pt/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 263704,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1-jFDw5YFnOFyOSDKCegyOoAxPTOPx7eV",
+      "title": "الدرس 5 الفقه الحدود.pdf",
+      "link": "https://drive.google.com/file/d/1-jFDw5YFnOFyOSDKCegyOoAxPTOPx7eV/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 596543,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1Wf2XS7KdVTyjm0yyf_nwy9I-4DIN1zIT",
+      "title": "الدرس 6 الفقه الجنايات.pdf",
+      "link": "https://drive.google.com/file/d/1Wf2XS7KdVTyjm0yyf_nwy9I-4DIN1zIT/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 381726,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1qDj-0gSU8EiPRRl3xJqiG8pZtRy8GRbP",
+      "title": "الدورة_التكميلية_الشعبة_الاصلية_2023.pdf",
+      "link": "https://drive.google.com/file/d/1qDj-0gSU8EiPRRl3xJqiG8pZtRy8GRbP/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 440924,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1zyhgWLn7RqPv_z7mwoZsTQTa2NclS-An",
+      "title": "السبيل - اللغة العربية مصحح(2)-1.pdf",
+      "link": "https://drive.google.com/file/d/1zyhgWLn7RqPv_z7mwoZsTQTa2NclS-An/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 3702907,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1_0ualJlUbFTVv_FLFJLbipuOnTMY5Aql",
+      "title": "السبيل - اللغة العربية مصحح(2).pdf",
+      "link": "https://drive.google.com/file/d/1_0ualJlUbFTVv_FLFJLbipuOnTMY5Aql/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 3765429,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1mgEio_Uts49Uk2EYOJt63_hVq5FV5j2b",
+      "title": "الصفوة_مصطلحات_التاريخ_والجغرافيا_23_24.pdf",
+      "link": "https://drive.google.com/file/d/1mgEio_Uts49Uk2EYOJt63_hVq5FV5j2b/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1309117,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1Z_5h04v_NelWua4cVET9j5KYF_L6O2Ew",
+      "title": "الصفوة_نصوص_للتطبيق_مادة_الفكر_2023_ـ_2024_الجزء1.pdf",
+      "link": "https://drive.google.com/file/d/1Z_5h04v_NelWua4cVET9j5KYF_L6O2Ew/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 539037,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "series"
+    },
+    {
+      "id": "1iN2vjagUrSAipgVOh2v4X9gZOJ3FyzWz",
+      "title": "الصيغ التمرين 7.pdf",
+      "link": "https://drive.google.com/file/d/1iN2vjagUrSAipgVOh2v4X9gZOJ3FyzWz/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 142216,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "series"
+    },
+    {
+      "id": "1-VqMXsLmUKGhCcibxNVFwkA_gzya7qiF",
+      "title": "الفكر التمهيدي مركز الصفوة (1).pdf",
+      "link": "https://drive.google.com/file/d/1-VqMXsLmUKGhCcibxNVFwkA_gzya7qiF/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 196160,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1EcfQroOY00gPouTw5ZQop9SoUVwWg4ZI",
+      "title": "الفكر التمهيدي مركز الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/1EcfQroOY00gPouTw5ZQop9SoUVwWg4ZI/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 192347,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1mwu6F8NwiN1YhW3nUtjLP-ziTdQ9bWBJ",
+      "title": "الفكر_الإسلامي_البرنامج_الجديد_.pdf",
+      "link": "https://drive.google.com/file/d/1mwu6F8NwiN1YhW3nUtjLP-ziTdQ9bWBJ/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2172275,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1LIAHimLVN9p0JwrKJ7tykOail_aPPzrB",
+      "title": "الفلسفة الشعبة الأصلية 2022.pdf",
+      "link": "https://drive.google.com/file/d/1LIAHimLVN9p0JwrKJ7tykOail_aPPzrB/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1086770,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1nG5qnNOPU7PqR4mWcpGRBDCV0vEwnT0H",
+      "title": "الفلسفة_السنه_السابع_العصريه.pdf",
+      "link": "https://drive.google.com/file/d/1nG5qnNOPU7PqR4mWcpGRBDCV0vEwnT0H/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1516790,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "15a8Om1X64TBMCc8AgwhfG4O7IceokWeu",
+      "title": "الفلسفة_والفكر_الإسلامي_للسوابع_الأدبية_منهجية_بكالوريا_2023.pdf",
+      "link": "https://drive.google.com/file/d/15a8Om1X64TBMCc8AgwhfG4O7IceokWeu/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2405956,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "1rbVzjH2CZO5uRyOhL59NmKmUcrdx7y1F",
+      "title": "القرآن1.pdf",
+      "link": "https://drive.google.com/file/d/1rbVzjH2CZO5uRyOhL59NmKmUcrdx7y1F/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 718243,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "19y2EiIOsaldNn2Fbj-QSYnfGksmHEjQc",
+      "title": "القسم 3 الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/19y2EiIOsaldNn2Fbj-QSYnfGksmHEjQc/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 945376,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "15-6CilJ5lILegAW4oGqttjq273qLJ14J",
+      "title": "القسم 3 صباح.pdf",
+      "link": "https://drive.google.com/file/d/15-6CilJ5lILegAW4oGqttjq273qLJ14J/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1079529,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1vHEt43rMIpGEjcc8uvL5LMRkU5OCn1h8",
+      "title": "القكر.pdf",
+      "link": "https://drive.google.com/file/d/1vHEt43rMIpGEjcc8uvL5LMRkU5OCn1h8/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 571983,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "19jckrxQYDHral6wFs7oNXfsnHINUjhuS",
+      "title": "المحور الثاني الفكر الإسلامي.pdf",
+      "link": "https://drive.google.com/file/d/19jckrxQYDHral6wFs7oNXfsnHINUjhuS/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 734707,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1LMuzCyT79Q6MZ5VHAANwOWWPKYr5SNvH",
+      "title": "المدارس-الشعرية.pdf",
+      "link": "https://drive.google.com/file/d/1LMuzCyT79Q6MZ5VHAANwOWWPKYr5SNvH/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 981777,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1t5f1cARJMHUnk6D-j4xzOZo5Zf8giwmd",
+      "title": "المدرسة_الافتراضية_مفاهيم_المحور_الأول_من_الفكر_الإسلامي.pdf",
+      "link": "https://drive.google.com/file/d/1t5f1cARJMHUnk6D-j4xzOZo5Zf8giwmd/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1043686,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1j-8OCcj489VPTWQM0SS0obdP1pxCtCfc",
+      "title": "المدرسة-الرومانسية-العربية.pdf",
+      "link": "https://drive.google.com/file/d/1j-8OCcj489VPTWQM0SS0obdP1pxCtCfc/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 422244,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "19Wh-fYLsj6Me7uMS8xrI8-lasQ1F8p4V",
+      "title": "المذكرة27.pdf",
+      "link": "https://drive.google.com/file/d/19Wh-fYLsj6Me7uMS8xrI8-lasQ1F8p4V/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1290396,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1zOqeflXBI6PUqpYZpHi7xuTlsEzl_ySV",
+      "title": "المساء  التاريخ والجغرافيا.pdf",
+      "link": "https://drive.google.com/file/d/1zOqeflXBI6PUqpYZpHi7xuTlsEzl_ySV/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 958203,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1tCjExS_0lZZlG_p-GaON2II3NBbpktPF",
+      "title": "المساء2024 التاريخ.pdf",
+      "link": "https://drive.google.com/file/d/1tCjExS_0lZZlG_p-GaON2II3NBbpktPF/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1061121,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1nO9myvkbf5OVfAVJwn5DscNFAkFz_-jG",
+      "title": "المستند (4).pdf",
+      "link": "https://drive.google.com/file/d/1nO9myvkbf5OVfAVJwn5DscNFAkFz_-jG/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 107148,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1zQKZGqiKKXpg9NGacTXdPuooAonP5j63",
+      "title": "المنهجية الجديدة بكالوريا آداب.pdf",
+      "link": "https://drive.google.com/file/d/1zQKZGqiKKXpg9NGacTXdPuooAonP5j63/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 256055,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "1Yi_StaIvw23AARMu2IfVbiPnuBoTGYN2",
+      "title": "المنهجية-ج2-النثر.pdf",
+      "link": "https://drive.google.com/file/d/1Yi_StaIvw23AARMu2IfVbiPnuBoTGYN2/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 723107,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1XCUrHVrZZ4WcIBL9t4PB3A7EG-ys4wcM",
+      "title": "المنهل في التاريخ والجغرافيا 2024.pdf",
+      "link": "https://drive.google.com/file/d/1XCUrHVrZZ4WcIBL9t4PB3A7EG-ys4wcM/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 3293470,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "books"
+    },
+    {
+      "id": "115LIrnqqj7pguJLRfpYoewe-3UctVKNw",
+      "title": "المنهل_في_التاريخ_والجغرافيا_2024_الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/115LIrnqqj7pguJLRfpYoewe-3UctVKNw/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 3561289,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "books"
+    },
+    {
+      "id": "10hGHEdM_Q_tVz8LnUbVdIX8p2Zq2ZwAC",
+      "title": "النثر.pdf",
+      "link": "https://drive.google.com/file/d/10hGHEdM_Q_tVz8LnUbVdIX8p2Zq2ZwAC/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 346733,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1zY6FEWZw7-XbEe0iOvtD-R-7WffYrzae",
+      "title": "النفيس في التشريع الإسلامي.pdf",
+      "link": "https://drive.google.com/file/d/1zY6FEWZw7-XbEe0iOvtD-R-7WffYrzae/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 9420809,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1V7F1fHd7ucGACiltHqXqWVLrPmGe_vWU",
+      "title": "النفيس للأستاذين ممو والحسين_copie.pdf",
+      "link": "https://drive.google.com/file/d/1V7F1fHd7ucGACiltHqXqWVLrPmGe_vWU/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 7086093,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1hiBGKPfvxMagP6XRwNvVq3Xnm46n7xoV",
+      "title": "الوثيقة_التوجيهية_للتاريخ_2022-1.pdf",
+      "link": "https://drive.google.com/file/d/1hiBGKPfvxMagP6XRwNvVq3Xnm46n7xoV/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1686190,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1F6gWt7HxIzYQ02lELKvNQQBHoWvmxdxX",
+      "title": "برنامج التاريخ الجديد.pdf",
+      "link": "https://drive.google.com/file/d/1F6gWt7HxIzYQ02lELKvNQQBHoWvmxdxX/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 183447,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1uutBOtcyNz_BLw9ZczyFkRshnK_5F_xQ",
+      "title": "برنامج التاريخ والجغرافيا 2022 .pdf",
+      "link": "https://drive.google.com/file/d/1uutBOtcyNz_BLw9ZczyFkRshnK_5F_xQ/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2301131,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1XJR0mLMmGJJfysAm4lWh2BdKA1FVZjoW",
+      "title": "برنامج الفكر 2022(مركز الصفوة) .pdf",
+      "link": "https://drive.google.com/file/d/1XJR0mLMmGJJfysAm4lWh2BdKA1FVZjoW/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 408595,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1GgAMQKk_ehAMiDiUjlWrW6BhIbr75_il",
+      "title": "بكات_التشريع_1991ـ2022_طباعة_مركز_الصفوة_231125_133224.pdf",
+      "link": "https://drive.google.com/file/d/1GgAMQKk_ehAMiDiUjlWrW6BhIbr75_il/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1017120,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "1T1ExducBLAspVMJ8cK9JsJKDw8I88b7m",
+      "title": "بكات_التشريع_1991ـ2022_طباعة_مركز_الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/1T1ExducBLAspVMJ8cK9JsJKDw8I88b7m/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1021203,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "11Td2upIYzzTAd0eZkgX0abc0vWxEYV-E",
+      "title": "تحليل نص فلسفي.pdf",
+      "link": "https://drive.google.com/file/d/11Td2upIYzzTAd0eZkgX0abc0vWxEYV-E/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 130717,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1aQEmK2n_fQuIJNPVWsGblZq6y6rsIJkP",
+      "title": "تصحيح_التاريخ_و_الجغرافيا_آداب_2023.pdf",
+      "link": "https://drive.google.com/file/d/1aQEmK2n_fQuIJNPVWsGblZq6y6rsIJkP/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 103018,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "19DNGcIZzHXuBf6BtX8Zs6SyUM0iJWFFu",
+      "title": "تصحيح_امتحان_العربية_الشعب_الأدبية_رسمي_مركز_الصفوة_الأدبي_20096412.pdf",
+      "link": "https://drive.google.com/file/d/19DNGcIZzHXuBf6BtX8Zs6SyUM0iJWFFu/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 323403,
+      "verifiedBranches": [
+        "LM",
+        "LO"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "1jEP4o9k3S2jzMbgmCmo6JePZ4z4-qbLB",
+      "title": "تلخيص فقه الفرائض.pdf",
+      "link": "https://drive.google.com/file/d/1jEP4o9k3S2jzMbgmCmo6JePZ4z4-qbLB/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 192994,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1f_Obec2G_F56pbn_GVcVposfvtQ1cbET",
+      "title": "جانب النثر.pdf",
+      "link": "https://drive.google.com/file/d/1f_Obec2G_F56pbn_GVcVposfvtQ1cbET/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 317235,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "13FSmQyMh9g22Z3BYgEvyzUFB2eT-qkl-",
+      "title": "حل_نموذجي_للتاريخ_وفق_المنهجية_الجديدة.pdf",
+      "link": "https://drive.google.com/file/d/13FSmQyMh9g22Z3BYgEvyzUFB2eT-qkl-/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 62891,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1VJapa5Np3IcC_I3n0zxlApN_ZUacJTdn",
+      "title": "خاص بالسوابع العلمية .pdf",
+      "link": "https://drive.google.com/file/d/1VJapa5Np3IcC_I3n0zxlApN_ZUacJTdn/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2185781,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1aQRf9nWCAAZm6cj8DKS0XB1pagttL7rz",
+      "title": "خريطة أصول الفقه.pdf",
+      "link": "https://drive.google.com/file/d/1aQRf9nWCAAZm6cj8DKS0XB1pagttL7rz/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 348316,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1MY2ktv4KRC8Y4t3V2NHpY1jbdQOHV1A6",
+      "title": "دروس التمهيدي (التشريع) 2.pdf",
+      "link": "https://drive.google.com/file/d/1MY2ktv4KRC8Y4t3V2NHpY1jbdQOHV1A6/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 239584,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1tSM9xvwEET7Urk7TFI7wphHS9NLfmfyQ",
+      "title": "دفتر التحضير - الفكر الإسلامي- النهائية.pdf",
+      "link": "https://drive.google.com/file/d/1tSM9xvwEET7Urk7TFI7wphHS9NLfmfyQ/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2596350,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1aoIW8OShulGc8mcwrf_otg5UqFr4r4Bc",
+      "title": "دفتر تحضير - مادة الفلسفة - الآداب العصرية- النهائية.pdf",
+      "link": "https://drive.google.com/file/d/1aoIW8OShulGc8mcwrf_otg5UqFr4r4Bc/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1097761,
+      "verifiedBranches": [
+        "LM"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1EKhRXsz3GZhDj4CCqevNv3pKWJcD6Rop",
+      "title": "رجال الإصلاح.pdf",
+      "link": "https://drive.google.com/file/d/1EKhRXsz3GZhDj4CCqevNv3pKWJcD6Rop/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 792584,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1D_EPUBoryLJZOSPCGSoO_QEabtoQDGRN",
+      "title": "رجالات الإصلاح.pdf",
+      "link": "https://drive.google.com/file/d/1D_EPUBoryLJZOSPCGSoO_QEabtoQDGRN/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 143517,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1pBpqlCvYhCEZPt4bFvDMduUSCBvPN7XE",
+      "title": "سلسلة_السبيل_كتاب_التشريع_الإسلامي_1.pdf",
+      "link": "https://drive.google.com/file/d/1pBpqlCvYhCEZPt4bFvDMduUSCBvPN7XE/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 12659555,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1gjZV9xakvpcIh32n-nOs-wZwgKrd5WzR",
+      "title": "سلسلة-السبيل-كتاب-الفكر-الإسلامي.pdf",
+      "link": "https://drive.google.com/file/d/1gjZV9xakvpcIh32n-nOs-wZwgKrd5WzR/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 12207114,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1tnsFW6GI5GNbFNf8P0Az4fYGmNQBRT3q",
+      "title": "سلسلة-السبيل-كتاب-اللغة-العربية.pdf",
+      "link": "https://drive.google.com/file/d/1tnsFW6GI5GNbFNf8P0Az4fYGmNQBRT3q/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 22206428,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1ueog9Kh0YZf5_vd9skn3toFcerm6X1O5",
+      "title": "كتاب_الدولة_الفرنسية_الآداب_العصرية_2024_الصفوة_41808309_7LM_français.pdf",
+      "link": "https://drive.google.com/file/d/1ueog9Kh0YZf5_vd9skn3toFcerm6X1O5/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 4174872,
+      "verifiedBranches": [
+        "LM"
+      ],
+      "verifiedSubject": "الفرنسية",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1doHeSTFd4Pfz-GSJldvUynr4p89u_ewe",
+      "title": "كتاب_العربية_السنة_السابعة_آداب_عصرية_و_أصلية.pdf",
+      "link": "https://drive.google.com/file/d/1doHeSTFd4Pfz-GSJldvUynr4p89u_ewe/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 4483756,
+      "verifiedBranches": [
+        "LM",
+        "LO"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1oHhJwdp8P4QquGGuBbxFaQ8ay3DhLa7q",
+      "title": "كتاب_الفلسفة_للسنة_السابعة_ثانوية.pdf",
+      "link": "https://drive.google.com/file/d/1oHhJwdp8P4QquGGuBbxFaQ8ay3DhLa7q/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 8737020,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1E2tqJQagEYrT7sjlStuB9wRRz5Wlum_Z",
+      "title": "كتاب_اللغة_العربية_للسنة_السادسة_ثانوية.pdf",
+      "link": "https://drive.google.com/file/d/1E2tqJQagEYrT7sjlStuB9wRRz5Wlum_Z/view",
+      "source": "ushare-literary",
+      "level": "6AS",
+      "fileType": "PDF",
+      "size": 4586608,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1kl1A4Xb01IsTxvViwXGyaPTZt0LF09Rn",
+      "title": "كتاب-التشريع-7O.pdf",
+      "link": "https://drive.google.com/file/d/1kl1A4Xb01IsTxvViwXGyaPTZt0LF09Rn/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 15138588,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1NyX_pYker-Cr47QJQJjdzzuO3Mx7hMVm",
+      "title": "كتاب-التشريع-الطبعة-الجديدة.pdf",
+      "link": "https://drive.google.com/file/d/1NyX_pYker-Cr47QJQJjdzzuO3Mx7hMVm/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2917212,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "books"
+    },
+    {
+      "id": "17RUjuftVSRFekRFiK5HgQu2MWS5o9AW7",
+      "title": "كراس تحضير مادة التشريع الإسلامي للسابع آداب أصلية.pdf",
+      "link": "https://drive.google.com/file/d/17RUjuftVSRFekRFiK5HgQu2MWS5o9AW7/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1901823,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1zO1AJMVma3bw_OesvdbyGewPA3K7VUUB",
+      "title": "مجموعات التشاور الفلسفي السؤال 6.pdf",
+      "link": "https://drive.google.com/file/d/1zO1AJMVma3bw_OesvdbyGewPA3K7VUUB/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 104037,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "series"
+    },
+    {
+      "id": "1H-qegdhAsVliOxtFqcw8dBugy7C4ZctJ",
+      "title": "مجموعات التشاور الفلسفي-2.pdf",
+      "link": "https://drive.google.com/file/d/1H-qegdhAsVliOxtFqcw8dBugy7C4ZctJ/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 89358,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "series"
+    },
+    {
+      "id": "1jGKrDLl2lX6vJX73NRBOWJPFfOZI0NP4",
+      "title": "مجموعة من بكات.pdf",
+      "link": "https://drive.google.com/file/d/1jGKrDLl2lX6vJX73NRBOWJPFfOZI0NP4/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 936327,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "16sBsQ3X9pEYCBzDeHocHUo7XfhYoDI4z",
+      "title": "مختصرالجغرافيا.pdf",
+      "link": "https://drive.google.com/file/d/1iNAIuR3FE3TAotmY3x_sMIXsNOihPFAy/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 4043522,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1xm6kzsxPo8HEv3PWn8wA40TG14CWzAmE",
+      "title": "مذكرة الأصول.pdf",
+      "link": "https://drive.google.com/file/d/1xm6kzsxPo8HEv3PWn8wA40TG14CWzAmE/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 216267,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1Yxa8MQ6fGodmKjTORg9gboZxxrBfWluV",
+      "title": "مذكرة التاريخ. سيدي محمد إدوم.pdf",
+      "link": "https://drive.google.com/file/d/1Yxa8MQ6fGodmKjTORg9gboZxxrBfWluV/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1830600,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1IKTNXfwcThjesm-6kDyofdMfnIkV6KsH",
+      "title": "مذكرة التاريخ.pdf",
+      "link": "https://drive.google.com/file/d/1IKTNXfwcThjesm-6kDyofdMfnIkV6KsH/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 732274,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1LH__2_n1fKTE0g7jUOodXOEoJ4IEcEwc",
+      "title": "مذكرة التشريع التمهيدي-2.pdf",
+      "link": "https://drive.google.com/file/d/1LH__2_n1fKTE0g7jUOodXOEoJ4IEcEwc/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 825129,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1ccZ4KCDkFT8RxQaEbaOxkl5UkUV_GkjX",
+      "title": "مذكرة التشريع التمهيدي.pdf",
+      "link": "https://drive.google.com/file/d/1ccZ4KCDkFT8RxQaEbaOxkl5UkUV_GkjX/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 819951,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1hEVzehgzRbjAP3CuK4XMRRlEt1rmCDy6",
+      "title": "مذكرة التعليق على القرآن والحديث.pdf",
+      "link": "https://drive.google.com/file/d/1hEVzehgzRbjAP3CuK4XMRRlEt1rmCDy6/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2310577,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1D7pSVfY7IaTZoP6kRbN9xlx9rqoakooF",
+      "title": "مذكرة التعليق_قلاع العلم.pdf",
+      "link": "https://drive.google.com/file/d/1D7pSVfY7IaTZoP6kRbN9xlx9rqoakooF/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1314437,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1LxsrKCSmd2U4tS3Tzp8RWpctrwm5EpJ_",
+      "title": "مذكرة_التاريخ_-_المعين_-_الرباني.pdf",
+      "link": "https://drive.google.com/file/d/1LxsrKCSmd2U4tS3Tzp8RWpctrwm5EpJ_/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 987978,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "18zrY9i_gGIgHNkBArssGCIlbHAa8ZHgI",
+      "title": "مذكرة_التاريخ_والجغرافيا.pdf",
+      "link": "https://drive.google.com/file/d/18zrY9i_gGIgHNkBArssGCIlbHAa8ZHgI/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1442392,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1OiATzOa6sTroNDvZOZXyMnuqjf9ADKzm",
+      "title": "مذكرة_التاريخ._سيدي_محمد_إدوم.pdf",
+      "link": "https://drive.google.com/file/d/1OiATzOa6sTroNDvZOZXyMnuqjf9ADKzm/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1832134,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1JCtywJxPhX2N6e4MlLwVAEJhRC2OX6vZ",
+      "title": "مذكرة_التشريع_الإسلامي_لقلاع_العلم_أحمد_عبد_الله_العتيق_آخر_تصحيح45.docx",
+      "link": "https://drive.google.com/file/d/1JCtywJxPhX2N6e4MlLwVAEJhRC2OX6vZ/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "DOCX",
+      "size": 265881,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1a-Rp2wsHY1gAGlkKzZ7uJaoH9qN3sYHZ",
+      "title": "مذكرة_التشريع_للسنة_السابعة_الأصلية_ـ_محمدن_ولد_الرباني_ـ_الموسوعة.pdf",
+      "link": "https://drive.google.com/file/d/1a-Rp2wsHY1gAGlkKzZ7uJaoH9qN3sYHZ/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 5377049,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1UucE03ojJVo2C2fkJnL4LkqdDsuuUgBb",
+      "title": "مذكرة_التعليق_على_القرآن_نص_مركز_الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/1UucE03ojJVo2C2fkJnL4LkqdDsuuUgBb/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 316824,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1gZgFSSRQTqfl2cNGhKmZDgJnuE7895qb",
+      "title": "مذكرة_العربية_المفتش_ممو_مركز_الصفوة_.pdf",
+      "link": "https://drive.google.com/file/d/1gZgFSSRQTqfl2cNGhKmZDgJnuE7895qb/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1747244,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1t3gypWXHA-wL0x0WFADti_KIKydeeceA",
+      "title": "مذكرة_الفكر_2023_للتجاني_مركز_الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/1t3gypWXHA-wL0x0WFADti_KIKydeeceA/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 382237,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1H5HzOiV7SlX3iZBQoH92T1KmHYzVOYJY",
+      "title": "مذكرة-التعليق-على-القرآن-1.pdf",
+      "link": "https://drive.google.com/file/d/1H5HzOiV7SlX3iZBQoH92T1KmHYzVOYJY/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2308892,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1sK0dUIwbpu3B0OcPOmU4y3k8Jv2QYQmM",
+      "title": "مذكرة-الجغرافيا.pdf",
+      "link": "https://drive.google.com/file/d/1sK0dUIwbpu3B0OcPOmU4y3k8Jv2QYQmM/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 492221,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1ZRR7eh1Lcqsah4lEWGUleCnEOmjtOTVS",
+      "title": "مذكرة-المنهجية-الطبعة-الرابعة-1.pdf",
+      "link": "https://drive.google.com/file/d/1ZRR7eh1Lcqsah4lEWGUleCnEOmjtOTVS/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 971011,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1e3Atehk6HVTbCWT2FcEQZAH82Gn5iD5n",
+      "title": "مذكرةالجغرافيا سيدي محمدإدوم.pdf",
+      "link": "https://drive.google.com/file/d/1e3Atehk6HVTbCWT2FcEQZAH82Gn5iD5n/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 781324,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1POG3nSIaYMcFXUb-26J4_yM-jsCDqMxr",
+      "title": "مصطلحات 7A +7O....إدوم.pdf",
+      "link": "https://drive.google.com/file/d/1POG3nSIaYMcFXUb-26J4_yM-jsCDqMxr/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 381228,
+      "verifiedBranches": [
+        "LM",
+        "LO"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1q4GKZE3och1PgAXPlE-UpVIZ6HCIKAlh",
+      "title": "مفاهيم البرنامج آداب أصلية.pdf",
+      "link": "https://drive.google.com/file/d/1BKsYJ_E4NpkBmXN1UdNO45xuhy78oNgr/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 979109,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1hlS967JaDNaRjB34oPOhuPQqt1k3nPhi",
+      "title": "مفاهيم التاريخ 1.pdf",
+      "link": "https://drive.google.com/file/d/1hlS967JaDNaRjB34oPOhuPQqt1k3nPhi/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 260647,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1qgkfBPmNt_6vObx95tTWlmgET8HIF0EJ",
+      "title": "مفاهيم تاريخية.pdf",
+      "link": "https://drive.google.com/file/d/1qgkfBPmNt_6vObx95tTWlmgET8HIF0EJ/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 138965,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1cOHLg7sp8f4fMwTnzSt3pAdM2IAPPQju",
+      "title": "مفاهيم فلسفية   EL OURWA.pdf",
+      "link": "https://drive.google.com/file/d/1cOHLg7sp8f4fMwTnzSt3pAdM2IAPPQju/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 287657,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1AbJxL-R2nctGgEUVz4qIVTjji-t-lkXt",
+      "title": "مفاهيم_البرنامج_الجديد.pdf",
+      "link": "https://drive.google.com/file/d/1AbJxL-R2nctGgEUVz4qIVTjji-t-lkXt/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1234846,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1vIz9GOk0oAJQPH6KkgJlehj-gkJLXn8o",
+      "title": "مفاهيم_المحور_الثاني_من_الفكر_الإسلامي.pdf",
+      "link": "https://drive.google.com/file/d/1vIz9GOk0oAJQPH6KkgJlehj-gkJLXn8o/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1305944,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1qR7rp3dOEuOxx8HZLwGNSlY9HudgGj8i",
+      "title": "مفاهيم_مادة_الفكر_مركز_الصفوة_أول_نسخة_مشكولة.pdf",
+      "link": "https://drive.google.com/file/d/1qR7rp3dOEuOxx8HZLwGNSlY9HudgGj8i/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 623575,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفكر الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1YfxoYgsXB2GO6AuEbeAf2VpVSlF49TU8",
+      "title": "مقرر النقد 2023-مركز الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/1YfxoYgsXB2GO6AuEbeAf2VpVSlF49TU8/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 118067,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1L4vhFCKtBorqXT_UR6OKX0a6d6j6dAt6",
+      "title": "مقرر_التربية_الإسلامية_لشعبة_الآداب_الأصلية_1_2.pdf",
+      "link": "https://drive.google.com/file/d/1L4vhFCKtBorqXT_UR6OKX0a6d6j6dAt6/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 563833,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "16IlaKtfYj9dkhiW8FmOzA1pM5xTWBdls",
+      "title": "ملخص للباك-1.pdf",
+      "link": "https://drive.google.com/file/d/16IlaKtfYj9dkhiW8FmOzA1pM5xTWBdls/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 212048,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1vvlGXfded1Vo-AMasmQpRMymb-p-E0m0",
+      "title": "ملخص_مادة_الفلسفة_لشعبة_الآداب_الأصلية.pdf",
+      "link": "https://drive.google.com/file/d/1vvlGXfded1Vo-AMasmQpRMymb-p-E0m0/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1645941,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "12_mJzI7aPMrkRuq_73nqkZitoZJxku1-",
+      "title": "ملخصات تاريخ 7A.pdf",
+      "link": "https://drive.google.com/file/d/12_mJzI7aPMrkRuq_73nqkZitoZJxku1-/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1619968,
+      "verifiedBranches": [
+        "LM"
+      ],
+      "verifiedSubject": "التاريخ والجغرافيا",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1ypM9R6hi-V6eboJ9ReJiEcFRIFTPyJtY",
+      "title": "ملخصات.pdf",
+      "link": "https://drive.google.com/file/d/1ypM9R6hi-V6eboJ9ReJiEcFRIFTPyJtY/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 516891,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1WuGa1sIvmowh4l6kGb84ghGE771Ak9M7",
+      "title": "منهاج مادة الفلسفة 2022م-1(١).pdf",
+      "link": "https://drive.google.com/file/d/1WuGa1sIvmowh4l6kGb84ghGE771Ak9M7/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1230890,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الفلسفة",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1p_FBY4MVJU71fPYxzsHfVaF4Bk2DHZsr",
+      "title": "مواضيع_ودروس_الرياضيات_للشعب_الأدبيةتواصل_معنا.pdf",
+      "link": "https://drive.google.com/file/d/1p_FBY4MVJU71fPYxzsHfVaF4Bk2DHZsr/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 4012945,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "الرياضيات",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1nHsN14IS-arloLQAhTFwG05ouac8UkvM",
+      "title": "نصائح_في_منهجية_تحليل_النص_النثري_الأستاذ_ممو_مركز_الصفوة.pdf",
+      "link": "https://drive.google.com/file/d/1nHsN14IS-arloLQAhTFwG05ouac8UkvM/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 48805,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "اللغة العربية",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "1hc9CiV9vo1YpnRaNhQDC9n3gWY3DHkV9",
+      "title": "Cahier de DAHABA-fr7as lm 024.pdf",
+      "link": "https://drive.google.com/file/d/1hc9CiV9vo1YpnRaNhQDC9n3gWY3DHkV9/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 2270056,
+      "verifiedBranches": [
+        "LM"
+      ],
+      "verifiedSubject": "الفرنسية",
+      "verifiedType": "books"
+    },
+    {
+      "id": "1w-JS1F27A1FuP3g9Mb5jXrmC9vCU8uoT",
+      "title": "DOC-20220605-WA0012..pdf",
+      "link": "https://drive.google.com/file/d/1w-JS1F27A1FuP3g9Mb5jXrmC9vCU8uoT/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 351636,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "exams"
+    },
+    {
+      "id": "16cEdAmCK-h0tLY-b4-DXhbN9S18YCdi7",
+      "title": "DOC-20240329-WA0204..pdf",
+      "link": "https://drive.google.com/file/d/16cEdAmCK-h0tLY-b4-DXhbN9S18YCdi7/view",
+      "source": "ushare-literary",
+      "level": "7AS",
+      "fileType": "PDF",
+      "size": 1963114,
+      "verifiedBranches": [
+        "LO"
+      ],
+      "verifiedSubject": "التشريع الإسلامي",
+      "verifiedType": "lessons"
+    },
+    {
+      "id": "19PX7w_mg3ONfncwcrwz2tDHi7EaL-KrU",
+      "title": "dzexams-docs-3as-902015.pdf",
+      "link": "https://drive.google.com/file/d/19PX7w_mg3ONfncwcrwz2tDHi7EaL-KrU/view",
+      "source": "ushare-literary",
+      "level": "3AS",
+      "fileType": "PDF",
+      "size": 5506516,
+      "verifiedBranches": [
+        "common"
+      ],
+      "verifiedSubject": "مواد متنوعة",
+      "verifiedType": "lessons"
+    }
+  ]
+}
