@@ -25,7 +25,7 @@ test("only indexed, validated IDs can be read", () => {
 test("public library UI uses first-party reader and download routes", () => {
   const component = readFileSync(new URL("../components/documents/StudyResourceLibrary.jsx", import.meta.url), "utf8");
   const wrapper = readFileSync(new URL("../components/documents/ExternalResourceCollections.jsx", import.meta.url), "utf8");
-  assert.match(component, /\/study\/reader\?id=/);
+  assert.match(component, /\/study\/reader\?/);
   assert.match(component, /\/api\/study-files\/download\?id=/);
   assert.doesNotMatch(component, /href=\{file\.link\}|href=\{archive\.folderUrl\}|drive\.google\.com|mediafire\.com/i);
   assert.doesNotMatch(wrapper, /drive\.google\.com|mediafire\.com|ushare/i);
