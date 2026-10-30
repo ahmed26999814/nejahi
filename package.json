@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/prebuild-status-label.cjs && npm test && node scripts/neon-storage-smoke.mjs",
+    "prebuild": "node scripts/prebuild-status-label.cjs && npm test && node scripts/neon-storage-smoke.mjs && node scripts/neon-seed-brand-logo.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
