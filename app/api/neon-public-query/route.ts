@@ -31,7 +31,7 @@ const ALLOWED_QUERY_COLUMNS = new Set([
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const table = url.searchParams.get("table") || "";
-  if (process.env.NEON_ENABLE_API_BRIDGE !== "1" ||
+  if (process.env.NEXT_PUBLIC_NEON_MODE !== "1" ||
       !ALLOWED_TABLES.has(table) ||
       [...url.searchParams.keys()].some(key => key !== "table" && !ALLOWED_QUERY_COLUMNS.has(key))) {
     return NextResponse.json({ error: "Resource not available" }, { status: 404 });
