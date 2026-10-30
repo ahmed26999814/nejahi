@@ -3,10 +3,10 @@ import literaryIndex from "./ushare-literary-files.json" with { type: "json" };
 import { decorateStudyFile, examBrowseGroup } from "./study-catalog.mjs";
 import { normalizeStudyTitle } from "./study-file-type.mjs";
 
-export const STUDY_LEVELS = ["7AS", "6AS", "5AS", "4AS", "6AF"];
+export const STUDY_LEVELS = ["7AS", "6AS", "5AS", "4AS", "6AF", "1AF"];
 export const LEVEL_TITLES = {
-  ar: { "7AS": "البكالوريا", "6AS": "السادسة ثانوي", "5AS": "الخامسة ثانوي", "4AS": "ابريفه (3AS / 4AS)", "6AF": "كونكور" },
-  fr: { "7AS": "Baccalauréat", "6AS": "6AS", "5AS": "5AS", "4AS": "BEPC (3AS / 4AS)", "6AF": "Concours" },
+  ar: { "7AS": "البكالوريا", "6AS": "السادسة ثانوي", "5AS": "الخامسة ثانوي", "4AS": "ابريفه (3AS / 4AS)", "6AF": "كونكور", "1AF": "الأولى ابتدائي" },
+  fr: { "7AS": "Baccalauréat", "6AS": "6AS", "5AS": "5AS", "4AS": "BEPC (3AS / 4AS)", "6AF": "Concours", "1AF": "1re année primaire" },
 };
 
 const BOOK_WORDS = /(?:^|[\s_\-])(?:livres?|manuels?|textbook|joussour|joussor|book|cours\s+en\s+livre)(?=$|[\s_\-.])|كتاب|الكتاب|كتب\s+مدرسية|جسور|المغن[ىي]|المدرسي|livrepc|\bjoussour[\w-]*|\bjoussor[\w-]*/i;
