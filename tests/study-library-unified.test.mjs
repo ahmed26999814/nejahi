@@ -27,6 +27,6 @@ test("public library UI uses first-party reader and download routes", () => {
   const wrapper = readFileSync(new URL("../components/documents/ExternalResourceCollections.jsx", import.meta.url), "utf8");
   assert.match(component, /\/study\/reader\?id=/);
   assert.match(component, /\/api\/study-files\/download\?id=/);
-  assert.doesNotMatch(component, /drive\.google\.com|mediafire\.com|ushare/i);
+  assert.doesNotMatch(component, /href=\{file\.link\}|href=\{archive\.folderUrl\}|drive\.google\.com|mediafire\.com/i);
   assert.doesNotMatch(wrapper, /drive\.google\.com|mediafire\.com|ushare/i);
 });
