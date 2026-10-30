@@ -10,7 +10,7 @@ export async function GET() {
   if (!host || !host.endsWith(".supabase.co"))
     return NextResponse.json({ status: "host_unavailable" }, { status: 503 });
   try {
-    const url = new URL("/rest/v1/site_content?select=content_key&limit=1", host);
+    const url = new URL("/rest/v1/site_content?select=content_key,title,value,type,updated_at&order=content_key.asc", host);
     const response = await fetch(url, {
       headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || "" },
       cache: "no-store",
@@ -18,6 +18,9 @@ export async function GET() {
     const content = await response.json().catch(() => []);
     return NextResponse.json({
       status: "checked",
+      serviceSecretConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      adminSecretConfigured: Boolean(process.env.ADMIN_SECRET),
+      neonDatabaseConfigured: Boolean(process.env.NEON_DATABASE_URL || process.env.NEON_STAGING_DATABASE_URL),
       bridgeActive: response.headers.get("x-mauri-database") === "neon-staging-bridge",
       upstreamOk: response.ok,
       resultCount: Array.isArray(content) ? content.length : null,
