@@ -24,7 +24,9 @@ test("literary references are shown inline rather than as external shortcuts", (
   const resources = readFileSync(new URL("../components/documents/ExternalResourceCollections.jsx", import.meta.url), "utf8");
   const unified = readFileSync(new URL("../components/documents/StudyResourceLibrary.jsx", import.meta.url), "utf8");
   assert.ok(resources.includes("<StudyResourceLibrary />"));
-  assert.ok(unified.includes('import literary from "../../data/ushare-literary-files.json"'));
+  assert.ok(unified.includes('STUDY_REFERENCE_FILES')); 
+  const catalog = readFileSync(new URL("../data/study-library.mjs", import.meta.url), "utf8");
+  assert.ok(catalog.includes('import literaryIndex from "./ushare-literary-files.json"'));
   assert.ok(unified.includes("/api/study-files/download?id="));
   assert.ok(!unified.includes("href={file.link}"));
 });
