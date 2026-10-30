@@ -12,6 +12,12 @@ function usableEnvironmentValue(value) {
 }
 
 function resolveSupabaseUrl() {
+  // In Neon mode the old Supabase hostname is a transport marker ONLY.
+  // It deliberately cannot reach the historical Supabase project if the
+  // server-side Neon adapter is unavailable.
+  if (process.env.NEXT_PUBLIC_NEON_MODE === "1") {
+    return "https://neon-bridge-disabled.supabase.co";
+  }
   const candidates = [
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_URL,
@@ -41,9 +47,11 @@ function resolveSupabaseHost(value) {
 }
 
 const publicSupabaseUrl = resolveSupabaseUrl();
-const publicSupabaseAnonKey = usableEnvironmentValue(
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-);
+const publicSupabaseAnonKey = process.env.NEXT_PUBLIC_NEON_MODE === "1"
+  ? "neon-transport-only"
+  : usableEnvironmentValue(
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+    );
 const supabaseHost = resolveSupabaseHost(publicSupabaseUrl);
 
 // Next.js inlines NEXT_PUBLIC_* variables during the build. Never allow Vercel's
@@ -117,6 +125,11 @@ const nextConfig = {
         protocol: "https",
         hostname: supabaseHost,
         pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "br-snowy-block-badutuyr.storage.c-8.eu-central-1.aws.neon.tech",
+        pathname: "/site-images/**",
       },
     ],
   },

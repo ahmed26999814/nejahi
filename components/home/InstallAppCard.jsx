@@ -17,18 +17,12 @@ function isIosDevice() {
     || (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
 }
 
-function isAndroidDevice() {
-  if (typeof window === "undefined") return false;
-  return /android/i.test(window.navigator.userAgent);
-}
-
 export default function InstallAppCard() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [visible, setVisible] = useState(false);
   const [showIosHelp, setShowIosHelp] = useState(false);
   const [message, setMessage] = useState("");
   const [iosDevice, setIosDevice] = useState(false);
-  const [androidDevice, setAndroidDevice] = useState(false);
 
   useEffect(() => {
     if (shouldHideInstallPromotion()) {
@@ -38,9 +32,7 @@ export default function InstallAppCard() {
 
     const mobile = isMobileDevice();
     const isIos = isIosDevice();
-    const isAndroid = isAndroidDevice();
     setIosDevice(isIos);
-    setAndroidDevice(isAndroid);
 
     if (!mobile || isNativeAppRuntime()) {
       setVisible(false);
@@ -52,8 +44,7 @@ export default function InstallAppCard() {
       && dismissedAt > 0
       && Date.now() - dismissedAt < DISMISS_TTL_MS;
 
-    // The Android 3.0.0 update is mandatory, so its card cannot be dismissed.
-    setVisible(isAndroid || !dismissedRecently);
+    setVisible(!dismissedRecently);
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -67,7 +58,7 @@ export default function InstallAppCard() {
     const handleInstalled = () => {
       setInstallPrompt(null);
       setMessage("تم تثبيت MauriResults بنجاح.");
-      if (!isAndroid) setVisible(false);
+      setVisible(false);
     };
 
     window.addEventListener("beforeinstallprompt", handleInstallPrompt);
@@ -80,14 +71,12 @@ export default function InstallAppCard() {
   }, []);
 
   const actionLabel = useMemo(() => {
-    if (androidDevice) return "تحديث الآن";
     if (installPrompt) return "تثبيت";
     if (iosDevice) return "طريقة التثبيت";
     return "تثبيت";
-  }, [androidDevice, installPrompt, iosDevice]);
+  }, [installPrompt, iosDevice]);
 
   function dismissPromotion() {
-    if (androidDevice) return;
     window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
     setVisible(false);
   }
@@ -95,11 +84,6 @@ export default function InstallAppCard() {
   async function installApp() {
     if (shouldHideInstallPromotion()) {
       setVisible(false);
-      return;
-    }
-
-    if (androidDevice) {
-      window.location.assign("/Apk/");
       return;
     }
 
@@ -123,16 +107,14 @@ export default function InstallAppCard() {
 
   if (!visible) return null;
 
-  const title = androidDevice ? "تحديث MauriResults الجديد 3.0.0" : "ثبّت MauriResults على هاتفك";
-  const description = androidDevice
-    ? "تم إيقاف النسخة القديمة. نزّل تطبيق Flutter الجديد للمتابعة."
-    : "وصول أسرع للنتائج من الشاشة الرئيسية.";
+  const title = "ثبّت MauriResults على هاتفك";
+  const description = "أضف الموقع إلى الشاشة الرئيسية للوصول السريع للنتائج دون تنزيل APK.";
 
   return (
     <>
       <aside
         className="relative flex items-center gap-3 overflow-hidden rounded-[20px] border border-emerald-200/80 bg-white/90 px-3 py-2.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-[#10231a]/90 md:hidden"
-        aria-label={androidDevice ? "تحديث تطبيق MauriResults الإجباري" : "اقتراح تثبيت التطبيق"}
+        aria-label="اقتراح تثبيت الموقع"
       >
         <span className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-emerald-500/10 to-transparent" aria-hidden="true" />
         <img
@@ -159,7 +141,7 @@ export default function InstallAppCard() {
           {actionLabel}
         </button>
 
-        {!androidDevice && (
+        {(
           <button
             type="button"
             onClick={dismissPromotion}
