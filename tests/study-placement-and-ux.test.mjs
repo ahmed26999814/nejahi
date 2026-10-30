@@ -11,7 +11,7 @@ function read(relative) {
 }
 test("every educational document has one and only one published destination", () => {
   const groups = [STUDY_BOOK_FILES, STUDY_EXAM_FILES, STUDY_REFERENCE_FILES];
-  assert.equal(STUDY_LIBRARY.length, 696);
+  assert.equal(STUDY_LIBRARY.length, 712);
   assert.equal(groups.reduce((sum, group) => sum + group.length, 0), STUDY_LIBRARY.length);
   const ids = groups.flatMap(group => group.map(file => file.id));
   assert.equal(new Set(ids).size, STUDY_LIBRARY.length);
