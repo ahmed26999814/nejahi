@@ -32,14 +32,14 @@ test("do not publish student result or candidate-list PDFs from shared folders",
   }
 });
 test("do not advertise external PDF files as 2027 editions without checking", () => {
-  assert.equal(index.generatedAt, "2026-10-29");
+  assert.equal(index.generatedAt, "2026-10-30");
   assert.ok(index.notice.includes("not verified"));
 });
 
 test("each educational file carries a document format and an honest year classification", () => {
   const allowed = new Set(["single", "academic", "range", "unspecified"]);
   for (const file of items) {
-    assert.ok(["PDF", "DOC", "DOCX"].includes(file.fileType));
+    assert.ok(["PDF", "DOC", "DOCX", "MP4"].includes(file.fileType));
     assert.ok(allowed.has(file.yearKind));
     if (file.yearKind === "unspecified") {
       assert.equal(file.year, null);
