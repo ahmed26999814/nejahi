@@ -15,9 +15,9 @@ const map = { ...partA, ...partB };
 
 test("every indexed document matches exactly one owned copy", () => {
   const stats = ownedDriveMappingStats();
-  assert.deepEqual(stats, { original: 558, copied: 558 });
+  assert.deepEqual(stats, { original: 574, copied: 574 });
   assert.equal(Object.keys(map).length, index.length);
-  assert.equal(new Set(Object.values(map)).size, 558);
+  assert.equal(new Set(Object.values(map)).size, 574);
   for (const file of index) {
     assert.equal(ownedDriveCopyId(file.id), map[file.id]);
     assert.match(map[file.id], /^[A-Za-z0-9_-]+$/);
