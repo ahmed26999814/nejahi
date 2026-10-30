@@ -3,13 +3,13 @@ import path from "node:path";
 
 const manifest = JSON.parse(await readFile(new URL("../docs/neon-public-assets-manifest.json", import.meta.url), "utf8"));
 const files = manifest.files || [];
-if (files.length !== 25) throw new Error("Unexpected public storage inventory");
+if (files.length !== 23) throw new Error("Unexpected public storage inventory");
 const hosts = [manifest.source_project, manifest.backup_host].map(ref => "https://" + ref + ".supabase.co");
 let copied = 0, total = 0;
 
 for (const entry of files) {
   const { bucket, name, bytes } = entry;
-  if (!["site-images","app-releases"].includes(bucket)
+  if (!bucket !== "site-images"
       || !/^[A-Za-z0-9_./-]+$/.test(name)
       || name.includes("..") || !Number.isSafeInteger(Number(bytes))
       || Number(bytes) < 1 || Number(bytes) > 40_000_000) {
