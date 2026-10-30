@@ -1,11 +1,13 @@
 "use client";
 
 import { m } from "framer-motion";
+import { useState } from "react";
 import { FaFacebookF, FaTelegram, FaWhatsapp } from "react-icons/fa6";
 import { contentValue } from "../common/content";
 import { HomeIcon, MessageIcon, UserIcon, XIcon } from "../common/icons";
 
 export default function DeveloperModal({ content = {}, onClose, text }) {
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const avatar = contentValue(content, "developer_avatar");
   const background = contentValue(content, "developer_background");
   const name = contentValue(content, "developer_name", "Ahmed abdellahi mady");
@@ -26,7 +28,7 @@ export default function DeveloperModal({ content = {}, onClose, text }) {
           <XIcon />
         </button>
         <div className="developer-avatar">
-          {avatar ? <img src={avatar} alt={name} loading="lazy" /> : <UserIcon />}
+          {avatar && !avatarFailed ? <img src={avatar} alt={name} loading="lazy" onError={() => setAvatarFailed(true)} /> : <UserIcon />}
         </div>
         <p className="text-[11px] font-black text-mauri-gold">{text.preparedBy}</p>
         <h3 className="mt-1 text-2xl font-black text-white">{name}</h3>
