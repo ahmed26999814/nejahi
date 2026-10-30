@@ -12,7 +12,7 @@ function internalReturnPath(query) {
     ["level", "branch", "subject", "kind", "year"];
   for (const key of keys) {
     const value = query?.[key];
-    if (typeof value === "string" && value.length <= 150 && !/[<>]/.test(value)) params.set(key, value);
+    if (typeof value === "string" && value.trim() && value.length <= 150 && !/[<>]/.test(value)) params.set(key, value);
   }
   return "/lessons?" + params.toString();
 }
