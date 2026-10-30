@@ -587,6 +587,20 @@ function logSupabaseQuery(table, params, context = "request") {
 }
 
 async function supabaseRequest(params, table = BAC_TABLE) {
+  if (process.env.NEXT_PUBLIC_NEON_MODE === "1") {
+    const search = new URLSearchParams({ table });
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        search.set(key, String(value));
+      }
+    });
+    const response = await fetch("/api/neon-public-query?" + search.toString(), {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Public query unavailable");
+    return response.json();
+  }
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error("Missing Supabase environment variables.");
   }
