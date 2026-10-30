@@ -1,18 +1,8 @@
 {
   "source_project": "whuddmevtiuejfwpstta",
   "backup_host": "nxizqnlemsbjmsfyuevg",
-  "description": "Public-only Supabase storage snapshot for a staged Neon/Vercel cutover. Never includes private buckets.",
+  "description": "Public site images only. The user explicitly discontinued APK downloads; no app-release objects are needed for Neon migration.",
   "files": [
-    {
-      "bucket": "app-releases",
-      "name": "MauriResults-3.3.0.apk",
-      "bytes": 37070849
-    },
-    {
-      "bucket": "app-releases",
-      "name": "version.json",
-      "bytes": 994
-    },
     {
       "bucket": "site-images",
       "name": "developer_avatar/1783313492741-0efbcaaf-1d13-4796-b060-e5f7af75b591.webp",
@@ -128,6 +118,5 @@
       "name": "result_card_image/1784229211643-ebdc5150-528b-4791-9eb5-cb5e2420a1ac.webp",
       "bytes": 87026
     }
-  ],
-  "diagnostic_retry": 2
+  ]
 }
