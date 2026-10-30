@@ -212,7 +212,7 @@ export default function StudyResourceLibrary() {
             <div className="flex gap-2">
               {(file.fileType === "PDF" || file.fileType === "MP4") && <Link href={"/study/reader?" + new URLSearchParams({
                 id:file.id, from:"resources", level, branch, subject,
-                kind:selectedType, year
+                kind, year: year === "all" ? "" : year
               }).toString()}
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-3 text-sm font-black text-white">
                 <Eye className="h-4 w-4" aria-hidden="true" />{file.fileType === "MP4" ? t.watch : t.read}
