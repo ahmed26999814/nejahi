@@ -9,7 +9,7 @@ const all = new Set([...indexed, ...literary].map(x => x.id));
 
 test("combined library indexes each verified document once", () => {
   assert.equal(all.size, indexed.length + literary.filter(x => !indexed.some(y => y.id === x.id)).length);
-  assert.ok(all.size >= 690);
+  assert.ok(all.size >= 696);
 });
 
 test("all source Google Drive documents are mapped to copies in the MauriResults Drive", () => {
