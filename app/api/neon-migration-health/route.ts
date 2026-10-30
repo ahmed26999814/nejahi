@@ -28,7 +28,12 @@ export async function GET() {
         (SELECT COUNT(*)::int FROM information_schema.views
          WHERE table_schema = 'public') AS views,
         (SELECT COUNT(*)::int FROM pg_proc p JOIN pg_namespace n
-         ON n.oid = p.pronamespace WHERE n.nspname = 'public') AS functions,
+         ON n.oid = p.pronamespace WHERE n.nspname = 'public'
+           AND NOT EXISTS (
+             SELECT 1 FROM pg_depend d
+             JOIN pg_extension e ON e.oid = d.refobjid
+             WHERE d.objid = p.oid AND d.deptype = 'e'
+           )) AS functions,
         (SELECT COUNT(*)::int FROM pg_policies
          WHERE schemaname = 'public') AS policies
     `;
