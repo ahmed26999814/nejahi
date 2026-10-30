@@ -106,9 +106,19 @@ PGPASSWORD="${source_password}" PGSSLMODE=require pg_dump --format=custom --sche
   --file="${dump}"
 pg_restore --list "${dump}" > "${toc}"
 
-# Neon already provides the public schema. Prevent a duplicate CREATE SCHEMA.
-awk '!(/^[0-9]+;.* SCHEMA - public / || /^[0-9]+;.* COMMENT - SCHEMA public /)' \
-  "${toc}" > "${filtered}"
+# Neon already provides public. Supabase's RLS POLICY entries target Supabase-only
+# roles (notably anon), which do not exist on Neon. Exclude ONLY POLICY records
+# for this staging restore. Keep table-level RLS ENABLE/FORCE entries intact.
+# This is NOT a security-policy migration: review and redesign privileges/RLS
+# before Neon can be used by an app. The no-ACL restore grants no anon access.
+awk '
+  /^[0-9]+;.* SCHEMA - public / {next}
+  /^[0-9]+;.* COMMENT - SCHEMA public / {next}
+  /^[0-9]+;.* POLICY public / {next}
+  {print}
+' "${toc}" > "${filtered}"
+policy_count="$(grep -Ec '^[0-9]+;.* POLICY public ' "${toc}" || true)"
+echo "Staging-only: excluded ${policy_count} Supabase-specific RLS policy objects; access rules must be redesigned before cutover."
 
 echo "Restoring on the isolated Neon staging branch in one transaction..."
 # If Supabase-specific auth roles/functions/extensions cannot be restored,
