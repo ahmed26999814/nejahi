@@ -9,8 +9,8 @@ const rows = JSON.parse(readFileSync(new URL("../data/indexed-drive-study-files.
 const files = rows.map(decorateStudyFile);
 const byId = Object.fromEntries(files.map(f => [f.id, f]));
 
-test("all 552 Drive documents remain indexed, including four newly listed lessons", () => {
-  assert.equal(files.length, 552);
+test("all 558 Drive documents remain indexed, including four newly listed lessons", () => {
+  assert.equal(files.length, 558);
   const ids = new Set(files.map(file => file.id));
   assert.equal(ids.size, files.length);
   for (const id of [
