@@ -18,7 +18,7 @@ test("uShare copies are distinct, recognized, and downloadable", () => {
     assert.ok(file.verifiedBranches.length);
     assert.ok(file.verifiedSubject);
   }
-  assert.deepEqual(ownedDriveMappingStats(), { original: 558, copied: 558 });
+  assert.deepEqual(ownedDriveMappingStats(), { original: 574, copied: 574 });
 });
 test("literary references are shown inline rather than as external shortcuts", () => {
   const resources = readFileSync(new URL("../components/documents/ExternalResourceCollections.jsx", import.meta.url), "utf8");
