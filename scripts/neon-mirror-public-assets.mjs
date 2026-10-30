@@ -23,12 +23,12 @@ for (const entry of files) {
         redirect: "follow",
         signal: AbortSignal.timeout(180000),
       });
-      if (!response.ok) continue;
+      if (!response.ok) { console.log("Public asset HTTP " + response.status + " from " + new URL(host).hostname); continue; }
       const buffer = Buffer.from(await response.arrayBuffer());
-      if (buffer.length !== Number(bytes)) continue;
+      if (buffer.length !== Number(bytes)) { console.log("Public asset byte mismatch from " + new URL(host).hostname + ": expected " + bytes + ", received " + buffer.length); continue; }
       data = buffer;
       break;
-    } catch {}
+    } catch (error) { console.log("Public asset fetch exception: " + (error?.name || "unknown")); }
   }
   if (!data) throw new Error("Unable to fetch matching public file: " + bucket + "/" + name);
   const destination = path.join("public", "neon-migrated-storage", bucket, name);
