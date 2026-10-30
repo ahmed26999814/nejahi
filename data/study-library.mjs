@@ -1,6 +1,7 @@
 import originalIndex from "./indexed-drive-study-files.json" with { type: "json" };
 import literaryIndex from "./ushare-literary-files.json" with { type: "json" };
-import { decorateStudyFile, normalizeStudyTitle, examBrowseGroup } from "./study-catalog.mjs";
+import { decorateStudyFile, examBrowseGroup } from "./study-catalog.mjs";
+import { normalizeStudyTitle } from "./study-file-type.mjs";
 
 export const STUDY_LEVELS = ["7AS", "6AS", "5AS", "4AS", "6AF"];
 export const LEVEL_TITLES = {
