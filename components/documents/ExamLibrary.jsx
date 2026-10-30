@@ -95,6 +95,20 @@ export default function ExamLibrary() {
   const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
+    const syncNavigation = () => {
+      const p = new URLSearchParams(window.location.search);
+      const value = p.get("competition");
+      setCompetition(ORDER.includes(value) ? value : "");
+      setBranch(BRANCH_ORDER.includes(p.get("branch")) ? p.get("branch") : "");
+      setYear((p.get("year") || "").slice(0,80));
+      setShown(PAGE);setDownloadError("");setShowOlder(false);
+    };
+    syncNavigation();
+    window.addEventListener("popstate", syncNavigation);
+    return () => window.removeEventListener("popstate", syncNavigation);
+  }, []);
+
+  useEffect(() => {
     let active = true;
     async function fetchDocuments() {
       try {
@@ -166,15 +180,25 @@ export default function ExamLibrary() {
     return result.sort((a, b) => String(a.subject).localeCompare(String(b.subject), "ar"));
   }, [filtered]);
 
+  function remember(next) {
+    const state = { competition, branch, year, ...next };
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", "exams");
+    for (const key of ["competition","branch","year"]) {
+      if (state[key]) url.searchParams.set(key, state[key]);
+      else url.searchParams.delete(key);
+    }
+    window.history.pushState({ ...window.history.state }, "", url.pathname + url.search + url.hash);
+    setCompetition(state.competition);setBranch(state.branch);setYear(state.year);
+    setShowOlder(false);setShown(PAGE);setDownloadError("");
+  }
   function chooseCompetition(value) {
-    setCompetition(value); setBranch(""); setYear(""); setShowOlder(false); setShown(PAGE); setDownloadError("");
+    remember({ competition:value, branch:"", year:"" });
   }
   function goBack() {
-    setDownloadError("");
-    if (year) { setYear(""); setShown(PAGE); return; }
-    if (branch) { setBranch(""); return; }
-    setCompetition("");
-    setShowOlder(false);
+    if (year) { remember({ year:"" }); return; }
+    if (branch) { remember({ branch:"" }); return; }
+    remember({ competition:"",branch:"",year:"" });
   }
 
   if (loading) return <div role="status" className="flex min-h-32 items-center justify-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-300">
@@ -210,13 +234,13 @@ export default function ExamLibrary() {
         <section aria-label="الشعب" className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {branches.map(value => <ChoiceCard key={value} label={branchTitle(value)}
             icon={Layers3} count={competitionFiles.filter(file => file.branches.includes(value)).length}
-            onClick={() => { setBranch(value); setYear(""); setShown(PAGE); }} />)}
+            onClick={() => remember({branch:value,year:""})} />)}
         </section>
       ) : step === "year" ? (
         <section aria-label="السنوات" className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {years.slice(0, showOlder ? undefined : 8).map(value => (
             <ChoiceCard key={value} label={yearLabel(value)} count={branchFiles.filter(file => file.yearGroup === value).length}
-              icon={BookOpen} onClick={() => { setYear(value); setShown(PAGE); }} />
+              icon={BookOpen} onClick={() => remember({year:value})} />
           ))}
           {years.length > 8 && <button type="button" onClick={() => setShowOlder(value => !value)}
             className="flex min-h-[92px] items-center justify-center gap-2 rounded-2xl border border-dashed border-mauri-green/40 bg-white p-3 text-sm font-black text-mauri-green dark:bg-[#12231a]">
@@ -246,7 +270,9 @@ export default function ExamLibrary() {
                       </div>
                     </div>
                     <div className="mt-auto flex gap-2">
-                      {card.file.fileType === "PDF" || card.file.fileType === "MP4" ? <Link href={`/study/reader?id=${encodeURIComponent(card.file.id)}`}
+                      {card.file.fileType === "PDF" || card.file.fileType === "MP4" ? <Link href={"/study/reader?" + new URLSearchParams({
+                        id:card.file.id, from:"exams", competition, branch, year
+                      }).toString()}
                         className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-mauri-green px-3 text-sm font-black text-white">قراءة</Link> : null}
                       <a href={`/api/study-files/download?id=${encodeURIComponent(card.file.id)}`}
                         className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-mauri-green px-3 text-sm font-black text-mauri-green">
