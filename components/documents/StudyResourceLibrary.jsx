@@ -200,10 +200,10 @@ export default function StudyResourceLibrary() {
                 </div>
               </div>
               <div className="flex gap-2">
-                {file.fileType === "PDF" ? (
+                {(file.fileType === "PDF" || file.fileType === "MP4") ? (
                   <Link href={"/study/reader?id=" + encodeURIComponent(file.id)}
                     className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-mauri-green px-3 text-sm font-black text-white hover:bg-emerald-700">
-                    <Eye className="h-4 w-4" aria-hidden="true" />{t.read}
+                    <Eye className="h-4 w-4" aria-hidden="true" />{file.fileType === "MP4" ? (lang === "ar" ? "مشاهدة" : "Voir") : t.read}
                   </Link>
                 ) : null}
                 <a href={"/api/study-files/download?id=" + encodeURIComponent(file.id)}
