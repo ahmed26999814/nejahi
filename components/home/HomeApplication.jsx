@@ -1,6 +1,7 @@
 "use client";
 
 import PremiumHomeView from "./PremiumHomeView";
+import dynamic from "next/dynamic";
 import AnalyticsPage from "../analytics/AnalyticsPage";
 import SearchPanel from "../search/SearchPanel";
 import { frenchExamTitle } from "../../lib/examLabels";
