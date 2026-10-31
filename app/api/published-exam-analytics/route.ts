@@ -189,10 +189,10 @@ export async function GET(request: Request) {
   if (isLegacyNativeRequest(request)) {
     return NextResponse.json(
       {
-        error: "هذا الإصدار متوقف. نزّل تحديث MauriResults الجديد 3.0.0.",
+        error: "هذا الإصدار متوقف. استخدم موقع MauriResults مباشرة.",
         updateRequired: true,
         minimumSupportedVersion: REQUIRED_APP_VERSION,
-        downloadUrl: `${SITE_URL}/Apk/`,
+        downloadUrl: SITE_URL,
       },
       { status: 426, headers: { "Cache-Control": "no-store" } }
     );
