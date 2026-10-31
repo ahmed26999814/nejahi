@@ -163,6 +163,6 @@ export async function GET(request: Request) {
 
   return NextResponse.json(
     { rows: result.rows },
-    { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=86400" } }
+    { headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=30" } }
   );
 }
