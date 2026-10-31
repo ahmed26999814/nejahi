@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SERVICE_ROLE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY);
 const VISITOR_COOKIE = "mauriresults_visitor_id";
 const ONE_YEAR = 60 * 60 * 24 * 365;
 const REQUEST_TIMEOUT_MS = 5_000;
