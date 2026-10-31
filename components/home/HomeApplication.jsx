@@ -1,7 +1,7 @@
 "use client";
 
 import PremiumHomeView from "./PremiumHomeView";
-import dynamic from "next/dynamic";
+import AnalyticsPage from "../analytics/AnalyticsPage";
 import SearchPanel from "../search/SearchPanel";
 import { frenchExamTitle } from "../../lib/examLabels";
 import { sanitizeCandidateNumber } from "../search/searchUtils";
@@ -18,7 +18,7 @@ import * as Select from "@radix-ui/react-select";
 import { Toaster, toast } from "sonner";
 
 const DecisionStrip = dynamic(() => import("../results/DecisionStrip"));
-const AnalyticsPage = dynamic(() => import("../analytics/AnalyticsPage"), { ssr: false });
+
 
 const PAGE_SIZE = 1000;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
