@@ -56,6 +56,6 @@ export async function GET() {
     const controls = await cachedControls();
     return NextResponse.json({ controls }, { headers: { "Cache-Control": "no-store", "CDN-Cache-Control": PUBLIC_CACHE, Vary: "Accept-Encoding" } });
   } catch {
-    return NextResponse.json({ controls: DEFAULTS }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ controls: DEFAULTS }, { headers: { "Cache-Control": "no-store", "X-Mauri-Controls": "temporary-fallback" } });
   }
 }
