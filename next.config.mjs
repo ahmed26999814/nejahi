@@ -61,7 +61,7 @@ if (publicSupabaseAnonKey) {
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = publicSupabaseAnonKey;
 }
 
-const RESULT_CACHE = "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800, stale-if-error=604800";
+const RESULT_CACHE = "public, max-age=0, s-maxage=120, stale-while-revalidate=30";
 const NO_STORE = "no-store, max-age=0";
 const PRIVATE_RESULT_ROBOTS = "noindex, nofollow, noarchive";
 const HOME_COMPONENTS_DIR = path.resolve(process.cwd(), "components/home");
@@ -212,19 +212,19 @@ const nextConfig = {
       {
         source: "/api/public-exams",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=60, stale-while-revalidate=3600" },
+          { key: "Cache-Control", value: "no-store" },
         ],
       },
       {
         source: "/api/public-data",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=86400" },
+          { key: "Cache-Control", value: "no-store" },
         ],
       },
       {
         source: "/api/site-controls",
         headers: [
-          { key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=3600" },
+          { key: "Cache-Control", value: "no-store" },
         ],
       },
       {
