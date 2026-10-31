@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const SITE_URL = "https://mauri-results.vercel.app";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=3600";
+const PUBLIC_CACHE = "public, s-maxage=20, stale-while-revalidate=10";
 const REQUIRED_APP_VERSION = "3.3.0";
 
 function isAdminPlaceholder(value: unknown) {
@@ -116,8 +116,8 @@ async function fetchPublishedExamsUncached(): Promise<{ rows: Array<Record<strin
 
 const fetchPublishedExams = unstable_cache(
   fetchPublishedExamsUncached,
-  ["mauriresults-public-exams-v4"],
-  { revalidate: 60, tags: [PUBLIC_EXAMS_CACHE_TAG] }
+  ["mauriresults-public-exams-v5-neon"],
+  { revalidate: 20, tags: [PUBLIC_EXAMS_CACHE_TAG] }
 );
 
 function publicCatalog(uploadedRows: ReadonlyArray<Record<string, unknown>>) {
@@ -190,7 +190,7 @@ export async function GET(request: Request) {
       {
         status: 200,
         headers: {
-          "Cache-Control": PUBLIC_CACHE,
+          "Cache-Control": "no-store",
           "CDN-Cache-Control": PUBLIC_CACHE,
           "Vercel-CDN-Cache-Control": PUBLIC_CACHE,
           Vary: "X-MauriResults-Client, User-Agent, Accept-Encoding",
