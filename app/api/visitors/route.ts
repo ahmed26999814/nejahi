@@ -10,7 +10,7 @@ const SERVICE_ROLE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-inte
 const VISITOR_COOKIE = "mauriresults_visitor_id";
 const ONE_YEAR = 60 * 60 * 24 * 365;
 const REQUEST_TIMEOUT_MS = 5_000;
-const COUNT_CACHE = "public, max-age=30, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400";
+const COUNT_CACHE = "public, max-age=0, s-maxage=60, stale-while-revalidate=30";
 
 function hashValue(prefix: string, value: string) {
   const salt = process.env.ADMIN_SECRET || "mauriresults-visitors";
