@@ -81,7 +81,7 @@ export default function SearchPanel(props) {
           <span>{loading ? (text?.searching || "بحث...") : (text?.searchButton || "بحث")}</span>
         </button>
 
-        <p id={hintId} className="col-span-full text-sm text-slate-600 dark:text-slate-300">{isFrench ? "Vérifiez l’année, le concours et le numéro sur votre convocation." : "تحقق من السنة والمسابقة ورقم المترشح في الاستدعاء."}</p>
+        <p id={hintId} className="col-span-full text-sm text-slate-600 dark:text-slate-300">{isFrench ? "Saisissez votre numéro pour rechercher le résultat du concours sélectionné." : "أدخل رقم المترشح للبحث عن نتيجته في المسابقة المختارة."}</p>
         <SearchFeedback id={feedbackId} error={error} message={message} text={text} />
       </form>
       <ForgotCandidateNumber />
