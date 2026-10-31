@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY) || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const PUBLIC_CACHE = "public, s-maxage=30, stale-while-revalidate=15";
 
 const DEFAULTS: Record<string, string> = {
