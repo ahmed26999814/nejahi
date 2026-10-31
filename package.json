@@ -30,7 +30,7 @@
     "xlsx": "file:vendor/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
-    "@types/node": "20.17.6",
+    "@types/node": "26.6.5",
     "@types/react": "latest",
     "autoprefixer": "^10.4.20",
     "postcss": "8.5.32",
