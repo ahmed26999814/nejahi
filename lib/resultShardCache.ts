@@ -12,7 +12,7 @@ import { SEARCH_CACHE_TAG, searchSourceTag } from "./cacheTags";
 
 // Cache published results, but never cache transient Supabase errors.
 // Without the throw, unstable_cache stores a {status: 504} value for an hour.
-const RESULT_CACHE_SECONDS = 3_600;
+const RESULT_CACHE_SECONDS = 600;
 type Result = NumberLookupResult | ShardLookupResult;
 
 async function cacheOnlySuccessful<T extends Result>(
