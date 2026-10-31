@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 5;
 export const preferredRegion = ["cdg1"];
 
-const CACHE_CONTROL = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
+const CACHE_CONTROL = "public, max-age=0, s-maxage=120, stale-while-revalidate=30";
 
 function clean(value: string) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, 160);
