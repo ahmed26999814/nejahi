@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const REQUEST_TIMEOUT_MS = 8_000;
-const PUBLIC_CACHE = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
-const SITE_CONTENT_CACHE = "public, max-age=30, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400";
+const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=30";
+const SITE_CONTENT_CACHE = "public, s-maxage=20, stale-while-revalidate=10";
 
 const RESOURCE_LIMITS: Record<string, number> = {
   site_content: 1000,
@@ -78,13 +78,13 @@ async function fetchResource(resource: string) {
 
 const cachedResource = unstable_cache(
   async (resource: string) => fetchResource(resource),
-  ["mauriresults-public-data-v2"],
-  { revalidate: 300 }
+  ["mauriresults-public-data-v3-neon"],
+  { revalidate: 20 }
 );
 
 const cachedSiteContent = unstable_cache(
   async () => fetchResource("site_content"),
-  ["mauriresults-site-content-v1"],
+  ["mauriresults-site-content-v2-neon"],
   { revalidate: 60 }
 );
 
@@ -103,7 +103,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(rows, {
       headers: {
-        "Cache-Control": cacheControl,
+        "Cache-Control": "no-store",
         "CDN-Cache-Control": cacheControl,
         "Vercel-CDN-Cache-Control": cacheControl,
         Vary: "Accept-Encoding",
