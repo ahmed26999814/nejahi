@@ -11,8 +11,8 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const REQUEST_TIMEOUT_MS = 5_000;
-const OPTIONS_CACHE = "public, max-age=60, s-maxage=1800, stale-while-revalidate=86400, stale-if-error=86400";
-const CANDIDATES_CACHE = "public, max-age=30, s-maxage=300, stale-while-revalidate=3600, stale-if-error=86400";
+const OPTIONS_CACHE = "public, max-age=0, s-maxage=180, stale-while-revalidate=30";
+const CANDIDATES_CACHE = "public, max-age=0, s-maxage=90, stale-while-revalidate=30";
 
 function clean(value: unknown, maxLength = 160) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, maxLength);
