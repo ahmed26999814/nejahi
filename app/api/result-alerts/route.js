@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SERVICE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY);
 const TABLE = "result_alert_subscriptions";
 const REQUEST_TIMEOUT_MS = 10_000;
 const RATE_WINDOW_MS = 10 * 60 * 1000;

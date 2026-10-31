@@ -1,5 +1,5 @@
-const CACHE_NAME = "mauriresults-v14-app-shell";
-const RUNTIME_CACHE = "mauriresults-v14-runtime";
+const CACHE_NAME = "mauriresults-v15-app-shell";
+const RUNTIME_CACHE = "mauriresults-v15-runtime";
 const APP_SHELL = ["/offline.html", "/logo.png", "/manifest.webmanifest"];
 const STATIC_PATHS = ["/images/", "/icons/", "/logo.png", "/manifest.webmanifest"];
 
@@ -34,11 +34,11 @@ function isCacheableStatic(url) {
 
 async function networkFirstNavigation(event) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 4500);
+  const timeout = setTimeout(() => controller.abort(), 12000);
 
   try {
     const preload = await event.preloadResponse;
-    if (preload) return preload;
+    // Always request a fresh document: a navigation preload may represent an older cached generation.
     return await fetch(event.request, { signal: controller.signal, cache: "no-store" });
   } catch {
     return (await caches.match("/offline.html")) || Response.error();

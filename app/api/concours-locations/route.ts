@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   || process.env.SUPABASE_ANON_KEY
-  || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  || (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY);
 const CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-  "CDN-Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-  "Vercel-CDN-Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+  "Cache-Control": "public, s-maxage=120, stale-while-revalidate=30",
+  "CDN-Cache-Control": "public, s-maxage=120, stale-while-revalidate=30",
+  "Vercel-CDN-Cache-Control": "public, s-maxage=120, stale-while-revalidate=30",
 };
 
 type ExamSearchConfig = {
@@ -67,7 +67,7 @@ async function supabaseJson(url: URL, init?: RequestInit) {
       Accept: "application/json",
       ...(init?.headers || {}),
     },
-    next: { revalidate: 3600 },
+    next: { revalidate: 120 },
   });
   const text = await response.text();
   if (!response.ok) throw new Error(text || `Supabase error ${response.status}`);

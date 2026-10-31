@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const PUBLIC_CACHE = "public, s-maxage=300, stale-while-revalidate=3600";
+const SUPABASE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY) || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const PUBLIC_CACHE = "public, s-maxage=30, stale-while-revalidate=15";
 
 const DEFAULTS: Record<string, string> = {
   ui_show_search: "true",
@@ -49,13 +49,13 @@ async function fetchControls() {
   return controls;
 }
 
-const cachedControls = unstable_cache(fetchControls, ["mauriresults-site-controls-v2"], { revalidate: 300 });
+const cachedControls = unstable_cache(fetchControls, ["mauriresults-site-controls-v3-neon"], { revalidate: 30 });
 
 export async function GET() {
   try {
     const controls = await cachedControls();
-    return NextResponse.json({ controls }, { headers: { "Cache-Control": PUBLIC_CACHE, "CDN-Cache-Control": PUBLIC_CACHE, Vary: "Accept-Encoding" } });
+    return NextResponse.json({ controls }, { headers: { "Cache-Control": "no-store", "CDN-Cache-Control": PUBLIC_CACHE, Vary: "Accept-Encoding" } });
   } catch {
-    return NextResponse.json({ controls: DEFAULTS }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=300" } });
+    return NextResponse.json({ controls: DEFAULTS }, { headers: { "Cache-Control": "no-store", "X-Mauri-Controls": "temporary-fallback" } });
   }
 }

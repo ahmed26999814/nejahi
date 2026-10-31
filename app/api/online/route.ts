@@ -7,10 +7,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 5;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SERVICE_ROLE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY);
 // Return a graceful fallback before Vercel's five-second function limit.
 const REQUEST_TIMEOUT_MS = 2_000;
-const ONLINE_CACHE = "public, max-age=15, s-maxage=30, stale-while-revalidate=300, stale-if-error=3600";
+const ONLINE_CACHE = "public, max-age=0, s-maxage=30, stale-while-revalidate=15";
 
 type RpcResult =
   | { data: unknown }

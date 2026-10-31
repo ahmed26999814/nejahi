@@ -5,9 +5,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY) || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const REQUEST_TIMEOUT_MS = 5_000;
-const CACHE_CONTROL = "public, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=86400";
+const CACHE_CONTROL = "public, s-maxage=120, stale-while-revalidate=30";
 
 function clean(value: unknown) {
   return String(value || "").replace(/\u0000/g, "").trim().slice(0, 160);
@@ -50,7 +50,7 @@ const cachedOptions = unstable_cache(
     });
   },
   ["mauriresults-concours-location-options-v2"],
-  { revalidate: 3600 }
+  { revalidate: 120 }
 );
 
 export async function GET(request: Request) {

@@ -3,7 +3,7 @@ import "server-only";
 import { cachedCentreShard, cachedNumberShard } from "./resultShardCache";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY);
 const MANIFEST_TIMEOUT_MS = 20_000;
 const DEFAULT_WARMUP_BUDGET_MS = 180_000;
 const MAX_RETRY_PASSES = 3;

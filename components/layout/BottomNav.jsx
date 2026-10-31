@@ -43,7 +43,6 @@ export default function BottomNav({ activeView, onNavigate, text }) {
     },
     { key: "toppers", label: text.toppers, view: "toppers", icon: <AwardIcon /> },
     { key: "calculator", label: isFrench ? "Calculateur" : "الحاسبة", href: "/calculator", icon: <CalculatorIcon /> },
-    { key: "download", label: isFrench ? "Application" : "التطبيق", href: "/Apk/", icon: <DownloadIcon /> },
   ];
 
   useEffect(() => {

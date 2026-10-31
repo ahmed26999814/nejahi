@@ -11,11 +11,11 @@ export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://mauri-results.vercel.app";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const FRESH_MS = 5 * 60 * 1000;
-const STALE_MS = 24 * 60 * 60 * 1000;
+const SUPABASE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY) || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const FRESH_MS = 2 * 60 * 1000;
+const STALE_MS = 15 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 5_000;
-const CACHE_CONTROL = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400";
+const CACHE_CONTROL = "public, max-age=0, s-maxage=90, stale-while-revalidate=30";
 const REQUIRED_APP_VERSION = "3.0.0";
 
 type Dashboard = Record<string, unknown>;
@@ -189,10 +189,10 @@ export async function GET(request: Request) {
   if (isLegacyNativeRequest(request)) {
     return NextResponse.json(
       {
-        error: "هذا الإصدار متوقف. نزّل تحديث MauriResults الجديد 3.0.0.",
+        error: "هذا الإصدار متوقف. استخدم موقع MauriResults مباشرة.",
         updateRequired: true,
         minimumSupportedVersion: REQUIRED_APP_VERSION,
-        downloadUrl: `${SITE_URL}/Apk/`,
+        downloadUrl: SITE_URL,
       },
       { status: 426, headers: { "Cache-Control": "no-store" } }
     );

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 3;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SERVICE_ROLE_KEY = (process.env.NEXT_PUBLIC_NEON_MODE === "1" ? "neon-internal" : process.env.SUPABASE_SERVICE_ROLE_KEY);
 const REQUEST_TIMEOUT_MS = 2_500;
 const CANONICAL_HOST = "mauri-results.vercel.app";
 
